@@ -97,12 +97,14 @@ Found while adapting an album-ratings pipeline to photometry:
 configs/
   datasets/ztf_wd.yaml          nightly g-band descriptor
   datasets/ztf_wd_monthly.yaml  monthly g-band descriptor (converged fit)
-  wd_fit.yaml                   run-config pin (heteroscedastic_entity_obs: false)
+  wd_fit.yaml                   run-config pins (heteroscedastic_entity_obs: false,
+                                entity_group_pooling: false)
 scripts/
   fetch_lightcurves.py          resumable IRSA cone-search fetch -> data/raw/lc_cache/
   build_panel.py                bin cached epochs -> data/raw/ztf_wd_panel.csv
 data/
-  roster/jestin2026_roster.csv  the 19-star roster + _source_provenance/
+  roster/jestin2026_roster.csv  the 20-row roster (19 with usable ZTF light
+                                curves) + _source_provenance/
   raw/ztf_wd_panel.csv          nightly g+r panel (19,950 rows)
   raw/ztf_wd_zg.csv             nightly g-band slice (9,501 rows)
   raw/ztf_wd_zg_monthly.csv     monthly g-band slice (1,147 rows)

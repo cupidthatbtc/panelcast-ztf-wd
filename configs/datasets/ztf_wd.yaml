@@ -2,8 +2,7 @@
 #
 # Frames nightly-binned ZTF g photometry as a per-entity variance census (NOT
 # pulsation-period recovery): the per-WD random-walk variance posterior is the
-# science read, compared against Jestin's variable-vs-constant split. See
-# ~/Documents/astro-panel/astro_panel_data_report.md section 3.
+# science read, compared against Jestin's variable-vs-constant split.
 #
 # The roster behind this build is the PARTIAL 19-star validation sample; the
 # full 864-source companion table publishes to VizieR with the paper. Repoint
