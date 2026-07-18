@@ -1,0 +1,6 @@
+# Run-config pin for the ZTF WD fits (the external-domain pin pattern from the
+# panelcast v0.13.0 release notes). With 19 near-constant series, per-entity
+# overdispersion is unidentified against sigma_obs/sigma_artist — chains land
+# in different variance attributions (rhat ~2.5, ESS ~5, 0 divergences).
+# Revisit at the 864-star roster, where pooling can identify it.
+heteroscedastic_entity_obs: false

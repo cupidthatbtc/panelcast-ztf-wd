@@ -1,0 +1,9 @@
+Roster provenance
+=================
+
+Star list extracted from the published excerpt table and individually named
+stars in Jestin et al. 2026 (arXiv:2509.15133) - 11 excerpt rows plus the
+stars named in the text. Coordinates resolved to full precision via Gaia DR3
+TAP (gaia_coords.json). The full 864-source companion table is pending VizieR
+publication; the paper manuscript itself is not redistributed here - fetch it
+from arXiv.

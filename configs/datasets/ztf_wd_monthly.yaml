@@ -1,0 +1,78 @@
+# ZTF white-dwarf variability census (Jestin+2026 roster) — zg band.
+#
+# Frames nightly-binned ZTF g photometry as a per-entity variance census (NOT
+# pulsation-period recovery): the per-WD random-walk variance posterior is the
+# science read, compared against Jestin's variable-vs-constant split. See
+# ~/Documents/astro-panel/astro_panel_data_report.md section 3.
+#
+# The roster behind this build is the PARTIAL 19-star validation sample; the
+# full 864-source companion table publishes to VizieR with the paper. Repoint
+# the roster, rerun scripts/fetch_lightcurves.py + build_panel.py, regenerate
+# data/raw/ztf_wd_zg.csv, and this descriptor is unchanged bar target_bounds.
+#
+# Every key omitted keeps its AOTY default (src/panelcast/config/descriptor.py).
+# Template: configs/datasets/aero.yaml in the panelcast repo + docs/PORTING.md.
+
+name: ztf_wd_monthly
+
+# --- raw source ----------------------------------------------------------
+raw_path_env: ZTF_WD_MONTHLY_PATH
+raw_path_default: data/raw/ztf_wd_zg_monthly.csv
+encoding: utf-8
+# Headers are already canonical underscore names; no renames needed.
+raw_column_map: {}
+required_raw_columns:
+  - source_id
+  - month_id
+  - month_date
+  - mag_binned
+  - n_exp
+  - wd_class
+  - year
+optional_raw_columns:
+  - mag_err
+
+# --- identity / sequencing ------------------------------------------------
+entity_col: source_id
+event_col: month_id
+entity_group_col: wd_class
+date_col: month_date
+parsed_date_col: month_date_parsed
+year_col: year
+date_format: "%Y-%m-%d"
+
+# --- targets ----------------------------------------------------------------
+target_col: mag_binned
+# Observed zg range 15.07-19.31, padded +/-0.5. (A zr fit would need its own
+# CSV and bounds: observed 15.40-21.69.)
+target_bounds: [15.0, 18.8]
+model_prefix: ztfg
+n_obs_col: n_exp
+# n_exp counts repeat exposures whose median IS the nightly target, so the
+# aggregation-count semantics (and the beta_binomial candidate) apply.
+n_obs_is_aggregation_count: true
+secondary_target_col: null
+secondary_prefix: null
+secondary_n_obs_col: null
+
+# --- cleaning semantics ----------------------------------------------------
+multi_entity_col: null
+unknown_entity_sentinel: null
+min_year: 2018
+
+# --- dataset preparation -----------------------------------------------------
+# Most nights are single-exposure (n_exp median 1); AOTY-style min-obs
+# thresholds would throw the panel away. Keep everything.
+min_obs_thresholds: [1]
+primary_min_obs: 1
+processed_name_template: "ztfgm_minobs_{min_ratings}"
+
+# --- features -----------------------------------------------------------------
+# No music packs; generic temporal + entity-history blocks only.
+feature_packs: []
+feature_blocks:
+  - name: temporal
+  - name: entity_history
+ablation_groups:
+  temporal: [temporal]
+  artist: [entity_history]
