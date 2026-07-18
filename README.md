@@ -43,10 +43,10 @@ panelcast run \
   --target-accept 0.90 --allow-unlocked-env
 ```
 
-Diagnostics: **R-hat 1.00, bulk ESS 1,197, 2 divergences in 12,000 draws**
-(the two grazing the class-pooling funnel). The canonical command is the
-`--target-accept` line above; a higher-`target-accept` run may supersede it once
-it lands, which is a one-line swap here and one row in the ladder below.
+Diagnostics: **R-hat 1.00, bulk ESS 1,711, 0 divergences in 12,000 draws**.
+The command above is canonical; `configs/wd_fit.yaml` carries both
+identifiability pins (`heteroscedastic_entity_obs: false`,
+`entity_group_pooling: false`).
 
 ### The convergence ladder
 
@@ -55,7 +55,9 @@ it lands, which is a one-line swap here and one row in the ladder below.
 | Nightly | 2 x 500 | 2.44 | 2 | baseline nightly panel |
 | Monthly | 4 x 1000 | 2.56 | 5 | monthly binning — multimodality is unidentifiability, not RW length |
 | + entity-obs off, artist features off | 4 x 1000 | 1.008 | 395 | removed the unidentifiable components |
-| + target-accept 0.90 | 4 x 3000 | 1.00 | 1,197 | converged |
+| + target-accept 0.90 | 4 x 3000 | 1.00 | 1,197 | mixes well; 2 divergences in the class-pooling funnel |
+| + target-accept 0.93 | 4 x 3000 | 1.011 | 789 | 0 divergences via smaller steps — treats the symptom, costs mixing |
+| + class pooling off, accept 0.90 | 4 x 3000 | 1.00 | 1,711 | removed the funnel itself — final config |
 
 **Diagnosis.** These are near-constant series, so the model has interchangeable
 explanations for the same data: the entity mean, AR persistence, and the random
@@ -63,8 +65,10 @@ walk all absorb the (tiny) variation, and global vs per-entity observation noise
 trade off freely. Chains settle into different variance attributions — different
 modes of one posterior, hence the high R-hat with zero divergences. Removing the
 unidentifiable components (per-entity overdispersion and the entity-history
-features) collapsed the modes into one; monthly binning and the higher
-`target-accept` then cleaned up the last of the funnel geometry.
+features) collapsed the modes into one. The last two divergences lived in the
+class-pooling variance funnel — a between-`wd_class` scale the handful of groups
+cannot inform; raising `target-accept` merely tiptoed around it, while dropping
+the pooling term removed it and improved mixing at the same time.
 
 ## Per-domain verdicts
 
@@ -75,6 +79,13 @@ At N=19 near-constant series it is unidentifiable against the shared `sigma_obs`
 expected to **reverse at the 864-star roster**, where cross-entity pooling can
 identify a per-entity noise scale. The pin follows the external-domain
 run-config pattern from the panelcast v0.13.0 release notes.
+
+`entity_group_pooling` (partial pooling across `wd_class`) is likewise pinned
+**OFF**. With only a handful of classes over 19 stars, the between-class
+variance is data-starved and its posterior develops the classic hierarchical
+funnel — the source of the final 2 divergences on the ladder. Removing it
+raised bulk ESS from 1,197 to 1,711 at the same `target-accept`. Also expected
+to be revisited at 864 stars, where the class populations carry real weight.
 
 ## Porting gotchas
 
