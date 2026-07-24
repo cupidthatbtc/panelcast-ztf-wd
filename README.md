@@ -23,6 +23,46 @@ The science framing is a **per-entity variance census** — the per-white-dwarf
 random-walk variance posterior versus Jestin's variable-vs-constant split — not
 pulsation-period recovery.
 
+## What the panel can carry — and what the binning removes
+
+Before any model runs, the panel itself decides which variability is
+recoverable. Scatter-to-error ratio per star, nightly against monthly
+(`python scripts/plot_variance_census.py`, reads the committed CSVs only):
+
+![Variability census of the 19-star panel](figures/variance_census.png)
+
+The compact pulsators pulse on **minutes-to-an-hour** periods — far below either
+bin width — so nightly binning averages them out and monthly binning finishes
+the job. At the monthly cadence that the converged fit actually uses, ZZ Ceti
+lands at sd/err **0.8** (its month-to-month scatter is smaller than its own error
+bar), and GW Vir, V777 Her and Old DAVs sit at 1.1–1.5, inside the range spanned
+by stars Jestin calls constant. One paper-constant unclassified star
+(`1410345596469085184`, sd/err 1.5) outranks three of the named pulsators.
+
+| regime | example | sd/err nightly | sd/err monthly |
+|---|---|---|---|
+| double-band binary | `4318508939464901760` | 23.6 | 16.4 |
+| WD-MS binary | `1191504471436192512` | 15.9 | 6.9 |
+| CV | `3750072904055666176` | 4.3 | 4.8 |
+| **pulsator** | ZZ Ceti | **1.5** | **0.8** |
+| **pulsator** | GW Vir | **1.5** | **1.1** |
+| paper-constant | `114808397128552576` | 1.0 | 0.4 |
+
+So the census separates **hours-to-days** variability (binaries, the CV, the
+transit) from constant cleanly, and is **structurally blind** to compact-pulsator
+variability. That is a property of the event axis, not of the model: recovering
+the pulsators means making the panel event the *exposure* rather than the night,
+which changes the entity-event contract. Read the variance posteriors with that
+scope in mind — "recovers the variable-vs-constant split" holds for the
+long-period variables only.
+
+Three per-star panels from the converged run, one per regime (all 19 are written
+to `<run_dir>/reports/figures_readable/` by `scripts/plot_star_panels.py`):
+
+| high-amplitude binary | pulsator, averaged flat | paper-constant |
+|---|---|---|
+| ![](figures/star_double_band_binary.png) | ![](figures/star_zz_ceti.png) | ![](figures/star_paper_constant.png) |
+
 This is a validation sample. The full **864-source** companion table is pending
 VizieR publication with the paper; the pipeline here scales to it by repointing
 `data/roster/jestin2026_roster.csv` and re-running the two scripts
@@ -113,6 +153,11 @@ configs/
 scripts/
   fetch_lightcurves.py          resumable IRSA cone-search fetch -> data/raw/lc_cache/
   build_panel.py                bin cached epochs -> data/raw/ztf_wd_panel.csv
+  plot_variance_census.py       panel-only variability census -> figures/
+  plot_star_panels.py           readable per-star panels from a run dir
+figures/
+  variance_census.png           nightly-vs-monthly scatter/error, all 19 stars
+  star_*.png                    three per-star panels, one per variability regime
 data/
   roster/jestin2026_roster.csv  the 20-row roster (19 with usable ZTF light
                                 curves) + _source_provenance/
