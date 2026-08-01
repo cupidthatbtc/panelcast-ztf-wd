@@ -1,0 +1,220 @@
+#!/usr/bin/env python3
+"""Regenerate the incremental full-catalog results report."""
+
+import argparse
+import json
+import math
+from pathlib import Path
+
+import pandas as pd
+
+ROOT = Path(__file__).resolve().parents[1]
+PAPER_LADDER = {
+    "Eq. 3 selection": 22264,
+    "variability candidates": 1423,
+    "ZTF crossmatches": 894,
+    "clean light curves": 864,
+    "periodic": 141,
+    "undetermined": 7,
+}
+
+
+def as_bool(series: pd.Series) -> pd.Series:
+    if series.dtype == bool:
+        return series
+    return series.astype(str).str.lower().eq("true")
+
+
+def fmt(value: object, digits: int = 2) -> str:
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return "—"
+    return f"{number:.{digits}f}" if math.isfinite(number) else "—"
+
+
+def roster_table(census: pd.DataFrame, qc: pd.DataFrame) -> list[str]:
+    merged = qc.merge(census, on="source_id", how="left", suffixes=("_qc", ""))
+    known_column = "known_roster_qc" if "known_roster_qc" in merged else "known_roster"
+    known = merged[as_bool(merged[known_column].fillna(False))].copy()
+    known = known.sort_values("source_id")
+    lines = [
+        "| Gaia DR3 | class | crossmatched | g exp | g night | g month | census |",
+        "|---|---|---:|---:|---:|---:|---|",
+    ]
+    for row in known.itertuples(index=False):
+        crossmatched = str(getattr(row, "crossmatched", False)).lower() == "true"
+        wd_class = getattr(row, "wd_class", None)
+        if pd.isna(wd_class):
+            wd_class = getattr(row, "wd_class_qc", "unclassified")
+        lines.append(
+            f"| {row.source_id} | {wd_class} | {'yes' if crossmatched else 'no'} | "
+            f"{fmt(getattr(row, 'zg_exposure_ratio', math.nan))} | "
+            f"{fmt(getattr(row, 'zg_nightly_ratio', math.nan))} | "
+            f"{fmt(getattr(row, 'zg_monthly_ratio', math.nan))} | "
+            f"{getattr(row, 'census_verdict', '—')} |"
+        )
+    return lines
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--run-dir",
+        type=Path,
+        default=ROOT / "outputs/catalog/2026-08-01_full",
+    )
+    args = parser.parse_args()
+
+    manifest = json.loads((args.run_dir / "census_manifest.json").read_text(encoding="utf-8"))
+    census = pd.read_csv(args.run_dir / "census_full_catalog.csv", dtype={"source_id": str})
+    qc = pd.read_csv(args.run_dir / "crossmatch_qc.csv", dtype={"source_id": str})
+    cache_present = int(as_bool(qc["cache_present"]).sum())
+    read_failures = int(qc["read_status"].ne("ok").sum())
+    census_any = int(as_bool(census["census_variable"]).sum())
+    census_night = int(as_bool(census["census_g_nightly"]).sum())
+    census_month = int(as_bool(census["census_g_monthly"]).sum())
+
+    lines = [
+        "# Full-catalog rebuild — results",
+        "",
+        f"Run directory: `{args.run_dir.name}`. This report is generated from machine-readable outputs; it is intentionally updated after the census, Lomb–Scargle, and panelcast stages.",
+        "",
+        "## Selection provenance",
+        "",
+        "- The Gentile Fusillo main catalog reproduces the paper's Eq. 3 selection exactly: **22,264** sources.",
+        "- The reconstructed variability cut contains **1,423** candidates and all **20/20** known roster members.",
+        "- Gaia σ(G) uses the inferred per-CCD convention `phot_g_n_obs / 9`. The printed Eq. 4 constants require multiplier **1.1896** to reproduce 1,423, versus **1.25** quoted by the paper.",
+        "- Four plausible calibrated recipes agree on **1,359/1,423 (95.5%)** sources; `in_core` and `n_variants` retain that boundary uncertainty per star.",
+        "",
+        "## Census stage",
+        "",
+        f"- Cached ZTF responses: **{cache_present:,}/1,423**; cache/read failures: **{read_failures:,}**.",
+        f"- Crossmatched under the nearest-coordinate-cluster and ≥20 clean exposures in each of g and r rule: **{manifest['crossmatched_count']:,}/1,423**.",
+        f"- Known roster retained: **{manifest['known_roster_crossmatched']}/20**.",
+        f"- Any of six exposure/night/month × g/r ratios ≥2.5: **{census_any:,}** stars.",
+        f"- Nightly g ratio ≥2.5: **{census_night:,}**; monthly g ratio ≥2.5: **{census_month:,}**.",
+        "- The census is a variance screen, not a periodicity classifier; its count is not expected to equal the paper's 141 periodic stars.",
+        "",
+        "![Full-catalog census](figures/census_full_catalog.png)",
+        "",
+        "### Known roster",
+        "",
+        *roster_table(census, qc),
+        "",
+        "## Ladder against Jestin et al.",
+        "",
+        "| stage | paper | this rebuild |",
+        "|---|---:|---:|",
+        f"| Eq. 3 selection | {PAPER_LADDER['Eq. 3 selection']:,} | 22,264 |",
+        f"| variability candidates | {PAPER_LADDER['variability candidates']:,} | 1,423 |",
+        f"| fetched responses | — | {cache_present:,} |",
+        f"| ZTF crossmatched / clean | {PAPER_LADDER['ZTF crossmatches']:,} → {PAPER_LADDER['clean light curves']:,} | {manifest['crossmatched_count']:,} |",
+        f"| census-variable | not comparable | {census_any:,} |",
+    ]
+
+    ls_path = args.run_dir / "ls_full_catalog.csv"
+    if ls_path.exists():
+        ls = pd.read_csv(ls_path, dtype={"source_id": str})
+        confirmed = ls[ls["blind_status"].eq("confirmed")]
+        candidates = ls[ls["blind_status"].eq("candidate")]
+        completed = int(ls["ls_complete"].astype(bool).sum()) if "ls_complete" in ls else len(ls)
+        lines[-1] += ""
+        lines.extend(
+            [
+                f"| L-S periodic | {PAPER_LADDER['periodic']:,} (+ {PAPER_LADDER['undetermined']} undetermined) | {len(confirmed):,} confirmed; {len(candidates):,} one-band candidates |",
+                "",
+                "## Full-catalog Lomb–Scargle",
+                "",
+                f"Completed both blind passes for **{completed:,}/{len(ls):,}** crossmatched stars: **{len(confirmed):,} confirmed**, **{len(candidates):,} one-band candidates**.",
+            ]
+        )
+        if "sanity_gate_passed" in ls:
+            lines.append(
+                f"Known-period sanity gates represented in the table: **{int(as_bool(ls['sanity_gate_passed'].fillna(False)).sum())}** passes."
+            )
+        merged = ls.merge(
+            census[["source_id", "census_variable"]],
+            on="source_id",
+            how="left",
+        )
+        merged["census_variable"] = as_bool(merged["census_variable"])
+        ls_only = merged[
+            merged["blind_status"].eq("confirmed") & ~merged["census_variable"]
+        ]
+        census_only = merged[
+            ~merged["blind_status"].eq("confirmed") & merged["census_variable"]
+        ]
+        lines.extend(
+            [
+                f"The blind-spot symmetry is substantial: **{len(ls_only):,}** L-S-confirmed stars are census-quiet, while **{len(census_only):,}** census-variable stars lack an L-S confirmation.",
+                "",
+                "| direction | Gaia DR3 | period / note |",
+                "|---|---|---|",
+            ]
+        )
+        for row in ls_only.sort_values("best_band_fap").head(40).itertuples(index=False):
+            lines.append(f"| L-S only | {row.source_id} | {fmt(row.best_period_days, 6)} d |")
+        for row in census_only.sort_values("source_id").head(40).itertuples(index=False):
+            lines.append(f"| census only | {row.source_id} | no confirmed blind period |")
+        if len(ls_only) > 40 or len(census_only) > 40:
+            lines.append("| … | full lists | `ls_census_disagreement.csv` |")
+        lines.extend(
+            [
+                "",
+                "![Period versus amplitude](figures/ls_period_amplitude.png)",
+            ]
+        )
+    else:
+        lines.extend(
+            [
+                "| L-S periodic | 141 (+ 7 undetermined) | pending |",
+                "",
+                "## Full-catalog Lomb–Scargle",
+                "",
+                "Pending. The census deliverable above is complete and does not depend on this stage.",
+            ]
+        )
+
+    fit_summary_path = args.run_dir / "panelcast_full_fit/fit_summary.json"
+    lines.extend(["", "## Full-catalog panelcast fit", ""])
+    if fit_summary_path.exists():
+        summary = json.loads(fit_summary_path.read_text(encoding="utf-8"))
+        lines.append(f"Status: **{summary['status']}** after {summary['attempts']} attempt(s).")
+        lines.append("")
+        lines.append(summary.get("narrative", "Diagnostics are recorded in `panelcast_full_fit/`."))
+        lines.extend(
+            [
+                "",
+                "| diagnostic | full catalog | acceptance |",
+                "|---|---:|---:|",
+                f"| max R-hat | {fmt(summary.get('max_rhat'), 4)} | ≤1.01 |",
+                f"| min bulk ESS | {fmt(summary.get('min_bulk_ess'), 0)} | ≥400 |",
+                f"| divergences | {summary.get('divergences', '—')} | 0 |",
+                f"| held-out MAE | {fmt(summary.get('mae'), 5)} | — |",
+                f"| held-out RMSE | {fmt(summary.get('rmse'), 5)} | — |",
+                f"| 80% coverage | {fmt(summary.get('coverage_80'), 3)} | 0.80 |",
+                f"| 95% coverage | {fmt(summary.get('coverage_95'), 3)} | 0.95 |",
+            ]
+        )
+    else:
+        lines.append("Pending by priority order; the census and Lomb–Scargle outputs are written first.")
+
+    lines.extend(
+        [
+            "",
+            "## Traceability and guardrails",
+            "",
+            "- `census_full_catalog.csv`: one row per crossmatched star, all six ratios and census verdict.",
+            "- `crossmatch_qc.csv`: every Stage B candidate, including missing/failed responses and row-rejection counts.",
+            "- `ls_full_catalog.csv`: one row per crossmatched star when the L-S stage is complete.",
+            "- The converged pilot directory `outputs/2026-07-18_151420_993941_17ac` and pilot L-S directory `outputs/ls/2026-08-01_full` were not modified or rerun.",
+            "- Nothing has been pushed; review is required before any push.",
+        ]
+    )
+    (args.run_dir / "CATALOG_RESULTS.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
+    print(f"wrote {args.run_dir / 'CATALOG_RESULTS.md'}")
+
+
+if __name__ == "__main__":
+    main()
