@@ -33,7 +33,7 @@ def run_stage(name: str, *arguments: str) -> None:
 
 def wait_for_fetch() -> None:
     write_state("fetch", "waiting", "for 1,423 terminal responses")
-    deadline = time.monotonic() + 36 * 60 * 60
+    deadline = time.monotonic() + 72 * 60 * 60
     last_count = -1
     while time.monotonic() < deadline:
         count = len(list((ROOT / "data/raw/catalog_lc_cache").glob("*.csv")))
@@ -62,7 +62,7 @@ def wait_for_fetch() -> None:
                     write_state("fetch", "complete")
                     return
         time.sleep(30)
-    raise TimeoutError("catalog fetch did not complete within 36 hours")
+    raise TimeoutError("catalog fetch did not complete within 72 hours")
 
 
 def validate_census_gate() -> None:
