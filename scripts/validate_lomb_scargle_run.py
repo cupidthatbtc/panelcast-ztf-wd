@@ -59,6 +59,7 @@ def main() -> None:
         "phase_fold_for_each_confirmed": len(list((args.run_dir / "figures/phase_folds").glob("*.png"))) == confirmed_count,
         "results_written": (args.run_dir / "RESULTS.md").exists(),
     }
+    checks = {name: bool(passed) for name, passed in checks.items()}
     failed = [name for name, passed in checks.items() if not passed]
     payload = {"checks": checks, "all_passed": not failed, "failed": failed}
     (args.run_dir / "acceptance.json").write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
