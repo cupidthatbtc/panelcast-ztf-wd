@@ -15,18 +15,26 @@ def load_attempt(path: Path) -> dict[str, object]:
     diagnostics = json.loads(
         (path / "evaluation/diagnostics.json").read_text(encoding="utf-8")
     )
-    metrics = json.loads((path / "evaluation/metrics.json").read_text(encoding="utf-8"))
-    split = metrics["splits"]["within_entity_temporal"]
-    coverages = split["calibration"]["coverages"]
+    metrics_path = path / "evaluation/metrics.json"
+    if metrics_path.exists():
+        metrics = json.loads(metrics_path.read_text(encoding="utf-8"))
+        split = metrics["splits"]["within_entity_temporal"]
+        coverages = split["calibration"]["coverages"]
+        mae = split["point_metrics"]["mae"]
+        rmse = split["point_metrics"]["rmse"]
+        coverage_80 = coverages["0.80"]["empirical"]
+        coverage_95 = coverages["0.95"]["empirical"]
+    else:
+        mae = rmse = coverage_80 = coverage_95 = None
     return {
         "path": path,
         "rhat": diagnostics["rhat_max"],
         "ess": diagnostics["ess_bulk_min"],
         "divergences": diagnostics["divergences"],
-        "mae": split["point_metrics"]["mae"],
-        "rmse": split["point_metrics"]["rmse"],
-        "coverage_80": coverages["0.80"]["empirical"],
-        "coverage_95": coverages["0.95"]["empirical"],
+        "mae": mae,
+        "rmse": rmse,
+        "coverage_80": coverage_80,
+        "coverage_95": coverage_95,
     }
 
 
@@ -68,7 +76,9 @@ def main() -> None:
         and float(final["ess"]) >= 400
         and int(final["divergences"]) == 0
     )
-    scalar_table(Path(final["path"]), args.fit_dir / "posterior_scalars_vs_pilot.csv")
+    coefficients = Path(final["path"]) / "reports/tables/coefficients.csv"
+    if coefficients.exists():
+        scalar_table(Path(final["path"]), args.fit_dir / "posterior_scalars_vs_pilot.csv")
     if converged:
         narrative = (
             "The final attempt met all prespecified diagnostics. Held-out metrics use the "
@@ -93,6 +103,14 @@ def main() -> None:
         "coverage_80": final["coverage_80"],
         "coverage_95": final["coverage_95"],
         "narrative": narrative,
+        "selection_provenance": {
+            "stage_a_eq3_count": 22264,
+            "stage_b_count": 1423,
+            "cross_variant_core": 1359,
+            "sigma_g_convention": "phot_g_n_obs / 9",
+            "stage_b_multiplier": 1.1896,
+            "paper_multiplier": 1.25,
+        },
         "acceptance": {
             "max_rhat": 1.01,
             "min_bulk_ess": 400,

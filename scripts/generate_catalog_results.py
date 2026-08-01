@@ -118,7 +118,7 @@ def main() -> None:
         ls = pd.read_csv(ls_path, dtype={"source_id": str})
         confirmed = ls[ls["blind_status"].eq("confirmed")]
         candidates = ls[ls["blind_status"].eq("candidate")]
-        completed = int(ls["ls_complete"].astype(bool).sum()) if "ls_complete" in ls else len(ls)
+        completed = int(as_bool(ls["ls_complete"]).sum()) if "ls_complete" in ls else len(ls)
         lines[-1] += ""
         lines.extend(
             [
@@ -129,9 +129,17 @@ def main() -> None:
                 f"Completed both blind passes for **{completed:,}/{len(ls):,}** crossmatched stars: **{len(confirmed):,} confirmed**, **{len(candidates):,} one-band candidates**.",
             ]
         )
-        if "sanity_gate_passed" in ls:
+        sanity_path = args.run_dir / "ls/sanity_gates.json"
+        if sanity_path.exists():
+            sanity = json.loads(sanity_path.read_text(encoding="utf-8"))
             lines.append(
-                f"Known-period sanity gates represented in the table: **{int(as_bool(ls['sanity_gate_passed'].fillna(False)).sum())}** passes."
+                f"Known-period sanity gates: **{sum(check['passed'] for check in sanity['checks'].values())}/4** passed before the batch."
+            )
+        if "bootstrap_fap" in ls:
+            bootstrapped = int(ls["bootstrap_fap"].notna().sum())
+            floor = 1.0 / 101.0
+            lines.append(
+                f"The strongest **{bootstrapped}** surviving candidates received 100-resample pass-wide bootstrap tests; values at {floor:.5f} are a finite resolution floor, not zero."
             )
         merged = ls.merge(
             census[["source_id", "census_variable"]],
@@ -190,13 +198,28 @@ def main() -> None:
                 "|---|---:|---:|",
                 f"| max R-hat | {fmt(summary.get('max_rhat'), 4)} | ≤1.01 |",
                 f"| min bulk ESS | {fmt(summary.get('min_bulk_ess'), 0)} | ≥400 |",
-                f"| divergences | {summary.get('divergences', '—')} | 0 |",
+                f"| divergences | {fmt(summary.get('divergences'), 0)} | 0 |",
                 f"| held-out MAE | {fmt(summary.get('mae'), 5)} | — |",
                 f"| held-out RMSE | {fmt(summary.get('rmse'), 5)} | — |",
                 f"| 80% coverage | {fmt(summary.get('coverage_80'), 3)} | 0.80 |",
                 f"| 95% coverage | {fmt(summary.get('coverage_95'), 3)} | 0.95 |",
             ]
         )
+        scalar_path = args.run_dir / "panelcast_full_fit/posterior_scalars_vs_pilot.csv"
+        if scalar_path.exists():
+            scalars = pd.read_csv(scalar_path)
+            lines.extend(
+                [
+                    "",
+                    "| posterior scalar | full catalog | 19-star pilot |",
+                    "|---|---:|---:|",
+                ]
+            )
+            for row in scalars.itertuples(index=False):
+                lines.append(
+                    f"| {row.parameter_key} | {fmt(getattr(row, 'Estimate_full'), 5)} | "
+                    f"{fmt(getattr(row, 'Estimate_pilot'), 5)} |"
+                )
     else:
         lines.append("Pending by priority order; the census and Lomb–Scargle outputs are written first.")
 

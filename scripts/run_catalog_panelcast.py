@@ -43,7 +43,23 @@ def diagnostics_pass(path: Path) -> bool:
     )
 
 
-def fit_command(target_accept: float, tag: str, timeout_seconds: int, run_dir: Path) -> str:
+def retry_settings(attempt_one: Path) -> tuple[float, str, str]:
+    diagnostics_path = attempt_one / "evaluation/diagnostics.json"
+    if not diagnostics_path.exists():
+        return 0.90, "median", "median initialization after an incomplete first attempt"
+    diagnostics = json.loads(diagnostics_path.read_text(encoding="utf-8"))
+    if int(diagnostics["divergences"]) > 0:
+        return 0.95, "uniform", "target_accept 0.95 for divergent transitions"
+    return 0.90, "median", "median initialization for R-hat/ESS failure without divergences"
+
+
+def fit_command(
+    target_accept: float,
+    init_strategy: str,
+    tag: str,
+    timeout_seconds: int,
+    run_dir: Path,
+) -> str:
     linux_repo = "/mnt/c/Users/jcwen/Projects/astro-wd"
     panel_path = f"{linux_repo}/outputs/catalog/{run_dir.name}/panelcast_zg_monthly.csv"
     command = (
@@ -56,6 +72,7 @@ def fit_command(target_accept: float, tag: str, timeout_seconds: int, run_dir: P
         "--no-artist --min-ratings 1 --max-albums 100 "
         "--num-chains 4 --num-samples 3000 --num-warmup 3000 "
         f"--target-accept {target_accept:.2f} "
+        f"--init-strategy {shlex.quote(init_strategy)} "
         f"--seed 42 --tag {shlex.quote(tag)} --allow-unlocked-env"
     )
     return command
@@ -69,6 +86,14 @@ def write_timebox_summary(fit_dir: Path, attempts: int, narrative: str) -> None:
         "min_bulk_ess": None,
         "divergences": None,
         "narrative": narrative,
+        "selection_provenance": {
+            "stage_a_eq3_count": 22264,
+            "stage_b_count": 1423,
+            "cross_variant_core": 1359,
+            "sigma_g_convention": "phot_g_n_obs / 9",
+            "stage_b_multiplier": 1.1896,
+            "paper_multiplier": 1.25,
+        },
         "acceptance": {
             "max_rhat": 1.01,
             "min_bulk_ess": 400,
@@ -96,7 +121,11 @@ def main() -> None:
     deadline = time.monotonic() + min(TIMEBOX_SECONDS, int(args.timebox_hours * 3600))
     attempts_completed = 0
 
-    for attempt, target_accept in ((1, 0.90), (2, 0.95)):
+    for attempt in (1, 2):
+        if attempt == 1:
+            target_accept, init_strategy, remedy = 0.90, "uniform", "pilot configuration"
+        else:
+            target_accept, init_strategy, remedy = retry_settings(fit_dir / "attempt_1")
         destination = fit_dir / f"attempt_{attempt}"
         if destination.exists() and (destination / "evaluation/diagnostics.json").exists():
             attempts_completed += 1
@@ -117,6 +146,7 @@ def main() -> None:
         before = current_runs()
         command = fit_command(
             target_accept,
+            init_strategy,
             f"catalog-rebuild-attempt-{attempt}",
             remaining,
             args.run_dir,
@@ -124,7 +154,7 @@ def main() -> None:
         log_path = fit_dir / f"attempt_{attempt}.log"
         print(
             f"[panelcast] attempt {attempt}; target_accept={target_accept:.2f}; "
-            f"remaining={remaining / 3600:.2f} h",
+            f"init={init_strategy}; remedy={remedy}; remaining={remaining / 3600:.2f} h",
             flush=True,
         )
         with log_path.open("w", encoding="utf-8") as log:
@@ -143,6 +173,8 @@ def main() -> None:
         failure = {
             "attempt": attempt,
             "target_accept": target_accept,
+            "init_strategy": init_strategy,
+            "remedy": remedy,
             "returncode": completed.returncode,
             "run_captured": new_run is not None,
             "diagnostics_present": (destination / "evaluation/diagnostics.json").exists(),

@@ -9,6 +9,9 @@ import pandas as pd
 
 ROOT = Path(__file__).resolve().parents[1]
 DESCRIPTOR_TEMPLATE = """# Rebuilt Jestin+2026 candidate catalog — monthly ZTF g photometry.
+# Stage A reproduces 22,264 exactly. Stage B has 1,423 candidates using the
+# inferred phot_g_n_obs / 9 convention and m=1.1896 (paper: 1.25); 1,359 are
+# shared by all four calibrated recipe variants. See catalog-rebuild/CATALOG_PLAN.md.
 name: ztf_wd_catalog_monthly
 
 raw_path_env: ZTF_WD_CATALOG_MONTHLY_PATH

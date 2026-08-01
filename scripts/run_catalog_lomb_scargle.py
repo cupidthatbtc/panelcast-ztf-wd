@@ -401,6 +401,14 @@ def main() -> None:
         "high_frequency_detrending": "per-night median subtracted",
         "low_frequency_detrending": "per-band weighted global mean subtracted",
         "spectral_window_power_threshold": 0.1,
+        "selection_provenance": {
+            "stage_a_eq3_count": 22264,
+            "stage_b_count": 1423,
+            "sigma_g_convention": "Gaia phot_g_n_obs / 9 per-CCD inference",
+            "stage_b_multiplier": 1.1896,
+            "paper_multiplier": 1.25,
+            "cross_variant_core": 1359,
+        },
         "failures": failures,
     }
     (ls_dir / "manifest.json").write_text(
