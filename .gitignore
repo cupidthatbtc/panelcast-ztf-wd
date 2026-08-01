@@ -9,6 +9,7 @@ models/
 
 # Local env / tooling
 .pixi/
+.venv/
 __pycache__/
 *.pyc
 .DS_Store

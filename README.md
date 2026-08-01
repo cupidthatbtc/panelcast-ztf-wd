@@ -19,40 +19,41 @@ panelcast's entity-event descriptor contract:
 - **`data/raw/ztf_wd_zg_monthly.csv`** — 1,147 rows, the same g-band series
   re-binned monthly (the descriptor-of-record for the converged fit below).
 
-The science framing is a **per-entity variance census** — the per-white-dwarf
-random-walk variance posterior versus Jestin's variable-vs-constant split — not
-pulsation-period recovery.
+The panelcast product remains a **per-entity variance census** — the
+per-white-dwarf random-walk variance posterior versus Jestin's
+variable-vs-constant split. A companion exposure-level Lomb–Scargle analysis now
+measures the periodic signals that the binned forecasting panel cannot carry;
+it complements the model rather than changing it.
 
 ## What the panel can carry — and what the binning removes
 
 Before any model runs, the panel itself decides which variability is
-recoverable. Scatter-to-error ratio per star, nightly against monthly
-(`python scripts/plot_variance_census.py`, reads the committed CSVs only):
+recoverable. The census now reports exposure-residual, nightly, and monthly
+scatter-to-error ratios in both bands (`python scripts/plot_variance_census.py`):
 
 ![Variability census of the 19-star panel](figures/variance_census.png)
 
-The compact pulsators pulse on **minutes-to-an-hour** periods — far below either
-bin width — so nightly binning averages them out and monthly binning finishes
-the job. At the monthly cadence that the converged fit actually uses, ZZ Ceti
-lands at sd/err **0.8** (its month-to-month scatter is smaller than its own error
-bar), and GW Vir, V777 Her and Old DAVs sit at 1.1–1.5, inside the range spanned
-by stars Jestin calls constant. One paper-constant unclassified star
-(`1410345596469085184`, sd/err 1.5) outranks three of the named pulsators.
+The compact pulsators pulse on **minutes-to-an-hour** periods. Nightly binning
+averages them down and monthly binning finishes the job. The exposure statistic
+is the scatter after subtracting each night's median; because the median ZTF
+night contains only one exposure, that subtraction also removes much of a
+minute-scale signal. It is a high-frequency excess diagnostic, not a substitute
+for a coherent periodogram.
 
-| regime | example | sd/err nightly | sd/err monthly |
-|---|---|---|---|
-| double-band binary | `4318508939464901760` | 23.6 | 16.4 |
-| WD-MS binary | `1191504471436192512` | 15.9 | 6.9 |
-| CV | `3750072904055666176` | 4.3 | 4.8 |
-| **pulsator** | ZZ Ceti | **1.5** | **0.8** |
-| **pulsator** | GW Vir | **1.5** | **1.1** |
-| paper-constant | `114808397128552576` | 1.0 | 0.4 |
+| regime | example | g exposure | g night | g month | r exposure | r night | r month |
+|---|---|---:|---:|---:|---:|---:|---:|
+| double-band binary | `4318508939464901760` | 11.0 | 23.6 | 16.4 | 11.9 | 19.1 | 15.2 |
+| WD-MS binary | `1191504471436192512` | 14.0 | 15.9 | 6.9 | 12.3 | 25.9 | 11.8 |
+| **pulsator** | ZZ Ceti | **0.5** | **1.5** | **0.8** | **1.2** | **1.4** | **0.8** |
+| **pulsator** | GW Vir | **0.7** | **1.5** | **1.1** | **0.9** | **1.2** | **0.6** |
+| paper-constant | `114808397128552576` | 0.7 | 1.0 | 0.4 | 1.0 | 1.0 | 0.6 |
 
-So the census separates **hours-to-days** variability (binaries, the CV, the
-transit) from constant cleanly, and is **structurally blind** to compact-pulsator
-variability. That is a property of the event axis, not of the model: recovering
-the pulsators means making the panel event the *exposure* rather than the night,
-which changes the entity-event contract. Read the variance posteriors with that
+The census separates **hours-to-days** variability (binaries, the CV, the
+transit) from constant cleanly and is structurally weak for compact pulsators.
+That is a property of the event axis, not of the model. A coherent
+exposure-level Lomb–Scargle search is deliberately a separate instrument: it can
+accumulate phase information across nights without changing panelcast's
+nightly/monthly forecasting contract. Read the variance posteriors with that
 scope in mind — "recovers the variable-vs-constant split" holds for the
 long-period variables only.
 
@@ -70,6 +71,25 @@ VizieR publication with the paper; the pipeline here scales to it by repointing
 descriptors are unchanged bar `target_bounds`.
 
 ## Reproduce
+
+The exposure-level analyses require the small scientific stack in
+`requirements-lomb-scargle.txt` (`python -m pip install -r requirements-lomb-scargle.txt`).
+Build the exposure panel first, then run the smoke test before any blind search:
+
+```text
+python scripts/build_exposure_panel.py
+python scripts/smoke_test_lomb_scargle.py
+python scripts/run_lomb_scargle.py --out-dir outputs/ls/<run>
+python scripts/revet_aliases.py --run-dir outputs/ls/<run>
+python scripts/extract_literature_periods.py
+python scripts/run_directed_search.py --blind-run outputs/ls/<run>
+python scripts/run_injection_recovery.py --run-dir outputs/ls/<run>
+python scripts/compute_attenuation.py --run-dir outputs/ls/<run>
+python scripts/run_bootstrap_fap.py --run-dir outputs/ls/<run>
+python scripts/plot_period_results.py --run-dir outputs/ls/<run>
+python scripts/generate_results.py --run-dir outputs/ls/<run>
+python scripts/validate_lomb_scargle_run.py --run-dir outputs/ls/<run>
+```
 
 The panelcast invocation that converges (run against a panelcast checkout with
 this repo's `configs/` and `data/` on the path):
@@ -153,14 +173,27 @@ configs/
 scripts/
   fetch_lightcurves.py          resumable IRSA cone-search fetch -> data/raw/lc_cache/
   build_panel.py                bin cached epochs -> data/raw/ztf_wd_panel.csv
-  plot_variance_census.py       panel-only variability census -> figures/
-  plot_star_panels.py           readable per-star panels from a run dir
+  build_exposure_panel.py       quality cuts + BJD_TDB exposure panel and QC tables
+  run_lomb_scargle.py           blind two-pass single/multiband LS + BLS control
+  revet_aliases.py              reproducible spectral-window/sidereal alias pass
+  extract_literature_periods.py sourced frequency table for directed/accuracy tests
+  run_directed_search.py        sourced tests at the four tabulated pulsator frequencies
+  run_injection_recovery.py     LS/night/month sensitivity grid
+  run_bootstrap_fap.py          pass-wide bootstrap maxima for surviving candidates
+  compute_attenuation.py        predicted-vs-observed nightly attenuation
+  plot_period_results.py        19 periodograms + confirmed phase folds
+  generate_results.py           all-star comparison tables and RESULTS.md
+  plot_variance_census.py       three-cadence, two-band census -> table + figure
+  plot_star_panels.py           readable per-star panels from a panelcast run
 figures/
-  variance_census.png           nightly-vs-monthly scatter/error, all 19 stars
-  star_*.png                    three per-star panels, one per variability regime
+  variance_census.png           exposure/night/month ratios in g+r, all 19 stars
+  star_*.png                    three per-star panelcast examples
 data/
   roster/jestin2026_roster.csv  the 20-row roster (19 with usable ZTF light
                                 curves) + _source_provenance/
+  roster/literature_periods.csv sourced directed-search/reference frequencies
+  raw/ztf_wd_exposures.csv      quality-filtered exposures with BJD_TDB
+  raw/variance_census.csv       three-cadence ratios in both bands
   raw/ztf_wd_panel.csv          nightly g+r panel (19,950 rows)
   raw/ztf_wd_zg.csv             nightly g-band slice (9,501 rows)
   raw/ztf_wd_zg_monthly.csv     monthly g-band slice (1,147 rows)
