@@ -138,6 +138,11 @@ def main() -> None:
             lines.append(
                 f"Known-period sanity gates: **{passed}/{sanity['available_checks']} available controls passed** before the batch; {unavailable} southern RR Lyrae control had zero IRSA rows within both 10 and 30 arcsec and is explicitly unavailable rather than counted as a failure."
             )
+        if "high_pass_available" in ls:
+            unavailable_high = int((~as_bool(ls["high_pass_available"])).sum())
+            lines.append(
+                f"The high-frequency residual pass is structurally unavailable for **{unavailable_high}** sparse stars with one exposure per night in both bands; their low-frequency result remains valid, and the missing high-pass A95 is labeled rather than reported as a zero limit."
+            )
         if "bootstrap_fap" in ls:
             bootstrapped = int(ls["bootstrap_fap"].notna().sum())
             floor = 1.0 / 101.0

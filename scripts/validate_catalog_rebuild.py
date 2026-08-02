@@ -70,6 +70,7 @@ def main() -> None:
     surviving = ls[ls["blind_status"].isin(["confirmed", "candidate"])]
     expected_bootstrap = min(30, len(surviving))
     scratch_power = list((args.run_dir / "ls/work").rglob("*.power.dat"))
+    error_records = list((args.run_dir / "ls/stars").glob("*.error.json"))
     unavailable_rr = qc[qc["source_id"].eq("6555925496084361344")].iloc[0]
     checks = {
         "stage_b_has_1423_unique_sources": len(roster) == 1423
@@ -113,6 +114,7 @@ def main() -> None:
         "bootstrap_top_candidates_complete": len(bootstrap) == expected_bootstrap
         and bootstrap["bootstrap_resamples"].ge(100).all(),
         "no_periodogram_scratch_files": not scratch_power,
+        "no_period_search_error_records": not error_records,
         "panelcast_attempt_policy_respected": 1 <= fit["attempts"] <= 2
         and fit["status"] in {"converged", "failed_diagnostics", "timebox_exceeded"},
         "panelcast_diagnostics_recorded": all(

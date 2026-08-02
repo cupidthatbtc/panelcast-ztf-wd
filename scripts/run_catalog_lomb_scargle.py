@@ -63,6 +63,39 @@ def close_memmaps(powers: dict[str, np.ndarray]) -> None:
     powers.clear()
 
 
+def unavailable_pass_result(
+    grid: object,
+    reason: str,
+    top_peaks: list[dict[str, object]] | None = None,
+) -> dict[str, object]:
+    return {
+        "status": "not_detected",
+        "basis": "",
+        "frequency_per_day": None,
+        "period_days": None,
+        "period_seconds": None,
+        "best_band_fap": 1.0,
+        "zg_power": 0.0,
+        "zr_power": 0.0,
+        "zg_fap": 1.0,
+        "zr_fap": 1.0,
+        "zg_amplitude_mmag": 0.0,
+        "zr_amplitude_mmag": 0.0,
+        "zg_alias": False,
+        "zr_alias": False,
+        "multiband_top5": False,
+        "zg_a95_mmag": None,
+        "zr_a95_mmag": None,
+        "grid_size": grid.size,
+        "grid_step_per_day": grid.step,
+        "multiband_zg_weight": None,
+        "multiband_zr_weight": None,
+        "top_peaks": top_peaks or [],
+        "available": False,
+        "unavailable_reason": reason,
+    }
+
+
 def analyze_star(
     source_id: str,
     shard_path: str,
@@ -90,6 +123,12 @@ def analyze_star(
                 band: prepare_series(star[star["band"] == band], high_frequency=high)
                 for band in ("zg", "zr")
             }
+            if high and all(np.ptp(series[band][1]) == 0 for band in ("zg", "zr")):
+                pass_results[pass_name] = unavailable_pass_result(
+                    grid,
+                    "no within-night variation after high-pass detrending",
+                )
+                continue
             paths = {
                 band: work_dir / f".{pass_name}_{band}.power.dat" for band in ("zg", "zr")
             }
@@ -133,6 +172,17 @@ def analyze_star(
                     grid,
                     series,
                 )
+                if not candidates:
+                    pass_results[pass_name] = unavailable_pass_result(
+                        grid,
+                        (
+                            "no within-night variation after high-pass detrending"
+                            if high
+                            else "no finite periodogram peaks"
+                        ),
+                        peak_rows,
+                    )
+                    continue
                 best = candidates[0]
                 pass_results[pass_name] = {
                     "status": best["status"],
@@ -157,6 +207,8 @@ def analyze_star(
                     "multiband_zg_weight": weights[0],
                     "multiband_zr_weight": weights[1],
                     "top_peaks": peak_rows,
+                    "available": True,
+                    "unavailable_reason": "",
                 }
             finally:
                 close_memmaps(powers)
@@ -164,7 +216,7 @@ def analyze_star(
                     path.unlink(missing_ok=True)
 
         result = {
-            "schema_version": 1,
+            "schema_version": 2,
             "source_id": source_id,
             "n_exp_zg": int((star["band"] == "zg").sum()),
             "n_exp_zr": int((star["band"] == "zr").sum()),
@@ -179,6 +231,7 @@ def analyze_star(
             encoding="utf-8",
         )
         temporary.replace(result_file)
+        result_file.with_suffix(".error.json").unlink(missing_ok=True)
         shutil.rmtree(work_dir, ignore_errors=True)
         return result
     except Exception:
@@ -225,6 +278,10 @@ def overall_result(result: dict[str, object]) -> dict[str, object]:
         "low_zr_a95_mmag": passes.get("low", {}).get("zr_a95_mmag"),
         "high_zg_a95_mmag": passes.get("high", {}).get("zg_a95_mmag"),
         "high_zr_a95_mmag": passes.get("high", {}).get("zr_a95_mmag"),
+        "low_pass_available": passes.get("low", {}).get("available", True),
+        "high_pass_available": passes.get("high", {}).get("available", True),
+        "low_unavailable_reason": passes.get("low", {}).get("unavailable_reason", ""),
+        "high_unavailable_reason": passes.get("high", {}).get("unavailable_reason", ""),
         "n_exp_zg": result["n_exp_zg"],
         "n_exp_zr": result["n_exp_zr"],
         "baseline_days": result["baseline_days"],
