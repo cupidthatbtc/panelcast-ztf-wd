@@ -47,12 +47,13 @@ def roster_table(census: pd.DataFrame, qc: pd.DataFrame) -> list[str]:
         wd_class = getattr(row, "wd_class", None)
         if pd.isna(wd_class):
             wd_class = getattr(row, "wd_class_qc", "unclassified")
+        verdict = getattr(row, "census_verdict", "—") if crossmatched else "unavailable"
         lines.append(
             f"| {row.source_id} | {wd_class} | {'yes' if crossmatched else 'no'} | "
             f"{fmt(getattr(row, 'zg_exposure_ratio', math.nan))} | "
             f"{fmt(getattr(row, 'zg_nightly_ratio', math.nan))} | "
             f"{fmt(getattr(row, 'zg_monthly_ratio', math.nan))} | "
-            f"{getattr(row, 'census_verdict', '—')} |"
+            f"{verdict} |"
         )
     return lines
 
@@ -132,8 +133,10 @@ def main() -> None:
         sanity_path = args.run_dir / "ls/sanity_gates.json"
         if sanity_path.exists():
             sanity = json.loads(sanity_path.read_text(encoding="utf-8"))
+            passed = sum(check["passed"] is True for check in sanity["checks"].values())
+            unavailable = sum(not check["available"] for check in sanity["checks"].values())
             lines.append(
-                f"Known-period sanity gates: **{sum(check['passed'] for check in sanity['checks'].values())}/4** passed before the batch."
+                f"Known-period sanity gates: **{passed}/{sanity['available_checks']} available controls passed** before the batch; {unavailable} southern RR Lyrae control had zero IRSA rows within both 10 and 30 arcsec and is explicitly unavailable rather than counted as a failure."
             )
         if "bootstrap_fap" in ls:
             bootstrapped = int(ls["bootstrap_fap"].notna().sum())

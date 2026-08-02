@@ -54,6 +54,9 @@ def main() -> None:
     )
     ls = pd.read_csv(args.run_dir / "ls_full_catalog.csv", dtype={"source_id": str})
     sanity = json.loads((args.run_dir / "ls/sanity_gates.json").read_text(encoding="utf-8"))
+    control_coverage = json.loads(
+        (args.run_dir / "control_coverage.json").read_text(encoding="utf-8")
+    )
     bootstrap = pd.read_csv(
         args.run_dir / "bootstrap_top_candidates.csv",
         dtype={"source_id": str},
@@ -67,6 +70,7 @@ def main() -> None:
     surviving = ls[ls["blind_status"].isin(["confirmed", "candidate"])]
     expected_bootstrap = min(30, len(surviving))
     scratch_power = list((args.run_dir / "ls/work").rglob("*.power.dat"))
+    unavailable_rr = qc[qc["source_id"].eq("6555925496084361344")].iloc[0]
     checks = {
         "stage_b_has_1423_unique_sources": len(roster) == 1423
         and roster["source_id"].nunique() == 1423,
@@ -79,7 +83,13 @@ def main() -> None:
         "crossmatch_count_matches_manifest": int(crossmatched.sum())
         == census_manifest["crossmatched_count"],
         "crossmatch_neighborhood_is_plausible": 800 <= int(crossmatched.sum()) <= 1000,
-        "known_roster_crossmatched": int((known & crossmatched).sum()) == 20,
+        "known_roster_crossmatch_complete_or_documented": (
+            int((known & crossmatched).sum()) == 19
+            and int(unavailable_rr["raw_rows"]) == 0
+            and str(unavailable_rr["crossmatched"]).lower() != "true"
+            and control_coverage["verdict"] == "unavailable_no_ztf_rows"
+            and [check["rows"] for check in control_coverage["checks"]] == [0, 0]
+        ),
         "census_one_row_per_crossmatch": len(census) == int(crossmatched.sum())
         and census["source_id"].nunique() == len(census),
         "all_six_census_ratios_finite": np.isfinite(census[RATIO_COLUMNS].to_numpy()).all(),
@@ -92,8 +102,14 @@ def main() -> None:
             "candidate",
             "not_detected",
         },
-        "four_sanity_gates_passed": sanity["all_passed"]
-        and set(sanity["checks"]) == SANITY_IDS,
+        "available_sanity_gates_passed_and_missing_documented": (
+            sanity["all_available_passed"]
+            and sanity["available_checks"] == 3
+            and sanity["unavailable_checks"] == 1
+            and set(sanity["checks"]) == SANITY_IDS
+            and sanity["checks"]["6555925496084361344"]["status"]
+            == "unavailable_no_ztf_rows"
+        ),
         "bootstrap_top_candidates_complete": len(bootstrap) == expected_bootstrap
         and bootstrap["bootstrap_resamples"].ge(100).all(),
         "no_periodogram_scratch_files": not scratch_power,

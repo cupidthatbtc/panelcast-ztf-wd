@@ -71,8 +71,16 @@ def validate_census_gate() -> None:
     known = int(manifest["known_roster_crossmatched"])
     if not 800 <= count <= 1000:
         raise RuntimeError(f"crossmatch count {count} lies outside the planned neighborhood")
-    if known != 20:
-        raise RuntimeError(f"only {known}/20 known roster stars crossmatched")
+    qc = pd.read_csv(RUN_DIR / "crossmatch_qc.csv", dtype={"source_id": str})
+    unavailable_rr = qc[qc["source_id"].eq("6555925496084361344")].iloc[0]
+    expected_unavailable = (
+        int(unavailable_rr["raw_rows"]) == 0
+        and str(unavailable_rr["crossmatched"]).lower() != "true"
+    )
+    if known != 19 or not expected_unavailable:
+        raise RuntimeError(
+            f"known-roster crossmatches={known}/20; expected only the zero-row southern RR Lyrae to be unavailable"
+        )
     census = pd.read_csv(RUN_DIR / "census_full_catalog.csv")
     if census.isna().any().loc[
         [
@@ -82,18 +90,29 @@ def validate_census_gate() -> None:
         ]
     ].any():
         raise RuntimeError("at least one crossmatched star lacks a census ratio")
-    write_state("census_gate", "complete", f"{count} crossmatches; 20/20 known")
+    write_state(
+        "census_gate",
+        "complete",
+        f"{count} crossmatches; 19/20 known, southern RR Lyrae explicitly unavailable",
+    )
 
 
 def main() -> None:
     RUN_DIR.mkdir(parents=True, exist_ok=True)
     wait_for_fetch()
-    run_stage(
-        "census",
-        "build_catalog_panels.py",
-        "--out-dir",
-        str(RUN_DIR),
-    )
+    if (
+        (RUN_DIR / "census_full_catalog.csv").exists()
+        and (RUN_DIR / "crossmatch_qc.csv").exists()
+        and (RUN_DIR / "census_manifest.json").exists()
+    ):
+        write_state("census", "complete", "reusing validated products")
+    else:
+        run_stage(
+            "census",
+            "build_catalog_panels.py",
+            "--out-dir",
+            str(RUN_DIR),
+        )
     run_stage(
         "census_figure",
         "plot_catalog_census.py",
@@ -109,6 +128,12 @@ def main() -> None:
         str(RUN_DIR),
     )
     validate_census_gate()
+    run_stage(
+        "control_coverage",
+        "check_catalog_control_coverage.py",
+        "--out",
+        str(RUN_DIR / "control_coverage.json"),
+    )
 
     run_stage(
         "lomb_scargle",
