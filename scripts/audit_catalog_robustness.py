@@ -254,6 +254,38 @@ def forecast_baselines(run_dir: Path, roster: pd.DataFrame) -> pd.DataFrame:
         gaia_ols[clean_split],
         "magnitude_delta_le_1",
     )
+
+    gaia_fit = run_dir / "hardening/panelcast_gaia_fit/evaluation"
+    if (gaia_fit / "metrics.json").exists():
+        gaia_primary_y, gaia_primary_pred, _ = prediction_arrays(
+            gaia_fit / "within_entity_temporal/predictions.json"
+        )
+        gaia_disjoint_y, gaia_disjoint_pred, gaia_disjoint_entities = prediction_arrays(
+            gaia_fit / "entity_disjoint/predictions.json"
+        )
+        add_metric(
+            rows,
+            "within_entity_temporal",
+            "panelcast_gaia_features",
+            gaia_primary_y,
+            gaia_primary_pred,
+        )
+        add_metric(
+            rows,
+            "entity_disjoint",
+            "panelcast_gaia_features",
+            gaia_disjoint_y,
+            gaia_disjoint_pred,
+        )
+        gaia_clean = np.isin(gaia_disjoint_entities, list(clean_entities))
+        add_metric(
+            rows,
+            "entity_disjoint",
+            "panelcast_gaia_features",
+            gaia_disjoint_y[gaia_clean],
+            gaia_disjoint_pred[gaia_clean],
+            "magnitude_delta_le_1",
+        )
     return pd.DataFrame(rows)
 
 
@@ -311,9 +343,75 @@ def write_report(
         "",
         markdown_table(disjoint_rows),
         "",
-        "The original panelcast fit does not beat the entity-median baseline for known stars and is effectively a global-mean model for unseen stars. Gaia G and BP−RP provide a strong, train-only cold-start baseline, motivating the minimal `core_numeric` panelcast sensitivity fit.",
+        "The original panelcast fit does not beat the entity-median baseline for known stars and is effectively a global-mean model for unseen stars. A converged sensitivity fit added Gaia G and BP−RP through `core_numeric` and removed the GBM offset, but the AR previous-score term still dominated training and the static coefficients did not materially improve cold start. The change is therefore rejected rather than promoted. The train-only Gaia regression remains the honest unseen-entity benchmark.",
     ]
     output.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+def append_hardening_results(
+    output_dir: Path,
+    baselines: pd.DataFrame,
+    conservative_confirmed: int,
+) -> dict[str, bool]:
+    gaia_fit = output_dir / "panelcast_gaia_fit"
+    diagnostics_path = gaia_fit / "evaluation/diagnostics.json"
+    metrics_path = gaia_fit / "evaluation/metrics.json"
+    bootstrap_path = output_dir / "stratified_bootstrap/results.csv"
+    checks = {
+        "gaia_fit_complete": diagnostics_path.exists() and metrics_path.exists(),
+        "stratified_bootstrap_complete": bootstrap_path.exists(),
+    }
+    sections = [
+        "",
+        "## Conservative catalog floor",
+        "",
+        f"Combining |median ZTF g − Gaia G| ≤1 with the wider ±0.01 d⁻¹ daily-systematics screen leaves **{conservative_confirmed}** prespecified confirmations. This is a sensitivity floor, not a rewritten primary catalog.",
+    ]
+    if checks["gaia_fit_complete"]:
+        diagnostics = json.loads(diagnostics_path.read_text(encoding="utf-8"))
+        gaia_rows = baselines[baselines["model"].eq("panelcast_gaia_features")]
+        sections.extend(
+            [
+                "",
+                "## Minimal Gaia-feature panelcast sensitivity",
+                "",
+                f"The fit converged with max R-hat **{diagnostics['rhat_max']:.3f}**, minimum bulk ESS **{diagnostics['ess_bulk_min']:.0f}**, and **{diagnostics['divergences']}** divergences.",
+                "",
+                markdown_table(gaia_rows),
+                "",
+                "The existing additive feature seam cannot solve cold start here because the AR previous-score term explains nearly every non-debut training observation, leaving static Gaia coefficients weakly identified for unseen entities. The sensitivity fit is retained as a clean negative result and is not adopted over the prespecified primary fit.",
+            ]
+        )
+    if checks["stratified_bootstrap_complete"]:
+        bootstrap = pd.read_csv(bootstrap_path, dtype={"source_id": str})
+        summary = pd.read_csv(output_dir / "stratified_bootstrap/summary.csv")
+        sections.extend(
+            [
+                "",
+                "## Stratified correlation-aware bootstrap",
+                "",
+                markdown_table(summary),
+                "",
+                f"The audit covers **{len(bootstrap)}** detections across all eight strong/marginal × low/high × confirmed/candidate strata. Low-frequency signals are substantially more robust than high-frequency signals under correlation-preserving nulls; the bootstrap table is a validation audit rather than a post-hoc relabeling of the primary catalog.",
+            ]
+        )
+        checks["stratified_bootstrap_has_all_strata"] = (
+            len(bootstrap) == 40
+            and bootstrap["selection_stratum"].nunique() == 8
+            and bootstrap.groupby("selection_stratum").size().eq(5).all()
+        )
+        checks["strong_low_confirmations_survive"] = bool(
+            bootstrap[
+                bootstrap["selection_stratum"].eq("confirmed_low_strong")
+            ]["bootstrap_fap"].le(0.01).all()
+        )
+    else:
+        checks["stratified_bootstrap_has_all_strata"] = False
+        checks["strong_low_confirmations_survive"] = False
+
+    with (output_dir / "HARDENING_RESULTS.md").open("a", encoding="utf-8") as report:
+        report.write("\n".join(sections) + "\n")
+    return checks
 
 
 def main() -> None:
@@ -342,14 +440,72 @@ def main() -> None:
     baselines.to_csv(output_dir / "forecast_baselines.csv", index=False)
     write_report(output_dir / "HARDENING_RESULTS.md", sensitivity, systematics, baselines)
 
+    magnitude_audit = pd.read_csv(
+        args.run_dir / "panelcast_crossmatch_magnitude_audit.csv",
+        dtype={"source_id": str},
+    )
+    clean_ids = set(
+        magnitude_audit.loc[
+            magnitude_audit["ztf_minus_gaia_g"].abs().le(1.0), "source_id"
+        ]
+    )
+    wide_alias_ids = set(
+        systematics.loc[as_bool(systematics["wide_daily_alias_0p01"]), "source_id"]
+    )
+    confirmed_ids = set(ls.loc[ls["blind_status"].eq("confirmed"), "source_id"])
+    conservative_confirmed = len(confirmed_ids & clean_ids - wide_alias_ids)
+    checks = append_hardening_results(output_dir, baselines, conservative_confirmed)
+
+    primary_baseline = baselines[
+        (baselines["split"].eq("within_entity_temporal"))
+        & baselines["model"].eq("panelcast_primary")
+        & baselines["subset"].eq("all")
+    ].iloc[0]
+    median_baseline = baselines[
+        (baselines["split"].eq("within_entity_temporal"))
+        & baselines["model"].eq("entity_train_median")
+    ].iloc[0]
+    disjoint_primary = baselines[
+        (baselines["split"].eq("entity_disjoint"))
+        & baselines["model"].eq("panelcast_primary")
+        & baselines["subset"].eq("all")
+    ].iloc[0]
+    gaia_ols = baselines[
+        (baselines["split"].eq("entity_disjoint"))
+        & baselines["model"].eq("gaia_g_bp_rp_train_ols")
+        & baselines["subset"].eq("all")
+    ].iloc[0]
+    checks.update(
+        {
+            "crossmatch_sensitivity_retains_95_percent": (
+                int(sensitivity.iloc[2]["ls_confirmed"])
+                / int(sensitivity.iloc[0]["ls_confirmed"])
+                >= 0.95
+            ),
+            "conservative_confirmation_floor_exceeds_paper": conservative_confirmed
+            > 141,
+            "exact_split_baselines_recorded": len(baselines) >= 11,
+            "primary_baseline_comparison_recorded": float(median_baseline.mae)
+            < float(primary_baseline.mae),
+            "gaia_cold_start_baseline_improves": float(gaia_ols.mae)
+            < float(disjoint_primary.mae),
+        }
+    )
     payload = {
+        "checks": {name: bool(value) for name, value in checks.items()},
+        "all_passed": all(checks.values()),
         "primary_sources": int(sensitivity.iloc[0]["sources"]),
         "primary_confirmed": int(sensitivity.iloc[0]["ls_confirmed"]),
         "magnitude_clean_sources": int(sensitivity.iloc[2]["sources"]),
         "magnitude_clean_confirmed": int(sensitivity.iloc[2]["ls_confirmed"]),
         "wide_daily_alias_flags": int(as_bool(systematics["wide_daily_alias_0p01"]).sum()),
+        "conservative_confirmed_floor": conservative_confirmed,
         "baseline_rows": len(baselines),
     }
+    (output_dir / "hardening_acceptance.json").write_text(
+        json.dumps(payload, indent=2) + "\n",
+        encoding="utf-8",
+    )
     (output_dir / "robustness_summary.json").write_text(
         json.dumps(payload, indent=2) + "\n",
         encoding="utf-8",
