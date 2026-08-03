@@ -85,8 +85,12 @@ def main() -> None:
         ROOT / "data/roster/jestin2026_rebuilt_candidates.csv",
         dtype={"source_id": str},
     )
+    qc = pd.read_csv(
+        args.run_dir / "crossmatch_qc.csv",
+        dtype={"source_id": str},
+    )
     panel = monthly[monthly["band"].eq("zg")].merge(
-        roster[["source_id", "wd_class"]],
+        roster[["source_id", "wd_class", "gaia_g_mag"]],
         on="source_id",
         how="left",
         validate="many_to_one",
@@ -94,6 +98,26 @@ def main() -> None:
     event_counts = panel.groupby("source_id")["month_id"].nunique()
     keep = set(event_counts[event_counts >= 2].index)
     panel = panel[panel["source_id"].isin(keep)].copy()
+    audit = (
+        panel.groupby("source_id", as_index=False)
+        .agg(
+            gaia_g_mag=("gaia_g_mag", "first"),
+            ztf_g_median=("mag_binned", "median"),
+            ztf_g_min=("mag_binned", "min"),
+            ztf_g_max=("mag_binned", "max"),
+            monthly_events=("month_id", "size"),
+        )
+        .merge(
+            qc[["source_id", "nearest_separation_arcsec"]],
+            on="source_id",
+            how="left",
+            validate="one_to_one",
+        )
+    )
+    audit["ztf_minus_gaia_g"] = audit["ztf_g_median"] - audit["gaia_g_mag"]
+    audit["magnitude_mismatch_flag"] = audit["ztf_minus_gaia_g"].abs().gt(1.0)
+    audit.to_csv(args.run_dir / "panelcast_crossmatch_magnitude_audit.csv", index=False)
+
     panel["source_id"] = "GaiaDR3_" + panel["source_id"]
     panel["month_date"] = pd.to_datetime(panel["month_date"]).dt.strftime("%Y-%m-%d")
     columns = [
@@ -119,6 +143,10 @@ def main() -> None:
     )
     print(
         f"wrote {output} ({len(panel):,} events; {panel['source_id'].nunique():,} entities)"
+    )
+    print(
+        f"wrote {args.run_dir / 'panelcast_crossmatch_magnitude_audit.csv'} "
+        f"({int(audit['magnitude_mismatch_flag'].sum())} sources differ from Gaia G by >1 mag)"
     )
     print(f"wrote {args.descriptor} (target bounds {lower:.1f}..{upper:.1f})")
 

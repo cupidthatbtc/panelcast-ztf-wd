@@ -194,6 +194,14 @@ def main() -> None:
 
     fit_summary_path = args.run_dir / "panelcast_full_fit/fit_summary.json"
     lines.extend(["", "## Full-catalog panelcast fit", ""])
+    magnitude_audit_path = args.run_dir / "panelcast_crossmatch_magnitude_audit.csv"
+    if magnitude_audit_path.exists():
+        magnitude_audit = pd.read_csv(magnitude_audit_path, dtype={"source_id": str})
+        mismatch_count = int(as_bool(magnitude_audit["magnitude_mismatch_flag"]).sum())
+        lines.append(
+            f"The nearest-coordinate crossmatch leaves **{mismatch_count}/928** sources whose median ZTF g differs from Gaia G by more than 1 mag. They are retained because the prespecified simplified hygiene rule contains no magnitude cut; `panelcast_crossmatch_magnitude_audit.csv` makes the sensitivity concern explicit."
+        )
+        lines.append("")
     if fit_summary_path.exists():
         summary = json.loads(fit_summary_path.read_text(encoding="utf-8"))
         lines.append(f"Status: **{summary['status']}** after {summary['attempts']} attempt(s).")
@@ -239,6 +247,7 @@ def main() -> None:
             "- `census_full_catalog.csv`: one row per crossmatched star, all six ratios and census verdict.",
             "- `crossmatch_qc.csv`: every Stage B candidate, including missing/failed responses and row-rejection counts.",
             "- `ls_full_catalog.csv`: one row per crossmatched star when the L-S stage is complete.",
+            "- `panelcast_crossmatch_magnitude_audit.csv`: Gaia-versus-ZTF median-magnitude audit for every retained crossmatch.",
             "- The converged pilot directory `outputs/2026-07-18_151420_993941_17ac` and pilot L-S directory `outputs/ls/2026-08-01_full` were not modified or rerun.",
             "- Nothing has been pushed; review is required before any push.",
         ]

@@ -64,6 +64,10 @@ def main() -> None:
     fit = json.loads(
         (args.run_dir / "panelcast_full_fit/fit_summary.json").read_text(encoding="utf-8")
     )
+    magnitude_audit = pd.read_csv(
+        args.run_dir / "panelcast_crossmatch_magnitude_audit.csv",
+        dtype={"source_id": str},
+    )
 
     crossmatched = as_bool(qc["crossmatched"].fillna(False))
     known = as_bool(qc["known_roster"])
@@ -115,6 +119,11 @@ def main() -> None:
         and bootstrap["bootstrap_resamples"].ge(100).all(),
         "no_periodogram_scratch_files": not scratch_power,
         "no_period_search_error_records": not error_records,
+        "panelcast_magnitude_mismatch_audit_complete": (
+            len(magnitude_audit) == int(crossmatched.sum())
+            and magnitude_audit["source_id"].nunique() == len(magnitude_audit)
+            and int(as_bool(magnitude_audit["magnitude_mismatch_flag"]).sum()) == 20
+        ),
         "panelcast_attempt_policy_respected": 1 <= fit["attempts"] <= 2
         and fit["status"] in {"converged", "failed_diagnostics", "timebox_exceeded"},
         "panelcast_diagnostics_recorded": all(

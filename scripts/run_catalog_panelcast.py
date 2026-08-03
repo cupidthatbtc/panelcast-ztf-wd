@@ -15,11 +15,16 @@ TIMEBOX_SECONDS = 12 * 60 * 60
 
 
 def current_runs() -> set[Path]:
-    return {
-        path.resolve()
-        for path in (ROOT / "outputs").iterdir()
-        if path.is_dir() and path.name != "catalog"
-    }
+    runs = set()
+    for path in (ROOT / "outputs").iterdir():
+        if path.name == "catalog":
+            continue
+        try:
+            if path.is_dir():
+                runs.add(path.resolve())
+        except OSError:
+            continue
+    return runs
 
 
 def locate_new_run(before: set[Path]) -> Path | None:
