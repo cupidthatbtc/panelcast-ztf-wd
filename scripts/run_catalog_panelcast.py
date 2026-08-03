@@ -67,17 +67,25 @@ def fit_command(
 ) -> str:
     linux_repo = "/mnt/c/Users/jcwen/Projects/astro-wd"
     panel_path = f"{linux_repo}/outputs/catalog/{run_dir.name}/panelcast_zg_monthly.csv"
+    retry_config = ""
+    if init_strategy != "uniform":
+        retry_path = (
+            f"{linux_repo}/outputs/catalog/{run_dir.name}/"
+            "panelcast_full_fit/retry_init.yaml"
+        )
+        retry_config = f"--config {shlex.quote(retry_path)} "
     command = (
         f"cd {shlex.quote(linux_repo)} && "
         f"export ZTF_WD_CATALOG_MONTHLY_PATH={shlex.quote(panel_path)} && "
+        "export COLUMNS=180 TERM=dumb NO_COLOR=1 && "
         f"timeout --signal=TERM --kill-after=60s {timeout_seconds}s "
         "~/aoty-gpu/bin/panelcast run "
         "--dataset configs/datasets/ztf_wd_catalog_monthly.yaml "
         "--config configs/wd_fit.yaml "
+        f"{retry_config}"
         "--no-artist --min-ratings 1 --max-albums 100 "
         "--num-chains 4 --num-samples 3000 --num-warmup 3000 "
         f"--target-accept {target_accept:.2f} "
-        f"--init-strategy {shlex.quote(init_strategy)} "
         f"--seed 42 --tag {shlex.quote(tag)} --allow-unlocked-env"
     )
     return command
@@ -148,6 +156,11 @@ def main() -> None:
             print("panelcast timebox expired", flush=True)
             return
 
+        if init_strategy != "uniform":
+            (fit_dir / "retry_init.yaml").write_text(
+                f"init_strategy: {init_strategy}\n",
+                encoding="utf-8",
+            )
         before = current_runs()
         command = fit_command(
             target_accept,
