@@ -25,6 +25,30 @@ variable-vs-constant split. A companion exposure-level Lomb–Scargle analysis n
 measures the periodic signals that the binned forecasting panel cannot carry;
 it complements the model rather than changing it.
 
+## Full-catalog reconstruction
+
+`catalog-rebuild/` reconstructs the paper's candidate selection without waiting
+for the companion VizieR table. The exact Eq. 3 cut yields **22,264** Gaia
+sources; the calibrated variability boundary yields **1,423** candidates, with
+**1,359** shared by all four plausible recipe variants. The Stage C run at
+`outputs/catalog/2026-08-01_full/` then produced:
+
+- **1,423/1,423** terminal IRSA responses under serial 10-arcsec cone searches;
+- **928** nearest-source crossmatches with at least 20 clean g and r exposures;
+- **203** stars above the 2.5 variance threshold at one or more of six
+  exposure/night/month × g/r census combinations;
+- **342** two-band/multiband Lomb–Scargle confirmations, **76** one-band
+  candidates, and **510** non-detections;
+- a converged 928-entity monthly-g panelcast fit (R-hat 1.000, minimum bulk ESS
+  3,459, zero divergences).
+
+The primary within-entity holdout is accurate and calibrated (MAE 0.0242 mag,
+R² 0.9984, 80%/95% coverage 0.787/0.928). The optional entity-disjoint
+cold-start split fails (MAE 0.634 mag, R² -0.005, coverage 0.058/0.104), so the
+model is validated for forecasting later observations of known white dwarfs,
+not for unseen entities. Full provenance, disagreements, and caveats are in
+`outputs/catalog/2026-08-01_full/CATALOG_RESULTS.md`.
+
 ## What the panel can carry — and what the binning removes
 
 Before any model runs, the panel itself decides which variability is
@@ -64,11 +88,13 @@ to `<run_dir>/reports/figures_readable/` by `scripts/plot_star_panels.py`):
 |---|---|---|
 | ![](figures/star_double_band_binary.png) | ![](figures/star_zz_ceti.png) | ![](figures/star_paper_constant.png) |
 
-This is a validation sample. The full **864-source** companion table is pending
-VizieR publication with the paper; the pipeline here scales to it by repointing
-`data/roster/jestin2026_roster.csv` and re-running the two scripts
-(`scripts/fetch_lightcurves.py`, then `scripts/build_panel.py`) — the dataset
-descriptors are unchanged bar `target_bounds`.
+The 19-star panel remains the human-readable validation sample. The full-catalog
+run reconstructs the selection directly and keeps the 19 available pilot stars
+as controls. One southern RR Lyrae has no IRSA rows within either 10 or 30
+arcsec and is recorded as unavailable rather than silently dropped. The full
+crossmatch also includes a machine-readable Gaia-versus-ZTF magnitude audit;
+20/928 nearest-coordinate matches differ by more than 1 mag and remain included
+because the prespecified simplified hygiene rule did not add a magnitude cut.
 
 ## Reproduce
 
@@ -89,6 +115,16 @@ python scripts/run_bootstrap_fap.py --run-dir outputs/ls/<run>
 python scripts/plot_period_results.py --run-dir outputs/ls/<run>
 python scripts/generate_results.py --run-dir outputs/ls/<run>
 python scripts/validate_lomb_scargle_run.py --run-dir outputs/ls/<run>
+```
+
+The reconstructed full catalog is driven in census → Lomb–Scargle → panelcast
+order and resumes the fetch, per-star period search, bootstrap, and panelcast
+attempts from their machine-readable products:
+
+```text
+python scripts/build_catalog_roster.py
+python scripts/run_catalog_pipeline.py
+python scripts/validate_catalog_rebuild.py --run-dir outputs/catalog/2026-08-01_full
 ```
 
 The panelcast invocation that converges (run against a panelcast checkout with
@@ -136,16 +172,18 @@ the pooling term removed it and improved mixing at the same time.
 as of panelcast **v0.13.0**, but is pinned **OFF** here in `configs/wd_fit.yaml`.
 At N=19 near-constant series it is unidentifiable against the shared `sigma_obs`
 / `sigma_artist` terms — chains simply reallocate variance between them. This is
-expected to **reverse at the 864-star roster**, where cross-entity pooling can
-identify a per-entity noise scale. The pin follows the external-domain
-run-config pattern from the panelcast v0.13.0 release notes.
+not tested here: the 928-entity catalog run deliberately retained the pilot's
+identifiability pin so that its posterior lineage stayed comparable. The pin
+follows the external-domain run-config pattern from the panelcast v0.13.0
+release notes.
 
 `entity_group_pooling` (partial pooling across `wd_class`) is likewise pinned
 **OFF**. With only a handful of classes over 19 stars, the between-class
 variance is data-starved and its posterior develops the classic hierarchical
 funnel — the source of the final 2 divergences on the ladder. Removing it
-raised bulk ESS from 1,197 to 1,711 at the same `target-accept`. Also expected
-to be revisited at 864 stars, where the class populations carry real weight.
+raised bulk ESS from 1,197 to 1,711 at the same `target-accept`. The 928-entity
+catalog run retained the pin for comparability; it converged cleanly but does
+not answer whether class pooling is identifiable at that scale.
 
 ## Porting gotchas
 
@@ -166,11 +204,18 @@ Found while adapting an album-ratings pipeline to photometry:
 
 ```
 configs/
-  datasets/ztf_wd.yaml          nightly g-band descriptor
-  datasets/ztf_wd_monthly.yaml  monthly g-band descriptor (converged fit)
-  wd_fit.yaml                   run-config pins (heteroscedastic_entity_obs: false,
-                                entity_group_pooling: false)
+  datasets/ztf_wd.yaml                  nightly g-band descriptor
+  datasets/ztf_wd_monthly.yaml          monthly g-band descriptor (19-star fit)
+  datasets/ztf_wd_catalog_monthly.yaml  full-catalog monthly descriptor
+  wd_fit.yaml                           run-config pins (heteroscedastic_entity_obs: false,
+                                        entity_group_pooling: false)
+catalog-rebuild/
+  CATALOG_PLAN.md                       prespecified reconstruction and Stage C plan
+  stageA_eq3_cut.csv                    exact 22,264-source Eq. 3 selection
+  stageB_variable_candidates.csv        reconstructed 1,423-source candidate set
 scripts/
+  run_catalog_pipeline.py       resumable census -> L-S -> panelcast driver
+  validate_catalog_rebuild.py   final machine-readable acceptance gate
   fetch_lightcurves.py          resumable IRSA cone-search fetch -> data/raw/lc_cache/
   build_panel.py                bin cached epochs -> data/raw/ztf_wd_panel.csv
   build_exposure_panel.py       quality cuts + BJD_TDB exposure panel and QC tables
@@ -214,9 +259,11 @@ plus a panelcast run regenerate them.
 - **panelcast** — https://github.com/cupidthatbtc/panelcast, the model and
   descriptor contract.
 
-The roster in this repo is the paper's **published 11-row excerpt table plus its
-individually-named stars only** — it is **not** the full 864-source catalog,
-which publishes separately to VizieR.
+The repo retains the paper's named-source roster as a 20-object control set and
+also carries the independently reconstructed 1,423-candidate selection under
+`catalog-rebuild/`. The reconstruction is not a claim to be the paper's future
+VizieR table: its inferred Eq. 4 convention and four-variant 1,359-source core
+are preserved explicitly so selection-boundary uncertainty remains auditable.
 
 ## License
 

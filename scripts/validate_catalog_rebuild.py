@@ -28,6 +28,10 @@ def as_bool(series: pd.Series) -> pd.Series:
     return series.astype(str).str.lower().eq("true")
 
 
+def finite(*values: object) -> bool:
+    return all(value is not None and np.isfinite(float(value)) for value in values)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -67,6 +71,11 @@ def main() -> None:
     magnitude_audit = pd.read_csv(
         args.run_dir / "panelcast_crossmatch_magnitude_audit.csv",
         dtype={"source_id": str},
+    )
+    panelcast_execution = json.loads(
+        (args.run_dir / "panelcast_full_fit/attempt_1_execution.json").read_text(
+            encoding="utf-8"
+        )
     )
 
     crossmatched = as_bool(qc["crossmatched"].fillna(False))
@@ -128,6 +137,55 @@ def main() -> None:
         and fit["status"] in {"converged", "failed_diagnostics", "timebox_exceeded"},
         "panelcast_diagnostics_recorded": all(
             key in fit for key in ("max_rhat", "min_bulk_ess", "divergences")
+        ),
+        "panelcast_primary_holdout_metrics_complete": (
+            fit["status"] != "converged"
+            or finite(
+                fit.get("mae"),
+                fit.get("rmse"),
+                fit.get("r2"),
+                fit.get("coverage_80"),
+                fit.get("coverage_95"),
+            )
+        ),
+        "panelcast_primary_calibration_within_tolerance": (
+            fit["status"] != "converged"
+            or (
+                abs(float(fit["coverage_80"]) - 0.80) <= 0.03
+                and abs(float(fit["coverage_95"]) - 0.95) <= 0.03
+            )
+        ),
+        "panelcast_secondary_failure_documented": (
+            fit["status"] != "converged"
+            or (
+                finite(
+                    fit.get("secondary_mae"),
+                    fit.get("secondary_rmse"),
+                    fit.get("secondary_r2"),
+                    fit.get("secondary_coverage_80"),
+                    fit.get("secondary_coverage_95"),
+                )
+                and float(fit["secondary_coverage_80"]) < 0.20
+                and float(fit["secondary_coverage_95"]) < 0.20
+            )
+        ),
+        "panelcast_prior_predictive_recorded": (
+            fit["status"] != "converged"
+            or (
+                fit.get("prior_predictive_reasonable") is False
+                and finite(
+                    fit.get("prior_predictive_mean"),
+                    fit.get("prior_predictive_sd"),
+                    fit.get("prior_predictive_fraction_in_bounds"),
+                )
+            )
+        ),
+        "panelcast_evaluation_recovery_recorded": (
+            panelcast_execution["sampling_attempts"] == 1
+            and panelcast_execution["evaluation_recovery_returncode"] == 0
+            and panelcast_execution["prediction_recovery_returncode"] == 0
+            and panelcast_execution["diagnostics_present"]
+            and panelcast_execution["metrics_present"]
         ),
         "required_figures_present": all(
             (args.run_dir / path).exists()

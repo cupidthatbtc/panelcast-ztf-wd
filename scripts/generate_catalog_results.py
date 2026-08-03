@@ -149,6 +149,13 @@ def main() -> None:
             lines.append(
                 f"The strongest **{bootstrapped}** surviving candidates received 100-resample pass-wide bootstrap tests; values at {floor:.5f} are a finite resolution floor, not zero."
             )
+            bootstrap_path = args.run_dir / "bootstrap_top_candidates.csv"
+            if bootstrap_path.exists():
+                bootstrap = pd.read_csv(bootstrap_path, dtype={"source_id": str})
+                pass_counts = bootstrap["pass"].value_counts().to_dict()
+                lines.append(
+                    f"All selected bootstrap targets came from the **{next(iter(pass_counts), 'unknown')}** pass because many analytic FAPs underflowed to zero; this validates the strongest low-frequency tail, not the high-frequency or marginal-candidate populations."
+                )
         merged = ls.merge(
             census[["source_id", "census_variable"]],
             on="source_id",
@@ -215,10 +222,17 @@ def main() -> None:
                 f"| max R-hat | {fmt(summary.get('max_rhat'), 4)} | ≤1.01 |",
                 f"| min bulk ESS | {fmt(summary.get('min_bulk_ess'), 0)} | ≥400 |",
                 f"| divergences | {fmt(summary.get('divergences'), 0)} | 0 |",
-                f"| held-out MAE | {fmt(summary.get('mae'), 5)} | — |",
-                f"| held-out RMSE | {fmt(summary.get('rmse'), 5)} | — |",
-                f"| 80% coverage | {fmt(summary.get('coverage_80'), 3)} | 0.80 |",
-                f"| 95% coverage | {fmt(summary.get('coverage_95'), 3)} | 0.95 |",
+                f"| primary MAE | {fmt(summary.get('mae'), 5)} | — |",
+                f"| primary RMSE | {fmt(summary.get('rmse'), 5)} | — |",
+                f"| primary R² | {fmt(summary.get('r2'), 4)} | — |",
+                f"| primary 80% coverage | {fmt(summary.get('coverage_80'), 3)} | 0.80 |",
+                f"| primary 95% coverage | {fmt(summary.get('coverage_95'), 3)} | 0.95 |",
+                f"| entity-disjoint MAE | {fmt(summary.get('secondary_mae'), 5)} | — |",
+                f"| entity-disjoint RMSE | {fmt(summary.get('secondary_rmse'), 5)} | — |",
+                f"| entity-disjoint R² | {fmt(summary.get('secondary_r2'), 4)} | — |",
+                f"| entity-disjoint 80% coverage | {fmt(summary.get('secondary_coverage_80'), 3)} | 0.80 |",
+                f"| entity-disjoint 95% coverage | {fmt(summary.get('secondary_coverage_95'), 3)} | 0.95 |",
+                f"| prior-predictive fraction in bounds | {fmt(summary.get('prior_predictive_fraction_in_bounds'), 3)} | informational |",
             ]
         )
         scalar_path = args.run_dir / "panelcast_full_fit/posterior_scalars_vs_pilot.csv"
@@ -227,14 +241,18 @@ def main() -> None:
             lines.extend(
                 [
                     "",
-                    "| posterior scalar | full catalog | 19-star pilot |",
-                    "|---|---:|---:|",
+                    "Raw offset-logit scalars are not directly comparable because the full and pilot descriptors use different target bounds. The magnitude-equivalent columns invert the location or apply a local delta-method scale.",
+                    "",
+                    "| posterior scalar | latent full | latent pilot | mag-equivalent full | mag-equivalent pilot |",
+                    "|---|---:|---:|---:|---:|",
                 ]
             )
             for row in scalars.itertuples(index=False):
                 lines.append(
                     f"| {row.parameter_key} | {fmt(getattr(row, 'Estimate_full'), 5)} | "
-                    f"{fmt(getattr(row, 'Estimate_pilot'), 5)} |"
+                    f"{fmt(getattr(row, 'Estimate_pilot'), 5)} | "
+                    f"{fmt(row.magnitude_equivalent_full, 5)} | "
+                    f"{fmt(row.magnitude_equivalent_pilot, 5)} |"
                 )
     else:
         lines.append("Pending by priority order; the census and Lomb–Scargle outputs are written first.")
