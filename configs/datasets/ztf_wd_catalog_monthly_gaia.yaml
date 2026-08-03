@@ -1,0 +1,54 @@
+# Full reconstructed Jestin+2026 catalog with static Gaia cold-start covariates.
+name: ztf_wd_catalog_monthly_gaia
+
+raw_path_env: ZTF_WD_CATALOG_GAIA_PATH
+raw_path_default: outputs/catalog/2026-08-01_full/hardening/panelcast_zg_monthly_gaia.csv
+encoding: utf-8
+raw_column_map: {}
+required_raw_columns:
+  - source_id
+  - month_id
+  - month_date
+  - mag_binned
+  - n_exp
+  - wd_class
+  - year
+  - gaia_g_mag
+  - bp_rp
+optional_raw_columns:
+  - mag_err
+
+entity_col: source_id
+event_col: month_id
+entity_group_col: wd_class
+date_col: month_date
+parsed_date_col: month_date_parsed
+year_col: year
+date_format: "%Y-%m-%d"
+
+target_col: mag_binned
+target_bounds: [10.0, 20.0]
+model_prefix: ztfgcg
+n_obs_col: n_exp
+n_obs_is_aggregation_count: true
+secondary_target_col: null
+secondary_prefix: null
+secondary_n_obs_col: null
+
+multi_entity_col: null
+unknown_entity_sentinel: null
+min_year: 2018
+min_obs_thresholds: [1]
+primary_min_obs: 1
+processed_name_template: "ztfgcgm_minobs_{min_ratings}"
+
+feature_packs: []
+feature_blocks:
+  - name: temporal
+  - name: entity_history
+  - name: core_numeric
+    params:
+      columns: [gaia_g_mag, bp_rp]
+ablation_groups:
+  temporal: [temporal]
+  artist: [entity_history]
