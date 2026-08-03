@@ -280,7 +280,7 @@ def main() -> None:
                 "",
                 "The correlation-aware bootstrap validates all five strong and four of five marginal low-frequency confirmations. High-frequency survival is weaker: three of five strong and one of five marginal confirmations pass at FAP ≤0.05, so the 65 high-pass confirmations remain exploratory.",
                 "",
-                f"The original panelcast fit does not beat the exact-split entity-median baseline (MAE **{median_baseline.mae:.5f}**). A converged Gaia-feature panelcast sensitivity also failed to improve cold start and was rejected; the train-only Gaia G + BP−RP benchmark reaches MAE **{gaia_ols.mae:.5f}**, R² **{gaia_ols.r2:.3f}**.",
+                f"The original panelcast fit does not beat the exact-split entity-median baseline (MAE **{median_baseline.mae:.5f}**), and the additive Gaia-feature sensitivity was rejected. Native Gaia initialization repairs cold start (MAE **{hardening['warm_start_native_disjoint_mae']:.5f}**, R² **{hardening['warm_start_native_disjoint_r2']:.3f}**). Train-only Gaia G + BP−RP correction plus validation conformalization reaches MAE **{hardening['warm_start_calibrated_disjoint_mae']:.5f}**, R² **{hardening['warm_start_calibrated_disjoint_r2']:.3f}**, and 80%/95% coverage **{hardening['warm_start_calibrated_coverage_80']:.3f}/{hardening['warm_start_calibrated_coverage_95']:.3f}**; the standalone Gaia benchmark is MAE **{gaia_ols.mae:.5f}**.",
                 "",
                 f"Eight bootstrap strata are recorded in `hardening/stratified_bootstrap/summary.csv` ({int(bootstrap_summary['sources'].sum())} sources). Full interpretation is in `hardening/HARDENING_RESULTS.md`.",
             ]

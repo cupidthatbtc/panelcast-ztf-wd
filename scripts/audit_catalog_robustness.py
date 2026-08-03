@@ -27,6 +27,12 @@ def metrics(y_true: np.ndarray, y_pred: np.ndarray) -> dict[str, float]:
     }
 
 
+def conformal_radius(residuals: np.ndarray, level: float) -> float:
+    ordered = np.sort(np.abs(residuals))
+    rank = min(len(ordered), int(np.ceil((len(ordered) + 1) * level)))
+    return float(ordered[rank - 1])
+
+
 def add_metric(
     rows: list[dict[str, object]],
     split: str,
@@ -138,11 +144,16 @@ def period_systematics(ls: pd.DataFrame) -> pd.DataFrame:
     ].sort_values(["wide_daily_alias_0p01", "distance_to_daily_systematic_per_day"], ascending=[False, True])
 
 
-def forecast_baselines(run_dir: Path, roster: pd.DataFrame) -> pd.DataFrame:
+def forecast_baselines(
+    run_dir: Path, roster: pd.DataFrame
+) -> tuple[pd.DataFrame, dict[str, object]]:
     split_root = ROOT / "data/splits"
     temporal_train = pd.read_parquet(split_root / "within_entity_temporal/train.parquet")
     temporal_test = pd.read_parquet(split_root / "within_entity_temporal/test.parquet")
     disjoint_train = pd.read_parquet(split_root / "entity_disjoint/train.parquet")
+    disjoint_validation = pd.read_parquet(
+        split_root / "entity_disjoint/validation.parquet"
+    )
     disjoint_test = pd.read_parquet(split_root / "entity_disjoint/test.parquet")
 
     fit = run_dir / "panelcast_full_fit/attempt_1/evaluation"
@@ -286,7 +297,100 @@ def forecast_baselines(run_dir: Path, roster: pd.DataFrame) -> pd.DataFrame:
             gaia_disjoint_pred[gaia_clean],
             "magnitude_delta_le_1",
         )
-    return pd.DataFrame(rows)
+
+    warm_calibration: dict[str, object] = {}
+    warm_fit = run_dir / "hardening/panelcast_gaia_warm_fit/evaluation"
+    if (warm_fit / "metrics.json").exists():
+        warm_primary_y, warm_primary_pred, _ = prediction_arrays(
+            warm_fit / "within_entity_temporal/predictions.json"
+        )
+        warm_y, warm_pred, warm_entities = prediction_arrays(
+            warm_fit / "entity_disjoint/predictions.json"
+        )
+        add_metric(
+            rows,
+            "within_entity_temporal",
+            "panelcast_gaia_warm",
+            warm_primary_y,
+            warm_primary_pred,
+        )
+        add_metric(rows, "entity_disjoint", "panelcast_gaia_warm", warm_y, warm_pred)
+        warm_clean = np.isin(warm_entities, list(clean_entities))
+        add_metric(
+            rows,
+            "entity_disjoint",
+            "panelcast_gaia_warm",
+            warm_y[warm_clean],
+            warm_pred[warm_clean],
+            "magnitude_delta_le_1",
+        )
+
+        validation_design = np.column_stack(
+            [
+                np.ones(len(disjoint_validation)),
+                disjoint_validation["source_id"].map(features["gaia_g_mag"]),
+                disjoint_validation["source_id"].map(features["bp_rp"]),
+            ]
+        )
+        validation_pred = validation_design @ coefficients
+        validation_residual = (
+            disjoint_validation["mag_binned"].to_numpy(dtype=float) - validation_pred
+        )
+        warm_entity_series = pd.Series(warm_entities)
+        warm_gaia = warm_entity_series.map(features["gaia_g_mag"]).to_numpy(dtype=float)
+        warm_design = np.column_stack(
+            [
+                np.ones(len(warm_entities)),
+                warm_gaia,
+                warm_entity_series.map(features["bp_rp"]),
+            ]
+        )
+        calibrated_warm = warm_pred + warm_design @ coefficients - warm_gaia
+        add_metric(
+            rows,
+            "entity_disjoint",
+            "panelcast_gaia_warm_calibrated",
+            warm_y,
+            calibrated_warm,
+        )
+        add_metric(
+            rows,
+            "entity_disjoint",
+            "panelcast_gaia_warm_calibrated",
+            warm_y[warm_clean],
+            calibrated_warm[warm_clean],
+            "magnitude_delta_le_1",
+        )
+        calibrated_residual = warm_y - calibrated_warm
+        radii = {
+            str(level): conformal_radius(validation_residual, level)
+            for level in (0.80, 0.95)
+        }
+        coverages = {
+            level: float(np.mean(np.abs(calibrated_residual) <= radius))
+            for level, radius in radii.items()
+        }
+        native_metrics = json.loads((warm_fit / "metrics.json").read_text(encoding="utf-8"))
+        diagnostics = json.loads(
+            (warm_fit / "diagnostics.json").read_text(encoding="utf-8")
+        )
+        warm_calibration = {
+            "method": "entity-disjoint-train OLS proxy correction plus validation split conformal radii",
+            "feature_columns": ["gaia_g_mag", "bp_rp"],
+            "coefficients": [float(value) for value in coefficients],
+            "validation_rows": len(disjoint_validation),
+            "conformal_radii": radii,
+            "test_coverages": coverages,
+            "calibrated_point_metrics": metrics(warm_y, calibrated_warm),
+            "calibrated_clean_point_metrics": metrics(
+                warm_y[warm_clean], calibrated_warm[warm_clean]
+            ),
+            "native_diagnostics": diagnostics,
+            "native_metrics": native_metrics["splits"],
+            "panelcast_source_commit": "960aadd",
+            "astro_descriptor_commit": "a24f677",
+        }
+    return pd.DataFrame(rows), warm_calibration
 
 
 def markdown_table(frame: pd.DataFrame) -> str:
@@ -352,6 +456,7 @@ def append_hardening_results(
     output_dir: Path,
     baselines: pd.DataFrame,
     conservative_confirmed: int,
+    warm_calibration: dict[str, object],
 ) -> dict[str, bool]:
     gaia_fit = output_dir / "panelcast_gaia_fit"
     diagnostics_path = gaia_fit / "evaluation/diagnostics.json"
@@ -359,6 +464,7 @@ def append_hardening_results(
     bootstrap_path = output_dir / "stratified_bootstrap/results.csv"
     checks = {
         "gaia_fit_complete": diagnostics_path.exists() and metrics_path.exists(),
+        "warm_start_fit_complete": bool(warm_calibration),
         "stratified_bootstrap_complete": bootstrap_path.exists(),
     }
     sections = [
@@ -382,6 +488,26 @@ def append_hardening_results(
                 "The existing additive feature seam cannot solve cold start here because the AR previous-score term explains nearly every non-debut training observation, leaving static Gaia coefficients weakly identified for unseen entities. The sensitivity fit is retained as a clean negative result and is not adopted over the prespecified primary fit.",
             ]
         )
+    if checks["warm_start_fit_complete"]:
+        warm_rows = baselines[baselines["model"].str.contains("gaia_warm")]
+        diagnostics = warm_calibration["native_diagnostics"]
+        calibrated = warm_calibration["calibrated_point_metrics"]
+        coverages = warm_calibration["test_coverages"]
+        radii = warm_calibration["conformal_radii"]
+        sections.extend(
+            [
+                "",
+                "## Native Gaia warm-start panelcast",
+                "",
+                f"The default-off `cold_start_target_col` seam converged with max R-hat **{diagnostics['rhat_max']:.3f}**, minimum bulk ESS **{diagnostics['ess_bulk_min']:.0f}**, and **{diagnostics['divergences']}** divergences. Gaia G initialized all 928 training debuts and all 7,639 unseen-entity test rows with zero fallback.",
+                "",
+                markdown_table(warm_rows),
+                "",
+                f"A leakage-safe hybrid fits the Gaia G + BP−RP proxy correction on the 648 entity-disjoint training entities, then derives split-conformal radii on the 7,400 validation rows. Test MAE is **{calibrated['mae']:.5f}**, R² **{calibrated['r2']:.3f}**, with 80%/95% coverage **{coverages['0.8']:.3f}/{coverages['0.95']:.3f}** and interval widths **{2 * radii['0.8']:.3f}/{2 * radii['0.95']:.3f}** mag.",
+                "",
+                "The native warm start is adopted for unseen-entity point prediction. Its uncalibrated Bayesian intervals remain too narrow because the fitted model does not contain Gaia-to-ZTF proxy error; the validation-conformal wrapper, not the raw posterior interval, is the accepted uncertainty product.",
+            ]
+        )
     if checks["stratified_bootstrap_complete"]:
         bootstrap = pd.read_csv(bootstrap_path, dtype={"source_id": str})
         summary = pd.read_csv(output_dir / "stratified_bootstrap/summary.csv")
@@ -396,7 +522,7 @@ def append_hardening_results(
                 "",
                 "## Final hardening verdict",
                 "",
-                "The reconstruction and low-frequency population are publication-grade robustness results: all five strong and four of five marginal low-frequency confirmations survive the correlation-aware audit, and 311 confirmations remain after simultaneous crossmatch and daily-systematics sensitivity screens. The 65 high-frequency primary confirmations remain valid prespecified outputs but must be presented as exploratory: only three of five strong and one of five marginal examples survive at FAP ≤0.05. Panelcast sampling is excellent, but neither the primary nor Gaia-feature configuration beats the relevant simple baselines; its value here is posterior trajectory description, not superior forecasting or cold-start transfer.",
+                "The reconstruction and low-frequency population are publication-grade robustness results: all five strong and four of five marginal low-frequency confirmations survive the correlation-aware audit, and 311 confirmations remain after simultaneous crossmatch and daily-systematics sensitivity screens. The 65 high-frequency primary confirmations remain valid prespecified outputs but must be presented as exploratory: only three of five strong and one of five marginal examples survive at FAP ≤0.05. Panelcast still does not beat the entity-median baseline for known stable stars, but native Gaia initialization repairs unseen-entity point prediction; train-only proxy correction plus validation conformalization supplies calibrated cold-start intervals without touching the prespecified primary fit.",
             ]
         )
         checks["stratified_bootstrap_has_all_strata"] = (
@@ -438,10 +564,15 @@ def main() -> None:
 
     sensitivity = crossmatch_sensitivity(args.run_dir, roster, census, ls)
     systematics = period_systematics(ls)
-    baselines = forecast_baselines(args.run_dir, roster)
+    baselines, warm_calibration = forecast_baselines(args.run_dir, roster)
     sensitivity.to_csv(output_dir / "crossmatch_sensitivity.csv", index=False)
     systematics.to_csv(output_dir / "period_systematics_audit.csv", index=False)
     baselines.to_csv(output_dir / "forecast_baselines.csv", index=False)
+    if warm_calibration:
+        (output_dir / "warm_start_calibration.json").write_text(
+            json.dumps(warm_calibration, indent=2) + "\n",
+            encoding="utf-8",
+        )
     write_report(output_dir / "HARDENING_RESULTS.md", sensitivity, systematics, baselines)
 
     magnitude_audit = pd.read_csv(
@@ -458,7 +589,12 @@ def main() -> None:
     )
     confirmed_ids = set(ls.loc[ls["blind_status"].eq("confirmed"), "source_id"])
     conservative_confirmed = len(confirmed_ids & clean_ids - wide_alias_ids)
-    checks = append_hardening_results(output_dir, baselines, conservative_confirmed)
+    checks = append_hardening_results(
+        output_dir,
+        baselines,
+        conservative_confirmed,
+        warm_calibration,
+    )
 
     primary_baseline = baselines[
         (baselines["split"].eq("within_entity_temporal"))
@@ -484,6 +620,22 @@ def main() -> None:
         & baselines["model"].eq("panelcast_gaia_features")
         & baselines["subset"].eq("all")
     ]
+    warm_primary = baselines[
+        (baselines["split"].eq("within_entity_temporal"))
+        & baselines["model"].eq("panelcast_gaia_warm")
+        & baselines["subset"].eq("all")
+    ]
+    warm_disjoint = baselines[
+        (baselines["split"].eq("entity_disjoint"))
+        & baselines["model"].eq("panelcast_gaia_warm")
+        & baselines["subset"].eq("all")
+    ]
+    warm_calibrated = baselines[
+        (baselines["split"].eq("entity_disjoint"))
+        & baselines["model"].eq("panelcast_gaia_warm_calibrated")
+        & baselines["subset"].eq("all")
+    ]
+    warm_coverages = warm_calibration.get("test_coverages", {})
     checks.update(
         {
             "crossmatch_sensitivity_retains_95_percent": (
@@ -500,6 +652,24 @@ def main() -> None:
             < float(disjoint_primary.mae),
             "gaia_feature_sensitivity_rejected": len(gaia_panelcast) == 1
             and float(gaia_panelcast.iloc[0].mae) > float(gaia_ols.mae),
+            "warm_start_sampling_diagnostics_pass": bool(
+                warm_calibration.get("native_diagnostics", {}).get("passed", False)
+            ),
+            "warm_start_primary_noninferior": len(warm_primary) == 1
+            and float(warm_primary.iloc[0].mae) <= float(primary_baseline.mae) + 0.001,
+            "warm_start_cold_start_improves": len(warm_disjoint) == 1
+            and float(warm_disjoint.iloc[0].mae) <= 0.20
+            and float(warm_disjoint.iloc[0].r2) >= 0.75,
+            "calibrated_warm_matches_gaia_baseline": len(warm_calibrated) == 1
+            and float(warm_calibrated.iloc[0].mae) <= float(gaia_ols.mae) + 0.005,
+            "calibrated_warm_coverage_80": abs(
+                float(warm_coverages.get("0.8", 0.0)) - 0.80
+            )
+            <= 0.03,
+            "calibrated_warm_coverage_95": abs(
+                float(warm_coverages.get("0.95", 0.0)) - 0.95
+            )
+            <= 0.03,
         }
     )
     payload = {
@@ -512,6 +682,20 @@ def main() -> None:
         "wide_daily_alias_flags": int(as_bool(systematics["wide_daily_alias_0p01"]).sum()),
         "conservative_confirmed_floor": conservative_confirmed,
         "baseline_rows": len(baselines),
+        "warm_start_native_disjoint_mae": (
+            float(warm_disjoint.iloc[0].mae) if len(warm_disjoint) else None
+        ),
+        "warm_start_native_disjoint_r2": (
+            float(warm_disjoint.iloc[0].r2) if len(warm_disjoint) else None
+        ),
+        "warm_start_calibrated_disjoint_mae": (
+            float(warm_calibrated.iloc[0].mae) if len(warm_calibrated) else None
+        ),
+        "warm_start_calibrated_disjoint_r2": (
+            float(warm_calibrated.iloc[0].r2) if len(warm_calibrated) else None
+        ),
+        "warm_start_calibrated_coverage_80": warm_coverages.get("0.8"),
+        "warm_start_calibrated_coverage_95": warm_coverages.get("0.95"),
     }
     (output_dir / "hardening_acceptance.json").write_text(
         json.dumps(payload, indent=2) + "\n",
