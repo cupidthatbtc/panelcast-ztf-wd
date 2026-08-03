@@ -106,18 +106,21 @@ def crossmatch_sensitivity(
 def period_systematics(ls: pd.DataFrame) -> pd.DataFrame:
     frame = ls[ls["blind_status"].isin(["confirmed", "candidate"])].copy()
     frequency = pd.to_numeric(frame["best_frequency_per_day"], errors="coerce").to_numpy()
-    references = []
-    for harmonic in range(1, 11):
-        references.extend(
-            [
-                (f"solar_{harmonic}", float(harmonic)),
-                (f"sidereal_{harmonic}", 1.00273790935 * harmonic),
-            ]
-        )
-    distances = np.column_stack([np.abs(frequency - value) for _, value in references])
-    nearest = np.argmin(distances, axis=1)
-    frame["nearest_daily_systematic"] = [references[index][0] for index in nearest]
-    frame["distance_to_daily_systematic_per_day"] = distances[np.arange(len(frame)), nearest]
+    solar_harmonic = np.clip(np.rint(frequency), 1, 1440).astype(int)
+    sidereal_harmonic = np.clip(
+        np.rint(frequency / 1.00273790935), 1, 1440
+    ).astype(int)
+    solar_distance = np.abs(frequency - solar_harmonic)
+    sidereal_distance = np.abs(frequency - 1.00273790935 * sidereal_harmonic)
+    use_sidereal = sidereal_distance < solar_distance
+    frame["nearest_daily_systematic"] = np.where(
+        use_sidereal,
+        [f"sidereal_{harmonic}" for harmonic in sidereal_harmonic],
+        [f"solar_{harmonic}" for harmonic in solar_harmonic],
+    )
+    frame["distance_to_daily_systematic_per_day"] = np.where(
+        use_sidereal, sidereal_distance, solar_distance
+    )
     frame["wide_daily_alias_0p01"] = frame["distance_to_daily_systematic_per_day"].lt(0.01)
     return frame[
         [
@@ -296,7 +299,7 @@ def write_report(
         "",
         "## Wider daily-systematics audit",
         "",
-        f"A ±0.01 d⁻¹ neighborhood around the first ten solar/sidereal harmonics flags **{len(wide_aliases)}** of {len(systematics)} confirmed/candidate results. This is a sensitivity flag, not a post-hoc replacement classification.",
+        f"A ±0.01 d⁻¹ neighborhood around the nearest solar/sidereal harmonic across the full low and high grids flags **{len(wide_aliases)}** of {len(systematics)} confirmed/candidate results. This is a sensitivity flag, not a post-hoc replacement classification.",
         "",
         "## Forecast baselines",
         "",
