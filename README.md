@@ -42,12 +42,21 @@ sources; the calibrated variability boundary yields **1,423** candidates, with
 - a converged 928-entity monthly-g panelcast fit (R-hat 1.000, minimum bulk ESS
   3,459, zero divergences).
 
-The primary within-entity holdout is accurate and calibrated (MAE 0.0242 mag,
-R² 0.9984, 80%/95% coverage 0.787/0.928). The optional entity-disjoint
-cold-start split fails (MAE 0.634 mag, R² -0.005, coverage 0.058/0.104), so the
-model is validated for forecasting later observations of known white dwarfs,
-not for unseen entities. Full provenance, disagreements, and caveats are in
-`outputs/catalog/2026-08-01_full/CATALOG_RESULTS.md`.
+A post-hoc hardening audit leaves **333** confirmations after excluding >1 mag
+Gaia–ZTF mismatches and **311** after combining that cut with a wider daily-alias
+screen. Correlation-aware bootstraps strongly support the low-frequency
+population; the 65 high-frequency confirmations remain exploratory because only
+three of five strong and one of five marginal sampled cases survive at FAP
+≤0.05.
+
+The primary within-entity panelcast holdout is accurate and calibrated (MAE
+0.0242 mag, R² 0.9984, 80%/95% coverage 0.787/0.928), but it does not beat the
+per-star training median (MAE 0.0196). The optional entity-disjoint split fails
+(MAE 0.634 mag, R² -0.005). A converged Gaia-feature panelcast sensitivity did
+not fix cold start and was rejected; a train-only Gaia G + BP−RP regression is
+the honest baseline (MAE 0.117, R² 0.835). Full provenance and caveats are in
+`outputs/catalog/2026-08-01_full/CATALOG_RESULTS.md` and
+`outputs/catalog/2026-08-01_full/hardening/HARDENING_RESULTS.md`.
 
 ## What the panel can carry — and what the binning removes
 

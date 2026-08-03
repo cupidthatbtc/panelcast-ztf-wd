@@ -257,6 +257,35 @@ def main() -> None:
     else:
         lines.append("Pending by priority order; the census and Lomb–Scargle outputs are written first.")
 
+    hardening_path = args.run_dir / "hardening/hardening_acceptance.json"
+    if hardening_path.exists():
+        hardening = json.loads(hardening_path.read_text(encoding="utf-8"))
+        bootstrap_summary = pd.read_csv(
+            args.run_dir / "hardening/stratified_bootstrap/summary.csv"
+        )
+        baselines = pd.read_csv(args.run_dir / "hardening/forecast_baselines.csv")
+        median_baseline = baselines[
+            baselines["model"].eq("entity_train_median")
+        ].iloc[0]
+        gaia_ols = baselines[
+            baselines["model"].eq("gaia_g_bp_rp_train_ols")
+            & baselines["subset"].eq("all")
+        ].iloc[0]
+        lines.extend(
+            [
+                "",
+                "## Post-hoc hardening audit",
+                "",
+                f"Hardening acceptance: **{'passed' if hardening['all_passed'] else 'pending'}**. The prespecified 342-confirmation result is unchanged; **{hardening['magnitude_clean_confirmed']}** survive the >1 mag crossmatch sensitivity cut and **{hardening['conservative_confirmed_floor']}** survive that cut together with the wider daily-systematics screen.",
+                "",
+                "The correlation-aware bootstrap validates all five strong and four of five marginal low-frequency confirmations. High-frequency survival is weaker: three of five strong and one of five marginal confirmations pass at FAP ≤0.05, so the 65 high-pass confirmations remain exploratory.",
+                "",
+                f"The original panelcast fit does not beat the exact-split entity-median baseline (MAE **{median_baseline.mae:.5f}**). A converged Gaia-feature panelcast sensitivity also failed to improve cold start and was rejected; the train-only Gaia G + BP−RP benchmark reaches MAE **{gaia_ols.mae:.5f}**, R² **{gaia_ols.r2:.3f}**.",
+                "",
+                f"Eight bootstrap strata are recorded in `hardening/stratified_bootstrap/summary.csv` ({int(bootstrap_summary['sources'].sum())} sources). Full interpretation is in `hardening/HARDENING_RESULTS.md`.",
+            ]
+        )
+
     lines.extend(
         [
             "",

@@ -321,7 +321,7 @@ def write_report(
         (baselines["split"].eq("entity_disjoint")) & baselines["subset"].eq("all")
     ]
     lines = [
-        "# Catalog hardening — interim results",
+        "# Catalog hardening — final results",
         "",
         "## Crossmatch sensitivity",
         "",
@@ -393,6 +393,10 @@ def append_hardening_results(
                 markdown_table(summary),
                 "",
                 f"The audit covers **{len(bootstrap)}** detections across all eight strong/marginal × low/high × confirmed/candidate strata. Low-frequency signals are substantially more robust than high-frequency signals under correlation-preserving nulls; the bootstrap table is a validation audit rather than a post-hoc relabeling of the primary catalog.",
+                "",
+                "## Final hardening verdict",
+                "",
+                "The reconstruction and low-frequency population are publication-grade robustness results: all five strong and four of five marginal low-frequency confirmations survive the correlation-aware audit, and 311 confirmations remain after simultaneous crossmatch and daily-systematics sensitivity screens. The 65 high-frequency primary confirmations remain valid prespecified outputs but must be presented as exploratory: only three of five strong and one of five marginal examples survive at FAP ≤0.05. Panelcast sampling is excellent, but neither the primary nor Gaia-feature configuration beats the relevant simple baselines; its value here is posterior trajectory description, not superior forecasting or cold-start transfer.",
             ]
         )
         checks["stratified_bootstrap_has_all_strata"] = (
@@ -475,6 +479,11 @@ def main() -> None:
         & baselines["model"].eq("gaia_g_bp_rp_train_ols")
         & baselines["subset"].eq("all")
     ].iloc[0]
+    gaia_panelcast = baselines[
+        (baselines["split"].eq("entity_disjoint"))
+        & baselines["model"].eq("panelcast_gaia_features")
+        & baselines["subset"].eq("all")
+    ]
     checks.update(
         {
             "crossmatch_sensitivity_retains_95_percent": (
@@ -489,6 +498,8 @@ def main() -> None:
             < float(primary_baseline.mae),
             "gaia_cold_start_baseline_improves": float(gaia_ols.mae)
             < float(disjoint_primary.mae),
+            "gaia_feature_sensitivity_rejected": len(gaia_panelcast) == 1
+            and float(gaia_panelcast.iloc[0].mae) > float(gaia_ols.mae),
         }
     )
     payload = {
