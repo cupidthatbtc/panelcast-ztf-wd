@@ -481,9 +481,21 @@ def append_hardening_results(
     diagnostics_path = gaia_fit / "evaluation/diagnostics.json"
     metrics_path = gaia_fit / "evaluation/metrics.json"
     bootstrap_path = output_dir / "stratified_bootstrap/results.csv"
+    warm_execution_path = output_dir / "panelcast_gaia_warm_execution.json"
+    warm_execution = (
+        json.loads(warm_execution_path.read_text(encoding="utf-8"))
+        if warm_execution_path.exists()
+        else {}
+    )
     checks = {
         "gaia_fit_complete": diagnostics_path.exists() and metrics_path.exists(),
         "warm_start_fit_complete": bool(warm_calibration),
+        "warm_start_recovery_recorded": (
+            warm_execution.get("sampling_attempts") == 1
+            and warm_execution.get("evaluation_recovery_returncode") == 0
+            and warm_execution.get("pipeline_completed") is True
+            and warm_execution.get("panelcast_source_commit") == "960aadd"
+        ),
         "stratified_bootstrap_complete": bootstrap_path.exists(),
     }
     sections = [
