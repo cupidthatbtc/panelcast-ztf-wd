@@ -91,7 +91,7 @@ def main() -> None:
         "## Census stage",
         "",
         f"- Cached ZTF responses: **{cache_present:,}/1,423**; cache/read failures: **{read_failures:,}**.",
-        f"- Crossmatched under the nearest-coordinate-cluster and ≥20 clean exposures in each of g and r rule: **{manifest['crossmatched_count']:,}/1,423**.",
+        f"- Crossmatched under the nearest-coordinate-cluster and ≥20 clean exposures in each of g and r rule: **{manifest['crossmatched_count']:,}/1,423**. This is 64 above the paper's 864 cleaned light curves; the simplified prespecified rule has no magnitude-consistency cut.",
         f"- Known roster retained: **{manifest['known_roster_crossmatched']}/20**. Gaia DR3 `6555925496084361344` is in Stage B but IRSA returned zero g/r rows within both 10 and 30 arcsec; this is an unavailable southern control, not a silent dropout.",
         f"- Any of six exposure/night/month × g/r ratios ≥2.5: **{census_any:,}** stars.",
         f"- Nightly g ratio ≥2.5: **{census_night:,}**; monthly g ratio ≥2.5: **{census_month:,}**.",
