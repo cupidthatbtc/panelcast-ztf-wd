@@ -390,6 +390,25 @@ def forecast_baselines(
             "panelcast_source_commit": "960aadd",
             "astro_descriptor_commit": "a24f677",
         }
+        calibrated_rows = pd.DataFrame(
+            {
+                "source_id": warm_entities,
+                "y_true": warm_y,
+                "native_warm_mean": warm_pred,
+                "calibrated_warm_mean": calibrated_warm,
+                "magnitude_delta_le_1": warm_clean,
+            }
+        )
+        for level, radius in radii.items():
+            calibrated_rows[f"lower_{level}"] = calibrated_warm - radius
+            calibrated_rows[f"upper_{level}"] = calibrated_warm + radius
+            calibrated_rows[f"covered_{level}"] = (
+                np.abs(calibrated_residual) <= radius
+            )
+        calibrated_rows.to_csv(
+            run_dir / "hardening/warm_start_calibrated_predictions.csv",
+            index=False,
+        )
     return pd.DataFrame(rows), warm_calibration
 
 
