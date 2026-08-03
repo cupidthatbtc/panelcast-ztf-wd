@@ -16,14 +16,18 @@ TIMEBOX_SECONDS = 12 * 60 * 60
 
 def current_runs() -> set[Path]:
     runs = set()
-    for path in (ROOT / "outputs").iterdir():
-        if path.name == "catalog":
+    roots = (ROOT / "outputs", ROOT / "outputs/failed")
+    for base in roots:
+        if not base.exists():
             continue
-        try:
-            if path.is_dir():
-                runs.add(path.resolve())
-        except OSError:
-            continue
+        for path in base.iterdir():
+            if path.name in {"catalog", "failed"}:
+                continue
+            try:
+                if path.is_dir():
+                    runs.add(path.resolve())
+            except OSError:
+                continue
     return runs
 
 
@@ -89,6 +93,29 @@ def fit_command(
         f"--seed 42 --tag {shlex.quote(tag)} --allow-unlocked-env"
     )
     return command
+
+
+def evaluation_oom(path: Path) -> bool:
+    failure_path = path / "failure.json"
+    if not failure_path.exists():
+        return False
+    failure = json.loads(failure_path.read_text(encoding="utf-8"))
+    return failure.get("stage") == "evaluate" and "RESOURCE_EXHAUSTED" in failure.get(
+        "message", ""
+    )
+
+
+def evaluation_resume_command(run_id: str, timeout_seconds: int) -> str:
+    linux_repo = "/mnt/c/Users/jcwen/Projects/astro-wd"
+    panel_path = f"{linux_repo}/outputs/catalog/2026-08-01_full/panelcast_zg_monthly.csv"
+    return (
+        f"cd {shlex.quote(linux_repo)} && "
+        f"export ZTF_WD_CATALOG_MONTHLY_PATH={shlex.quote(panel_path)} && "
+        "export COLUMNS=180 TERM=dumb NO_COLOR=1 TF_GPU_ALLOCATOR=cuda_malloc_async && "
+        f"timeout --signal=TERM --kill-after=60s {timeout_seconds}s "
+        f"~/aoty-gpu/bin/panelcast run --resume {shlex.quote(run_id)} "
+        "--allow-unlocked-env"
+    )
 
 
 def write_timebox_summary(fit_dir: Path, attempts: int, narrative: str) -> None:
@@ -185,7 +212,29 @@ def main() -> None:
                 text=True,
             )
         new_run = locate_new_run(before)
-        if new_run is not None:
+        recovery_returncode = None
+        if new_run is not None and evaluation_oom(new_run):
+            recovery_remaining = int(deadline - time.monotonic())
+            recovery_command = evaluation_resume_command(new_run.name, recovery_remaining)
+            print(
+                f"[panelcast] resuming attempt {attempt} evaluation with cuda_malloc_async",
+                flush=True,
+            )
+            with log_path.open("a", encoding="utf-8") as log:
+                log.write("\n[runner] resuming evaluation after allocator OOM\n")
+                recovered = subprocess.run(
+                    ["wsl", "bash", "-lc", recovery_command],
+                    stdout=log,
+                    stderr=subprocess.STDOUT,
+                    timeout=recovery_remaining + 90,
+                    check=False,
+                    text=True,
+                )
+            recovery_returncode = recovered.returncode
+            root_run = ROOT / "outputs" / new_run.name
+            failed_run = ROOT / "outputs/failed" / new_run.name
+            new_run = root_run if root_run.exists() else failed_run
+        if new_run is not None and new_run.exists():
             shutil.move(str(new_run), str(destination))
         attempts_completed += 1
         failure = {
@@ -194,7 +243,8 @@ def main() -> None:
             "init_strategy": init_strategy,
             "remedy": remedy,
             "returncode": completed.returncode,
-            "run_captured": new_run is not None,
+            "evaluation_recovery_returncode": recovery_returncode,
+            "run_captured": new_run is not None and destination.exists(),
             "diagnostics_present": (destination / "evaluation/diagnostics.json").exists(),
         }
         (fit_dir / f"attempt_{attempt}_execution.json").write_text(
