@@ -1,0 +1,41 @@
+{
+  "checks": {
+    "stage_b_has_1423_unique_sources": true,
+    "stage_b_core_is_1359": true,
+    "all_20_known_members_present": true,
+    "fetch_complete_without_silent_failures": true,
+    "qc_covers_every_candidate": true,
+    "crossmatch_count_matches_manifest": true,
+    "crossmatch_neighborhood_is_plausible": true,
+    "known_roster_crossmatch_complete_or_documented": true,
+    "census_one_row_per_crossmatch": true,
+    "all_six_census_ratios_finite": true,
+    "bjd_exposure_shard_per_crossmatch": true,
+    "ls_one_complete_row_per_crossmatch": true,
+    "ls_status_taxonomy_valid": true,
+    "available_sanity_gates_passed_and_missing_documented": true,
+    "bootstrap_top_candidates_complete": true,
+    "no_periodogram_scratch_files": true,
+    "no_period_search_error_records": true,
+    "panelcast_magnitude_mismatch_audit_complete": true,
+    "panelcast_attempt_policy_respected": true,
+    "panelcast_diagnostics_recorded": true,
+    "panelcast_primary_holdout_metrics_complete": true,
+    "panelcast_primary_calibration_within_tolerance": true,
+    "panelcast_secondary_failure_documented": true,
+    "panelcast_prior_predictive_recorded": true,
+    "panelcast_evaluation_recovery_recorded": true,
+    "required_figures_present": true,
+    "incremental_results_present": true
+  },
+  "all_passed": true,
+  "failed": [],
+  "counts": {
+    "stage_b": 1423,
+    "crossmatched": 928,
+    "census_variable": 203,
+    "ls_confirmed": 342,
+    "ls_candidates": 76,
+    "bootstrap": 30
+  }
+}

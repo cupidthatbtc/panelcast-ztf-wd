@@ -1,0 +1,13 @@
+{
+  "source_id": "2146494091832635520",
+  "pass": "low",
+  "band": "zg",
+  "frequency_per_day": 3.0013140003903835,
+  "power": 0.6872993977971715,
+  "bootstrap_fap": 0.009900990099009901,
+  "bootstrap_exceedances": 0,
+  "bootstrap_resamples": 100,
+  "bootstrap_resolution": 0.009900990099009901,
+  "bootstrap_grid_samples_per_peak": 2,
+  "trials_context": "bootstrap maximum over 0.00072310671..48 d^-1"
+}

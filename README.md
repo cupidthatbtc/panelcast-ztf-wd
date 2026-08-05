@@ -56,9 +56,10 @@ per-star training median (MAE 0.0196). The original entity-disjoint split fails
 default-off panelcast seam instead initializes unseen entities from Gaia G,
 cutting cold-start MAE to 0.156 and raising R² to 0.799. Train-only Gaia G +
 BP−RP correction plus validation conformalization reaches MAE 0.117, R² 0.835,
-and 80%/95% coverage 0.829/0.966. Full provenance and caveats are in
-`outputs/catalog/2026-08-01_full/CATALOG_RESULTS.md` and
-`outputs/catalog/2026-08-01_full/hardening/HARDENING_RESULTS.md`.
+and 80%/95% coverage 0.829/0.966. The complete review bundle—raw IRSA cache, aggregate panels, per-source period
+results, posterior artifacts, calibrated predictions, hashes, and acquisition
+provenance—is committed under
+`catalog-rebuild/results/2026-08-01_full/`.
 
 ## What the panel can carry — and what the binning removes
 

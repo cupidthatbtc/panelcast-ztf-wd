@@ -1,0 +1,18 @@
+{
+  "n_tables": 8,
+  "n_figures": 50,
+  "n_docs": 3,
+  "n_errors": 1,
+  "errors": [
+    {
+      "artifact": "slice_coverage_plot",
+      "error": "'yerr' must not contain negative values"
+    }
+  ],
+  "publication_ready": false,
+  "critical_readiness_failures": [
+    "secondary_calibration_within_tolerance",
+    "publication_artifact_errors"
+  ],
+  "recommended_readiness_failures": []
+}
