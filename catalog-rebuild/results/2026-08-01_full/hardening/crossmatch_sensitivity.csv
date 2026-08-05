@@ -1,7 +1,0 @@
-scenario,sources,known_roster,census_variable,ls_confirmed,ls_candidates,ls_not_detected,ls_confirmed_fraction,census_or_ls_confirmed
-primary_all,928,19,203,342,76,510,0.36853448275862066,436
-magnitude_delta_le_2,914,19,203,336,75,503,0.3676148796498906,430
-magnitude_delta_le_1,908,19,201,333,74,501,0.3667400881057269,427
-magnitude_delta_le_0.5,898,19,196,330,73,495,0.3674832962138085,421
-separation_le_2_arcsec,907,19,199,334,74,499,0.36824696802646084,426
-separation_le_2_and_delta_le_1,902,19,197,331,73,498,0.3669623059866962,423

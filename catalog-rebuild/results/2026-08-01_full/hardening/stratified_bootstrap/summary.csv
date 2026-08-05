@@ -1,9 +1,0 @@
-selection_stratum,sources,median_bootstrap_fap,fap_le_0p01,fap_le_0p05
-candidate_high_marginal,5,0.4752475247524752,0,1
-candidate_high_strong,5,0.1188118811881188,0,2
-candidate_low_marginal,5,0.039603960396039604,2,3
-candidate_low_strong,5,0.009900990099009901,5,5
-confirmed_high_marginal,5,0.24752475247524752,0,1
-confirmed_high_strong,5,0.009900990099009901,3,3
-confirmed_low_marginal,5,0.009900990099009901,4,4
-confirmed_low_strong,5,0.009900990099009901,5,5
