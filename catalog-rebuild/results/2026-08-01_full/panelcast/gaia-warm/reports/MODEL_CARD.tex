@@ -1,0 +1,210 @@
+\documentclass{article}
+\usepackage{booktabs}
+\usepackage{listings}
+\usepackage{hyperref}
+
+\lstset{
+  language=Python,
+  basicstyle=\ttfamily\small,
+  breaklines=true,
+  frame=single
+}
+
+\begin{document}
+
+\section*{Model Card: Ztf Wd Catalog Monthly Gaia Warm source\_id Score Prediction Model}
+
+\subsection*{Model Details}
+\begin{itemize}
+  \item \textbf{Model type:} Bayesian Hierarchical Regression with Time-Varying Effects
+  \item \textbf{Version:} 0.23.0
+  \item \textbf{Authors:} Ztf Wd Catalog Monthly Gaia Warm Prediction Pipeline
+  \item \textbf{Created:} 2026-08-03
+  \item \textbf{Last updated:} 2026-08-03
+\end{itemize}
+
+\subsection*{Intended Use}
+This model is intended for:
+
+- Research on source id score trajectories
+- Exploration of month id-to-month id score patterns
+- Educational demonstration of Bayesian hierarchical modeling
+
+\subsubsection*{Out-of-Scope Use}
+This model should NOT be used for:
+
+- High-stakes or operational decisions without human review
+- Real-time prediction systems in production environments
+
+\subsection*{Training Data}
+\begin{itemize}
+  \item \textbf{Dataset:} ztf\_wd\_catalog\_monthly\_gaia\_warm
+  \item \textbf{Size:} 49,422 albums
+  \item \textbf{Description:} Sequential month id-level records grouped by source id from the 'ztf\_wd\_catalog\_monthly\_gaia\_warm' dataset, with the target score (mag\_binned) bounded to [10, 20].
+  \item \textbf{Preprocessing:} Leak-safe within-source id temporal splitting with source id-disjoint secondary checks, minimum observation-count filtering, features standardized to zero mean and unit variance.
+\end{itemize}
+
+\subsection*{Model Architecture}
+Grouping entity: source\_id; sequential event: month\_id. Internal parameter names use 'artist' for the grouping entity.
+
+Bayesian hierarchical regression with four key components:
+
+1. **Hierarchical artist effects**: Partial pooling across artists for robust estimation of artist quality. Non-centered parameterization via LocScaleReparam avoids funnel geometry.
+
+2. **Time-varying slopes**: Artist quality modeled as a random walk, allowing career trajectories to evolve over time.
+
+3. **AR(1) structure**: Album-to-album dependencies captured via autoregressive term, modeling momentum effects where consecutive albums tend to have correlated scores.
+
+4. **Heteroscedastic observation noise** (sigma\_ref parameterization): Albums with more reviews have lower observation noise. The model samples sigma\_ref (noise at the median review count n\_ref) and derives per-observation noise as: sigma\_obs = sigma\_ref * n\_ref\textasciicircum{}n\_exponent, then sigma\_i = sigma\_obs / n\_reviews\_i\textasciicircum{}n\_exponent. This reparameterization breaks the multiplicative funnel between sigma\_obs and n\_exponent that causes divergent transitions in MCMC sampling.
+
+Mathematical form:
+- y\_ij \textasciitilde{} StudentT(df=4, mu\_ij, sigma\_i) (likelihood family configurable via --likelihood-family)
+- mu\_ij = artist\_effect\_jt + X\_ij @ beta + rho * (prev\_score\_ij - ar\_center)
+- artist\_effect\_jt evolves via random walk from initial effect
+- sigma\_i = sigma\_obs / n\_reviews\_i\textasciicircum{}n\_exponent (heteroscedastic mode)
+
+Since 0.5.0 the likelihood operates on the offset-logit transformed target by default (--target-transform offset\_logit), and since 0.6.0 the default feature block includes a stacked-GBM offset (gbm\_offset) with genre-level pooling where the dataset provides a group column. The per-run values are recorded in the hyperparameters table.
+
+\subsubsection*{Prior Distributions}
+Prior distributions are weakly informative, chosen to regularize inference while allowing the data to dominate:
+
+- **mu\_artist** \textasciitilde{} Normal(0.7227843999862671, 1.0): Centered at 0.7227843999862671 because artist effects represent deviations from feature-based predictions. Scale of 1.0 permits the population center to shift by \textasciitilde{}1.0 SD on the standardized score scale.
+- **sigma\_artist** \textasciitilde{} HalfNormal(0.5): Scale of 0.5 encourages moderate partial pooling. Implies most artist effects within +/-1.0, consistent with observed between-artist spread.
+- **sigma\_rw** \textasciitilde{} HalfNormal(0.1): Scale of 0.1 produces smooth career trajectories where album-to-album quality changes are small relative to overall artist variation.
+- **rho** \textasciitilde{} TruncatedNormal(0.0, 0.3, -0.99, 0.99): Centered at 0.0 with scale 0.3, allowing moderate autoregressive momentum without strong prior commitment to direction.
+- **beta** \textasciitilde{} Normal(0.0, 1.0): Scale of 1.0 is weakly informative for standardized features, allowing data to determine effect sizes.
+- **sigma\_obs** \textasciitilde{} HalfNormal(0.5): Scale of 0.5 allows data to determine observation-level noise.
+
+
+**Prior Predictive Check**: Prior predictive simulation (n\_samples=500) shows 74.2\% of prior-implied predictions fall within [10.0, 20.0]. Summary: mean=15.9, sd=3.8, range=[9.5, 20.5].
+
+\subsubsection*{Hyperparameters}
+\begin{tabular}{ll}
+\toprule
+Parameter & Value \\
+\midrule
+mu\_artist\_loc & 0.0 \\
+mu\_artist\_scale & 1.0 \\
+sigma\_artist\_scale & 0.5 \\
+sigma\_rw\_scale & 0.1 \\
+rho\_loc & 0.0 \\
+rho\_scale & 0.3 \\
+beta\_loc & 0.0 \\
+beta\_scale & 1.0 \\
+sigma\_obs\_scale & 1.0 \\
+sigma\_ref\_scale & 1.0 \\
+n\_exponent\_default & 0.0 \\
+n\_features & 8 \\
+n\_artists & 928 \\
+max\_albums & 100 \\
+num\_chains & 4 \\
+num\_warmup & 3000 \\
+num\_samples & 3000 \\
+chain\_method & sequential \\
+target\_accept\_prob & 0.9 \\
+max\_tree\_depth & 10 \\
+target\_transform & offset\_logit \\
+likelihood\_family & studentt \\
+entity\_group\_pooling & False \\
+gbm\_offset & False \\
+\bottomrule
+\end{tabular}
+
+\subsection*{Evaluation Results}
+
+\subsubsection*{Convergence Diagnostics}
+Convergence status: PASSED
+
+- R-hat (max): 1.0000 (threshold: < 1.01)
+- ESS bulk (min): 5,100
+- ESS tail (min): 6,603
+- Divergent transitions: 0
+
+\subsubsection*{Calibration}
+Credible interval coverage:
+- 80\% CI: 77.9\% empirical coverage, mean width=0.07
+- 95\% CI: 92.3\% empirical coverage, mean width=0.13
+
+**Posterior Predictive Checks:**
+- mean: T(y\_obs)=16.91, p=0.930 (MC SE: 0.002)
+- sd: T(y\_obs)=0.89, p=0.197 (MC SE: 0.004)
+- skewness: T(y\_obs)=-1.27, p=0.722 (MC SE: 0.004)
+- min: T(y\_obs)=12.81, p=0.442 (MC SE: 0.005)
+- max: T(y\_obs)=18.94, p=0.001 (MC SE: 0.000)
+- q10: T(y\_obs)=15.64, p=0.855 (MC SE: 0.003)
+- q50: T(y\_obs)=17.12, p=0.864 (MC SE: 0.003)
+- q90: T(y\_obs)=17.82, p=0.941 (MC SE: 0.002)
+
+\subsubsection*{Predictive Performance}
+Point prediction metrics:
+
+- MAE: 0.02
+- RMSE: 0.04
+- R-squared: 0.998
+- Held-out ELPD (test lppd): 1847.4 (SE: 36.2)
+
+Held-out ELPD (test lppd): 1847.4
+
+\subsection*{Limitations}
+\begin{itemize}
+  \item Dynamic source id trajectories are learned only when an source id has at least 2 training month ids.
+  \item Score predictions are probabilistic and should not be treated as ground truth.
+  \item Review the AOTY model card limitations for the statistical caveats of the shared model architecture (bounded target vs. symmetric likelihood, convergence budget).
+\end{itemize}
+
+\subsection*{Ethical Considerations}
+\begin{itemize}
+  \item Predictions are for research and exploration, not operational decisions.
+  \item Historical biases in the recorded mag\_binned values will be reflected in predictions.
+\end{itemize}
+
+\subsection*{How to Use}
+
+\subsubsection*{Loading the Model}
+\begin{lstlisting}
+from pathlib import Path
+
+from panelcast.models.bayes.io import load_manifest, load_model
+
+# Load the current ztfgcgw-score model referenced by models/manifest.json
+manifest = load_manifest(Path("models"))
+model_name = manifest.current["ztfgcgw_score"]
+idata = load_model(Path("models") / model_name)
+\end{lstlisting}
+
+\subsubsection*{Making Predictions}
+\begin{lstlisting}
+from panelcast.models.bayes.predict import (
+    extract_posterior_samples,
+    predict_new_entity,
+)
+import jax.numpy as jnp
+
+posterior_samples = extract_posterior_samples(idata)
+n_features = int(posterior_samples["ztfgcgw_beta"].shape[-1])
+X_new = jnp.zeros((1, n_features), dtype=jnp.float32)
+pred = predict_new_entity(
+    posterior_samples=posterior_samples,
+    X_new=X_new,
+    prev_score=jnp.array([15], dtype=jnp.float32),
+    n_reviews_new=jnp.array([100.0], dtype=jnp.float32),
+    prefix="ztfgcgw_",
+    target_bounds=(10, 20),
+)
+\end{lstlisting}
+
+\subsubsection*{Interpreting Results}
+\begin{lstlisting}
+import numpy as np
+
+# Extract prediction statistics from posterior predictive draws
+y_samples = np.asarray(pred['y']).ravel()
+pred_mean = float(np.mean(y_samples))
+pred_std = float(np.std(y_samples))
+ci_95 = np.percentile(y_samples, [2.5, 97.5])
+
+print(f"Predicted score: {pred_mean:.1f} +/- {pred_std:.1f}")
+print(f"95% CI: [{ci_95[0]:.1f}, {ci_95[1]:.1f}]")
+\end{lstlisting}
+
+\end{document}

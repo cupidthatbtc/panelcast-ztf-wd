@@ -1,0 +1,17 @@
+{
+  "source_id": "6046892947212837376",
+  "selection_stratum": "candidate_high_strong",
+  "blind_status": "candidate",
+  "pass": "high",
+  "band": "zr",
+  "frequency_per_day": 118.8771244690076,
+  "observed_power": 0.20109595926720528,
+  "bootstrap_fap": 0.1188118811881188,
+  "bootstrap_exceedances": 11,
+  "bootstrap_resamples": 100,
+  "bootstrap_resolution": 0.009900990099009901,
+  "resampling_scheme": "night_wild_sign",
+  "block_length": null,
+  "grid_samples_per_peak": 2,
+  "trials_context": "maximum over 24..1440 d^-1"
+}
