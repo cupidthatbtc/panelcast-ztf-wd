@@ -1,0 +1,2 @@
+# Let the hierarchical entity level, rather than a previous-score offset, carry stellar magnitude.
+gbm_offset: false
