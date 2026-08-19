@@ -1,0 +1,20 @@
+{
+  "checks": {
+    "smoke_test_passed": true,
+    "rr_lyrae_control_confirmed": true,
+    "double_band_control_confirmed": true,
+    "qc_has_20_stars_x_2_bands": true,
+    "bjd_tdb_high_pass": true,
+    "master_has_19_unique_stars": true,
+    "four_pulsators_directed": true,
+    "injection_three_detectors_full_grid": true,
+    "attenuation_all_confirmed": true,
+    "bootstrap_all_surviving_candidates": true,
+    "oddball_verdict_present": true,
+    "nineteen_periodogram_figures": true,
+    "phase_fold_for_each_confirmed": true,
+    "results_written": true
+  },
+  "all_passed": true,
+  "failed": []
+}

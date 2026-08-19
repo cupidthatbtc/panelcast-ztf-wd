@@ -4,7 +4,23 @@ The first astronomy deployment of [panelcast](https://github.com/cupidthatbtc/pa
 It ports ZTF white-dwarf light curves into panelcast's **entity-event panel**
 contract and fits them with the same hierarchical random-walk model panelcast
 uses for album-rating trajectories — here each white dwarf is an entity and each
-observing night is an event.
+observing interval is an event (nightly bins for the panel, monthly bins for the
+converged fit of record).
+
+## Results at a glance
+
+| | census (variance screen) | blind Lomb–Scargle | together |
+|---|---|---|---|
+| **Pilot, 19 roster stars** | 9/13 paper-variables; 0/5 reference constants flagged | 11/13 (incl. all four paper-labeled pulsators) | union 13/13 |
+| **Rebuilt catalog, 928 clean stars** | 203 flagged | 342 confirmed + 76 one-band candidates | 327 one-channel-only |
+
+The catalog reconstruction reproduces the paper's Eq. 3 count **exactly**
+(22,264) and yields **1,423** variability candidates containing all 20
+ground-truth stars under one inferred convention. Full details below; pilot
+Lomb–Scargle evidence in
+[`lomb-scargle/results/2026-08-01_full/`](lomb-scargle/results/2026-08-01_full/RESULTS.md),
+catalog results in
+[`catalog-rebuild/results/2026-08-01_full/`](catalog-rebuild/results/2026-08-01_full/CATALOG_RESULTS.md).
 
 ## What this is
 
@@ -19,11 +35,13 @@ panelcast's entity-event descriptor contract:
 - **`data/raw/ztf_wd_zg_monthly.csv`** — 1,147 rows, the same g-band series
   re-binned monthly (the descriptor-of-record for the converged fit below).
 
-The panelcast product remains a **per-entity variance census** — the
-per-white-dwarf random-walk variance posterior versus Jestin's
-variable-vs-constant split. A companion exposure-level Lomb–Scargle analysis now
-measures the periodic signals that the binned forecasting panel cannot carry;
-it complements the model rather than changing it.
+The science product is a **per-entity variance census** — a deliberately
+model-free scatter/error screen at exposure, nightly, and monthly cadence
+(threshold 2.5, frozen before scoring) versus Jestin's variable-vs-constant
+split, with the per-white-dwarf random-walk variance posterior as its
+model-based companion. A separate exposure-level Lomb–Scargle analysis measures
+the periodic signals that the binned forecasting panel cannot carry; it
+complements the model rather than changing it.
 
 ## Full-catalog reconstruction
 
@@ -138,6 +156,9 @@ python scripts/build_catalog_roster.py
 python scripts/run_catalog_pipeline.py
 python scripts/validate_catalog_rebuild.py --run-dir outputs/catalog/2026-08-01_full
 ```
+
+(`scripts/run_catalog_panelcast.py` locates the WSL checkout via the
+`ASTRO_WD_WSL_REPO` environment variable.)
 
 The panelcast invocation that converges (run against a panelcast checkout with
 this repo's `configs/` and `data/` on the path):
