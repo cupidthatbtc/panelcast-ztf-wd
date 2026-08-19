@@ -120,7 +120,7 @@
     "fingerprint": "ed17afdbaa9c77c5"
   },
   "input_hashes": {
-    "/mnt/c/Users/jcwen/Projects/astro-wd/outputs/catalog/2026-08-01_full/hardening/panelcast_zg_monthly_gaia.csv": "fd485ef4698e86a8c6697818ed88b6844278bb067d434a6a7649ece3810dfcae",
+    "/mnt/c/Users/USER/Projects/astro-wd/outputs/catalog/2026-08-01_full/hardening/panelcast_zg_monthly_gaia.csv": "fd485ef4698e86a8c6697818ed88b6844278bb067d434a6a7649ece3810dfcae",
     "data/processed/ztfgcgm_minobs_1.parquet": "1993b7958f8b087194d03cb1b03ce8145c4bdeca1b669e9b236bea6a7933f516",
     "data/splits/within_entity_temporal/train.parquet": "a0e3743205f4bdbad06dd2d2f24426f8630e97c40c8db11aa1182865b54bfef2",
     "data/splits/within_entity_temporal/validation.parquet": "d63ccc54d4da6d9610378b95abd80f8349934a5736bb5a6c355a30f43bcce9c1",

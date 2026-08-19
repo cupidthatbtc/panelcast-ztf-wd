@@ -120,7 +120,7 @@
     "fingerprint": "ed17afdbaa9c77c5"
   },
   "input_hashes": {
-    "/mnt/c/Users/jcwen/Projects/astro-wd/outputs/catalog/2026-08-01_full/panelcast_zg_monthly.csv": "0e4b93a5cd22586bd269aa8e53954ada218ab7f55be021893cbd061e06622113",
+    "/mnt/c/Users/USER/Projects/astro-wd/outputs/catalog/2026-08-01_full/panelcast_zg_monthly.csv": "0e4b93a5cd22586bd269aa8e53954ada218ab7f55be021893cbd061e06622113",
     "data/processed/ztfgcm_minobs_1.parquet": "5fad2b95088899448b59e46f8ac8e58eca666d641246909bca4d32dd0a47a775",
     "data/splits/within_entity_temporal/train.parquet": "bad223e86da786acb104baf32125fabe5312db58f06146657a2357479345bf87",
     "data/splits/within_entity_temporal/validation.parquet": "a08b04b9a4f8b0919d12c6a5a85b663716f0f04110aee70c87d7cdc8b521cc9e",

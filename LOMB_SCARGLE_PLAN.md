@@ -7,7 +7,7 @@ presentation material. Every number must trace to a committed script.
 
 ## Context
 
-- Repo: `C:\Users\jcwen\Projects\astro-wd` (publishes as `github.com/cupidthatbtc/panelcast-ztf-wd`).
+- Repo: the Windows working copy (publishes as `github.com/cupidthatbtc/panelcast-ztf-wd`).
   `git pull` first — the Mac pushed commit d6cd3f3 (census figure + README section) on 7/24.
 - Raw per-exposure data: `data/raw/lc_cache/<gaia_source_id>.csv` — one file per star, both bands
   mixed (`filtercode` = zg/zr). Columns include `hjd`, `mjd`, `mag`, `magerr`, `catflags`, `chi`,

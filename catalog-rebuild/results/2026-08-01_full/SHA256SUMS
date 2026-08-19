@@ -1045,8 +1045,8 @@ d09318674dd0a79f0797d0df9154d79dba24acdbedf2051fbbe766941ad60ecc         51734  
 e67f5efab70664b0557a1bb917073d1609a75781137875a27d76a62e4eea5191           497  panelcast/gaia-additive/evaluation/within_entity_temporal/calibration.json
 48843060e39a688c9ca36f78740b0248aea222d05cfd08a2ac654247ab7d6e81        188794  panelcast/gaia-additive/evaluation/within_entity_temporal/predictions.json
 c06b6bc8ee66b99583fd2dbea88a4ab4ed52006296ad377280f7a3c25351217b         99740  panelcast/gaia-additive/evaluation/within_entity_temporal/ranked_slate.csv
-b6cd6dbbee26031ef48b10636f9b75bdad9b273b6749f42328cc0346eb355c98          6290  panelcast/gaia-additive/failure.json
-2409d18f63c946c3a1bbaa6c9b37a7b57c2410322188b9dfcefe99cce5b5a1fd         22878  panelcast/gaia-additive/manifest.json
+bff09fa88da2e8320103bea0942701ead9cff4732b335fb1d53c3f4c229f676a          6287  panelcast/gaia-additive/failure.json
+337ae3fc4625deb96f26683ebc202b88824caf6d27f2f465d0bcdc711fab3424         22877  panelcast/gaia-additive/manifest.json
 11299f16e566b9e987bbf3ae1cfee44442eae9a22045f353dc2a989371e5a32c          3537  panelcast/gaia-additive/models/manifest.json
 22e51b208b57d895268aed0a37bb1eb059835a73bda83d317a35fd9e0c0b30ae         43879  panelcast/gaia-additive/models/training_summary.json
 8b12b8fc5bef7ee8b5803ce1598ac4eb580701c56acb5ff01f81b91343eb86b2      73495607  panelcast/gaia-additive/models/ztfgcg_score_20260803_072222.nc
@@ -1129,8 +1129,8 @@ f9fc1ada10f59fada9a00ad88d125dd08944a9bc9e8a1b0aa10780b967b91407           509  
 f9fc1ada10f59fada9a00ad88d125dd08944a9bc9e8a1b0aa10780b967b91407           509  panelcast/gaia-warm/evaluation/within_entity_temporal/calibration.json
 8a62ed860dce39453dfd6af290f82022e58fce63087da07e291c63f6fb259522        189037  panelcast/gaia-warm/evaluation/within_entity_temporal/predictions.json
 115c45675b00f9f09e0581aa2d9ab61b1ad3801209ccdc42c98f8dcdc718cf1c         99277  panelcast/gaia-warm/evaluation/within_entity_temporal/ranked_slate.csv
-1c4e642029e56a3dae1c41a41c60e7494d630f008baca8ae30fdde495cf61357          6297  panelcast/gaia-warm/failure.json
-a6429adae17890737ec9ab954d2c128b42a83d797120602d8d8b6bb19d933300         24040  panelcast/gaia-warm/manifest.json
+eef6df347caab663d61b5a182d90bb6705ac6a498f3e544e5dac6d82a177b284          6294  panelcast/gaia-warm/failure.json
+1947e88d59c87f5fbc54035b15bbcbaaa6a14d04e468e2b0fe99dc0ba017b15b         24039  panelcast/gaia-warm/manifest.json
 2822d3918711626b85b01e85bc3fea5a300775afc9ec1725e7016254d41aeb93          3541  panelcast/gaia-warm/models/manifest.json
 b5ae298c732eca7b3d987b1864e24bd6559575ad2e6fe5fa3ccd7a28d2be590d         46104  panelcast/gaia-warm/models/training_summary.json
 c748c73e59b64361460d7fb6ed8a57c5e78e01dda536d70978049ad269b081c0      73513622  panelcast/gaia-warm/models/ztfgcgw_score_20260803_184927.nc
@@ -1213,8 +1213,8 @@ d80cf6111e59cdebc002dbadd7ab000fbdea2f57c6eae127a57f9e096d5e903e         22485  
 3e11dda0ea93aadb4bcb5f3881b9f8f52471da1248707cb87989a4c85c5fa741           501  panelcast/primary/evaluation/within_entity_temporal/calibration.json
 b946d04080feaaffaf1b42369a67124d21c42fcec25d887f9121a7d1dce68602        188920  panelcast/primary/evaluation/within_entity_temporal/predictions.json
 90aca7d3cf6597fd5a778545135460de2121026356f813b8f3795953f0c3eb92         99304  panelcast/primary/evaluation/within_entity_temporal/ranked_slate.csv
-806e6fdd7ccfbe20e937dbfb1b133d8a031d633560cdf62781bcd53e79413efd          6287  panelcast/primary/failure.json
-4b228e00026bdf9a0d918e88232dc9db15dee12727cb4de7509f147855daef94         22833  panelcast/primary/manifest.json
+3abb3fb7c5f3226c48c479298a29a3ecc7f1c2c2fc1f69f370d5bacd90c11334          6284  panelcast/primary/failure.json
+47fe4e120256080bfec3b5336016941d242cd92a04d122cea9ff25365865f302         22832  panelcast/primary/manifest.json
 cd80de1c602d7233591b0e4bc07430706e27a8d114e926ff204efd83a3b18564          3533  panelcast/primary/models/manifest.json
 99fea8a41cba946bbe7ef48d436ca101f59efe99cc9775646c16b9e8fd4b9dca         43787  panelcast/primary/models/training_summary.json
 bf68929271f0b489556e04b357128dce454564f300a9faf963e938ff9d8107c2      75332500  panelcast/primary/models/ztfgc_score_20260803_023118.nc

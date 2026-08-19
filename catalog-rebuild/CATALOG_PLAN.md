@@ -3,7 +3,7 @@
 Context: the Jestin+2026 (arXiv:2509.15133) 864-star catalog is not on VizieR yet, so we rebuilt
 their candidate selection from public data on the Mac. This plan scales the ZTF fetch + variance
 census to the full rebuilt candidate list. Same repo conventions as `LOMB_SCARGLE_PLAN.md`
-(repo `C:\Users\jcwen\Projects\astro-wd`, branch off `lomb-scargle-census`).
+(the Windows working copy of this repo, branch off `lomb-scargle-census`).
 
 ## What is already done (Mac, verified against the paper)
 

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Run the two-attempt, 12-hour full-catalog panelcast policy from Windows."""
 
+import os
 import argparse
 import json
 from pathlib import Path
@@ -69,7 +70,7 @@ def fit_command(
     timeout_seconds: int,
     run_dir: Path,
 ) -> str:
-    linux_repo = "/mnt/c/Users/jcwen/Projects/astro-wd"
+    linux_repo = os.environ.get("ASTRO_WD_WSL_REPO", "/mnt/c/Projects/astro-wd")
     panel_path = f"{linux_repo}/outputs/catalog/{run_dir.name}/panelcast_zg_monthly.csv"
     retry_config = ""
     if init_strategy != "uniform":
@@ -106,7 +107,7 @@ def evaluation_oom(path: Path) -> bool:
 
 
 def evaluation_resume_command(run_id: str, timeout_seconds: int) -> str:
-    linux_repo = "/mnt/c/Users/jcwen/Projects/astro-wd"
+    linux_repo = os.environ.get("ASTRO_WD_WSL_REPO", "/mnt/c/Projects/astro-wd")
     panel_path = f"{linux_repo}/outputs/catalog/2026-08-01_full/panelcast_zg_monthly.csv"
     return (
         f"cd {shlex.quote(linux_repo)} && "
