@@ -1,0 +1,217 @@
+{
+  "run_id": "2026-08-02_201719_874610_b84e",
+  "stage": "evaluate",
+  "exception_type": "PipelineError",
+  "message": "[evaluate] RESOURCE_EXHAUSTED: Out of memory while trying to allocate 8.02GiB.",
+  "traceback_tail": [
+    "--------------------\n",
+    "For simplicity, JAX has removed its internal frames from the traceback of the following exception. Set JAX_TRACEBACK_FILTERING=off to include these.\n",
+    "\nThe above exception was the direct cause of the following exception:\n\n",
+    "Traceback (most recent call last):\n",
+    "  File \"/home/jcwen/aoty-gpu/lib/python3.12/site-packages/panelcast/pipelines/orchestrator.py\", line 919, in run\n    self._execute_stages(stages)\n",
+    "  File \"/home/jcwen/aoty-gpu/lib/python3.12/site-packages/panelcast/pipelines/orchestrator.py\", line 1657, in _execute_stages\n    self._execute_stage(stage)\n",
+    "  File \"/home/jcwen/aoty-gpu/lib/python3.12/site-packages/panelcast/pipelines/orchestrator.py\", line 2037, in _execute_stage\n    raise PipelineError(str(e), stage=stage.name) from e\n",
+    "panelcast.pipelines.errors.PipelineError: [evaluate] RESOURCE_EXHAUSTED: Out of memory while trying to allocate 8.02GiB.\n"
+  ],
+  "stages_completed": [
+    "data",
+    "splits",
+    "features",
+    "train"
+  ],
+  "hint": null,
+  "resume_command": "panelcast run --resume 2026-08-02_201719_874610_b84e",
+  "recent_events": [
+    {
+      "level": "info",
+      "batch": "8",
+      "n_batches": "24",
+      "draws_done": "4000",
+      "batch_s": "0.4",
+      "elapsed_s": "3.6",
+      "event": "info_criteria_progress",
+      "timestamp": "2026-08-03T02:32:13.139187Z"
+    },
+    {
+      "level": "info",
+      "batch": "9",
+      "n_batches": "24",
+      "draws_done": "4500",
+      "batch_s": "0.4",
+      "elapsed_s": "4.1",
+      "event": "info_criteria_progress",
+      "timestamp": "2026-08-03T02:32:13.575218Z"
+    },
+    {
+      "level": "info",
+      "batch": "10",
+      "n_batches": "24",
+      "draws_done": "5000",
+      "batch_s": "0.4",
+      "elapsed_s": "4.5",
+      "event": "info_criteria_progress",
+      "timestamp": "2026-08-03T02:32:14.000024Z"
+    },
+    {
+      "level": "info",
+      "batch": "11",
+      "n_batches": "24",
+      "draws_done": "5500",
+      "batch_s": "0.4",
+      "elapsed_s": "4.9",
+      "event": "info_criteria_progress",
+      "timestamp": "2026-08-03T02:32:14.441682Z"
+    },
+    {
+      "level": "info",
+      "batch": "12",
+      "n_batches": "24",
+      "draws_done": "6000",
+      "batch_s": "0.4",
+      "elapsed_s": "5.4",
+      "event": "info_criteria_progress",
+      "timestamp": "2026-08-03T02:32:14.874789Z"
+    },
+    {
+      "level": "info",
+      "batch": "13",
+      "n_batches": "24",
+      "draws_done": "6500",
+      "batch_s": "0.4",
+      "elapsed_s": "5.8",
+      "event": "info_criteria_progress",
+      "timestamp": "2026-08-03T02:32:15.313739Z"
+    },
+    {
+      "level": "info",
+      "batch": "14",
+      "n_batches": "24",
+      "draws_done": "7000",
+      "batch_s": "0.4",
+      "elapsed_s": "6.2",
+      "event": "info_criteria_progress",
+      "timestamp": "2026-08-03T02:32:15.737452Z"
+    },
+    {
+      "level": "info",
+      "batch": "15",
+      "n_batches": "24",
+      "draws_done": "7500",
+      "batch_s": "0.4",
+      "elapsed_s": "6.7",
+      "event": "info_criteria_progress",
+      "timestamp": "2026-08-03T02:32:16.168272Z"
+    },
+    {
+      "level": "info",
+      "batch": "16",
+      "n_batches": "24",
+      "draws_done": "8000",
+      "batch_s": "0.4",
+      "elapsed_s": "7.1",
+      "event": "info_criteria_progress",
+      "timestamp": "2026-08-03T02:32:16.601877Z"
+    },
+    {
+      "level": "info",
+      "batch": "17",
+      "n_batches": "24",
+      "draws_done": "8500",
+      "batch_s": "0.4",
+      "elapsed_s": "7.5",
+      "event": "info_criteria_progress",
+      "timestamp": "2026-08-03T02:32:17.034414Z"
+    },
+    {
+      "level": "info",
+      "batch": "18",
+      "n_batches": "24",
+      "draws_done": "9000",
+      "batch_s": "0.4",
+      "elapsed_s": "8.0",
+      "event": "info_criteria_progress",
+      "timestamp": "2026-08-03T02:32:17.472380Z"
+    },
+    {
+      "level": "info",
+      "batch": "19",
+      "n_batches": "24",
+      "draws_done": "9500",
+      "batch_s": "0.4",
+      "elapsed_s": "8.4",
+      "event": "info_criteria_progress",
+      "timestamp": "2026-08-03T02:32:17.907240Z"
+    },
+    {
+      "level": "info",
+      "batch": "20",
+      "n_batches": "24",
+      "draws_done": "10000",
+      "batch_s": "0.4",
+      "elapsed_s": "8.8",
+      "event": "info_criteria_progress",
+      "timestamp": "2026-08-03T02:32:18.336575Z"
+    },
+    {
+      "level": "info",
+      "batch": "21",
+      "n_batches": "24",
+      "draws_done": "10500",
+      "batch_s": "0.4",
+      "elapsed_s": "9.3",
+      "event": "info_criteria_progress",
+      "timestamp": "2026-08-03T02:32:18.769255Z"
+    },
+    {
+      "level": "info",
+      "batch": "22",
+      "n_batches": "24",
+      "draws_done": "11000",
+      "batch_s": "0.4",
+      "elapsed_s": "9.7",
+      "event": "info_criteria_progress",
+      "timestamp": "2026-08-03T02:32:19.192910Z"
+    },
+    {
+      "level": "info",
+      "batch": "23",
+      "n_batches": "24",
+      "draws_done": "11500",
+      "batch_s": "0.4",
+      "elapsed_s": "10.1",
+      "event": "info_criteria_progress",
+      "timestamp": "2026-08-03T02:32:19.640817Z"
+    },
+    {
+      "level": "info",
+      "batch": "24",
+      "n_batches": "24",
+      "draws_done": "12000",
+      "batch_s": "0.4",
+      "elapsed_s": "10.6",
+      "event": "info_criteria_progress",
+      "timestamp": "2026-08-03T02:32:20.076850Z"
+    },
+    {
+      "level": "info",
+      "lag1_acf": "None",
+      "n_pairs": "0",
+      "event": "residual_autocorrelation",
+      "timestamp": "2026-08-03T02:32:25.123316Z"
+    },
+    {
+      "level": "info",
+      "mode": "global_mean_for_all_rows",
+      "n_multi_album_artists": "140",
+      "event": "disjoint_prev_score_cold_start_mode",
+      "timestamp": "2026-08-03T02:32:25.601369Z"
+    },
+    {
+      "level": "error",
+      "stage": "evaluate",
+      "error": "[evaluate] RESOURCE_EXHAUSTED: Out of memory while trying to allocate 8.02GiB.",
+      "event": "pipeline_failed",
+      "timestamp": "2026-08-03T02:32:38.149701Z"
+    }
+  ]
+}

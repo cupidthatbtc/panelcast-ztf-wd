@@ -1,0 +1,20 @@
+{
+  "stage_a_eq3_count": 22264,
+  "stage_b_candidate_count": 1423,
+  "stage_b_cross_variant_core": 1359,
+  "stage_b_core_fraction": 0.955024595924104,
+  "known_roster_in_stage_b": 20,
+  "crossmatch_rule": "nearest ZTF coordinate cluster; >=20 QC-passing exposures in zg and zr",
+  "nearest_cluster_radius_arcsec": 1.5,
+  "row_qc": "catflags == 0; finite mag; finite magerr > 0; chi < 4; finite MJD",
+  "crossmatched_count": 928,
+  "known_roster_crossmatched": 19,
+  "exposure_time_standard": "BJD_TDB",
+  "census_threshold": 2.5,
+  "selection_provenance": {
+    "sigma_g_convention": "Gaia phot_g_n_obs / 9 per-CCD inference",
+    "stage_b_multiplier": 1.1896,
+    "paper_multiplier": 1.25,
+    "membership_variants": 4
+  }
+}

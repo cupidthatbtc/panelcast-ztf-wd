@@ -1,0 +1,10 @@
+{
+  "passed": true,
+  "rhat_max": 1.0,
+  "ess_bulk_min": 5133.0,
+  "ess_tail_min": 6191.0,
+  "divergences": 0,
+  "rhat_threshold": 1.01,
+  "ess_threshold": 400,
+  "failing_params": []
+}

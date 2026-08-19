@@ -1,0 +1,38 @@
+{
+  "all_available_passed": true,
+  "available_checks": 3,
+  "unavailable_checks": 1,
+  "checks": {
+    "3345661467822106624": {
+      "passed": true,
+      "available": true,
+      "expected": "confirmed RR Lyrae, 0.2\u20131.0 d",
+      "status": "confirmed",
+      "period_days": 0.2170366094883607,
+      "frequency_per_day": 4.607517608929604
+    },
+    "6555925496084361344": {
+      "passed": null,
+      "available": false,
+      "expected": "confirmed RR Lyrae, 0.2\u20131.0 d",
+      "status": "unavailable_no_ztf_rows",
+      "reason": "IRSA returned zero rows within both 10 and 30 arcsec cones"
+    },
+    "103999471976858496": {
+      "passed": true,
+      "available": true,
+      "expected": "0.44977 \u00b1 0.005 d",
+      "status": "confirmed",
+      "period_days": 0.44976888236893253,
+      "frequency_per_day": 2.223364130335119
+    },
+    "2833849800205759360": {
+      "passed": true,
+      "available": true,
+      "expected": "6.1464 \u00b1 0.01 d^-1",
+      "status": "confirmed",
+      "period_days": 0.16269660781016476,
+      "frequency_per_day": 6.146409648360986
+    }
+  }
+}
