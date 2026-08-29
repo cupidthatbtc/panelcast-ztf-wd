@@ -49,6 +49,7 @@ CAMPAIGN_ID_PREFIXES = {
     "93": "D2 arm A (TESS-truth signal + synthetic Gaussian floor)",
     "94": "D2 Gaussian nulls (zero amplitude, arm-A floor)",
     "95": "D2 paired real-window controls (uninjected template windows)",
+    "96": "D2 self-window templates (real ZTF at Romero positions; diagnostic)",
 }
 
 

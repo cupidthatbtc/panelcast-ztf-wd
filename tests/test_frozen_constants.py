@@ -106,6 +106,7 @@ def test_campaign_id_convention():
     assert frozen_api.campaign_id_ok("9300000000000123456")
     assert frozen_api.campaign_id_ok("9400000000000000001")
     assert frozen_api.campaign_id_ok("9500000000000000001")
+    assert frozen_api.campaign_id_ok("9600000000000000001")
     assert not frozen_api.campaign_id_ok("757076")  # not 19 digits
     assert not frozen_api.campaign_id_ok("9100000000000123456")  # unknown prefix
     assert not frozen_api.campaign_id_ok("1013776353903293056")  # real Gaia id
