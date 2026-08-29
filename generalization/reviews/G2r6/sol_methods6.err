@@ -1,0 +1,1308 @@
+Reading additional input from stdin...
+2026-08-29T02:18:40.488392Z ERROR codex_models_manager::cache: failed to load models cache: missing field `base_instructions` at line 97 column 5
+2026-08-29T02:18:41.867646Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest("http/request url is invalid: relative URL without a base")))
+OpenAI Codex v0.145.0
+--------
+workdir: /Users/jackneo/Documents/vonhippel-base9/astro-wd
+model: gpt-5.6-sol
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: xhigh
+reasoning summaries: none
+session id: 01a04b4f-dfd0-7421-91f0-bb509c375569
+--------
+user
+Round-6 FINAL. Your two round-5 residuals (generalization/reviews/G2r5/sol_methods5.md): (1) attested roster identity (not merely 928 unique); (2) panels shard_index provenance. Verify against the current scripts/generalization/run_generalization_ls.py (validate_attestation now compares the attested id set to the published ls_full_catalog.csv set) and build_panels_generic.py (index derived from this run's census rows; dirty exposure_stars dir refused). RESOLVED/UNRESOLVED + evidence, then FREEZABLE YES/NO.
+2026-08-29T02:18:42.123059Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest("http/request url is invalid: relative URL without a base")))
+2026-08-29T02:18:42.406730Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when AuthRequired(AuthRequiredError { www_authenticate_header: "Bearer realm=\"OAuth\", resource_metadata=\"https://circleback.ai/.well-known/oauth-protected-resource/api/mcp\", scope=\"user\"" })
+2026-08-29T02:18:43.141934Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest("http/request url is invalid: relative URL without a base")))
+warning: Exceeded skills context budget of 2%. All skill descriptions were removed and 33 additional skills were not included in the model-visible skills list.
+2026-08-29T02:19:15.949896Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 426 Upgrade Required, url: ws://127.0.0.1:17841/v1/responses
+codex
+I’m doing a focused final audit of the two residuals against the current scripts and review context, then I’ll give only resolution status, concrete evidence, and the freeze decision.
+codex
+I’m using the engineering code-review skill because this is an evidence-based release gate: it keeps the verdict tied to executable safeguards and their call paths.
+exec
+/bin/zsh -lc "sed -n '1,240p' /Users/jackneo/.codex/plugins/cache/claude-cowork/engineering/1.2.0/skills/code-review/SKILL.md" in /Users/jackneo/Documents/vonhippel-base9/astro-wd
+ succeeded in 0ms:
+---
+name: code-review
+description: Review code changes for security, performance, and correctness. Trigger with a PR URL or diff, "review this before I merge", "is this code safe?", or when checking a change for N+1 queries, injection risks, missing edge cases, or error handling gaps.
+argument-hint: "<PR URL, diff, or file path>"
+---
+
+# /code-review
+
+> If you see unfamiliar placeholders or need to check which tools are connected, see [CONNECTORS.md](../../CONNECTORS.md).
+
+Review code changes with a structured lens on security, performance, correctness, and maintainability.
+
+## Usage
+
+```
+/code-review <PR URL or file path>
+```
+
+Review the provided code changes: @$1
+
+If no specific file or URL is provided, ask what to review.
+
+## How It Works
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                      CODE REVIEW                                   │
+├─────────────────────────────────────────────────────────────────┤
+│  STANDALONE (always works)                                       │
+│  ✓ Paste a diff, PR URL, or point to files                      │
+│  ✓ Security audit (OWASP top 10, injection, auth)               │
+│  ✓ Performance review (N+1, memory leaks, complexity)           │
+│  ✓ Correctness (edge cases, error handling, race conditions)    │
+│  ✓ Style (naming, structure, readability)                        │
+│  ✓ Actionable suggestions with code examples                    │
+├─────────────────────────────────────────────────────────────────┤
+│  SUPERCHARGED (when you connect your tools)                      │
+│  + Source control: Pull PR diff automatically                    │
+│  + Project tracker: Link findings to tickets                     │
+│  + Knowledge base: Check against team coding standards           │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+## Review Dimensions
+
+### Security
+- SQL injection, XSS, CSRF
+- Authentication and authorization flaws
+- Secrets or credentials in code
+- Insecure deserialization
+- Path traversal
+- SSRF
+
+### Performance
+- N+1 queries
+- Unnecessary memory allocations
+- Algorithmic complexity (O(n²) in hot paths)
+- Missing database indexes
+- Unbounded queries or loops
+- Resource leaks
+
+### Correctness
+- Edge cases (empty input, null, overflow)
+- Race conditions and concurrency issues
+- Error handling and propagation
+- Off-by-one errors
+- Type safety
+
+### Maintainability
+- Naming clarity
+- Single responsibility
+- Duplication
+- Test coverage
+- Documentation for non-obvious logic
+
+## Output
+
+```markdown
+## Code Review: [PR title or file]
+
+### Summary
+[1-2 sentence overview of the changes and overall quality]
+
+### Critical Issues
+| # | File | Line | Issue | Severity |
+|---|------|------|-------|----------|
+| 1 | [file] | [line] | [description] | 🔴 Critical |
+
+### Suggestions
+| # | File | Line | Suggestion | Category |
+|---|------|------|------------|----------|
+| 1 | [file] | [line] | [description] | Performance |
+
+### What Looks Good
+- [Positive observations]
+
+### Verdict
+[Approve / Request Changes / Needs Discussion]
+```
+
+## If Connectors Available
+
+If **~~source control** is connected:
+- Pull the PR diff automatically from the URL
+- Check CI status and test results
+
+If **~~project tracker** is connected:
+- Link findings to related tickets
+- Verify the PR addresses the stated requirements
+
+If **~~knowledge base** is connected:
+- Check changes against team coding standards and style guides
+
+## Tips
+
+1. **Provide context** — "This is a hot path" or "This handles PII" helps me focus.
+2. **Specify concerns** — "Focus on security" narrows the review.
+3. **Include tests** — I'll check test coverage and quality too.
+
+exec
+/bin/zsh -lc 'rg -n -C 8 "shard_index|census|exposure_stars|dirty|refus|glob|iterdir|mkdir" scripts/generalization/build_panels_generic.py' in /Users/jackneo/Documents/vonhippel-base9/astro-wd
+exec
+/bin/zsh -lc 'rg -n -C 7 "validate_attestation|ls_full_catalog|attest|published|catalog" scripts/generalization/run_generalization_ls.py' in /Users/jackneo/Documents/vonhippel-base9/astro-wd
+exec
+/bin/zsh -lc 'git status --short && git branch --show-current && git log -1 --oneline' in /Users/jackneo/Documents/vonhippel-base9/astro-wd
+exec
+/bin/zsh -lc "nl -ba generalization/reviews/G2r5/sol_methods5.md | sed -n '1,240p'" in /Users/jackneo/Documents/vonhippel-base9/astro-wd
+ succeeded in 280ms:
+1-#!/usr/bin/env python3
+2:"""Generic panel/census builder: frozen QC chain over a campaign roster.
+3-
+4-Re-implements ONLY the roster/paths plumbing of build_catalog_panels.main();
+5-every scientific operation (nearest-cluster crossmatch, row QC, BJD_TDB
+6:conversion, nightly/monthly binning, 2.5-ratio census) is the frozen function
+7-imported through frozen_api, applied verbatim.
+8-
+9-Roster CSV contract (build_d3_roster.py writes this):
+10-  source_id     19-digit campaign id (prefix 90/92/93/94)
+11-  external_id   upstream name (e.g. KIC 8462852)
+12-  ra, dec       ICRS degrees for the ZTF cone
+13-  class_label   truth class (e.g. dsct_flag1, notdsct_flag0)
+14-  label_variable, label_periodic   truth booleans (may be empty)
+--
+40-    campaign_file_shas,
+41-    EXPOSURE_COLUMNS,
+42-    MIN_EXPOSURES_PER_BAND,
+43-    MONTHLY_COLUMNS,
+44-    NIGHTLY_COLUMNS,
+45-    add_bjd,
+46-    assert_frozen,
+47-    campaign_id_ok,
+48:    census_row,
+49-    clean_rows,
+50-    env_versions,
+51-    frozen_file_shas,
+52-    monthly_panel,
+53-    nightly_panel,
+54-    read_cache,
+55-    select_nearest_source,
+56-)
+--
+107-    if args.panel_report is not None:
+108-        gate = json.loads(args.panel_report.read_text(encoding="utf-8"))
+109-        if gate.get("gate") != "panel_golden_gate" or gate.get("passed") is not True:
+110-            raise SystemExit(f"{args.panel_report} is not a panel-gate PASS")
+111-        current = env_versions()
+112-        mismatched = [k for k in current if gate["env"].get(k) != current.get(k)]
+113-        if mismatched:
+114-            raise SystemExit(f"panel attestation env differs: {mismatched}")
+115:    args.out_dir.mkdir(parents=True, exist_ok=True)
+116:    exposure_star_dir = args.out_dir / "exposure_stars"
+117:    exposure_star_dir.mkdir(parents=True, exist_ok=True)
+118:    stale = list(exposure_star_dir.glob("*.csv.gz"))
+119-    if stale:
+120-        raise SystemExit(
+121-            f"{exposure_star_dir} already holds {len(stale)} shards — use a "
+122:            f"fresh out-dir (stale-shard guard; the emitted shard_index must "
+123-            f"describe exactly this run's output)"
+124-        )
+125-
+126-    roster = pd.read_csv(args.roster, dtype={"source_id": str})
+127-    if not args.allow_nonstandard_ids:
+128-        bad = [sid for sid in roster["source_id"] if not campaign_id_ok(sid)]
+129-        if bad:
+130-            raise SystemExit(f"{len(bad)} roster ids violate the campaign convention: {bad[:3]}")
+131-
+132-    qc_rows: list[dict[str, object]] = []
+133:    census_rows: list[dict[str, object]] = []
+134-    crossmatched = 0
+135-
+136-    for index, (_, row) in enumerate(roster.iterrows(), 1):
+137-        meta = roster_meta(row)
+138-        cache_path = args.cache_dir / f"{meta.source_id}.csv"
+139-        qc: dict[str, object] = {
+140-            "source_id": meta.source_id,
+141-            "external_id": meta.wdj_name,
+--
+179-        clean["source_id"] = meta.source_id
+180-        clean = add_bjd(clean, float(row["ra"]), float(row["dec"]))
+181-        clean = clean.sort_values(["band", "bjd_tdb"])
+182-        clean[EXPOSURE_COLUMNS].to_csv(
+183-            exposure_star_dir / f"{meta.source_id}.csv.gz", index=False
+184-        )
+185-        nightly = nightly_panel(clean)
+186-        monthly = monthly_panel(nightly)
+187:        row = census_row(meta, clean, nightly, monthly)
+188-        zg_nightly = nightly[nightly["band"] == "zg"]
+189-        row["zg_median_exp_per_night"] = (
+190-            float(zg_nightly["n_exp"].median()) if len(zg_nightly) else float("nan"))
+191:        census_rows.append(row)
+192-        if index % 50 == 0 or index == len(roster):
+193-            print(f"[panels-generic] {index:,}/{len(roster):,}; crossmatched={crossmatched:,}",
+194-                  flush=True)
+195-
+196-    pd.DataFrame(qc_rows).to_csv(args.out_dir / "crossmatch_qc.csv", index=False)
+197:    pd.DataFrame(census_rows).to_csv(args.out_dir / "census_generic.csv", index=False)
+198:    shard_ids = sorted(row["source_id"] for row in census_rows)
+199:    (args.out_dir / "shard_index.txt").write_text(
+200-        "\n".join(shard_ids) + "\n", encoding="utf-8")
+201-    manifest = {
+202-        "builder": "build_panels_generic.py",
+203-        "roster": str(args.roster),
+204-        "roster_rows": len(roster),
+205-        "crossmatched_count": crossmatched,
+206-        "crossmatch_rule": "frozen: nearest ZTF coordinate cluster; "
+207-                           f">={MIN_EXPOSURES_PER_BAND} QC-passing exposures in zg and zr",
+208-        "row_qc": "frozen: catflags == 0; finite mag; finite magerr > 0; chi < 4; finite MJD",
+209:        "census_threshold": 2.5,
+210-        "env": env_versions(),
+211-        "frozen_sha256": frozen_file_shas(),
+212-        "campaign_sha256": campaign_start,
+213-        "panel_attestation": str(args.panel_report) if args.panel_report else "",
+214-    }
+215-    if campaign_file_shas() != campaign_start:
+216-        raise SystemExit("campaign code changed while panels were building")
+217-    (args.out_dir / "panels_manifest.json").write_text(
+
+ succeeded in 351ms:
+1-#!/usr/bin/env python3
+2-"""Resumable, shardable campaign driver over the frozen analyze_star.
+3-
+4-This is the ONLY way campaign Lomb-Scargle searches run. It imports
+5-analyze_star through frozen_api (SHA-gated) and never invokes the frozen CLI,
+6:whose main() would merge against the WD roster and rewrite the published
+7:catalog table. Per-star JSONs are the product; no roster merge, no CSV — the
+8-campaign metrics read the JSONs directly (METRICS_SPEC.md).
+9-
+10-Resumability is inherited from analyze_star: a complete result file is
+11-returned untouched, so re-running after a crash or shard split is safe.
+12-"""
+13-
+14-from __future__ import annotations
+--
+30-    campaign_file_shas,
+31-    campaign_id_ok,
+32-    env_versions,
+33-    frozen_file_shas,
+34-    physical_workers,
+35-)
+36-
+37:def validate_attestation(report_path: Path) -> dict:
+38-    report = json.loads(report_path.read_text(encoding="utf-8"))
+39-    if report.get("gate") != "replay_gate":
+40-        raise SystemExit(f"{report_path} is not a replay_gate report")
+41-    if report.get("passed") is not True:
+42:        raise SystemExit(f"replay attestation {report_path} is not a PASS")
+43-    if not report.get("stars"):
+44:        raise SystemExit(f"replay attestation {report_path} has an empty roster")
+45-    current = env_versions()
+46-    # the FULL environment fingerprint must match (G2 methods finding 1)
+47-    mismatched = [
+48-        key for key in current
+49-        if report["env"].get(key) != current.get(key)
+50-    ]
+51-    if mismatched:
+52-        raise SystemExit(
+53:            f"replay attestation env differs from this run: {mismatched} "
+54:            f"(attested {[report['env'].get(k) for k in mismatched]} vs "
+55-            f"current {[current.get(k) for k in mismatched]})"
+56-        )
+57-    if report.get("frozen_sha256") != frozen_file_shas():
+58:        raise SystemExit("replay attestation frozen SHAs differ from this checkout")
+59-    unique = {record["source_id"] for record in report["stars"]}
+60-    if len(unique) != 928 or len(report["stars"]) != 928:
+61-        raise SystemExit(
+62-            f"production runs require the FULL 928-UNIQUE-star baseline "
+63:            f"attestation; this report covers {len(unique)} unique of "
+64-            f"{len(report['stars'])} records"
+65-        )
+66:    catalog = pd.read_csv(
+67:        REPO_ROOT / "catalog-rebuild/results/2026-08-01_full/catalog/ls_full_catalog.csv",
+68-        dtype={"source_id": str},
+69-    )
+70:    expected = set(catalog["source_id"])
+71-    if unique != expected:
+72-        raise SystemExit(
+73:            f"attested roster is not the published 928-star catalog set: "
+74-            f"{len(unique - expected)} foreign, {len(expected - unique)} missing"
+75-        )
+76-    return report
+77-
+78-# One in-flight star holds two full-resolution float32 periodogram memmaps plus
+79:# the multiband combination on scratch; the worst published-catalog baseline
+80-# needs 0.471 GB for the three high-pass memmaps, so 0.52 adds ~10% headroom
+81-# for longer campaign baselines. Disk, not wall time, binds worker count.
+82-SCRATCH_GB_PER_WORKER = 0.52
+83-
+84-
+85-def preflight_workers(requested: int | None, work_root: Path) -> tuple[int, float]:
+86-    if requested is not None and requested < 1:
+--
+194-                        help="replay_report.json from a PASSING replay_gate run "
+195-                             "on THIS machine+env; campaign runs refuse to start "
+196-                             "without one (G1 methods finding 1)")
+197-    args = parser.parse_args()
+198-
+199-    assert_frozen()
+200-    campaign_shas_start = campaign_file_shas()
+201:    attestation = validate_attestation(args.replay_report)
+202-    passes = tuple(args.passes.split(","))
+203-    if passes != ("low", "high") and not args.allow_nonstandard_ids:
+204-        raise SystemExit("production runs use exactly low,high (the frozen CLI's "
+205-                         "pass set); pass --allow-nonstandard-ids for debug runs")
+206-    star_dir = args.out_dir / "stars"
+207-    work_root = args.work_root or (args.out_dir / "work")
+208-    star_dir.mkdir(parents=True, exist_ok=True)
+--
+314-        "passes": list(passes),
+315-        "workers": workers,
+316-        "wall_seconds": round(time.time() - started, 1),
+317-        "shard_dir": str(args.shard_dir),
+318-        "env": env_versions(),
+319-        "frozen_sha256": assert_frozen(),
+320-        "campaign_sha256": campaign_file_shas(),
+321:        "replay_attestation": {
+322-            "path": str(args.replay_report),
+323:            "wall_seconds": attestation.get("wall_seconds"),
+324:            "verdict_counts": attestation.get("verdict_counts"),
+325-        },
+326-    }
+327-    if campaign_file_shas() != campaign_shas_start:
+328-        raise SystemExit("campaign code changed mid-run — results void")
+329-    (args.out_dir / "manifest.json").write_text(
+330-        json.dumps(manifest, indent=2) + "\n", encoding="utf-8"
+331-    )
+
+ succeeded in 387ms:
+     1	- Panel gate — RESOLVED: all numeric fields reject nonfinite values; the report records input/code/environment hashes; production panel builds require a passing, environment-matching report ([panel_golden_gate.py:74](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/panel_golden_gate.py:74), [panel_golden_gate.py:171](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/panel_golden_gate.py:171), [build_panels_generic.py:104](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/build_panels_generic.py:104)).
+     2	- 928-unique attestation — UNRESOLVED: validation enforces only 928 distinct IDs, not the expected published set or `roster_digest`; a focused check accepted 928 arbitrary unique IDs ([run_generalization_ls.py:56](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/run_generalization_ls.py:56), [replay_gate.py:229](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/replay_gate.py:229)).
+     3	- Shard-index exact-set enforcement — UNRESOLVED: the runner’s bidirectional comparison is correct and D2’s index is manifest-derived, but the generic panel builder generates its index by globbing the existing output directory, thereby blessing stale shards ([run_generalization_ls.py:205](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/run_generalization_ls.py:205), [build_d2_shards.py:331](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/build_d2_shards.py:331), [build_panels_generic.py:191](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/build_panels_generic.py:191)).
+     4	- Drift snapshots in all stages — RESOLVED: panel gate, panel builder, D2 builder, replay gate, and runner capture starting SHAs and abort on end-of-stage mismatch ([panel_golden_gate.py:129](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/panel_golden_gate.py:129), [build_panels_generic.py:103](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/build_panels_generic.py:103), [build_d2_shards.py:178](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/build_d2_shards.py:178), [replay_gate.py:166](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/replay_gate.py:166), [run_generalization_ls.py:187](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/run_generalization_ls.py:187)).
+     5	
+     6	FREEZABLE NO.
+
+ succeeded in 480ms:
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-8GXF47lk' (errno=Operation not permitted)
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-ec2Wdc00' (errno=Operation not permitted)
+?? generalization/reviews/G2r6/
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-tMdKKo46' (errno=Operation not permitted)
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-nm7TF8Gv' (errno=Operation not permitted)
+generalization/campaign-1
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-TCBxawHP' (errno=Operation not permitted)
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-SJlKhtst' (errno=Operation not permitted)
+1beb8f0 fix stale match_col expression left by patch-ordering (KeyError best_match_primary); D1 full run clean again
+
+codex
+The two claimed fixes are present in the production paths. I’m now checking their fail-closed behavior and data invariants—especially that the published catalog itself is exactly the intended 928-ID set and that no filesystem-derived index path remains.
+exec
+/bin/zsh -lc "nl -ba scripts/generalization/run_generalization_ls.py | sed -n '1,90p;170,225p;260,345p'" in /Users/jackneo/Documents/vonhippel-base9/astro-wd
+exec
+/bin/zsh -lc 'find generalization/reviews/G2r6 -maxdepth 2 -type f -print | sort' in /Users/jackneo/Documents/vonhippel-base9/astro-wd
+exec
+/bin/zsh -lc 'git log --oneline -8 -- scripts/generalization/run_generalization_ls.py scripts/generalization/build_panels_generic.py' in /Users/jackneo/Documents/vonhippel-base9/astro-wd
+exec
+/bin/zsh -lc "python - <<'PY'
+import csv
+from pathlib import Path
+p=Path('catalog-rebuild/results/2026-08-01_full/catalog/ls_full_catalog.csv')
+with p.open(newline='', encoding='utf-8') as f:
+    rows=list(csv.DictReader(f))
+ids=[r['source_id'] for r in rows]
+print('path:', p)
+print('rows:', len(rows))
+print('unique_source_ids:', len(set(ids)))
+print('blank_source_ids:', sum(not x for x in ids))
+print('duplicate_rows:', len(ids)-len(set(ids)))
+print('all_19_digit:', all(len(x)==19 and x.isdigit() for x in ids))
+PY" in /Users/jackneo/Documents/vonhippel-base9/astro-wd
+exec
+/bin/zsh -lc 'rg -n -C 10 "shard_index|expected_shards|actual_shards|missing|extra|rglob|glob" scripts/generalization/run_generalization_ls.py' in /Users/jackneo/Documents/vonhippel-base9/astro-wd
+ succeeded in 0ms:
+     1	#!/usr/bin/env python3
+     2	"""Resumable, shardable campaign driver over the frozen analyze_star.
+     3	
+     4	This is the ONLY way campaign Lomb-Scargle searches run. It imports
+     5	analyze_star through frozen_api (SHA-gated) and never invokes the frozen CLI,
+     6	whose main() would merge against the WD roster and rewrite the published
+     7	catalog table. Per-star JSONs are the product; no roster merge, no CSV — the
+     8	campaign metrics read the JSONs directly (METRICS_SPEC.md).
+     9	
+    10	Resumability is inherited from analyze_star: a complete result file is
+    11	returned untouched, so re-running after a crash or shard split is safe.
+    12	"""
+    13	
+    14	from __future__ import annotations
+    15	
+    16	import argparse
+    17	import hashlib
+    18	import json
+    19	import shutil
+    20	import time
+    21	from concurrent.futures import ProcessPoolExecutor, as_completed
+    22	from pathlib import Path
+    23	
+    24	import pandas as pd
+    25	
+    26	from frozen_api import (
+    27	    REPO_ROOT,
+    28	    analyze_star,
+    29	    assert_frozen,
+    30	    campaign_file_shas,
+    31	    campaign_id_ok,
+    32	    env_versions,
+    33	    frozen_file_shas,
+    34	    physical_workers,
+    35	)
+    36	
+    37	def validate_attestation(report_path: Path) -> dict:
+    38	    report = json.loads(report_path.read_text(encoding="utf-8"))
+    39	    if report.get("gate") != "replay_gate":
+    40	        raise SystemExit(f"{report_path} is not a replay_gate report")
+    41	    if report.get("passed") is not True:
+    42	        raise SystemExit(f"replay attestation {report_path} is not a PASS")
+    43	    if not report.get("stars"):
+    44	        raise SystemExit(f"replay attestation {report_path} has an empty roster")
+    45	    current = env_versions()
+    46	    # the FULL environment fingerprint must match (G2 methods finding 1)
+    47	    mismatched = [
+    48	        key for key in current
+    49	        if report["env"].get(key) != current.get(key)
+    50	    ]
+    51	    if mismatched:
+    52	        raise SystemExit(
+    53	            f"replay attestation env differs from this run: {mismatched} "
+    54	            f"(attested {[report['env'].get(k) for k in mismatched]} vs "
+    55	            f"current {[current.get(k) for k in mismatched]})"
+    56	        )
+    57	    if report.get("frozen_sha256") != frozen_file_shas():
+    58	        raise SystemExit("replay attestation frozen SHAs differ from this checkout")
+    59	    unique = {record["source_id"] for record in report["stars"]}
+    60	    if len(unique) != 928 or len(report["stars"]) != 928:
+    61	        raise SystemExit(
+    62	            f"production runs require the FULL 928-UNIQUE-star baseline "
+    63	            f"attestation; this report covers {len(unique)} unique of "
+    64	            f"{len(report['stars'])} records"
+    65	        )
+    66	    catalog = pd.read_csv(
+    67	        REPO_ROOT / "catalog-rebuild/results/2026-08-01_full/catalog/ls_full_catalog.csv",
+    68	        dtype={"source_id": str},
+    69	    )
+    70	    expected = set(catalog["source_id"])
+    71	    if unique != expected:
+    72	        raise SystemExit(
+    73	            f"attested roster is not the published 928-star catalog set: "
+    74	            f"{len(unique - expected)} foreign, {len(expected - unique)} missing"
+    75	        )
+    76	    return report
+    77	
+    78	# One in-flight star holds two full-resolution float32 periodogram memmaps plus
+    79	# the multiband combination on scratch; the worst published-catalog baseline
+    80	# needs 0.471 GB for the three high-pass memmaps, so 0.52 adds ~10% headroom
+    81	# for longer campaign baselines. Disk, not wall time, binds worker count.
+    82	SCRATCH_GB_PER_WORKER = 0.52
+    83	
+    84	
+    85	def preflight_workers(requested: int | None, work_root: Path) -> tuple[int, float]:
+    86	    if requested is not None and requested < 1:
+    87	        raise SystemExit(f"invalid --workers {requested}")
+    88	    free_gb = shutil.disk_usage(work_root).free / 1e9
+    89	    ceiling = int(free_gb * 0.5 / SCRATCH_GB_PER_WORKER)
+    90	    if ceiling < 1:
+   170	    parser = argparse.ArgumentParser(description=__doc__)
+   171	    parser.add_argument("--shard-dir", type=Path, required=True)
+   172	    parser.add_argument("--out-dir", type=Path, required=True)
+   173	    parser.add_argument("--work-root", type=Path, default=None,
+   174	                        help="scratch for periodogram memmaps; put on local NVMe "
+   175	                             "or a RAM disk, NEVER inside a synced folder")
+   176	    parser.add_argument("--dataset", required=True,
+   177	                        help="manifest label, e.g. d3-kepler-dsct or d2-tess-dav")
+   178	    parser.add_argument("--workers", type=int, default=None)
+   179	    parser.add_argument("--passes", default="low,high")
+   180	    parser.add_argument("--stars-file", type=Path, default=None,
+   181	                        help="optional newline-separated campaign_id subset (a shard)")
+   182	    parser.add_argument("--limit", type=int, default=None,
+   183	                        help="pilot mode: first N stars only")
+   184	    parser.add_argument("--expect-count", type=int, default=None,
+   185	                        help="assert the shard dir holds exactly N shards "
+   186	                             "(stale-directory guard)")
+   187	    parser.add_argument("--shard-index", type=Path, default=None,
+   188	                        help="newline-separated campaign_id list the shard dir "
+   189	                             "must match EXACTLY (builders emit shard_index.txt); "
+   190	                             "required for production runs")
+   191	    parser.add_argument("--allow-nonstandard-ids", action="store_true",
+   192	                        help="permit non-campaign source_ids (replay/debug only)")
+   193	    parser.add_argument("--replay-report", type=Path, required=True,
+   194	                        help="replay_report.json from a PASSING replay_gate run "
+   195	                             "on THIS machine+env; campaign runs refuse to start "
+   196	                             "without one (G1 methods finding 1)")
+   197	    args = parser.parse_args()
+   198	
+   199	    assert_frozen()
+   200	    campaign_shas_start = campaign_file_shas()
+   201	    attestation = validate_attestation(args.replay_report)
+   202	    passes = tuple(args.passes.split(","))
+   203	    if passes != ("low", "high") and not args.allow_nonstandard_ids:
+   204	        raise SystemExit("production runs use exactly low,high (the frozen CLI's "
+   205	                         "pass set); pass --allow-nonstandard-ids for debug runs")
+   206	    star_dir = args.out_dir / "stars"
+   207	    work_root = args.work_root or (args.out_dir / "work")
+   208	    star_dir.mkdir(parents=True, exist_ok=True)
+   209	    work_root.mkdir(parents=True, exist_ok=True)
+   210	
+   211	    if args.expect_count is not None:
+   212	        found = len(list(args.shard_dir.glob("*.csv.gz")))
+   213	        if found != args.expect_count:
+   214	            raise SystemExit(
+   215	                f"shard dir holds {found} shards, expected {args.expect_count} "
+   216	                f"— stale or incomplete directory"
+   217	            )
+   218	    if args.shard_index is None and not args.allow_nonstandard_ids:
+   219	        raise SystemExit("production runs require --shard-index (builders emit "
+   220	                         "shard_index.txt); --allow-nonstandard-ids for debug")
+   221	    if args.shard_index is not None:
+   222	        index_ids = {line.strip() for line in
+   223	                     args.shard_index.read_text().splitlines() if line.strip()}
+   224	        disk_ids = {path.name.split(".csv")[0]
+   225	                    for path in args.shard_dir.glob("*.csv.gz")}
+   260	        elapsed = time.time() - started
+   261	        rate = completed_now / elapsed if elapsed > 0 else 0.0
+   262	        return {
+   263	            "dataset": args.dataset,
+   264	            "total": total,
+   265	            "pending_at_start": len(pending),
+   266	            "completed_now": completed_now,
+   267	            "failed": len(failures),
+   268	            "elapsed_seconds": round(elapsed, 1),
+   269	            "stars_per_hour": round(rate * 3600.0, 2),
+   270	            "eta_hours": round((len(pending) - completed_now - len(failures)) / (rate * 3600.0), 2)
+   271	            if rate > 0
+   272	            else None,
+   273	            "workers": workers,
+   274	        }
+   275	
+   276	    write_progress(progress_path, progress_payload())
+   277	    with ProcessPoolExecutor(max_workers=workers) as executor:
+   278	        futures = {
+   279	            executor.submit(
+   280	                analyze_star,
+   281	                source_id,
+   282	                str(args.shard_dir / f"{source_id}.csv.gz"),
+   283	                str(star_dir / f"{source_id}.json"),
+   284	                str(work_root),
+   285	                passes,
+   286	            ): source_id
+   287	            for source_id in pending
+   288	        }
+   289	        for future in as_completed(futures):
+   290	            source_id = futures[future]
+   291	            try:
+   292	                future.result()
+   293	                write_provenance(star_dir, source_id,
+   294	                                 args.shard_dir / f"{source_id}.csv.gz")
+   295	                completed_now += 1
+   296	            except Exception as exc:
+   297	                failures[source_id] = repr(exc)
+   298	                print(f"[{args.dataset}] FAILED {source_id}: {exc}", flush=True)
+   299	            if completed_now % 10 == 0 or completed_now + len(failures) == len(pending):
+   300	                write_progress(progress_path, progress_payload())
+   301	                print(
+   302	                    f"[{args.dataset}] {completed_now:,}/{len(pending):,} "
+   303	                    f"({progress_payload()['stars_per_hour']}/h)",
+   304	                    flush=True,
+   305	                )
+   306	
+   307	    manifest = {
+   308	        "dataset": args.dataset,
+   309	        "driver": "run_generalization_ls.py",
+   310	        "source_count": total,
+   311	        "pending_at_start": len(pending),
+   312	        "completed_now": completed_now,
+   313	        "failures": failures,
+   314	        "passes": list(passes),
+   315	        "workers": workers,
+   316	        "wall_seconds": round(time.time() - started, 1),
+   317	        "shard_dir": str(args.shard_dir),
+   318	        "env": env_versions(),
+   319	        "frozen_sha256": assert_frozen(),
+   320	        "campaign_sha256": campaign_file_shas(),
+   321	        "replay_attestation": {
+   322	            "path": str(args.replay_report),
+   323	            "wall_seconds": attestation.get("wall_seconds"),
+   324	            "verdict_counts": attestation.get("verdict_counts"),
+   325	        },
+   326	    }
+   327	    if campaign_file_shas() != campaign_shas_start:
+   328	        raise SystemExit("campaign code changed mid-run — results void")
+   329	    (args.out_dir / "manifest.json").write_text(
+   330	        json.dumps(manifest, indent=2) + "\n", encoding="utf-8"
+   331	    )
+   332	    write_progress(progress_path, progress_payload())
+   333	    print(f"[{args.dataset}] done: {completed_now:,} completed, {len(failures)} failed", flush=True)
+   334	    if failures:
+   335	        raise SystemExit(1)
+   336	
+   337	
+   338	if __name__ == "__main__":
+   339	    main()
+
+ succeeded in 106ms:
+generalization/reviews/G2r6/sol_methods6.err
+generalization/reviews/G2r6/sol_methods6.md
+generalization/reviews/G2r6/sol_referee6.err
+generalization/reviews/G2r6/sol_referee6.md
+generalization/reviews/G2r6/sol_stats6.err
+generalization/reviews/G2r6/sol_stats6.md
+
+exec
+/bin/zsh -lc "nl -ba scripts/generalization/build_panels_generic.py | sed -n '80,225p'" in /Users/jackneo/Documents/vonhippel-base9/astro-wd
+ succeeded in 166ms:
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-uypCIXAt' (errno=Operation not permitted)
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-5GRQLaVQ' (errno=Operation not permitted)
+d5a74f0 G2 round-5 response: final five residuals closed
+2eca7d0 G2 round-4 response: last execution blockers closed
+304b04c G2 round-3 response: code conformance + fail-closed gates + doc freeze prep
+55da006 W2 hardening: builder provenance, driver result-sidecars, remaining spec outputs
+c0a92c3 G2 round-2 response: spec v3, plan reconciliation, code fixes
+d5f12b6 G1 response: 47 findings dispositioned; design + spec + gate hardening
+65d0e6a generalization campaign W1: frozen adapter shell, replay gate, D3 roster, plan+spec
+
+ exited 1 in 298ms:
+zsh:1: can't create temp file for here document: operation not permitted
+
+ succeeded in 335ms:
+64-            f"{len(report['stars'])} records"
+65-        )
+66-    catalog = pd.read_csv(
+67-        REPO_ROOT / "catalog-rebuild/results/2026-08-01_full/catalog/ls_full_catalog.csv",
+68-        dtype={"source_id": str},
+69-    )
+70-    expected = set(catalog["source_id"])
+71-    if unique != expected:
+72-        raise SystemExit(
+73-            f"attested roster is not the published 928-star catalog set: "
+74:            f"{len(unique - expected)} foreign, {len(expected - unique)} missing"
+75-        )
+76-    return report
+77-
+78-# One in-flight star holds two full-resolution float32 periodogram memmaps plus
+79-# the multiband combination on scratch; the worst published-catalog baseline
+80-# needs 0.471 GB for the three high-pass memmaps, so 0.52 adds ~10% headroom
+81-# for longer campaign baselines. Disk, not wall time, binds worker count.
+82-SCRATCH_GB_PER_WORKER = 0.52
+83-
+84-
+--
+120-        encoding="utf-8",
+121-    )
+122-
+123-
+124-def scan_pending(shard_dir: Path, star_dir: Path, passes: tuple[str, ...],
+125-                 only: set[str] | None, limit: int | None) -> tuple[list[str], int]:
+126-    """A completed result is reused ONLY when its provenance sidecar matches
+127-    the current shard content and environment (G1 methods finding 8); stale
+128-    results are DELETED so analyze_star's internal early-return cannot
+129-    resurrect them."""
+130:    source_ids = sorted(path.name.split(".csv")[0] for path in shard_dir.glob("*.csv.gz"))
+131-    if only is not None:
+132:        missing = only - set(source_ids)
+133:        if missing:
+134:            raise SystemExit(f"requested stars absent from shards: {sorted(missing)[:5]}...")
+135-        source_ids = [sid for sid in source_ids if sid in only]
+136-    if limit is not None:
+137-        source_ids = source_ids[:limit]
+138-    current_env = env_digest()
+139-    pending = []
+140-    for source_id in source_ids:
+141-        result_path = star_dir / f"{source_id}.json"
+142-        prov_file = provenance_path(star_dir, source_id)
+143-        if result_path.exists() and prov_file.exists():
+144-            try:
+--
+147-                if (
+148-                    result.get("complete")
+149-                    and set(result.get("passes", {})) >= set(passes)
+150-                    and prov.get("shard_sha256")
+151-                    == shard_sha256(shard_dir / f"{source_id}.csv.gz")
+152-                    and prov.get("env_digest") == current_env
+153-                ):
+154-                    continue
+155-            except json.JSONDecodeError:
+156-                pass
+157:        result_path.unlink(missing_ok=True)
+158:        prov_file.unlink(missing_ok=True)
+159-        pending.append(source_id)
+160-    return pending, len(source_ids)
+161-
+162-
+163-def write_progress(path: Path, payload: dict) -> None:
+164-    temporary = path.with_suffix(".json.part")
+165-    temporary.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+166-    temporary.replace(path)
+167-
+168-
+--
+179-    parser.add_argument("--passes", default="low,high")
+180-    parser.add_argument("--stars-file", type=Path, default=None,
+181-                        help="optional newline-separated campaign_id subset (a shard)")
+182-    parser.add_argument("--limit", type=int, default=None,
+183-                        help="pilot mode: first N stars only")
+184-    parser.add_argument("--expect-count", type=int, default=None,
+185-                        help="assert the shard dir holds exactly N shards "
+186-                             "(stale-directory guard)")
+187-    parser.add_argument("--shard-index", type=Path, default=None,
+188-                        help="newline-separated campaign_id list the shard dir "
+189:                             "must match EXACTLY (builders emit shard_index.txt); "
+190-                             "required for production runs")
+191-    parser.add_argument("--allow-nonstandard-ids", action="store_true",
+192-                        help="permit non-campaign source_ids (replay/debug only)")
+193-    parser.add_argument("--replay-report", type=Path, required=True,
+194-                        help="replay_report.json from a PASSING replay_gate run "
+195-                             "on THIS machine+env; campaign runs refuse to start "
+196-                             "without one (G1 methods finding 1)")
+197-    args = parser.parse_args()
+198-
+199-    assert_frozen()
+--
+202-    passes = tuple(args.passes.split(","))
+203-    if passes != ("low", "high") and not args.allow_nonstandard_ids:
+204-        raise SystemExit("production runs use exactly low,high (the frozen CLI's "
+205-                         "pass set); pass --allow-nonstandard-ids for debug runs")
+206-    star_dir = args.out_dir / "stars"
+207-    work_root = args.work_root or (args.out_dir / "work")
+208-    star_dir.mkdir(parents=True, exist_ok=True)
+209-    work_root.mkdir(parents=True, exist_ok=True)
+210-
+211-    if args.expect_count is not None:
+212:        found = len(list(args.shard_dir.glob("*.csv.gz")))
+213-        if found != args.expect_count:
+214-            raise SystemExit(
+215-                f"shard dir holds {found} shards, expected {args.expect_count} "
+216-                f"— stale or incomplete directory"
+217-            )
+218:    if args.shard_index is None and not args.allow_nonstandard_ids:
+219-        raise SystemExit("production runs require --shard-index (builders emit "
+220:                         "shard_index.txt); --allow-nonstandard-ids for debug")
+221:    if args.shard_index is not None:
+222-        index_ids = {line.strip() for line in
+223:                     args.shard_index.read_text().splitlines() if line.strip()}
+224-        disk_ids = {path.name.split(".csv")[0]
+225:                    for path in args.shard_dir.glob("*.csv.gz")}
+226-        if disk_ids != index_ids:
+227:            extra = sorted(disk_ids - index_ids)[:3]
+228-            gone = sorted(index_ids - disk_ids)[:3]
+229-            raise SystemExit(
+230-                f"shard dir does not match the index: {len(disk_ids - index_ids)} "
+231:                f"extra (e.g. {extra}), {len(index_ids - disk_ids)} missing "
+232-                f"(e.g. {gone})"
+233-            )
+234-    only = None
+235-    if args.stars_file:
+236-        only = {line.strip() for line in args.stars_file.read_text().splitlines() if line.strip()}
+237-    pending, total = scan_pending(args.shard_dir, star_dir, passes, only, args.limit)
+238-
+239-    if not args.allow_nonstandard_ids:
+240-        bad = [sid for sid in pending if not campaign_id_ok(sid)]
+241-        if bad:
+
+ succeeded in 449ms:
+    80	        in_core=True,
+    81	        n_variants=0,
+    82	        known_roster=False,
+    83	        wd_class=str(row.get("class_label", "")),
+    84	        paper_variable=opt_bool("label_variable"),
+    85	        paper_periodic=opt_bool("label_periodic"),
+    86	    )
+    87	
+    88	
+    89	def main() -> None:
+    90	    parser = argparse.ArgumentParser(description=__doc__)
+    91	    parser.add_argument("--roster", type=Path, required=True)
+    92	    parser.add_argument("--cache-dir", type=Path, required=True,
+    93	                        help="IRSA response cache: <source_id>.csv per target")
+    94	    parser.add_argument("--out-dir", type=Path, required=True)
+    95	    parser.add_argument("--allow-nonstandard-ids", action="store_true")
+    96	    parser.add_argument("--panel-report", type=Path, default=None,
+    97	                        help="panel_golden_report.json from a PASSING "
+    98	                             "panel_golden_gate run on THIS machine+env; "
+    99	                             "required unless --allow-nonstandard-ids")
+   100	    args = parser.parse_args()
+   101	
+   102	    assert_frozen()
+   103	    campaign_start = campaign_file_shas()
+   104	    if args.panel_report is None and not args.allow_nonstandard_ids:
+   105	        raise SystemExit("campaign panel builds require --panel-report "
+   106	                         "(panel_golden_gate PASS on this machine)")
+   107	    if args.panel_report is not None:
+   108	        gate = json.loads(args.panel_report.read_text(encoding="utf-8"))
+   109	        if gate.get("gate") != "panel_golden_gate" or gate.get("passed") is not True:
+   110	            raise SystemExit(f"{args.panel_report} is not a panel-gate PASS")
+   111	        current = env_versions()
+   112	        mismatched = [k for k in current if gate["env"].get(k) != current.get(k)]
+   113	        if mismatched:
+   114	            raise SystemExit(f"panel attestation env differs: {mismatched}")
+   115	    args.out_dir.mkdir(parents=True, exist_ok=True)
+   116	    exposure_star_dir = args.out_dir / "exposure_stars"
+   117	    exposure_star_dir.mkdir(parents=True, exist_ok=True)
+   118	    stale = list(exposure_star_dir.glob("*.csv.gz"))
+   119	    if stale:
+   120	        raise SystemExit(
+   121	            f"{exposure_star_dir} already holds {len(stale)} shards — use a "
+   122	            f"fresh out-dir (stale-shard guard; the emitted shard_index must "
+   123	            f"describe exactly this run's output)"
+   124	        )
+   125	
+   126	    roster = pd.read_csv(args.roster, dtype={"source_id": str})
+   127	    if not args.allow_nonstandard_ids:
+   128	        bad = [sid for sid in roster["source_id"] if not campaign_id_ok(sid)]
+   129	        if bad:
+   130	            raise SystemExit(f"{len(bad)} roster ids violate the campaign convention: {bad[:3]}")
+   131	
+   132	    qc_rows: list[dict[str, object]] = []
+   133	    census_rows: list[dict[str, object]] = []
+   134	    crossmatched = 0
+   135	
+   136	    for index, (_, row) in enumerate(roster.iterrows(), 1):
+   137	        meta = roster_meta(row)
+   138	        cache_path = args.cache_dir / f"{meta.source_id}.csv"
+   139	        qc: dict[str, object] = {
+   140	            "source_id": meta.source_id,
+   141	            "external_id": meta.wdj_name,
+   142	            "class_label": meta.wd_class,
+   143	            "cache_present": cache_path.exists() and cache_path.stat().st_size > 0,
+   144	            "read_status": "ok",
+   145	        }
+   146	        if not qc["cache_present"]:
+   147	            qc["read_status"] = "missing"
+   148	            qc_rows.append(qc)
+   149	            continue
+   150	        try:
+   151	            raw = read_cache(cache_path)
+   152	            qc["raw_rows"] = len(raw)
+   153	            selected, separation, n_objects, n_selected = select_nearest_source(
+   154	                raw, float(row["ra"]), float(row["dec"])
+   155	            )
+   156	            clean, drop_counts = clean_rows(selected)
+   157	            qc.update(drop_counts)
+   158	            qc["nearest_separation_arcsec"] = separation
+   159	            qc["ztf_objects_in_cone"] = n_objects
+   160	            qc["selected_ztf_objects"] = n_selected
+   161	        except Exception as exc:
+   162	            qc["read_status"] = "error"
+   163	            qc["error"] = repr(exc)
+   164	            qc_rows.append(qc)
+   165	            continue
+   166	
+   167	        for band in BANDS:
+   168	            qc[f"{band}_raw_rows"] = int((raw["filtercode"] == band).sum())
+   169	            qc[f"{band}_clean_rows"] = int((clean["band"] == band).sum())
+   170	        is_crossmatched = all(
+   171	            qc[f"{band}_clean_rows"] >= MIN_EXPOSURES_PER_BAND for band in BANDS
+   172	        )
+   173	        qc["crossmatched"] = is_crossmatched
+   174	        qc_rows.append(qc)
+   175	        if not is_crossmatched:
+   176	            continue
+   177	
+   178	        crossmatched += 1
+   179	        clean["source_id"] = meta.source_id
+   180	        clean = add_bjd(clean, float(row["ra"]), float(row["dec"]))
+   181	        clean = clean.sort_values(["band", "bjd_tdb"])
+   182	        clean[EXPOSURE_COLUMNS].to_csv(
+   183	            exposure_star_dir / f"{meta.source_id}.csv.gz", index=False
+   184	        )
+   185	        nightly = nightly_panel(clean)
+   186	        monthly = monthly_panel(nightly)
+   187	        row = census_row(meta, clean, nightly, monthly)
+   188	        zg_nightly = nightly[nightly["band"] == "zg"]
+   189	        row["zg_median_exp_per_night"] = (
+   190	            float(zg_nightly["n_exp"].median()) if len(zg_nightly) else float("nan"))
+   191	        census_rows.append(row)
+   192	        if index % 50 == 0 or index == len(roster):
+   193	            print(f"[panels-generic] {index:,}/{len(roster):,}; crossmatched={crossmatched:,}",
+   194	                  flush=True)
+   195	
+   196	    pd.DataFrame(qc_rows).to_csv(args.out_dir / "crossmatch_qc.csv", index=False)
+   197	    pd.DataFrame(census_rows).to_csv(args.out_dir / "census_generic.csv", index=False)
+   198	    shard_ids = sorted(row["source_id"] for row in census_rows)
+   199	    (args.out_dir / "shard_index.txt").write_text(
+   200	        "\n".join(shard_ids) + "\n", encoding="utf-8")
+   201	    manifest = {
+   202	        "builder": "build_panels_generic.py",
+   203	        "roster": str(args.roster),
+   204	        "roster_rows": len(roster),
+   205	        "crossmatched_count": crossmatched,
+   206	        "crossmatch_rule": "frozen: nearest ZTF coordinate cluster; "
+   207	                           f">={MIN_EXPOSURES_PER_BAND} QC-passing exposures in zg and zr",
+   208	        "row_qc": "frozen: catflags == 0; finite mag; finite magerr > 0; chi < 4; finite MJD",
+   209	        "census_threshold": 2.5,
+   210	        "env": env_versions(),
+   211	        "frozen_sha256": frozen_file_shas(),
+   212	        "campaign_sha256": campaign_start,
+   213	        "panel_attestation": str(args.panel_report) if args.panel_report else "",
+   214	    }
+   215	    if campaign_file_shas() != campaign_start:
+   216	        raise SystemExit("campaign code changed while panels were building")
+   217	    (args.out_dir / "panels_manifest.json").write_text(
+   218	        json.dumps(manifest, indent=2) + "\n", encoding="utf-8"
+   219	    )
+   220	    print(f"[panels-generic] crossmatched {crossmatched:,}/{len(roster):,}")
+   221	
+   222	
+   223	if __name__ == "__main__":
+   224	    main()
+
+exec
+/bin/zsh -lc 'for f in generalization/reviews/G2r6/*.md; do wc -c "$f"; done' in /Users/jackneo/Documents/vonhippel-base9/astro-wd
+exec
+/bin/zsh -lc "rg -l '\"gate\"\\s*:\\s*\"replay_gate\"' --glob '*.json' . | head -40" in /Users/jackneo/Documents/vonhippel-base9/astro-wd
+exec
+/bin/zsh -lc 'git show --format=fuller --stat d5a74f0 && git show --format= -- scripts/generalization/run_generalization_ls.py scripts/generalization/build_panels_generic.py d5a74f0' in /Users/jackneo/Documents/vonhippel-base9/astro-wd
+exec
+/bin/zsh -lc "python -c 'import csv,pathlib; p=pathlib.Path(\"catalog-rebuild/results/2026-08-01_full/catalog/ls_full_catalog.csv\"); rows=list(csv.DictReader(p.open(newline=\"\",encoding=\"utf-8\"))); ids=[r[\"source_id\"] for r in rows]; print(\"path:\",p); print(\"rows:\",len(rows)); print(\"unique_source_ids:\",len(set(ids))); print(\"blank_source_ids:\",sum(not x for x in ids)); print(\"duplicate_rows:\",len(ids)-len(set(ids))); print(\"all_19_digit:\",all(len(x)==19 and x.isdigit() for x in ids))'" in /Users/jackneo/Documents/vonhippel-base9/astro-wd
+exec
+/bin/zsh -lc "rg -n \"validate_attestation|stale-shard guard|shard_index.*census|published 928|arbitrary unique|foreign.*missing\" --glob '*.py' --glob '*.md' ." in /Users/jackneo/Documents/vonhippel-base9/astro-wd
+ succeeded in 471ms:
+       0 generalization/reviews/G2r6/sol_methods6.md
+     645 generalization/reviews/G2r6/sol_referee6.md
+       0 generalization/reviews/G2r6/sol_stats6.md
+
+ exited 127 in 562ms:
+zsh:1: command not found: python
+
+ succeeded in 570ms:
+./generalization/reviews/G2r3/RESPONSE.md:20:attestation; campaign-drift checks; stale-shard guards; frozen phase
+./scripts/generalization/build_panels_generic.py:122:            f"fresh out-dir (stale-shard guard; the emitted shard_index must "
+./generalization/reviews/G2r5/sol_methods5.md:2:- 928-unique attestation — UNRESOLVED: validation enforces only 928 distinct IDs, not the expected published set or `roster_digest`; a focused check accepted 928 arbitrary unique IDs ([run_generalization_ls.py:56](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/run_generalization_ls.py:56), [replay_gate.py:229](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/replay_gate.py:229)).
+./scripts/generalization/run_generalization_ls.py:37:def validate_attestation(report_path: Path) -> dict:
+./scripts/generalization/run_generalization_ls.py:73:            f"attested roster is not the published 928-star catalog set: "
+./scripts/generalization/run_generalization_ls.py:74:            f"{len(unique - expected)} foreign, {len(expected - unique)} missing"
+./scripts/generalization/run_generalization_ls.py:201:    attestation = validate_attestation(args.replay_report)
+./scripts/generalization/build_d2_shards.py:185:            f"--resume to add to it, or use a fresh directory (stale-shard guard)"
+
+ succeeded in 766ms:
+ succeeded in 784ms:
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-iZEAjkB7' (errno=Operation not permitted)
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-9wBMyZ93' (errno=Operation not permitted)
+commit d5a74f05a1c24794d4e898cdb95b3b92a8ef6bac
+Author:     Jack W <jackneo@MacBook-Pro.local>
+AuthorDate: Fri Aug 28 22:17:07 2026 -0400
+Commit:     Jack W <jackneo@MacBook-Pro.local>
+CommitDate: Fri Aug 28 22:17:07 2026 -0400
+
+    G2 round-5 response: final five residuals closed
+    
+    Binding estimator column names (best_candidate_matches_dominant/_any_mode,
+    any_top_peak_matches_any_mode) emitted end to end; detection + freq-recovery
+    exposure x amplitude 2-D surfaces; attested roster must equal the published
+    928-star catalog set (not merely 928 unique ids); panels shard_index derived
+    from this run's census rows + dirty-dir guard (no stale blessing); P4 usable
+    estimator written algebraically (denominator 103 - n_empty, replicate-level
+    handling matches the code). D1 validation still 11/13.
+    
+    Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>
+
+ generalization/METRICS_SPEC.md                   |   18 +-
+ generalization/reviews/G2r5/sol_methods5.err     | 3490 ++++++++++++++++++++++
+ generalization/reviews/G2r5/sol_methods5.md      |    6 +
+ generalization/reviews/G2r5/sol_referee5.err     |  418 +++
+ generalization/reviews/G2r5/sol_referee5.md      |    5 +
+ generalization/reviews/G2r5/sol_stats5.err       | 1475 +++++++++
+ generalization/reviews/G2r5/sol_stats5.md        |    9 +
+ scripts/generalization/build_panels_generic.py   |   10 +-
+ scripts/generalization/metrics_generalization.py |   59 +-
+ scripts/generalization/run_generalization_ls.py  |   13 +
+ 10 files changed, 5481 insertions(+), 22 deletions(-)
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-J4qgivaM' (errno=Operation not permitted)
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-Pdhfod5W' (errno=Operation not permitted)
+
+exec
+/bin/zsh -lc "python3 -c 'import csv,pathlib; p=pathlib.Path(\"catalog-rebuild/results/2026-08-01_full/catalog/ls_full_catalog.csv\"); rows=list(csv.DictReader(p.open(newline=\"\",encoding=\"utf-8\"))); ids=[r[\"source_id\"] for r in rows]; print(\"path:\",p); print(\"rows:\",len(rows)); print(\"unique_source_ids:\",len(set(ids))); print(\"blank_source_ids:\",sum(not x for x in ids)); print(\"duplicate_rows:\",len(ids)-len(set(ids))); print(\"all_19_digit:\",all(len(x)==19 and x.isdigit() for x in ids))'" in /Users/jackneo/Documents/vonhippel-base9/astro-wd
+exec
+/bin/zsh -lc 'git show --format= d5a74f0 -- scripts/generalization/run_generalization_ls.py scripts/generalization/build_panels_generic.py' in /Users/jackneo/Documents/vonhippel-base9/astro-wd
+exec
+/bin/zsh -lc 'git diff --check d5a74f0..HEAD -- scripts/generalization/run_generalization_ls.py scripts/generalization/build_panels_generic.py && git diff --stat d5a74f0..HEAD -- scripts/generalization/run_generalization_ls.py scripts/generalization/build_panels_generic.py' in /Users/jackneo/Documents/vonhippel-base9/astro-wd
+exec
+/bin/zsh -lc "python3 -c 'import ast,pathlib; ps=[pathlib.Path(\"scripts/generalization/run_generalization_ls.py\"),pathlib.Path(\"scripts/generalization/build_panels_generic.py\")]; [ast.parse(p.read_text(),filename=str(p)) for p in ps]; print(\"AST parse: PASS\", *(str(p) for p in ps), sep=\"\\n\")'" in /Users/jackneo/Documents/vonhippel-base9/astro-wd
+ succeeded in 1815ms:
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-11XZq89K' (errno=Operation not permitted)
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-y1yRlROO' (errno=Operation not permitted)
+diff --git a/scripts/generalization/build_panels_generic.py b/scripts/generalization/build_panels_generic.py
+index 145e139..f5347e5 100644
+--- a/scripts/generalization/build_panels_generic.py
++++ b/scripts/generalization/build_panels_generic.py
+@@ -115,6 +115,13 @@ def main() -> None:
+     args.out_dir.mkdir(parents=True, exist_ok=True)
+     exposure_star_dir = args.out_dir / "exposure_stars"
+     exposure_star_dir.mkdir(parents=True, exist_ok=True)
++    stale = list(exposure_star_dir.glob("*.csv.gz"))
++    if stale:
++        raise SystemExit(
++            f"{exposure_star_dir} already holds {len(stale)} shards — use a "
++            f"fresh out-dir (stale-shard guard; the emitted shard_index must "
++            f"describe exactly this run's output)"
++        )
+ 
+     roster = pd.read_csv(args.roster, dtype={"source_id": str})
+     if not args.allow_nonstandard_ids:
+@@ -188,8 +195,7 @@ def main() -> None:
+ 
+     pd.DataFrame(qc_rows).to_csv(args.out_dir / "crossmatch_qc.csv", index=False)
+     pd.DataFrame(census_rows).to_csv(args.out_dir / "census_generic.csv", index=False)
+-    shard_ids = sorted(
+-        path.name.split(".csv")[0] for path in exposure_star_dir.glob("*.csv.gz"))
++    shard_ids = sorted(row["source_id"] for row in census_rows)
+     (args.out_dir / "shard_index.txt").write_text(
+         "\n".join(shard_ids) + "\n", encoding="utf-8")
+     manifest = {
+diff --git a/scripts/generalization/run_generalization_ls.py b/scripts/generalization/run_generalization_ls.py
+index bda4c00..340c27e 100644
+--- a/scripts/generalization/run_generalization_ls.py
++++ b/scripts/generalization/run_generalization_ls.py
+@@ -21,7 +21,10 @@ import time
+ from concurrent.futures import ProcessPoolExecutor, as_completed
+ from pathlib import Path
+ 
++import pandas as pd
++
+ from frozen_api import (
++    REPO_ROOT,
+     analyze_star,
+     assert_frozen,
+     campaign_file_shas,
+@@ -60,6 +63,16 @@ def validate_attestation(report_path: Path) -> dict:
+             f"attestation; this report covers {len(unique)} unique of "
+             f"{len(report['stars'])} records"
+         )
++    catalog = pd.read_csv(
++        REPO_ROOT / "catalog-rebuild/results/2026-08-01_full/catalog/ls_full_catalog.csv",
++        dtype={"source_id": str},
++    )
++    expected = set(catalog["source_id"])
++    if unique != expected:
++        raise SystemExit(
++            f"attested roster is not the published 928-star catalog set: "
++            f"{len(unique - expected)} foreign, {len(expected - unique)} missing"
++        )
+     return report
+ 
+ # One in-flight star holds two full-resolution float32 periodogram memmaps plus
+
+ succeeded in 1825ms:
+path: catalog-rebuild/results/2026-08-01_full/catalog/ls_full_catalog.csv
+rows: 928
+unique_source_ids: 928
+blank_source_ids: 0
+duplicate_rows: 0
+all_19_digit: False
+
+ succeeded in 764ms:
+AST parse: PASS
+scripts/generalization/run_generalization_ls.py
+scripts/generalization/build_panels_generic.py
+
+ succeeded in 773ms:
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-RtCeSRZf' (errno=Operation not permitted)
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-Nt8S8Nmr' (errno=Operation not permitted)
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-k1aU8bbR' (errno=Operation not permitted)
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-omMGHnxv' (errno=Operation not permitted)
+
+exec
+/bin/zsh -lc "nl -ba scripts/generalization/frozen_api.py | sed -n '1,140p' && python3 -c 'import sys; sys.path.insert(0,\"scripts/generalization\"); import run_generalization_ls as m; print(\"import PASS\", m.REPO_ROOT)'" in /Users/jackneo/Documents/vonhippel-base9/astro-wd
+ exited 1 in 934ms:
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    import sys; sys.path.insert(0,"scripts/generalization"); import run_generalization_ls as m; print("import PASS", m.REPO_ROOT)
+                                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/run_generalization_ls.py", line 26, in <module>
+    from frozen_api import (
+    ...<8 lines>...
+    )
+  File "/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/frozen_api.py", line 151, in <module>
+    from build_catalog_panels import (  # noqa: E402
+    ...<16 lines>...
+    )
+  File "/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/build_catalog_panels.py", line 10, in <module>
+    import astropy.units as u
+ModuleNotFoundError: No module named 'astropy'
+
+exec
+/bin/zsh -lc "python3 -c '
+import ast,pathlib,types
+source=pathlib.Path(\"scripts/generalization/build_panels_generic.py\").read_text()
+tree=ast.parse(source)
+main=next(n for n in tree.body if isinstance(n,ast.FunctionDef) and n.name==\"main\")
+module=ast.fix_missing_locations(ast.Module(body=[main],type_ignores=[]))
+assign=next(n for n in ast.walk(main) if isinstance(n,ast.Assign) and any(isinstance(t,ast.Name) and t.id==\"shard_ids\" for t in n.targets))
+globs=[n for n in ast.walk(assign.value) if isinstance(n,ast.Call) and isinstance(n.func,ast.Attribute) and n.func.attr==\"glob\"]
+print(\"shard_ids expression:\",ast.unparse(assign.value))
+print(\"filesystem glob in shard_ids expression:\",len(globs))
+assert ast.unparse(assign.value)==\"sorted((row[\\\"source_id\\\"] for row in census_rows))\"
+assert not globs
+class Dirty:
+    def mkdir(self,parents=False,exist_ok=False): pass
+    def glob(self,pattern):
+        print(\"dirty guard glob:\",pattern)
+        return [object()]
+    def __str__(self): return \"<out>/exposure_stars\"
+class Out:
+    def __init__(self): self.dirty=Dirty()
+    def mkdir(self,parents=False,exist_ok=False): pass
+    def __truediv__(self,name):
+        assert name==\"exposure_stars\"
+        return self.dirty
+class Parser:
+    def __init__(self,args): self.args=args
+    def add_argument(self,*a,**k): pass
+    def parse_args(self): return self.args
+args=types.SimpleNamespace(panel_report=None,allow_nonstandard_ids=True,out_dir=Out())
+ns={\"argparse\":types.SimpleNamespace(ArgumentParser=lambda description:Parser(args)),\"Path\":pathlib.Path,\"assert_frozen\":lambda:{},\"campaign_file_shas\":lambda:{}}
+exec(compile(module,\"build_panels_generic.py\",\"exec\"),ns)
+try:
+    ns[\"main\"]()
+except SystemExit as exc:
+    print(\"pre-existing csv.gz shard rejected: PASS\")
+    print(str(exc))
+else:
+    raise AssertionError(\"dirty exposure_stars was accepted\")
+'" in /Users/jackneo/Documents/vonhippel-base9/astro-wd
+exec
+/bin/zsh -lc "python3 -c '
+import ast,json,pathlib,pandas as pd
+source=pathlib.Path(\"scripts/generalization/run_generalization_ls.py\").read_text()
+tree=ast.parse(source)
+fn=next(n for n in tree.body if isinstance(n,ast.FunctionDef) and n.name==\"validate_attestation\")
+module=ast.fix_missing_locations(ast.Module(body=[fn],type_ignores=[]))
+repo=pathlib.Path.cwd()
+env={\"test_env\":\"fixed\"}
+shas={\"frozen\":\"fixed\"}
+ns={\"json\":json,\"pd\":pd,\"Path\":pathlib.Path,\"REPO_ROOT\":repo,\"env_versions\":lambda:env,\"frozen_file_shas\":lambda:shas}
+exec(compile(module,\"run_generalization_ls.py\",\"exec\"),ns)
+Fake=type(\"FakeReport\",(),{\"read_text\":lambda self,encoding=None:self.payload,\"__str__\":lambda self:\"<memory-report>\"})
+def call(report):
+    p=Fake(); p.payload=json.dumps(report); return ns[\"validate_attestation\"](p)
+catalog=pd.read_csv(repo/\"catalog-rebuild/results/2026-08-01_full/catalog/ls_full_catalog.csv\",dtype={\"source_id\":str})
+ids=list(catalog[\"source_id\"])
+good={\"gate\":\"replay_gate\",\"passed\":True,\"env\":env,\"frozen_sha256\":shas,\"stars\":[{\"source_id\":x} for x in ids]}
+call(good)
+print(\"published set accepted: PASS\",len(ids),len(set(ids)))
+bad=json.loads(json.dumps(good)); bad[\"stars\"][0][\"source_id\"]=\"foreign-round6-id\"
+try:
+    call(bad)
+except SystemExit as exc:
+    print(\"928-unique one-for-one mutation rejected: PASS\")
+    print(str(exc))
+else:
+    raise AssertionError(\"mutated 928-ID roster was accepted\")
+'" in /Users/jackneo/Documents/vonhippel-base9/astro-wd
+exec
+/bin/zsh -lc "rg -n -C 8 \"stars\\.append|star_records|source_id.*stars|report.*stars|ls_full_catalog|roster_digest\" scripts/generalization/replay_gate.py" in /Users/jackneo/Documents/vonhippel-base9/astro-wd
+ succeeded in 135ms:
+221-        "verdict_counts": counts,
+222-        "stars": records,
+223-        "wall_seconds": round(time.time() - started, 1),
+224-        "completion_offsets_seconds": durations,
+225-        "workers": workers,
+226-        "env": env_versions(),
+227-        "frozen_sha256": assert_frozen(),
+228-        "campaign_sha256": campaign_start,
+229:        "roster_digest": __import__("hashlib").sha256(
+230-            ",".join(stars).encode()).hexdigest(),
+231-        "roster_size": len(stars),
+232-    }
+233-    if campaign_file_shas() != campaign_start:
+234-        raise SystemExit("campaign code changed while the gate ran — report void")
+235-    report_path = args.out_dir / "replay_report.json"
+236-    report_path.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
+237-    print(f"[replay] {'PASS' if passed else 'FAIL'} {counts} -> {report_path}", flush=True)
+
+ exited 1 in 184ms:
+Traceback (most recent call last):
+  File "<string>", line 11, in <module>
+    assert ast.unparse(assign.value)=="sorted((row[\"source_id\"] for row in census_rows))"
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError
+shard_ids expression: sorted((row['source_id'] for row in census_rows))
+filesystem glob in shard_ids expression: 0
+
+ succeeded in 1104ms:
+published set accepted: PASS 928 928
+928-unique one-for-one mutation rejected: PASS
+attested roster is not the published 928-star catalog set: 1 foreign, 1 missing
+
+exec
+/bin/zsh -lc "python3 -c '
+import ast,pathlib,types
+source=pathlib.Path(\"scripts/generalization/build_panels_generic.py\").read_text()
+tree=ast.parse(source)
+main=next(n for n in tree.body if isinstance(n,ast.FunctionDef) and n.name==\"main\")
+module=ast.fix_missing_locations(ast.Module(body=[main],type_ignores=[]))
+assign=next(n for n in ast.walk(main) if isinstance(n,ast.Assign) and any(isinstance(t,ast.Name) and t.id==\"shard_ids\" for t in n.targets))
+globs=[n for n in ast.walk(assign.value) if isinstance(n,ast.Call) and isinstance(n.func,ast.Attribute) and n.func.attr==\"glob\"]
+gen=assign.value.args[0]
+assert isinstance(assign.value.func,ast.Name) and assign.value.func.id==\"sorted\"
+assert isinstance(gen,ast.GeneratorExp) and isinstance(gen.generators[0].iter,ast.Name) and gen.generators[0].iter.id==\"census_rows\"
+assert isinstance(gen.elt,ast.Subscript) and isinstance(gen.elt.value,ast.Name) and gen.elt.value.id==\"row\" and gen.elt.slice.value==\"source_id\"
+assert not globs
+print(\"shard_ids expression:\",ast.unparse(assign.value))
+print(\"filesystem glob in shard_ids expression:\",len(globs))
+class Dirty:
+    def mkdir(self,parents=False,exist_ok=False): pass
+    def glob(self,pattern):
+        print(\"dirty guard glob:\",pattern)
+        return [object()]
+    def __str__(self): return \"<out>/exposure_stars\"
+class Out:
+    def __init__(self): self.dirty=Dirty()
+    def mkdir(self,parents=False,exist_ok=False): pass
+    def __truediv__(self,name):
+        assert name==\"exposure_stars\"
+        return self.dirty
+class Parser:
+    def __init__(self,args): self.args=args
+    def add_argument(self,*a,**k): pass
+    def parse_args(self): return self.args
+args=types.SimpleNamespace(panel_report=None,allow_nonstandard_ids=True,out_dir=Out())
+ns={\"argparse\":types.SimpleNamespace(ArgumentParser=lambda description:Parser(args)),\"Path\":pathlib.Path,\"assert_frozen\":lambda:{},\"campaign_file_shas\":lambda:{}}
+exec(compile(module,\"build_panels_generic.py\",\"exec\"),ns)
+try:
+    ns[\"main\"]()
+except SystemExit as exc:
+    print(\"pre-existing csv.gz shard rejected: PASS\")
+    print(str(exc))
+else:
+    raise AssertionError(\"dirty exposure_stars was accepted\")
+'" in /Users/jackneo/Documents/vonhippel-base9/astro-wd
+ succeeded in 8512ms:
+shard_ids expression: sorted((row['source_id'] for row in census_rows))
+filesystem glob in shard_ids expression: 0
+dirty guard glob: *.csv.gz
+pre-existing csv.gz shard rejected: PASS
+<out>/exposure_stars already holds 1 shards — use a fresh out-dir (stale-shard guard; the emitted shard_index must describe exactly this run's output)
+
+codex
+The attestation mutation test passed: the valid published 928-ID set is accepted, while replacing one ID with a foreign ID is rejected as “1 foreign, 1 missing.” One panel-guard harness is still running unexpectedly, so I’m isolating that harness rather than treating a test-infrastructure stall as code evidence.
+codex
+- Attested roster identity — **RESOLVED.** Validation requires 928 records/unique IDs, loads the published catalog as strings, and enforces exact set equality before execution ([run_generalization_ls.py:59](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/run_generalization_ls.py:59), [run_generalization_ls.py:201](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/run_generalization_ls.py:201)). Catalog audit found 928 rows and 928 unique IDs. A focused test accepted the published set and rejected a one-ID substitution as “1 foreign, 1 missing.”
+
+- Panels `shard_index` provenance — **RESOLVED.** Pre-existing `*.csv.gz` shards are refused before processing ([build_panels_generic.py:115](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/build_panels_generic.py:115)). Index IDs come directly from this run’s successful census rows, with no filesystem glob ([build_panels_generic.py:182](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/build_panels_generic.py:182), [build_panels_generic.py:198](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/build_panels_generic.py:198)). Focused dataflow and dirty-directory rejection tests passed.
+
+**FREEZABLE YES.**
+tokens used
+40,859

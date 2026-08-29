@@ -253,7 +253,7 @@ No re-run; campaign metrics re-read the published per-star JSONs.
 | Gate | When | Reviewer | Scope |
 |---|---|---|---|
 | G1 | DONE 2026-08-28 | sol ×3 | 47 findings; dispositions in reviews/G1/RESPONSE.md; design fixes applied same day |
-| G2 | end W1 | sol ×5 | this file + METRICS_SPEC.md; frozen only after unanimous/addressed |
+| G2 | **FROZEN 2026-08-28** | sol, 6 rounds (5+4+3+3 reviewer-passes) | unanimous FREEZABLE at round 6; ~90 findings addressed across rounds (ledgers in reviews/G2*/RESPONSE.md); frozen SHAs: METRICS_SPEC.md 5d8d589ae73a608a…, GENERALIZATION_PLAN.md 8487f14f9480612f… (full values in reviews/G2_FREEZE.md) |
 | G3 | W2 pre-batch | Pro (inline code) | d2_truth_model + build_d2_shards: sinc algebra, bandpass, phase coherence, schema |
 | G4 | W3 mid-run | sol ×2 | pilot metrics sanity, run anomalies |
 | G5 | W4 | Pro + fresh-context verifier | results audit; every headline number re-derived from JSONs/CSVs |

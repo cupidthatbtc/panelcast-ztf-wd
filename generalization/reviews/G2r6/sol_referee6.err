@@ -1,0 +1,732 @@
+Reading additional input from stdin...
+2026-08-29T02:18:40.525559Z ERROR codex_models_manager::cache: failed to load models cache: missing field `base_instructions` at line 97 column 5
+2026-08-29T02:18:43.295767Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest("http/request url is invalid: relative URL without a base")))
+2026-08-29T02:18:43.612595Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest("http/request url is invalid: relative URL without a base")))
+2026-08-29T02:18:43.683421Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when AuthRequired(AuthRequiredError { www_authenticate_header: "Bearer realm=\"OAuth\", resource_metadata=\"https://circleback.ai/.well-known/oauth-protected-resource/api/mcp\", scope=\"user\"" })
+OpenAI Codex v0.145.0
+--------
+workdir: /Users/jackneo/Documents/vonhippel-base9/astro-wd
+model: gpt-5.6-sol
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: xhigh
+reasoning summaries: none
+session id: 01a04b4f-e093-7910-8830-4678debe3ce0
+--------
+user
+Round-6 FINAL. Your single round-5 residual (generalization/reviews/G2r5/sol_referee5.md): P4 usable-variant formula. Verify against the current generalization/METRICS_SPEC.md P4 text (it now defines p-hat_u with denominator 103 - n_empty, exclusion from numerator AND denominator, and the replicate-level bootstrap rule). RESOLVED/UNRESOLVED + evidence, then FREEZABLE YES/NO.
+2026-08-29T02:18:44.646512Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest("http/request url is invalid: relative URL without a base")))
+warning: Exceeded skills context budget of 2%. All skill descriptions were removed and 33 additional skills were not included in the model-visible skills list.
+2026-08-29T02:19:16.773125Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 426 Upgrade Required, url: ws://127.0.0.1:17841/v1/responses
+codex
+I’ll compare the round-5 residual against the current P4 specification, using the repository’s academic-review workflow because this is a formal resolution check.
+exec
+/bin/zsh -lc "sed -n '1,240p' /Users/jackneo/.codex/plugins/cache/andrehuang-academic-writing-agents/academic-writing-agents/2.0.0/skills/academic/SKILL.md" in /Users/jackneo/Documents/vonhippel-base9/astro-wd
+ succeeded in 216ms:
+---
+name: academic
+description: >-
+  Academic writing multi-agent orchestrator. TRIGGER when: user is editing
+  .tex files, reviewing thesis/paper chapters, drafting academic content,
+  checking writing quality, or analyzing research positioning. Coordinates
+  specialist agents in parallel for review, research, drafting, polishing,
+  figure work, bibliography auditing, and literature surveys.
+allowed-tools: Agent, Read, Glob, Grep, Edit, Write, Bash, WebSearch, WebFetch
+argument-hint: [task-description]
+---
+
+# Academic Writing Orchestrator
+
+You are the **Orchestrator** — a senior advisor coordinating a team of specialist agents for academic writing. Your job is to understand the user's request, deploy the right combination of workers, collect their outputs, synthesize findings, and drive iterative improvement through dialogue with the user.
+
+ultrathink
+
+## Invocation
+
+This skill activates in two ways:
+
+1. **Auto-trigger**: Claude detects academic writing context — `.tex` files, thesis chapters, paper drafts, writing quality discussions — and invokes this skill automatically.
+2. **Manual**: The user runs `/academic <task>`, e.g., `/academic review my introduction` or `/academic polish the abstract`.
+
+## Setup: Context Loading
+
+Before deploying any agents:
+1. Read `academic-writing.md` (in the same directory as this skill) for the 30 writing principles organized in 6 categories (A. Structure & Narrative, B. Prose & Style, C. Math & Equations, D. Figures & Tables, E. Citations & Bibliography, F. Process & Meta).
+2. If a project-level `.claude/CLAUDE.md` exists in the working directory, read it for project-specific structure and conventions.
+3. Check for project-level agents: Glob for `.claude/agents/*.md` in the working directory. If found, read their frontmatter (name, description, tools) and add them to your available roster alongside the agents listed below. Present project agents in your deployment plan.
+4. Include relevant context (principles, project info, workflow triggers) in each agent's deployment prompt. Reference principle categories relevant to deployed agents.
+
+## Available Worker Agents
+
+Use their name as `subagent_type` when spawning via the Agent tool:
+
+### Review Agents (read-only analysis)
+
+| Agent | `subagent_type` | Specialization |
+|-------|-----------------|----------------|
+| **Consistency Checker** | `consistency-checker` | Terminology, cross-refs, structural coherence, figure-text alignment |
+| **Logic Reviewer** | `logic-reviewer` | Argument flow, transitions, narrative arc, logical gaps |
+| **Technical Reviewer** | `technical-reviewer` | Math, methodology, results validity, citations, technical accuracy |
+| **Writing Reviewer** | `writing-reviewer` | Prose clarity, conciseness, grammar, tone (reports issues) |
+| **LaTeX Layout Auditor** | `latex-layout-auditor` | PDF layout audit — float placement, alignment, sizing |
+
+### Audit Agents (read + verify)
+
+| Agent | `subagent_type` | Specialization |
+|-------|-----------------|----------------|
+| **Bibliography Auditor** | `bibliography-auditor` | Bib entry completeness, arXiv updates, title capitalization, venue consistency |
+
+### Research Agents (read + web)
+
+| Agent | `subagent_type` | Specialization |
+|-------|-----------------|----------------|
+| **Research Analyst** | `research-analyst` | Related work, novelty, positioning, gap analysis, literature |
+| **Brainstormer** | `brainstormer` | Creative ideas, alternative framings, connections, research directions |
+
+### Survey Agents (read + web + write)
+
+| Agent | `subagent_type` | Specialization |
+|-------|-----------------|----------------|
+| **Paper Crawler** | `paper-crawler` | Collects papers from DBLP + OpenAlex APIs, deduplicates, optionally classifies |
+
+### Action Agents (read + write — these create/edit content)
+
+| Agent | `subagent_type` | Specialization |
+|-------|-----------------|----------------|
+| **Prose Polisher** | `prose-polisher` | Rewrites text for clarity, conciseness, flow. Applies fixes, not just reports. |
+| **Section Drafter** | `section-drafter` | Drafts new LaTeX sections, paragraphs, transitions, captions, abstracts |
+| **LaTeX Figure Specialist** | `latex-figure-specialist` | Creates/adjusts TikZ/pgfplots figures, manages placement, layout |
+
+## How to Operate
+
+### Step 1: Understand the Request and Present Deployment Plan
+
+Analyze the user's task, then **present your deployment plan to the user before executing**. Show:
+
+1. **Agents to deploy**: Which specialists you'll use and what each will do
+2. **Scope**: What files/topics each agent will focus on
+3. **Gaps**: Any parts of the task that no existing specialist can handle well, and how you plan to cover them (general-purpose agents with custom prompts)
+4. **Sequencing**: Whether agents run in parallel or in stages (e.g., review first, then polish)
+
+Example deployment plan:
+```
+## Deployment Plan
+
+I'll deploy 5 agents in parallel:
+- **consistency-checker** → Check terminology and cross-refs in parts/good.tex
+- **logic-reviewer** → Review argument flow and transitions in parts/good.tex
+- **technical-reviewer** → Check math notation and methodology in parts/good.tex
+- **writing-reviewer** → Review prose quality in parts/good.tex
+- **bibliography-auditor** → Check bib entries for completeness and hygiene
+
+No gaps — all aspects are covered by existing specialists.
+```
+
+After presenting the plan, proceed with deployment unless the user objects.
+
+### Step 2: Deploy Workers
+
+Rules for deployment:
+- **Maximize parallelism**: Launch all independent agents simultaneously in a single response.
+- **Be specific in prompts**: Tell each agent exactly what files to read, what to focus on, and what output format to use. Include file paths.
+- **Scope appropriately**: Don't send everything to every agent. Scope to the relevant subset.
+- **Include context**: Pass relevant principles (by category) and project info in each agent's prompt.
+- **For gaps**: When no specialist fits, spawn a `general-purpose` agent with a detailed custom prompt. Note this in your synthesis so the user can decide whether to create a permanent specialist.
+
+### Step 3: Synthesize Results
+
+After all workers report back:
+
+1. **Deduplicate**: Multiple agents may flag the same issue from different angles. Merge these.
+2. **Prioritize**: Categorize into Critical (must address), Important (should address), Minor (nice to address).
+3. **Identify patterns**: Recurring issues suggest systematic problems.
+4. **Cross-validate**: If agents disagree, note the disagreement and provide your assessment.
+5. **Be opinionated**: Share your own judgment on what matters most and why.
+6. **Actionable output**: Present findings as a prioritized action plan.
+
+### Step 4: Dialogue and Iteration
+
+After presenting the synthesis:
+- Ask the user which issues to tackle first.
+- Offer to deploy action agents (prose-polisher, section-drafter, latex-figure-specialist) to implement fixes.
+- For straightforward fixes, do them directly with Edit/Write.
+- Deploy brainstormer for creative exploration.
+- Track what's been addressed and what remains.
+
+## Academic Writing Playbook
+
+### Review Workflows
+
+| Task Pattern | Agents to Deploy |
+|-------------|-----------------|
+| "review chapter/section X" | consistency-checker + logic-reviewer + technical-reviewer + writing-reviewer + bibliography-auditor (all in parallel) |
+| "check consistency" | consistency-checker |
+| "check flow/logic" | logic-reviewer |
+| "check technical correctness" | technical-reviewer |
+| "review writing quality" | writing-reviewer |
+| "audit bibliography" | bibliography-auditor |
+| "check layout/figures" | latex-layout-auditor |
+| "research positioning" | research-analyst + brainstormer |
+| "collect papers on X" | paper-crawler |
+| "literature survey on X" | paper-crawler then research-analyst (analyze results) |
+| "full thesis/paper review" | all 5 reviewers + bibliography-auditor across all chapter files |
+
+### Creation Workflows
+
+| Task Pattern | Agents to Deploy |
+|-------------|-----------------|
+| "draft section/paragraph about X" | section-drafter |
+| "write transition from X to Y" | logic-reviewer (analyze gap) then section-drafter (write) |
+| "create/design figure for X" | latex-figure-specialist |
+| "write caption for figure X" | section-drafter (scoped to caption writing) |
+| "write abstract" | section-drafter (scoped to abstract) |
+
+### Polish Workflows
+
+| Task Pattern | Agents to Deploy |
+|-------------|-----------------|
+| "polish/improve section X" | writing-reviewer (diagnose) then prose-polisher (fix) |
+| "fix issues from review" | prose-polisher + section-drafter as needed |
+| "fix figure layout/placement" | latex-figure-specialist |
+
+### Multi-Stage Pipelines
+
+| Task Pattern | Pipeline |
+|-------------|----------|
+| "prepare for submission" | reviewers + bibliography-auditor (parallel) -> prose-polisher -> consistency-checker (verify) |
+| "revise based on feedback" | Analyze feedback -> deploy relevant reviewers -> action agents to fix -> verify |
+
+### Pre-Writing Planning
+
+| Task Pattern | Approach |
+|-------------|----------|
+| "plan section/chapter structure" | Brainstormer (generate structure options) -> present outline to user -> iterate -> section-drafter (write) |
+| "what should my intro cover?" | Research-analyst (identify key positioning points) + brainstormer (alternative framings) -> synthesize into outline |
+| "help me find my nugget" | Read the paper/chapter, then brainstormer (distill the single key insight) -> present candidates to user |
+
+### Pre-Writing Interview
+
+When a user asks to draft something from scratch and the scope is unclear, conduct a brief interview first:
+1. **What is the nugget?** — What single insight should the reader take away? (A7)
+2. **Who is the audience?** — Conference reviewers, thesis committee, general ML audience?
+3. **What comes before and after?** — Context for transitions (A2)
+4. **What figures/tables exist?** — So the drafter can reference them (D2, D7)
+5. **What related work must be cited?** — Core positioning references (E1, E2)
+
+Keep it short — 3-5 questions max, skip any the context already answers.
+
+### Submission Readiness Pipeline
+
+For "prepare for submission" or "is this ready to submit?", run a comprehensive pipeline:
+
+1. **Stage 1 — Parallel audit**: Deploy all 5 reviewers + bibliography-auditor + latex-layout-auditor
+2. **Stage 2 — Fix**: Deploy prose-polisher for writing issues, section-drafter for structural gaps, latex-figure-specialist for layout problems
+3. **Stage 3 — Verify**: Re-run consistency-checker on changed files
+4. **Final checklist**: Compile a submission readiness report covering:
+   - [ ] All figures referenced and interpreted (D2, D5)
+   - [ ] Bibliography complete — no "?" markers, no arXiv-only citations with published versions (E3)
+   - [ ] Negation-contrast audit passed (F2)
+   - [ ] Abstract states the nugget clearly (A7)
+   - [ ] GPS rhythm in introduction (A6)
+   - [ ] All named models/datasets cited (E1, E2)
+   - [ ] Captions self-sufficient (D7)
+
+## Synthesis Output Format
+
+```markdown
+## Orchestrator Synthesis
+
+### Overview
+[1-2 sentence summary of the overall assessment]
+
+### Critical Issues (N items)
+1. **[Category]** [FILE:LINE] — Description
+   - *Found by*: [agent name]
+   - *Principle*: [PN]
+   - *Suggested action*: ...
+
+### Important Issues (N items)
+...
+
+### Minor Issues (N items)
+...
+
+### Patterns Observed
+- [Recurring themes across findings]
+
+### Recommendations
+1. [Highest priority action]
+2. ...
+
+### Next Steps
+- [ ] [Suggested next action]
+- [ ] [Alternative direction]
+```
+
+
+codex
+Deployment plan: one technical-consistency pass, scoped only to the prior residual and the current `METRICS_SPEC.md` P4 definition. I’ll verify the estimator, empty-run treatment, and bootstrap sampling unit, then issue the requested binary verdict; no edits are needed.
+exec
+/bin/zsh -lc "if [ -f .claude/CLAUDE.md ]; then sed -n '1,260p' .claude/CLAUDE.md; fi
+if [ -d .claude/agents ]; then for f in .claude/agents/*.md; do [ -e \""'$f" ] || continue; sed -n '"'1,40p' \""'$f"; done; fi' in /Users/jackneo/Documents/vonhippel-base9/astro-wd
+ succeeded in 0ms:
+exec
+/bin/zsh -lc "sed -n '1,260p' /Users/jackneo/.codex/plugins/cache/andrehuang-academic-writing-agents/academic-writing-agents/2.0.0/skills/academic/academic-writing.md" in /Users/jackneo/Documents/vonhippel-base9/astro-wd
+ succeeded in 0ms:
+# Academic Writing Principles (30)
+
+Distilled from thesis supervision, author self-review feedback, and Michael Black's "Writing a Good Scientific Paper" (March 2026).
+Canonical reference — all agents and workflows should consult this file.
+Organized into 6 categories that map to agent specializations.
+
+---
+
+## A. Structure & Narrative
+
+*Primary agents: logic-reviewer, consistency-checker*
+
+### A1. Recursive Consistency Checks
+For each chapter, section, and subsection — verify that terminology, section summary/intro, actual flow, and experiments all match. If a section says "we discuss X, Y, Z," the subsections must cover exactly X, Y, Z in that order.
+
+**Common violations**: Section intro promises three topics but delivers two; subsection order doesn't match the intro's enumeration; terminology drifts between sections (e.g., "feature" vs "representation").
+
+### A2. Logical Chaining with Transitions
+Every paragraph, section, and chapter should be "chained" logically. The end of one section should motivate the start of the next. Never leave two adjacent paragraphs without a transition. Section-level transitions are necessary but insufficient — paragraph-to-paragraph connections are the more common failure mode.
+
+**Common violations**: Abrupt topic shifts between paragraphs; sections that start with no connection to what came before; chapter endings that don't set up the next chapter; adjacent paragraphs on related subtopics connected only by thematic proximity rather than explicit bridging.
+
+### A3. Figure/Table Definition Order
+Ensure that figure/table definition order in the source matches the order they are first mentioned and discussed in the text. Teaser figures may appear early but must still be discussed promptly.
+
+**Common violations**: LaTeX source defines Figure 5 before Figure 3; a figure is \input'd early but not referenced until much later.
+
+### A4. Close Every Paragraph
+The last sentence of a paragraph should conclude, synthesize, or motivate the next paragraph — not trail off. A strong closer draws an implication, states a principle, or poses a question the next paragraph answers.
+
+**Common violations**: Paragraphs ending with "subsequently", "which we detail below", or a bare citation; final sentences that introduce new information without resolution; paragraphs that simply stop after the last piece of evidence.
+
+### A5. Claim-First Exposition
+State the conceptual contribution or objective before diving into technical details. The reader should know *what* and *why* before *how*. The first 1–2 sentences of each section or subsection should declare the goal before presenting formulas or procedures.
+
+**Common violations**: Sections that open with equations or implementation details before stating the purpose; subsections that dive into "how" without first explaining "what" or "why"; method descriptions that defer the motivation to the end.
+
+### A6. Goal-Problem-Solution Rhythm
+Every section — from the full paper down to individual subsections — should follow a Goal-Problem-Solution (GPS) rhythm. **Goal**: what are we trying to achieve? **Problem**: what makes this hard or what's missing? **Solution**: how do we address it? This rhythm gives the reader a reason to care before presenting the technical content. Sections that jump to solutions without establishing the goal and problem lose the reader's motivation.
+
+**Common violations**: Method sections that present techniques without first stating what problem each technique solves; introduction paragraphs that list contributions without establishing the gap; subsections that describe "how" without "why this is needed."
+
+### A7. The Nugget — One Key Insight Per Paper
+Every paper should orbit a single key insight — the "nugget" — that the reader takes away. All sections, experiments, and figures should serve this central message. If you cannot state the nugget in one sentence, the paper's focus is unclear. The nugget is not the method; it is the insight that makes the method work or the finding that changes how we think about the problem.
+
+**Common violations**: Papers that present multiple loosely connected contributions without a unifying insight; abstracts that list techniques rather than stating what was learned; conclusion sections that enumerate results rather than crystallizing the takeaway.
+
+---
+
+## B. Prose & Style
+
+*Primary agents: writing-reviewer, prose-polisher*
+
+### B1. Avoid Exhaustive-Sounding Enumerations
+When listing examples, use "such as" rather than "for" to avoid implying the list is complete. ("benchmarks for X, Y, Z" -> "benchmarks such as X, Y, Z")
+
+**Common violations**: "for" used with partial lists; enumerations that imply completeness when the list is illustrative.
+
+### B2. Avoid Negation-Contrast Structures
+Rephrase "not X, but Y" / "not because... but because..." / "not that... but that..." positively. These are a strong AI-writing marker. E.g., "not because it is rarer, but because no one defined it" -> "because no one had conceptualized it as a category, regardless of how often it occurs."
+
+**Common violations**: Sentences structured around negation before stating the actual point; double negatives; "not only... but also" used excessively.
+
+### B3. Avoid Colloquial Terminology in Titles/Formal Claims
+Vivid phrases can appear parenthetically but should not be primary terminology. Use formal terms in titles; introduce colloquial terms once parenthetically.
+
+**Common violations**: Informal shorthand used as section titles; colloquial metaphors presented as formal definitions.
+
+### B4. Match Discussion Tone to Thesis Voice
+Discussion/findings should flow as analytical prose (claim -> evidence -> mechanism -> example -> principle), not flat report-style enumeration. The author's voice is deductive, first-person plural, active, with calibrated hedging. See the project CLAUDE.md for the full style profile.
+
+**Common violations**: Bullet-point style findings; flat enumeration without analytical depth; discussion sections that read like lists rather than arguments.
+
+### B5. One Idea Per Sentence
+Split sentences that pack multiple distinct claims (method + contrast + result). Each sentence should advance exactly one point. If a sentence needs "while", "unlike", or a semicolon to stitch together separate claims, it should be two sentences.
+
+**Common violations**: Sentences with "unlike X which...", "while prior work does A, we do B and achieve C", or subordinate clauses introducing separate claims from the main clause; compound sentences where each half could stand alone as a distinct contribution.
+
+### B6. Calibrated Confidence Language
+Use assertive language for empirical facts ("achieves", "outperforms", "yields") and hedged language for causal explanations ("we observe", "we hypothesize", "this suggests"). Do not hedge facts or assert mechanisms.
+
+**Common violations**: "because" / "due to" / "leads to" used with assertive tone for unproven causal mechanisms; "may" / "might" / "could" modifying reported numerical results; mixing confidence levels within the same sentence.
+
+### B7. Ruthless Conciseness
+Every word must earn its place. Academic writing is not about sounding sophisticated — it is about communicating precisely with minimal friction. Cut filler phrases ("it is important to note that", "in the context of"), compress relative clauses into participles or appositives, and prefer short Anglo-Saxon words over long Latinate ones when meaning is preserved ("use" not "utilize", "show" not "demonstrate"). A paragraph that says in 100 words what could be said in 60 is not thorough — it is wasteful.
+
+**Common violations**: "It is worth noting that" (cut entirely); "in order to" -> "to"; "a large number of" -> "many"; "due to the fact that" -> "because"; "plays an important role in" -> "affects"; padding sentences with "importantly", "interestingly", "notably" as openers; restating in the conclusion what was already said in the abstract and introduction with only cosmetic changes.
+
+### B8. AI-Writing Tell Detection
+Actively scan for and eliminate patterns that mark text as AI-generated. Common tells: (1) "not X, but Y" negation-contrast (see B2), (2) "delve", "leverage", "landscape", "tapestry", "multifaceted", "paradigm shift", (3) sentences starting with "Moreover", "Furthermore", "Additionally" in sequence, (4) formulaic transitions ("Building on this", "Taking this a step further"), (5) hollow intensifiers ("crucial", "vital", "essential" used interchangeably), (6) mirroring the user's exact phrasing back, (7) overly balanced "on one hand / on the other hand" structures. Replace with direct, specific language.
+
+**Common violations**: Three consecutive paragraphs starting with "Moreover" / "Furthermore" / "Additionally"; using "delve into" instead of "examine" or "analyze"; "leverage" as a verb when "use" suffices; "the landscape of X" as a vague framing; sentences that begin with a gerund phrase restating the previous sentence ("Building on the above analysis, we...").
+
+---
+
+## C. Math & Equations
+
+*Primary agents: technical-reviewer*
+
+### C1. Math for Clarity, Not Complexity
+Use formal notation to make difficult concepts precise when applicable, but theories should serve to *clarify*, not confuse or overwhelm. If notation doesn't add precision, drop it. Introduce no more than two new symbols per sentence. When a passage requires multiple definitions, space them across sentences with interleaving explanation.
+
+**Common violations**: Introducing notation used only once; over-formalizing intuitive concepts; inconsistent symbol meanings across sections; multiple new symbols defined in a single sentence without intervening explanation.
+
+### C2. Triple Explanation — Text, Equation, Figure
+Key concepts deserve explanation through all three modalities: intuitive text, formal equation, and visual figure. The text gives the reader intuition and motivation. The equation makes it precise. The figure makes it concrete and memorable. Not every concept needs all three, but any concept central to the paper's contribution should have at least two, and the core idea should have all three. The three explanations should reinforce each other, not merely repeat.
+
+**Common violations**: Core methods described only via equations with no intuitive text; figures that illustrate the pipeline but not the key mathematical insight; text that paraphrases an equation without adding intuition; methods explained in text and equations but with no figure to ground the reader's understanding.
+
+### C3. Equation-Code Correspondence
+When a paper presents both mathematical formulations and implementation details (pseudocode, algorithm blocks, or references to released code), the notation should map clearly to the implementation. Variable names in equations should correspond to variable names in code or pseudocode. If the mapping is non-trivial, state it explicitly. Readers who want to implement the method should not need to reverse-engineer the connection.
+
+**Common violations**: Equations using $\alpha$ and $\beta$ while pseudocode uses `lr` and `momentum` without mapping; algorithm blocks that introduce new variable names not present in the mathematical formulation; loss functions defined differently in the equation and the code; dimension ordering (e.g., batch-first vs channel-first) differing between equations and implementation without comment.
+
+---
+
+## D. Figures & Tables
+
+*Primary agents: consistency-checker, latex-layout-auditor, latex-figure-specialist*
+
+### D1. Active Figure Use
+Use figures to explain or illustrate complicated concepts. If a concept is hard to convey in text alone, create a figure. Consider whether every major chapter section has adequate visual support.
+
+**Common violations**: Long stretches of dense text with no visual support; figures that decorate rather than explain; missing overview/pipeline figures for method sections.
+
+### D2. Cross-Reference All Floats
+Never let any figure or table "just be there." Every float must be explicitly referenced and discussed in the surrounding text.
+
+**Common violations**: Figures placed in the document but never mentioned with \ref; tables referenced once without discussion of their content.
+
+### D3. Figure-Text-Caption Consistency
+Always match what the figure shows, what the caption says, and what the body text says. If they describe the same concept differently, reconcile them. If a figure places items in certain positions (e.g., a 2D plot), the text must match that placement.
+
+**Common violations**: Caption describes elements not visible in the figure; body text says "top-left" when the item is bottom-right; caption and text use different terminology for the same element.
+
+### D4. One Figure, One Message
+Do not layer multiple stories onto one visualization. If a figure answers two questions, consider splitting.
+
+**Common violations**: Figures with too many subplots serving different arguments; a single figure trying to show both the method pipeline and the results.
+
+### D5. Interpret Figures, Don't Just Reference
+When referencing a figure, tell the reader what to look for. Not just "as shown in Figure X" — say what the figure reveals, what pattern to notice, or what comparison matters. This extends principle D2 (which checks existence of reference; this checks quality of reference).
+
+**Common violations**: Bare "see Figure X" or "as shown in Figure X" without interpretive guidance; figure references that state the figure exists but not what it demonstrates; paragraphs that rely on the reader to independently extract the figure's message.
+
+### D6. Figure Row Alignment
+Use `[t]` alignment on subfigures in multi-row grids to ensure rows align at their tops. When subfigures in a row have different heights (e.g., one has a caption and others do not, or one is a PNG and others are PDFs), `[b]` alignment causes visual misalignment. Add explicit height constraints (`\includegraphics[height=X]`) when images within a row have different aspect ratios.
+
+**Common violations**: Using `[b]` alignment in subfigure grids (the default in many templates); rows where captions appear only on some subfigures, pushing others up or down; mixing raster and vector formats without height normalization.
+
+### D7. Figure Caption Self-Sufficiency
+A caption should be understandable without reading the body text. It should state what the figure shows, define any abbreviations or symbols used in the figure, and highlight the key takeaway. Readers often scan figures and captions before deciding whether to read the full text — the caption is the figure's elevator pitch.
+
+**Common violations**: Captions that say only "Results on dataset X" without explaining what the axes, colors, or groups represent; captions that reference terms defined only in the body text; captions that describe the visual layout ("Left: ..., Right: ...") without stating the message; captions missing units on reported quantities.
+
+---
+
+## E. Citations & Bibliography
+
+*Primary agents: technical-reviewer, bibliography-auditor*
+
+### E1. Cite All Named Models/Benchmarks/Datasets
+At first use in each section, even if cited earlier in the thesis. Readers may jump to individual sections.
+
+**Common violations**: Named methods mentioned without citation after the first chapter; benchmark names used without references in experiment sections that readers may access directly.
+
+### E2. Citation Completeness at First Mention
+Cite foundational methods and models (SIFT, HOG, CNN/AlexNet, Transformer, etc.) at their first mention in each chapter, even if they are well-known. Readers may start from any chapter; a bare mention without citation forces them to search for the reference.
+
+**Common violations**: Named methods mentioned without citation after their first appearance in Ch. 1; acronyms like "CNN" or "ViT" used without a citation in chapters that readers may access independently; benchmark names (ImageNet, COCO) used without references in experiment sections.
+
+### E3. Bibliography Hygiene
+Bibliography entries should be complete, consistent, and up-to-date. Check: (1) every entry has the required fields for its type (authors, title, year, venue/journal, pages, DOI where available), (2) title capitalization is protected with braces for proper nouns and acronyms (e.g., `{ImageNet}`, `{BERT}`), (3) arXiv-only citations are updated to their published versions when available, (4) author names are consistent across entries (not "Vaswani, A." in one and "Ashish Vaswani" in another), (5) venue names are consistent (not "NeurIPS" in one entry and "Advances in Neural Information Processing Systems" in another — pick one style), (6) no "?" markers appear in the compiled PDF (indicating unresolved references). Run `biber --validate-datamodel` or check the .blg file for warnings.
+
+**Common violations**: arXiv preprints cited when a published version exists at a top venue; missing page numbers or DOIs; inconsistent venue abbreviations; title-cased titles without brace protection causing lowercase output; duplicate bib entries under different keys; entries with placeholder fields ("to appear", "forthcoming") that were never updated.
+
+---
+
+## F. Process & Meta
+
+*Primary agents: writing-reviewer (final pass)*
+
+### F1. Strategic Limitation Placement
+How and where to discuss limitations depends on the document type. **Peer-reviewed papers**: Be strategic — don't expose weaknesses prematurely. Options: (a) acknowledge briefly with a potential fix ("While X assumes Y, this can be mitigated by Z"), (b) place in a dedicated limitations section after results build confidence, (c) frame as future work rather than weakness. **Thesis / internal documents**: Discuss limitations earlier and more clearly, at the point the design decision is made, so the reader (supervisor, committee) sees the author's awareness of assumptions and tradeoffs.
+
+**Common violations**: Limitations mentioned in the method section of a paper before the reader has seen results; limitations omitted entirely from a thesis chapter; limitations listed without mitigation or context; defensive tone when discussing known constraints.
+
+### F2. Negation-Contrast Audit
+Before finalizing any chapter, search for "not...but" patterns and rephrase positively. Negation-contrast structures ("not X, but Y") are a strong AI-writing marker per Principle B2. A final-pass grep for patterns like `is not.*but`, `not to.*but to`, `not how.*but` catches residual instances.
+
+**Common violations**: Sentences structured as "the question is not X but Y" (rephrase: "the question is Y"); "the goal is not to X but to Y" (rephrase: "the goal is to Y: ..."); "not only...but also" used to combine two claims that should be separate sentences.
+
+exec
+/bin/zsh -lc "sed -n '1,240p' generalization/reviews/G2r5/sol_referee5.md
+rg -n -C 14 'P4|p-hat|hat.p|n_empty|empty|bootstrap|usable' generalization/METRICS_SPEC.md" in /Users/jackneo/Documents/vonhippel-base9/astro-wd
+ succeeded in 0ms:
+Amplitude-stationarity — **RESOLVED:** Plan makes ±30% runs CORE and binding ([GENERALIZATION_PLAN.md:210](/Users/jackneo/Documents/vonhippel-base9/astro-wd/generalization/GENERALIZATION_PLAN.md:210)); spec agrees ([METRICS_SPEC.md:160](/Users/jackneo/Documents/vonhippel-base9/astro-wd/generalization/METRICS_SPEC.md:160)).
+
+P4 zero-usable-strata — **UNRESOLVED:** \(K_t=\varnothing\) is excluded, but the usable formula still divides by 103 and the bootstrap still resamples all 103 without defining the usable denominator/exclusion calculation ([METRICS_SPEC.md:124](/Users/jackneo/Documents/vonhippel-base9/astro-wd/generalization/METRICS_SPEC.md:124), [METRICS_SPEC.md:146](/Users/jackneo/Documents/vonhippel-base9/astro-wd/generalization/METRICS_SPEC.md:146)).
+
+**FREEZABLE NO.**
+1-# METRICS_SPEC — to be frozen at G2 (freeze = git blob SHA recorded in
+2-# GENERALIZATION_PLAN.md when the G2 panel reaches no-blocker verdicts)
+3-
+4-Implemented by `scripts/generalization/metrics_generalization.py`. Any change
+5-after the first campaign L-S run voids the prespecification and must be
+6-reported as such. v3, 2026-08-28: absorbs G2 round-2 findings (referee2,
+7-stats2, methods2, abstract lenses).
+8-
+9-## Estimand vocabulary (names are binding)
+10-
+11-Three separate response assessments; never pooled.
+12-
+13-- **detection completeness** — P(rule fires | labeled positive), reported for
+14:  BOTH denominators: `eligible_roster` (missing/unusable light curves count
+15:  as non-detections) and `usable_lightcurve` (frozen QC passed, both passes
+16-  complete). D1 denominators: the 13 paper-variable stars of the published
+17-  19-star master table (the 928-star catalog is NOT a labeled-positive
+18-  completeness denominator). D3: the 610 dSct=1 survivors. D2: injection
+19-  targets — always labeled *conditional injection-recovery efficiency of the
+20-  search stage*; D2 primary detection = post-injection rule firing
+21-  (detection-only); strict frequency matching is the separate
+22-  frequency-recovery estimand; paired controls contextualize native triggers.
+23-- **frequency-recovery completeness** — P(rule fires AND
+24-  best_candidate_matches_dominant | labeled positive AND freq-scorable AND
+25-  S_p = 1). Freq-scorable: D3 = Mo-joined with >=1 frequency and a defined
+26-  dominant amplitude (assert count == 456; "Mo-join-conditioned" label
+27-  mandatory; joined-vs-unjoined covariate table mandatory); D2 = >=1
+28-  RETAINED injected mode (from injected_modes.csv, post |sinc|>=0.3
+29-  rejection — never the original mode table); D1 = diagnostic only
+30-  (non-contemporaneous literature frequencies; see below).
+31-  S_p (per pass p): >=1 truth frequency inside pass p's search bounds
+32-  (low: [2/baseline, 48] / d; high: [24, 1440] / d); S_best = S_low OR
+33-  S_high. Known consequence stated up front: only ~10/456 D3 dominant
+34-  frequencies lie >= 24 / d, so D3 high-pass frequency recovery is a
+35:  near-empty cell and is reported as counts.
+36-  Mo-join MNAR limitation (binding statement): Mo inclusion required
+37-  SNR > 8 in Kepler photometry and is plausibly related to amplitude,
+38-  magnitude, and mode complexity; missingness for the 154 unjoined
+39-  positives is treated as informative — the frequency-recovery curve is
+40-  therefore a Mo-join-conditioned estimand, the joined-vs-unjoined
+41-  covariate table is mandatory, and DETECTION surfaces retain all 610
+42-  positives with the unjoined stars in an explicit `amp_unknown` bin so
+43-  their detection behavior is visible beside the joined sample.
+44-  The missed-vs-wrong-frequency decomposition uses matching denominators
+45-  only: P(D AND M | Y=1, F=1, S_p=1) vs P(D | Y=1, F=1, S_p=1).
+46-- **correct-frequency fraction among detected positives** —
+47-  P(best_candidate_matches_dominant | rule-1 fired, Y=1, F=1, S_p=1).
+48-  Never called purity.
+49-- **frame-specific label PPV (D3 only)** — among triggered roster members of
+50-  the weighted frame {dSct=1 census positives, dSct=0 SRS negatives; dSct=2
+51-  EXCLUDED, reported separately}: weighted fraction labeled dSct=1.
+52:  Interval: FPC-rescaled survey bootstrap (B=2000, frozen seed): the 2,314
+53-  negatives are resampled with replacement, positives held fixed (census),
+54:  and bootstrap deviations are rescaled by sqrt(1 − f) with sampling
+55-  fraction f = 2314/7292 (SRSWOR finite-population correction).
+56-  No transfer to other prevalences. Output: ppv.csv.
+57-- **negative-class trigger rate (D3)** — P(rule fires | dSct=0, the
+58-  NON-dSct COMPARISON CLASS — it contains genuine gamma Dor, rotational,
+59-  binary and other variables, which is why this is a trigger rate). Weights are
+60-  constant within the class and cancel: plain Wilson on the 2,314 sampled
+61-  negatives (no FPC — conservative). Triggered negatives adjudicated in W4
+62-  (plausible real variable vs unexplained), reported descriptively.
+63-- **Gaussian-null false-alarm rate (FPR_Gaussian, D2)** — P(confirmed |
+64-  arm-A zero-amplitude null), n = 1000; window allocation frozen as
+65-  deterministic cycling of the sorted 928-window pool (serial i -> window
+66-  i mod 928), noise seed = serial. Interval: EXACT one-sided
+67-  Clopper-Pearson upper bound at the OBSERVED event count x
+68-  (U = Beta_{0.95}(x+1, n-x)); acceptance criterion (confirmatory):
+69-  U_95(x, 1000) <= 0.005. Windows repeat; inference is conditional on the
+70-  frozen window set. FP frequency-distribution/alias audit descriptive only
+71-  below 10 events.
+72-- **native trigger rate of the template pool (D2)** — P(confirmed | paired
+73-  uninjected control window, 95-prefix). Context, not an FPR.
+74-
+75-Exact D3 sampling constants (binding): negatives inclusion probability
+76-2314/7292 (= 0.31733406...), sampling weight 7292/2314 (= 3.15125324...);
+77-never derived from rounded values.
+78-
+79-## D1 specifics
+80-
+81:Labels from the published master table (19 usable stars: 13 paper-variable,
+82-5 paper-constant, 1 transit control excluded from both classes — it is the
+83-frozen pipeline's eclipsing sanity object). D1 truth frequencies are
+84-non-contemporaneous single-epoch literature tabulations of multi-mode
+85-pulsators (observed lit-vs-ZTF offsets reach 0.6%): frequency-recovery for
+86-D1 is DIAGNOSTIC only; the D1 estimand is detection completeness.
+87-Match tolerance adds a truth-quantum term: D1 +0.0025 / d (2-decimal
+88-tables); D2/D3 +0. Validation on record (2026-08-28): the engine reproduces
+89-all five published D1 numbers (11/13 L-S, 9/13 census, 13/13 union,
+90-0 confirmed + 1 candidate among the 5 constants).
+91-
+92-## Frequency-match taxonomy (evaluate everything, then classify)
+93-
+94-Tolerance: 1.5 / baseline_days + truth-quantum. f_sid = 1.00273790935 / d
+95-(frozen, the pipeline's constant). For each detected candidate, evaluate ALL
+--
+106-`best_candidate_matches_any_mode` (secondary), plus
+107-`any_top_peak_matches_any_mode` (diagnostic over the 15 stored peaks).
+108-Chance-match calibration: truth lists permuted across stars (frozen seed
+109-20260829, 100 permutations) -> accidental direct-match rate beside every
+110-frequency-recovery table.
+111-
+112-## Detection rules and the preregistered primary family
+113-
+114-Rules (all four always reported): 1 `confirmed`, 2 `confirmed|candidate`,
+115-3 `census` (any of six frozen ratios >= 2.5), 4 `either` (1 OR 3).
+116-PRIMARY endpoints — complete tuples; everything else is pointwise
+117-descriptive sensitivity:
+118-  P1 D3 detection completeness: {D3, dSct=1 (610), eligible_roster, rule 1,
+119-     best pass, unweighted, Wilson 95%}.
+120:  P2 D3 frequency recovery: {D3, Mo-joined S_best=1 subset, usable, rule 1 +
+121-     best_candidate_matches_dominant, Wilson 95%, beside chance-match rate}.
+122-  P3 D3 negative-class trigger rate: {D3, dSct=0 (2314), rule 1, best pass,
+123-     plain Wilson}.
+124:  P4 D2 conditional injection-recovery, algebraically:
+125:     p-hat = (1/103) Σ_t (1/|K_t|) Σ_{k in K_t} y_{t,k}, where y_{t,k} = 1
+126-     iff rule 1 fires (detection-only) on target t's stratum-k nominal
+127-     (1.7/0.80, de-dilution off, phase_draw 0) arm-B shard, and K_t ⊆
+128:     {0, 1, 2} is the set of strata with a usable result. ELIGIBLE variant:
+129-     denominator all 103 targets; missing stratum counts y = 0 with
+130-     |K_t| = 3; a K_t = ∅ target contributes 0. USABLE variant:
+131:     p-hat_u = (1/(103 − n_∅)) Σ_{t: K_t ≠ ∅} (1/|K_t|) Σ_k y_{t,k} —
+132-     K_t = ∅ targets are excluded from numerator AND denominator, with
+133:     n_∅ reported as n_targets_zero_usable_strata. The bootstrap resamples
+134-     all 103 target labels with the common draw matrix for both variants;
+135-     a resampled-in K_t = ∅ target contributes 0 to the eligible statistic
+136:     and is dropped from that replicate's usable statistic (matching the
+137-     estimators). Both variants reported. Interval: target-cluster
+138:     bootstrap 95%.
+139-  P5 FPR_Gaussian acceptance: {D2 arm A nulls, rule 1, exact one-sided CP
+140-     upper at observed x <= 0.5%} — the sole confirmatory decision.
+141-No claim direction reversal, endpoint swap, or denominator swap after the
+142-first campaign L-S run.
+143-
+144-## Units of analysis and intervals
+145-
+146-- D1/D3: the star is the unit. Wilson 95% on unweighted proportions; plain
+147:  Wilson on the negatives class (weights cancel); survey bootstrap for PPV;
+148-  ESS-Wilson only for other descriptive weighted proportions, labeled
+149-  approximate.
+150-- D2: the TESS target (TIC) is the CLUSTER; inference is CONDITIONAL on the
+151-  frozen window assignment (report unique window count and reuse table —
+152:  windows repeat across targets, and a target-only bootstrap does not
+153-  represent the 928-window frame; stated as a limitation).
+154-  Estimator: per-target mean over its replicates within a scenario/stratum;
+155-  aggregate = equal-weight mean over the 103 targets (a scenario mix, NOT
+156-  the 928-window frame). Bootstrap: resample the 103 TICs with replacement
+157-  (B = 2000, frozen seed 20260830), carrying ALL of a resampled target's
+158-  replicates, paired census/L-S outcomes, phases, and scenario results
+159-  jointly; identical resample draws across scenarios (common random
+160-  numbers). Percentile 95% intervals; if a statistic is degenerate
+161-  (all-0/all-1), report the exact one-sided CP bound at the target level
+162-  instead. Pooled exact McNemar is PROHIBITED for D2; use the target-cluster
+163:  paired-difference bootstrap.
+164-- Sensitivity contrasts (D2 ladder, phase draws, amplitude-stationarity,
+165-  dominant-mode dropout — ALL core and binding; the ±30% multiplier is a
+166-  local sensitivity, never presented as an astrophysical uncertainty
+167-  envelope):
+168-  COMMON-SUBSET RULE — every contrast against nominal is computed with
+169-  nominal re-evaluated on the same median-window (K=1) subset and the same
+170:  bootstrap draws. Min-max across the 3x3 grid is a "prespecified
+171-  finite-grid sensitivity range", never a confidence band; endpoint
+172-  scenarios identified. De-dilution and amplitude-stationarity are separate
+173-  axes.
+174-
+175-## Complementarity (census vs L-S)
+176-
+177:Per dataset, on labeled positives with both methods available and usable:
+178-C = census flag; L = rule-1 detection (detection-only, symmetric margins).
+179-Report the full 2x2, both discordant fractions, union completeness, and
+180:incremental yields with intervals (Wilson for D1/D3; cluster bootstrap for
+181-D2). Exact McNemar secondary (D1/D3 only; marginal homogeneity, not
+182-complementarity).
+183-
+184-## Surfaces
+185-
+186-Surfaces exist for D2 and D3 only (D1 has no amplitude axis). Two
+187-endpoints, separate files: (a) rule-1 DETECTION completeness over ALL
+188-labeled positives — stars without a defined amplitude (the 154 unjoined
+189-D3 positives) fall in an explicit `amp_unknown` bin (bin index −1), so
+190-the full 610-star denominator is preserved; (b) frequency recovery over
+191-the scorable subset only. Coordinates per star (frozen): D3 = dominant Mo
+192-mode (period from dominant frequency; historical Kepler-band dominant
+193-amplitude, mmag — explicitly non-contemporaneous, not a ZTF-g threshold);
+194-D2 = largest-amplitude RETAINED injected mode (period; published TESS
+
+codex
+The residual is substantively closed: the current text now defines the usable denominator, removes zero-usable targets from both terms, and applies that exclusion inside each bootstrap replicate. I’m checking the exact line references for the final freeze verdict.
+exec
+/bin/zsh -lc "nl -ba generalization/METRICS_SPEC.md | sed -n '124,163p'
+nl -ba generalization/reviews/G2r5/sol_referee5.md | sed -n '1,24p'
+git status --short -- generalization/METRICS_SPEC.md generalization/reviews/G2r5/sol_referee5.md" in /Users/jackneo/Documents/vonhippel-base9/astro-wd
+ succeeded in 0ms:
+   124	  P4 D2 conditional injection-recovery, algebraically:
+   125	     p-hat = (1/103) Σ_t (1/|K_t|) Σ_{k in K_t} y_{t,k}, where y_{t,k} = 1
+   126	     iff rule 1 fires (detection-only) on target t's stratum-k nominal
+   127	     (1.7/0.80, de-dilution off, phase_draw 0) arm-B shard, and K_t ⊆
+   128	     {0, 1, 2} is the set of strata with a usable result. ELIGIBLE variant:
+   129	     denominator all 103 targets; missing stratum counts y = 0 with
+   130	     |K_t| = 3; a K_t = ∅ target contributes 0. USABLE variant:
+   131	     p-hat_u = (1/(103 − n_∅)) Σ_{t: K_t ≠ ∅} (1/|K_t|) Σ_k y_{t,k} —
+   132	     K_t = ∅ targets are excluded from numerator AND denominator, with
+   133	     n_∅ reported as n_targets_zero_usable_strata. The bootstrap resamples
+   134	     all 103 target labels with the common draw matrix for both variants;
+   135	     a resampled-in K_t = ∅ target contributes 0 to the eligible statistic
+   136	     and is dropped from that replicate's usable statistic (matching the
+   137	     estimators). Both variants reported. Interval: target-cluster
+   138	     bootstrap 95%.
+   139	  P5 FPR_Gaussian acceptance: {D2 arm A nulls, rule 1, exact one-sided CP
+   140	     upper at observed x <= 0.5%} — the sole confirmatory decision.
+   141	No claim direction reversal, endpoint swap, or denominator swap after the
+   142	first campaign L-S run.
+   143	
+   144	## Units of analysis and intervals
+   145	
+   146	- D1/D3: the star is the unit. Wilson 95% on unweighted proportions; plain
+   147	  Wilson on the negatives class (weights cancel); survey bootstrap for PPV;
+   148	  ESS-Wilson only for other descriptive weighted proportions, labeled
+   149	  approximate.
+   150	- D2: the TESS target (TIC) is the CLUSTER; inference is CONDITIONAL on the
+   151	  frozen window assignment (report unique window count and reuse table —
+   152	  windows repeat across targets, and a target-only bootstrap does not
+   153	  represent the 928-window frame; stated as a limitation).
+   154	  Estimator: per-target mean over its replicates within a scenario/stratum;
+   155	  aggregate = equal-weight mean over the 103 targets (a scenario mix, NOT
+   156	  the 928-window frame). Bootstrap: resample the 103 TICs with replacement
+   157	  (B = 2000, frozen seed 20260830), carrying ALL of a resampled target's
+   158	  replicates, paired census/L-S outcomes, phases, and scenario results
+   159	  jointly; identical resample draws across scenarios (common random
+   160	  numbers). Percentile 95% intervals; if a statistic is degenerate
+   161	  (all-0/all-1), report the exact one-sided CP bound at the target level
+   162	  instead. Pooled exact McNemar is PROHIBITED for D2; use the target-cluster
+   163	  paired-difference bootstrap.
+     1	Amplitude-stationarity — **RESOLVED:** Plan makes ±30% runs CORE and binding ([GENERALIZATION_PLAN.md:210](/Users/jackneo/Documents/vonhippel-base9/astro-wd/generalization/GENERALIZATION_PLAN.md:210)); spec agrees ([METRICS_SPEC.md:160](/Users/jackneo/Documents/vonhippel-base9/astro-wd/generalization/METRICS_SPEC.md:160)).
+     2	
+     3	P4 zero-usable-strata — **UNRESOLVED:** \(K_t=\varnothing\) is excluded, but the usable formula still divides by 103 and the bootstrap still resamples all 103 without defining the usable denominator/exclusion calculation ([METRICS_SPEC.md:124](/Users/jackneo/Documents/vonhippel-base9/astro-wd/generalization/METRICS_SPEC.md:124), [METRICS_SPEC.md:146](/Users/jackneo/Documents/vonhippel-base9/astro-wd/generalization/METRICS_SPEC.md:146)).
+     4	
+     5	**FREEZABLE NO.**
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-yx1fA4Sj' (errno=Operation not permitted)
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-E8VExwMh' (errno=Operation not permitted)
+
+codex
+**RESOLVED.** P4 now specifies:
+
+- \(\hat p_u\) denominator \(103-n_{\emptyset}\).
+- \(K_t=\emptyset\) targets excluded from numerator and denominator.
+- Bootstrap resamples 103 target labels, then drops empty targets from each replicate’s usable statistic.
+
+Evidence: [METRICS_SPEC.md:131](/Users/jackneo/Documents/vonhippel-base9/astro-wd/generalization/METRICS_SPEC.md:131)–[138](/Users/jackneo/Documents/vonhippel-base9/astro-wd/generalization/METRICS_SPEC.md:138), with target-cluster resampling details at [METRICS_SPEC.md:150](/Users/jackneo/Documents/vonhippel-base9/astro-wd/generalization/METRICS_SPEC.md:150).
+
+**FREEZABLE YES.**
+tokens used
+16,282

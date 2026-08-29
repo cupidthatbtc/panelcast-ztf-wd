@@ -1,0 +1,758 @@
+Reading additional input from stdin...
+2026-08-29T02:18:40.542438Z ERROR codex_models_manager::cache: failed to load models cache: missing field `base_instructions` at line 97 column 5
+2026-08-29T02:18:42.080025Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest("http/request url is invalid: relative URL without a base")))
+OpenAI Codex v0.145.0
+--------
+workdir: /Users/jackneo/Documents/vonhippel-base9/astro-wd
+model: gpt-5.6-sol
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: xhigh
+reasoning summaries: none
+session id: 01a04b4f-dfb8-7eb1-8d05-a5446cabe3b8
+--------
+user
+Round-6 FINAL. Your two round-5 residuals (generalization/reviews/G2r5/sol_stats5.md): (1) binding estimator column names; (2) detection exposure surface + 2-D freq-recovery exposure x amplitude. Verify against the current scripts/generalization/metrics_generalization.py (columns best_candidate_matches_dominant / best_candidate_matches_any_mode / any_top_peak_matches_any_mode; surfaces detection_exposure_amplitude and freq_recovery_exposure_amplitude with BOTH exp_per_night_bin and amp_bin). RESOLVED/UNRESOLVED + evidence, then FREEZABLE YES/NO.
+2026-08-29T02:18:42.364287Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest("http/request url is invalid: relative URL without a base")))
+2026-08-29T02:18:42.494959Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when AuthRequired(AuthRequiredError { www_authenticate_header: "Bearer realm=\"OAuth\", resource_metadata=\"https://circleback.ai/.well-known/oauth-protected-resource/api/mcp\", scope=\"user\"" })
+2026-08-29T02:18:43.430681Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest("http/request url is invalid: relative URL without a base")))
+warning: Exceeded skills context budget of 2%. All skill descriptions were removed and 33 additional skills were not included in the model-visible skills list.
+2026-08-29T02:19:16.083807Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 426 Upgrade Required, url: ws://127.0.0.1:17841/v1/responses
+codex
+I’ll inspect the round-5 residuals and the current metrics script, then give a strict resolved/unresolved verdict with line-level evidence and a final freeze decision.
+codex
+I’m using the engineering code-review skill because this is a narrow release-gate verification; its evidence and severity rules will keep the freeze verdict tied to the actual implementation.
+exec
+/bin/zsh -lc "sed -n '1,240p' /Users/jackneo/.codex/plugins/cache/claude-cowork/engineering/1.2.0/skills/code-review/SKILL.md" in /Users/jackneo/Documents/vonhippel-base9/astro-wd
+ succeeded in 0ms:
+---
+name: code-review
+description: Review code changes for security, performance, and correctness. Trigger with a PR URL or diff, "review this before I merge", "is this code safe?", or when checking a change for N+1 queries, injection risks, missing edge cases, or error handling gaps.
+argument-hint: "<PR URL, diff, or file path>"
+---
+
+# /code-review
+
+> If you see unfamiliar placeholders or need to check which tools are connected, see [CONNECTORS.md](../../CONNECTORS.md).
+
+Review code changes with a structured lens on security, performance, correctness, and maintainability.
+
+## Usage
+
+```
+/code-review <PR URL or file path>
+```
+
+Review the provided code changes: @$1
+
+If no specific file or URL is provided, ask what to review.
+
+## How It Works
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                      CODE REVIEW                                   │
+├─────────────────────────────────────────────────────────────────┤
+│  STANDALONE (always works)                                       │
+│  ✓ Paste a diff, PR URL, or point to files                      │
+│  ✓ Security audit (OWASP top 10, injection, auth)               │
+│  ✓ Performance review (N+1, memory leaks, complexity)           │
+│  ✓ Correctness (edge cases, error handling, race conditions)    │
+│  ✓ Style (naming, structure, readability)                        │
+│  ✓ Actionable suggestions with code examples                    │
+├─────────────────────────────────────────────────────────────────┤
+│  SUPERCHARGED (when you connect your tools)                      │
+│  + Source control: Pull PR diff automatically                    │
+│  + Project tracker: Link findings to tickets                     │
+│  + Knowledge base: Check against team coding standards           │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+## Review Dimensions
+
+### Security
+- SQL injection, XSS, CSRF
+- Authentication and authorization flaws
+- Secrets or credentials in code
+- Insecure deserialization
+- Path traversal
+- SSRF
+
+### Performance
+- N+1 queries
+- Unnecessary memory allocations
+- Algorithmic complexity (O(n²) in hot paths)
+- Missing database indexes
+- Unbounded queries or loops
+- Resource leaks
+
+### Correctness
+- Edge cases (empty input, null, overflow)
+- Race conditions and concurrency issues
+- Error handling and propagation
+- Off-by-one errors
+- Type safety
+
+### Maintainability
+- Naming clarity
+- Single responsibility
+- Duplication
+- Test coverage
+- Documentation for non-obvious logic
+
+## Output
+
+```markdown
+## Code Review: [PR title or file]
+
+### Summary
+[1-2 sentence overview of the changes and overall quality]
+
+### Critical Issues
+| # | File | Line | Issue | Severity |
+|---|------|------|-------|----------|
+| 1 | [file] | [line] | [description] | 🔴 Critical |
+
+### Suggestions
+| # | File | Line | Suggestion | Category |
+|---|------|------|------------|----------|
+| 1 | [file] | [line] | [description] | Performance |
+
+### What Looks Good
+- [Positive observations]
+
+### Verdict
+[Approve / Request Changes / Needs Discussion]
+```
+
+## If Connectors Available
+
+If **~~source control** is connected:
+- Pull the PR diff automatically from the URL
+- Check CI status and test results
+
+If **~~project tracker** is connected:
+- Link findings to related tickets
+- Verify the PR addresses the stated requirements
+
+If **~~knowledge base** is connected:
+- Check changes against team coding standards and style guides
+
+## Tips
+
+1. **Provide context** — "This is a hot path" or "This handles PII" helps me focus.
+2. **Specify concerns** — "Focus on security" narrows the review.
+3. **Include tests** — I'll check test coverage and quality too.
+
+exec
+/bin/zsh -lc 'rg -n -C 8 "binding estimator|best_candidate_matches_dominant|best_candidate_matches_any_mode|any_top_peak_matches_any_mode|detection_exposure_amplitude|freq_recovery_exposure_amplitude|exp_per_night_bin|amp_bin" generalization/reviews/G2r5/sol_stats5.md scripts/generalization/metrics_generalization.py' in /Users/jackneo/Documents/vonhippel-base9/astro-wd
+ succeeded in 986ms:
+generalization/reviews/G2r5/sol_stats5.md-1-- P5 completed-trials — **RESOLVED**: only non-missing nulls count as completed, and acceptance requires exactly 1,000 ([code](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/metrics_generalization.py:639)).
+generalization/reviews/G2r5/sol_stats5.md:2:- Dominant headline + binding columns + correct-frequency fraction — **UNRESOLVED**: dominant matching and the conditional fraction are implemented, but emitted columns remain `best_match_primary`, `best_match`, and `matched_any_mode_diagnostic`, not the binding estimator names ([code](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/metrics_generalization.py:170)).
+generalization/reviews/G2r5/sol_stats5.md-3-- P4 denominators + clustered paired contrasts — **RESOLVED**: eligible/usable variants and target-clustered census-minus-LS bootstrap are emitted ([code](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/metrics_generalization.py:498)).
+generalization/reviews/G2r5/sol_stats5.md-4-- PPV all-2314 preservation — **RESOLVED**: missing negatives remain in the frame and the complete negative frame is resampled before trigger filtering ([code](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/metrics_generalization.py:668)).
+generalization/reviews/G2r5/sol_stats5.md:5:- Surface coordinates — **UNRESOLVED**: no detection exposure surface is emitted, and `freq_recovery_exposure_amplitude` uses a one-dimensional helper that emits only `exp_per_night_bin`, not `amp_bin` ([code](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/metrics_generalization.py:554), [call](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/metrics_generalization.py:618)).
+generalization/reviews/G2r5/sol_stats5.md-6-
+generalization/reviews/G2r5/sol_stats5.md-7-**FREEZABLE: NO**
+generalization/reviews/G2r5/sol_stats5.md-8-
+generalization/reviews/G2r5/sol_stats5.md:9:Execution blockers: emit the exact binding estimator columns; complete the detection exposure and frequency-recovery exposure×amplitude surface coordinates.
+--
+scripts/generalization/metrics_generalization.py-162-        )
+scripts/generalization/metrics_generalization.py-163-        row[f"{name}_eligible"] = pass_eligible(truth_freqs, name, baseline)
+scripts/generalization/metrics_generalization.py-164-        for peak in p.get("top_peaks", []):
+scripts/generalization/metrics_generalization.py-165-            f_peak = peak.get("frequency_per_day")
+scripts/generalization/metrics_generalization.py-166-            if f_peak is not None and truth_freqs and \
+scripts/generalization/metrics_generalization.py-167-               classify_match(float(f_peak), truth_freqs, tol) == "direct":
+scripts/generalization/metrics_generalization.py-168-                any_direct_top = True
+scripts/generalization/metrics_generalization.py-169-    best_freq = row["best_frequency_per_day"]
+scripts/generalization/metrics_generalization.py:170:    row["best_candidate_matches_any_mode"] = (
+scripts/generalization/metrics_generalization.py-171-        classify_match(float(best_freq), truth_freqs, tol)
+scripts/generalization/metrics_generalization.py-172-        if best_freq is not None and truth_freqs else "unscored"
+scripts/generalization/metrics_generalization.py-173-    )
+scripts/generalization/metrics_generalization.py:174:    row["best_candidate_matches_dominant"] = (
+scripts/generalization/metrics_generalization.py-175-        classify_match(float(best_freq), [primary_freq], tol)
+scripts/generalization/metrics_generalization.py-176-        if best_freq is not None and primary_freq is not None else "unscored"
+scripts/generalization/metrics_generalization.py-177-    )
+scripts/generalization/metrics_generalization.py:178:    row["any_top_peak_matches_any_mode"] = any_direct_top
+scripts/generalization/metrics_generalization.py-179-    row["eligible_any_pass"] = row["low_eligible"] or row["high_eligible"]
+scripts/generalization/metrics_generalization.py-180-    return row
+scripts/generalization/metrics_generalization.py-181-
+scripts/generalization/metrics_generalization.py-182-
+scripts/generalization/metrics_generalization.py-183-# ---------------------------------------------------------------- truth loaders
+scripts/generalization/metrics_generalization.py-184-
+scripts/generalization/metrics_generalization.py-185-def truth_d1() -> pd.DataFrame:
+scripts/generalization/metrics_generalization.py-186-    """Labels from the PUBLISHED master table (19 usable stars; 13
+--
+scripts/generalization/metrics_generalization.py-328-
+scripts/generalization/metrics_generalization.py-329-
+scripts/generalization/metrics_generalization.py-330-# ------------------------------------------------------------------ aggregates
+scripts/generalization/metrics_generalization.py-331-
+scripts/generalization/metrics_generalization.py-332-def completeness_tables(per_star: pd.DataFrame, dataset: str) -> pd.DataFrame:
+scripts/generalization/metrics_generalization.py-333-    # primary frequency-match column: D3 scores the DOMINANT Mo mode (any-mode
+scripts/generalization/metrics_generalization.py-334-    # is secondary/diagnostic); D2 scores the exact injected list; D1 is
+scripts/generalization/metrics_generalization.py-335-    # diagnostic-only either way (spec).
+scripts/generalization/metrics_generalization.py:336:    use_dominant = True  # headline = best_candidate_matches_dominant (spec)
+scripts/generalization/metrics_generalization.py-337-    rows = []
+scripts/generalization/metrics_generalization.py-338-    positives = per_star[per_star["label_positive"] == True]  # noqa: E712
+scripts/generalization/metrics_generalization.py-339-    usable = positives[(positives["best_status"] != "missing")
+scripts/generalization/metrics_generalization.py-340-                       & positives["low_available"].fillna(False)
+scripts/generalization/metrics_generalization.py-341-                       & positives["high_available"].fillna(False)]
+scripts/generalization/metrics_generalization.py-342-    for pass_name in PASSES:
+scripts/generalization/metrics_generalization.py-343-        status_col = "best_status" if pass_name == "best" else f"{pass_name}_status"
+scripts/generalization/metrics_generalization.py:344:        match_col = ("best_candidate_matches_dominant" if pass_name == "best"
+scripts/generalization/metrics_generalization.py-345-                     else f"{pass_name}_match_primary")
+scripts/generalization/metrics_generalization.py-346-        for rule in RULES:
+scripts/generalization/metrics_generalization.py-347-            for scope, frame in (
+scripts/generalization/metrics_generalization.py-348-                ("detection_eligible_roster", positives),
+scripts/generalization/metrics_generalization.py-349-                ("detection_usable_lightcurve", usable),
+scripts/generalization/metrics_generalization.py-350-                ("freq_recovery_scorable", usable[
+scripts/generalization/metrics_generalization.py-351-                    usable["freq_scorable"]
+scripts/generalization/metrics_generalization.py-352-                    & (usable["eligible_any_pass"] if pass_name == "best"
+--
+scripts/generalization/metrics_generalization.py-463-        return pd.DataFrame()
+scripts/generalization/metrics_generalization.py-464-    clusters = np.array(sorted(frame["cluster"].unique()))
+scripts/generalization/metrics_generalization.py-465-    rng = np.random.Generator(np.random.PCG64(BOOTSTRAP_SEED))
+scripts/generalization/metrics_generalization.py-466-    draws = rng.integers(0, len(clusters), size=(BOOTSTRAP_B, len(clusters)))
+scripts/generalization/metrics_generalization.py-467-    rows = []
+scripts/generalization/metrics_generalization.py-468-    endpoints = {
+scripts/generalization/metrics_generalization.py-469-        "detection": lambda f: f["best_status"] == "confirmed",
+scripts/generalization/metrics_generalization.py-470-        "freq_recovery": lambda f: (f["best_status"] == "confirmed")
+scripts/generalization/metrics_generalization.py:471:        & (f["best_candidate_matches_dominant"] == "direct"),
+scripts/generalization/metrics_generalization.py-472-    }
+scripts/generalization/metrics_generalization.py-473-    scenario_cols = ["arm", "ratio_g", "ratio_rg"]
+scripts/generalization/metrics_generalization.py-474-    for extra in ("phase_draw", "amp_scale"):
+scripts/generalization/metrics_generalization.py-475-        if extra in frame:
+scripts/generalization/metrics_generalization.py-476-            scenario_cols.append(extra)
+scripts/generalization/metrics_generalization.py-477-
+scripts/generalization/metrics_generalization.py-478-    def bootstrap_stats(aligned: pd.Series) -> tuple[float, float, float, str, int]:
+scripts/generalization/metrics_generalization.py-479-        observed = aligned.dropna()
+--
+scripts/generalization/metrics_generalization.py-572-        return {}  # no amplitude axis for D1 (spec)
+scripts/generalization/metrics_generalization.py-573-    out: dict[str, pd.DataFrame] = {}
+scripts/generalization/metrics_generalization.py-574-    amp_edges = AMP_EDGES[dataset]
+scripts/generalization/metrics_generalization.py-575-    positives = per_star[per_star["label_positive"] == True]  # noqa: E712
+scripts/generalization/metrics_generalization.py-576-    # detection endpoint: ALL positives; unknown-amplitude stars form their
+scripts/generalization/metrics_generalization.py-577-    # own bin (-1) so the 154 unjoined D3 positives stay in the denominator
+scripts/generalization/metrics_generalization.py-578-    detection = positives["best_status"] == "confirmed"
+scripts/generalization/metrics_generalization.py-579-    out["detection_amplitude"] = pd.DataFrame(
+scripts/generalization/metrics_generalization.py:580:        surface_cells(positives, detection, positives["amp"], amp_edges, "amp_bin"))
+scripts/generalization/metrics_generalization.py-581-    # detection endpoint on (period, amplitude): unknowns fall in bin -1
+scripts/generalization/metrics_generalization.py-582-    p_bins_all = np.where(np.isfinite(positives["truth_period_days"]),
+scripts/generalization/metrics_generalization.py-583-                          np.digitize(positives["truth_period_days"],
+scripts/generalization/metrics_generalization.py-584-                                      PERIOD_EDGES_DAYS), -1)
+scripts/generalization/metrics_generalization.py-585-    a_bins_all = np.where(np.isfinite(positives["amp"]),
+scripts/generalization/metrics_generalization.py-586-                          np.digitize(positives["amp"], amp_edges), -1)
+scripts/generalization/metrics_generalization.py-587-    det_rows = []
+scripts/generalization/metrics_generalization.py-588-    for (pb, ab), idx in positives.groupby([p_bins_all, a_bins_all]).groups.items():
+scripts/generalization/metrics_generalization.py-589-        k = int(detection.loc[idx].sum())
+scripts/generalization/metrics_generalization.py-590-        n = len(idx)
+scripts/generalization/metrics_generalization.py:591:        entry = {"period_bin": int(pb), "amp_bin": int(ab), "n": n, "k": k}
+scripts/generalization/metrics_generalization.py-592-        if n >= MIN_CELL:
+scripts/generalization/metrics_generalization.py-593-            entry.update(dict(zip(("p", "lo", "hi"), wilson(k, n))))
+scripts/generalization/metrics_generalization.py-594-        det_rows.append(entry)
+scripts/generalization/metrics_generalization.py-595-    out["detection_period_amplitude"] = pd.DataFrame(det_rows)
+scripts/generalization/metrics_generalization.py-596-    # frequency-recovery endpoint: scorable AND S_best subset only
+scripts/generalization/metrics_generalization.py-597-    scorable = positives[positives["freq_scorable"]
+scripts/generalization/metrics_generalization.py-598-                         & positives["eligible_any_pass"]]
+scripts/generalization/metrics_generalization.py-599-    if not scorable.empty:
+scripts/generalization/metrics_generalization.py:600:        match_col = "best_candidate_matches_dominant"
+scripts/generalization/metrics_generalization.py-601-        recovery = (scorable["best_status"] == "confirmed") & (
+scripts/generalization/metrics_generalization.py-602-            scorable[match_col] == "direct")
+scripts/generalization/metrics_generalization.py-603-        rows = []
+scripts/generalization/metrics_generalization.py-604-        p_bins = np.digitize(scorable["truth_period_days"], PERIOD_EDGES_DAYS)
+scripts/generalization/metrics_generalization.py-605-        a_bins = np.where(np.isfinite(scorable["amp"]),
+scripts/generalization/metrics_generalization.py-606-                          np.digitize(scorable["amp"], amp_edges), -1)
+scripts/generalization/metrics_generalization.py-607-        for (pb, ab), idx in scorable.groupby([p_bins, a_bins]).groups.items():
+scripts/generalization/metrics_generalization.py-608-            k = int(recovery.loc[idx].sum())
+scripts/generalization/metrics_generalization.py-609-            n = len(idx)
+scripts/generalization/metrics_generalization.py:610:            entry = {"period_bin": int(pb), "amp_bin": int(ab), "n": n, "k": k}
+scripts/generalization/metrics_generalization.py-611-            if n >= MIN_CELL:
+scripts/generalization/metrics_generalization.py-612-                entry.update(dict(zip(("p", "lo", "hi"), wilson(k, n))))
+scripts/generalization/metrics_generalization.py-613-            rows.append(entry)
+scripts/generalization/metrics_generalization.py-614-        out["freq_recovery_period_amplitude"] = pd.DataFrame(rows)
+scripts/generalization/metrics_generalization.py-615-        if "median_exp_per_night" in scorable and \
+scripts/generalization/metrics_generalization.py-616-                scorable["median_exp_per_night"].notna().any():
+scripts/generalization/metrics_generalization.py-617-            def epn_amp_cells(frame, success):
+scripts/generalization/metrics_generalization.py-618-                e_bins = np.where(
+--
+scripts/generalization/metrics_generalization.py-620-                    np.digitize(frame["median_exp_per_night"], EXP_PER_NIGHT_EDGES),
+scripts/generalization/metrics_generalization.py-621-                    -1)
+scripts/generalization/metrics_generalization.py-622-                ab = np.where(np.isfinite(frame["amp"]),
+scripts/generalization/metrics_generalization.py-623-                              np.digitize(frame["amp"], amp_edges), -1)
+scripts/generalization/metrics_generalization.py-624-                cells = []
+scripts/generalization/metrics_generalization.py-625-                for (eb, abin), idx in frame.groupby([e_bins, ab]).groups.items():
+scripts/generalization/metrics_generalization.py-626-                    k = int(success.loc[idx].sum())
+scripts/generalization/metrics_generalization.py-627-                    n = len(idx)
+scripts/generalization/metrics_generalization.py:628:                    entry = {"exp_per_night_bin": int(eb), "amp_bin": int(abin),
+scripts/generalization/metrics_generalization.py-629-                             "n": n, "k": k}
+scripts/generalization/metrics_generalization.py-630-                    if n >= MIN_CELL:
+scripts/generalization/metrics_generalization.py-631-                        entry.update(dict(zip(("p", "lo", "hi"), wilson(k, n))))
+scripts/generalization/metrics_generalization.py-632-                    cells.append(entry)
+scripts/generalization/metrics_generalization.py-633-                return pd.DataFrame(cells)
+scripts/generalization/metrics_generalization.py-634-
+scripts/generalization/metrics_generalization.py:635:            out["freq_recovery_exposure_amplitude"] = epn_amp_cells(
+scripts/generalization/metrics_generalization.py-636-                scorable, recovery)
+scripts/generalization/metrics_generalization.py-637-        if "median_exp_per_night" in positives and \
+scripts/generalization/metrics_generalization.py-638-                positives["median_exp_per_night"].notna().any():
+scripts/generalization/metrics_generalization.py-639-            e_bins_all = np.where(
+scripts/generalization/metrics_generalization.py-640-                np.isfinite(positives["median_exp_per_night"]),
+scripts/generalization/metrics_generalization.py-641-                np.digitize(positives["median_exp_per_night"],
+scripts/generalization/metrics_generalization.py-642-                            EXP_PER_NIGHT_EDGES), -1)
+scripts/generalization/metrics_generalization.py-643-            det_e_rows = []
+scripts/generalization/metrics_generalization.py-644-            for (eb, abin), idx in positives.groupby(
+scripts/generalization/metrics_generalization.py-645-                    [e_bins_all, a_bins_all]).groups.items():
+scripts/generalization/metrics_generalization.py-646-                k = int(detection.loc[idx].sum())
+scripts/generalization/metrics_generalization.py-647-                n = len(idx)
+scripts/generalization/metrics_generalization.py:648:                entry = {"exp_per_night_bin": int(eb), "amp_bin": int(abin),
+scripts/generalization/metrics_generalization.py-649-                         "n": n, "k": k}
+scripts/generalization/metrics_generalization.py-650-                if n >= MIN_CELL:
+scripts/generalization/metrics_generalization.py-651-                    entry.update(dict(zip(("p", "lo", "hi"), wilson(k, n))))
+scripts/generalization/metrics_generalization.py-652-                det_e_rows.append(entry)
+scripts/generalization/metrics_generalization.py:653:            out["detection_exposure_amplitude"] = pd.DataFrame(det_e_rows)
+scripts/generalization/metrics_generalization.py-654-    return out
+scripts/generalization/metrics_generalization.py-655-
+scripts/generalization/metrics_generalization.py-656-
+scripts/generalization/metrics_generalization.py-657-def trigger_rates(per_star: pd.DataFrame, dataset: str) -> pd.DataFrame:
+scripts/generalization/metrics_generalization.py-658-    rows = []
+scripts/generalization/metrics_generalization.py-659-    if dataset == "d3":
+scripts/generalization/metrics_generalization.py-660-        negatives = per_star[per_star["class_label"] == "dsct_flag0"]
+scripts/generalization/metrics_generalization.py-661-        for rule in RULES:
+--
+scripts/generalization/metrics_generalization.py-834-        json_path = args.stars_dir / f"{r.sid}.json"
+scripts/generalization/metrics_generalization.py-835-        if not json_path.exists():
+scripts/generalization/metrics_generalization.py-836-            # eligible roster target with no usable light curve: counts as a
+scripts/generalization/metrics_generalization.py-837-            # non-detection in the eligible-roster estimand, excluded from the
+scripts/generalization/metrics_generalization.py-838-            # usable-light-curve estimand (G2 stats finding 2)
+scripts/generalization/metrics_generalization.py-839-            missing.append(r.sid)
+scripts/generalization/metrics_generalization.py-840-            record = {**r._asdict(),
+scripts/generalization/metrics_generalization.py-841-                      "best_status": "missing", "low_status": "missing",
+scripts/generalization/metrics_generalization.py:842:                      "high_status": "missing", "best_candidate_matches_any_mode": "unscored",
+scripts/generalization/metrics_generalization.py:843:                      "best_candidate_matches_dominant": "unscored", "low_match": "unscored",
+scripts/generalization/metrics_generalization.py-844-                      "high_match": "unscored", "low_eligible": False,
+scripts/generalization/metrics_generalization.py-845-                      "high_eligible": False, "eligible_any_pass": False,
+scripts/generalization/metrics_generalization.py-846-                      "best_frequency_per_day": None, "baseline_days": math.nan,
+scripts/generalization/metrics_generalization.py:847:                      "any_top_peak_matches_any_mode": False,
+scripts/generalization/metrics_generalization.py-848-                      "census_variable": census.get(r.sid, {}).get("census_variable")}
+scripts/generalization/metrics_generalization.py-849-            rows.append(record)
+scripts/generalization/metrics_generalization.py-850-            continue
+scripts/generalization/metrics_generalization.py-851-        inputs[str(json_path)] = sha256_file(json_path)
+scripts/generalization/metrics_generalization.py-852-        scored = score_star(json_path, list(r.truth_freqs), r.primary_freq,
+scripts/generalization/metrics_generalization.py-853-                            TRUTH_QUANTUM_PER_DAY[args.dataset])
+scripts/generalization/metrics_generalization.py-854-        record = {**r._asdict(), **scored}
+scripts/generalization/metrics_generalization.py-855-        if r.sid in census:
+
+codex
+The named columns and both requested surface keys are present. I’m checking the surrounding control flow and output-writing path now, since presence alone would not prove they are actually emitted with both coordinates.
+exec
+/bin/zsh -lc "sed -n '120,186p' scripts/generalization/metrics_generalization.py && sed -n '532,660p' scripts/generalization/metrics_generalization.py && sed -n '780,930p' scripts/generalization/metrics_generalization.py && rg -n \"best_match_primary|matched_any_mode_diagnostic|\\bbest_match\\b|surface_tables|amplitude_tables|to_csv|metrics_tables\" scripts/generalization/metrics_generalization.py && git status --short -- scripts/generalization/metrics_generalization.py generalization/reviews/G2r5/sol_stats5.md && git diff -- scripts/generalization/metrics_generalization.py" in /Users/jackneo/Documents/vonhippel-base9/astro-wd
+ succeeded in 0ms:
+    if rule == "either":
+        if census_flag is None:
+            return status == "confirmed"
+        return status == "confirmed" or bool(census_flag)
+    raise ValueError(rule)
+
+
+def score_star(json_path: Path, truth_freqs: list[float], primary_freq: float | None,
+               truth_quantum: float = 0.0) -> dict:
+    result = json.loads(json_path.read_text(encoding="utf-8"))
+    if not result.get("complete"):
+        raise SystemExit(f"{json_path} is not complete")
+    passes = result["passes"]
+    if set(passes) != {"low", "high"}:
+        raise SystemExit(f"{json_path} passes {set(passes)} != low/high")
+    baseline = float(result["baseline_days"])
+    tol = 1.5 / baseline + truth_quantum
+    overall = overall_result(result)
+
+    row: dict = {
+        "baseline_days": baseline,
+        "n_exp_zg": result["n_exp_zg"],
+        "n_exp_zr": result["n_exp_zr"],
+        "best_pass": overall["best_pass"],
+        "best_status": overall["blind_status"],
+        "best_frequency_per_day": overall["best_frequency_per_day"],
+        "low_available": passes["low"].get("available", True),
+        "high_available": passes["high"].get("available", True),
+    }
+    any_direct_top = False
+    for name in ("low", "high"):
+        p = passes[name]
+        freq = p.get("frequency_per_day")
+        row[f"{name}_status"] = p["status"]
+        row[f"{name}_frequency_per_day"] = freq
+        row[f"{name}_match"] = (
+            classify_match(float(freq), truth_freqs, tol)
+            if freq is not None and truth_freqs else "unscored"
+        )
+        row[f"{name}_match_primary"] = (
+            classify_match(float(freq), [primary_freq], tol)
+            if freq is not None and primary_freq is not None else "unscored"
+        )
+        row[f"{name}_eligible"] = pass_eligible(truth_freqs, name, baseline)
+        for peak in p.get("top_peaks", []):
+            f_peak = peak.get("frequency_per_day")
+            if f_peak is not None and truth_freqs and \
+               classify_match(float(f_peak), truth_freqs, tol) == "direct":
+                any_direct_top = True
+    best_freq = row["best_frequency_per_day"]
+    row["best_candidate_matches_any_mode"] = (
+        classify_match(float(best_freq), truth_freqs, tol)
+        if best_freq is not None and truth_freqs else "unscored"
+    )
+    row["best_candidate_matches_dominant"] = (
+        classify_match(float(best_freq), [primary_freq], tol)
+        if best_freq is not None and primary_freq is not None else "unscored"
+    )
+    row["any_top_peak_matches_any_mode"] = any_direct_top
+    row["eligible_any_pass"] = row["low_eligible"] or row["high_eligible"]
+    return row
+
+
+# ---------------------------------------------------------------- truth loaders
+
+def truth_d1() -> pd.DataFrame:
+    """Labels from the PUBLISHED master table (19 usable stars; 13
+                and usable_rows["census_variable"].notna().any()):
+            paired = usable_rows[usable_rows["census_variable"].notna()]
+            c_only = paired["census_variable"].astype(bool) & (
+                paired["best_status"] != "confirmed")
+            l_only = (~paired["census_variable"].astype(bool)) & (
+                paired["best_status"] == "confirmed")
+            diff = (c_only.astype(float) - l_only.astype(float)).groupby(
+                paired["cluster"]).mean()
+            aligned = diff.reindex(clusters)
+            if not aligned.dropna().empty:
+                point, lo, hi, interval, n_targets = bootstrap_stats(aligned)
+                rows.append({
+                    "arm": arm, "ratio_g": g, "ratio_rg": r,
+                    "endpoint": "paired_census_minus_ls_discordance",
+                    "denominator": "usable", "n_targets": n_targets,
+                    "n_targets_zero_usable_strata": int(aligned.isna().sum()),
+                    "p": point, "lo": lo, "hi": hi, "interval": interval,
+                })
+    return pd.DataFrame(rows)
+
+
+def surface_cells(frame: pd.DataFrame, success: pd.Series,
+                  x_values: pd.Series, edges: list[float],
+                  x_name: str) -> list[dict]:
+    """Half-open [lo, hi) bins; bin 0 = underflow, bin len(edges) = overflow;
+    NaN x -> bin -1 ("unknown"). Cells below MIN_CELL: counts only."""
+    bins = np.where(np.isfinite(x_values), np.digitize(x_values, edges), -1)
+    rows = []
+    for b, idx in frame.groupby(bins).groups.items():
+        k = int(success.loc[idx].sum())
+        n = len(idx)
+        entry = {x_name: int(b), "n": n, "k": k}
+        if n >= MIN_CELL:
+            entry.update(dict(zip(("p", "lo", "hi"), wilson(k, n))))
+        rows.append(entry)
+    return rows
+
+
+def surfaces(per_star: pd.DataFrame, dataset: str) -> dict[str, pd.DataFrame]:
+    if dataset == "d1":
+        return {}  # no amplitude axis for D1 (spec)
+    out: dict[str, pd.DataFrame] = {}
+    amp_edges = AMP_EDGES[dataset]
+    positives = per_star[per_star["label_positive"] == True]  # noqa: E712
+    # detection endpoint: ALL positives; unknown-amplitude stars form their
+    # own bin (-1) so the 154 unjoined D3 positives stay in the denominator
+    detection = positives["best_status"] == "confirmed"
+    out["detection_amplitude"] = pd.DataFrame(
+        surface_cells(positives, detection, positives["amp"], amp_edges, "amp_bin"))
+    # detection endpoint on (period, amplitude): unknowns fall in bin -1
+    p_bins_all = np.where(np.isfinite(positives["truth_period_days"]),
+                          np.digitize(positives["truth_period_days"],
+                                      PERIOD_EDGES_DAYS), -1)
+    a_bins_all = np.where(np.isfinite(positives["amp"]),
+                          np.digitize(positives["amp"], amp_edges), -1)
+    det_rows = []
+    for (pb, ab), idx in positives.groupby([p_bins_all, a_bins_all]).groups.items():
+        k = int(detection.loc[idx].sum())
+        n = len(idx)
+        entry = {"period_bin": int(pb), "amp_bin": int(ab), "n": n, "k": k}
+        if n >= MIN_CELL:
+            entry.update(dict(zip(("p", "lo", "hi"), wilson(k, n))))
+        det_rows.append(entry)
+    out["detection_period_amplitude"] = pd.DataFrame(det_rows)
+    # frequency-recovery endpoint: scorable AND S_best subset only
+    scorable = positives[positives["freq_scorable"]
+                         & positives["eligible_any_pass"]]
+    if not scorable.empty:
+        match_col = "best_candidate_matches_dominant"
+        recovery = (scorable["best_status"] == "confirmed") & (
+            scorable[match_col] == "direct")
+        rows = []
+        p_bins = np.digitize(scorable["truth_period_days"], PERIOD_EDGES_DAYS)
+        a_bins = np.where(np.isfinite(scorable["amp"]),
+                          np.digitize(scorable["amp"], amp_edges), -1)
+        for (pb, ab), idx in scorable.groupby([p_bins, a_bins]).groups.items():
+            k = int(recovery.loc[idx].sum())
+            n = len(idx)
+            entry = {"period_bin": int(pb), "amp_bin": int(ab), "n": n, "k": k}
+            if n >= MIN_CELL:
+                entry.update(dict(zip(("p", "lo", "hi"), wilson(k, n))))
+            rows.append(entry)
+        out["freq_recovery_period_amplitude"] = pd.DataFrame(rows)
+        if "median_exp_per_night" in scorable and \
+                scorable["median_exp_per_night"].notna().any():
+            def epn_amp_cells(frame, success):
+                e_bins = np.where(
+                    np.isfinite(frame["median_exp_per_night"]),
+                    np.digitize(frame["median_exp_per_night"], EXP_PER_NIGHT_EDGES),
+                    -1)
+                ab = np.where(np.isfinite(frame["amp"]),
+                              np.digitize(frame["amp"], amp_edges), -1)
+                cells = []
+                for (eb, abin), idx in frame.groupby([e_bins, ab]).groups.items():
+                    k = int(success.loc[idx].sum())
+                    n = len(idx)
+                    entry = {"exp_per_night_bin": int(eb), "amp_bin": int(abin),
+                             "n": n, "k": k}
+                    if n >= MIN_CELL:
+                        entry.update(dict(zip(("p", "lo", "hi"), wilson(k, n))))
+                    cells.append(entry)
+                return pd.DataFrame(cells)
+
+            out["freq_recovery_exposure_amplitude"] = epn_amp_cells(
+                scorable, recovery)
+        if "median_exp_per_night" in positives and \
+                positives["median_exp_per_night"].notna().any():
+            e_bins_all = np.where(
+                np.isfinite(positives["median_exp_per_night"]),
+                np.digitize(positives["median_exp_per_night"],
+                            EXP_PER_NIGHT_EDGES), -1)
+            det_e_rows = []
+            for (eb, abin), idx in positives.groupby(
+                    [e_bins_all, a_bins_all]).groups.items():
+                k = int(detection.loc[idx].sum())
+                n = len(idx)
+                entry = {"exp_per_night_bin": int(eb), "amp_bin": int(abin),
+                         "n": n, "k": k}
+                if n >= MIN_CELL:
+                    entry.update(dict(zip(("p", "lo", "hi"), wilson(k, n))))
+                det_e_rows.append(entry)
+            out["detection_exposure_amplitude"] = pd.DataFrame(det_e_rows)
+    return out
+
+
+def trigger_rates(per_star: pd.DataFrame, dataset: str) -> pd.DataFrame:
+    rows = []
+    if dataset == "d3":
+        negatives = per_star[per_star["class_label"] == "dsct_flag0"]
+            rate(scenario, "arm_b_median_window", label)
+    if dataset == "d3":
+        positives = per_star[(per_star["label_positive"] == True)  # noqa: E712
+                             & (per_star["best_status"] != "missing")]
+        if "near_saturation" in positives:
+            rate(positives[positives["near_saturation"] == True], "positives", "near_saturation")  # noqa: E712
+            rate(positives[positives["near_saturation"] == False], "positives", "safe_magnitude")  # noqa: E712
+        if crossmatch_qc is not None:
+            qc = crossmatch_qc.set_index("source_id")
+            joined = positives.join(
+                qc[["nearest_separation_arcsec", "ztf_objects_in_cone"]], on="sid")
+            clean = joined[(joined["nearest_separation_arcsec"] < 1.0)
+                           & (joined["ztf_objects_in_cone"] <= 3)]
+            rate(clean, "positives", "crowding_clean")
+    return pd.DataFrame(rows)
+
+
+def sha256_file(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--dataset", choices=("d1", "d2", "d3"), required=True)
+    parser.add_argument("--stars-dir", type=Path, required=True)
+    parser.add_argument("--census-csv", type=Path, default=None)
+    parser.add_argument("--shards-dir", type=Path, default=None,
+                        help="d2: shard dir with shard_manifest.csv; census "
+                             "computed from shards when --census-csv absent")
+    parser.add_argument("--out-dir", type=Path, required=True)
+    parser.add_argument("--crossmatch-qc", type=Path, default=None,
+                        help="d3: crossmatch_qc.csv from build_panels_generic "
+                             "(enables the crowding sensitivity subset)")
+    args = parser.parse_args()
+
+    assert_frozen()
+    campaign_shas_start = campaign_file_shas()
+    if args.dataset == "d1":
+        truth = truth_d1()
+    elif args.dataset == "d3":
+        truth = truth_d3()
+    else:
+        if args.shards_dir is None:
+            raise SystemExit("d2 needs --shards-dir")
+        truth = truth_d2(args.shards_dir)
+
+    census = census_lookup_csv(args.census_csv) if args.census_csv else {}
+    inputs: dict[str, str] = {}
+    if args.census_csv:
+        inputs[str(args.census_csv)] = sha256_file(args.census_csv)
+
+    rows = []
+    missing = []
+    for r in truth.itertuples(index=False):
+        json_path = args.stars_dir / f"{r.sid}.json"
+        if not json_path.exists():
+            # eligible roster target with no usable light curve: counts as a
+            # non-detection in the eligible-roster estimand, excluded from the
+            # usable-light-curve estimand (G2 stats finding 2)
+            missing.append(r.sid)
+            record = {**r._asdict(),
+                      "best_status": "missing", "low_status": "missing",
+                      "high_status": "missing", "best_candidate_matches_any_mode": "unscored",
+                      "best_candidate_matches_dominant": "unscored", "low_match": "unscored",
+                      "high_match": "unscored", "low_eligible": False,
+                      "high_eligible": False, "eligible_any_pass": False,
+                      "best_frequency_per_day": None, "baseline_days": math.nan,
+                      "any_top_peak_matches_any_mode": False,
+                      "census_variable": census.get(r.sid, {}).get("census_variable")}
+            rows.append(record)
+            continue
+        inputs[str(json_path)] = sha256_file(json_path)
+        scored = score_star(json_path, list(r.truth_freqs), r.primary_freq,
+                            TRUTH_QUANTUM_PER_DAY[args.dataset])
+        record = {**r._asdict(), **scored}
+        if r.sid in census:
+            record.update(census[r.sid])
+        elif args.dataset == "d2" and args.shards_dir is not None:
+            record.update(census_from_shard(args.shards_dir / f"{r.sid}.csv.gz"))
+        else:
+            record["census_variable"] = None
+        rows.append(record)
+    per_star = pd.DataFrame(rows)
+    if per_star.empty:
+        raise SystemExit("no stars scored")
+
+    args.out_dir.mkdir(parents=True, exist_ok=True)
+    per_star.drop(columns=["truth_freqs"]).to_csv(
+        args.out_dir / "per_star.csv", index=False)
+    completeness_tables(per_star, args.dataset).to_csv(
+        args.out_dir / "completeness_by_class_pass_rule.csv", index=False)
+    (args.out_dir / "contingency_complementarity.json").write_text(
+        json.dumps(contingency(per_star, args.dataset), indent=2) + "\n",
+        encoding="utf-8")
+    trigger_rates(per_star, args.dataset).to_csv(
+        args.out_dir / "trigger_rates.csv", index=False)
+    (args.out_dir / "chance_match.json").write_text(
+        json.dumps(chance_match_rate(per_star), indent=2) + "\n", encoding="utf-8")
+    (args.out_dir / "surfaces").mkdir(exist_ok=True)
+    for name, surface in surfaces(per_star, args.dataset).items():
+        surface.to_csv(args.out_dir / "surfaces" / f"{name}.csv", index=False)
+    if args.dataset == "d2":
+        d2_cluster_bootstrap(per_star).to_csv(
+            args.out_dir / "d2_cluster_completeness.csv", index=False)
+    if args.dataset == "d3":
+        (args.out_dir / "ppv.csv").write_text(
+            pd.DataFrame([ppv_d3(per_star)]).to_csv(index=False), encoding="utf-8")
+    fp_frequency_distribution(per_star, args.dataset).to_csv(
+        args.out_dir / "fp_frequency_distribution.csv", index=False)
+    qc_frame = (pd.read_csv(args.crossmatch_qc, dtype={"source_id": str})
+                if args.crossmatch_qc else None)
+    if qc_frame is not None:
+        inputs[str(args.crossmatch_qc)] = sha256_file(args.crossmatch_qc)
+    sensitivity_table(per_star, args.dataset, qc_frame).to_csv(
+        args.out_dir / "sensitivity.csv", index=False)
+
+    attrition = {
+        "roster": len(truth),
+        "scored": len(per_star),
+        "missing_star_json": len(missing),
+        "missing_ids_first5": missing[:5],
+        "census_available": int(per_star["census_variable"].notna().sum()),
+    }
+    manifest = {
+        "dataset": args.dataset,
+        "spec_sha256": sha256_file(REPO_ROOT / "generalization/METRICS_SPEC.md"),
+        "attrition": attrition,
+        "inputs_sha256_count": len(inputs),
+        "inputs_sha256_digest": hashlib.sha256(
+            json.dumps(inputs, sort_keys=True).encode()).hexdigest(),
+        "env": env_versions(),
+        "frozen_sha256": frozen_file_shas(),
+        "campaign_sha256": campaign_file_shas(),
+    }
+    if campaign_file_shas() != campaign_shas_start:
+        raise SystemExit("campaign code changed while metrics were running")
+    (args.out_dir / "manifest.json").write_text(
+        json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+    (args.out_dir / "inputs_sha256.json").write_text(
+        json.dumps(inputs, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    (args.out_dir / "attrition.csv").write_text(
+        pd.DataFrame([attrition]).to_csv(index=False), encoding="utf-8")
+    print(json.dumps(attrition, indent=2))
+    print(f"[metrics] wrote {args.out_dir}")
+
+
+if __name__ == "__main__":
+    main()
+867:    per_star.drop(columns=["truth_freqs"]).to_csv(
+869:    completeness_tables(per_star, args.dataset).to_csv(
+874:    trigger_rates(per_star, args.dataset).to_csv(
+880:        surface.to_csv(args.out_dir / "surfaces" / f"{name}.csv", index=False)
+882:        d2_cluster_bootstrap(per_star).to_csv(
+886:            pd.DataFrame([ppv_d3(per_star)]).to_csv(index=False), encoding="utf-8")
+887:    fp_frequency_distribution(per_star, args.dataset).to_csv(
+893:    sensitivity_table(per_star, args.dataset, qc_frame).to_csv(
+921:        pd.DataFrame([attrition]).to_csv(index=False), encoding="utf-8")
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-08U65V70' (errno=Operation not permitted)
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-jdf2X1CR' (errno=Operation not permitted)
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-ZN5kY0BP' (errno=Operation not permitted)
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-336Ku8dz' (errno=Operation not permitted)
+
+exec
+/bin/zsh -lc "sed -n '1,120p' scripts/generalization/metrics_generalization.py && rg -n \"best_candidate_matches_(dominant|any_mode)|any_top_peak_matches_any_mode|detection_exposure_amplitude|freq_recovery_exposure_amplitude\" . --glob '"'!generalization/reviews/G2r5/sol_stats5.md'"' --glob '"'!scripts/generalization/metrics_generalization.py'"'" in /Users/jackneo/Documents/vonhippel-base9/astro-wd
+ succeeded in 230ms:
+exec
+/bin/zsh -lc "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=scripts/generalization python -c 'import ast; from pathlib import Path; ast.parse(Path(\"scripts/generalization/metrics_generalization.py\").read_text()); import pandas as pd; from metrics_generalization import surfaces; n=6; f=pd.DataFrame({\"label_positive\":[True]*n,\"best_status\":[\"confirmed\",\"confirmed\",\"candidate\",\"confirmed\",\"confirmed\",\"candidate\"],\"amp\":[0.4,0.8,1.2,2.5,6.0,float(\"nan\")],\"truth_period_days\":[0.01,0.02,0.03,0.04,0.05,0.06],\"freq_scorable\":[True]*n,\"eligible_any_pass\":[True]*n,\"best_candidate_matches_dominant\":[\"direct\",\"unmatched\",\"direct\",\"direct\",\"harmonic\",\"direct\"],\"median_exp_per_night\":[1.1,1.6,2.1,3.1,5.1,float(\"nan\")]}); out=surfaces(f,\"d2\"); names=(\"detection_exposure_amplitude\",\"freq_recovery_exposure_amplitude\"); print(\"syntax=ok\"); print(\"keys=\" + \",\".join(k for k in names if k in out)); [print(k+\" columns=\"+\",\".join(out[k].columns)) for k in names]; assert all({\"exp_per_night_bin\",\"amp_bin\"}.issubset(out[k].columns) for k in names)'" in /Users/jackneo/Documents/vonhippel-base9/astro-wd
+ exited 127 in 1631ms:
+zsh:1: command not found: python
+
+codex
+Static inspection is clean; the first lightweight runtime probe hit only an environment issue (`python` is not installed under that name). I’m rerunning it with `python3` to confirm the returned table schemas.
+exec
+/bin/zsh -lc "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=scripts/generalization python3 -c 'import ast; from pathlib import Path; ast.parse(Path(\"scripts/generalization/metrics_generalization.py\").read_text()); import pandas as pd; from metrics_generalization import surfaces; n=6; f=pd.DataFrame({\"label_positive\":[True]*n,\"best_status\":[\"confirmed\",\"confirmed\",\"candidate\",\"confirmed\",\"confirmed\",\"candidate\"],\"amp\":[0.4,0.8,1.2,2.5,6.0,float(\"nan\")],\"truth_period_days\":[0.01,0.02,0.03,0.04,0.05,0.06],\"freq_scorable\":[True]*n,\"eligible_any_pass\":[True]*n,\"best_candidate_matches_dominant\":[\"direct\",\"unmatched\",\"direct\",\"direct\",\"harmonic\",\"direct\"],\"median_exp_per_night\":[1.1,1.6,2.1,3.1,5.1,float(\"nan\")]}); out=surfaces(f,\"d2\"); names=(\"detection_exposure_amplitude\",\"freq_recovery_exposure_amplitude\"); print(\"syntax=ok\"); print(\"keys=\" + \",\".join(k for k in names if k in out)); [print(k+\" columns=\"+\",\".join(out[k].columns)) for k in names]; assert all({\"exp_per_night_bin\",\"amp_bin\"}.issubset(out[k].columns) for k in names)'" in /Users/jackneo/Documents/vonhippel-base9/astro-wd
+ exited 1 in 2277ms:
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    import ast; from pathlib import Path; ast.parse(Path("scripts/generalization/metrics_generalization.py").read_text()); import pandas as pd; from metrics_generalization import surfaces; n=6; f=pd.DataFrame({"label_positive":[True]*n,"best_status":["confirmed","confirmed","candidate","confirmed","confirmed","candidate"],"amp":[0.4,0.8,1.2,2.5,6.0,float("nan")],"truth_period_days":[0.01,0.02,0.03,0.04,0.05,0.06],"freq_scorable":[True]*n,"eligible_any_pass":[True]*n,"best_candidate_matches_dominant":["direct","unmatched","direct","direct","harmonic","direct"],"median_exp_per_night":[1.1,1.6,2.1,3.1,5.1,float("nan")]}); out=surfaces(f,"d2"); names=("detection_exposure_amplitude","freq_recovery_exposure_amplitude"); print("syntax=ok"); print("keys=" + ",".join(k for k in names if k in out)); [print(k+" columns="+",".join(out[k].columns)) for k in names]; assert all({"exp_per_night_bin","amp_bin"}.issubset(out[k].columns) for k in names)
+                                                                                                                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/metrics_generalization.py", line 30, in <module>
+    from frozen_api import (
+    ...<10 lines>...
+    )
+  File "/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/frozen_api.py", line 151, in <module>
+    from build_catalog_panels import (  # noqa: E402
+    ...<16 lines>...
+    )
+  File "/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/build_catalog_panels.py", line 10, in <module>
+    import astropy.units as u
+ModuleNotFoundError: No module named 'astropy'
+
+exec
+/bin/zsh -lc "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=scripts/generalization python3 -c 'import ast,sys,types; from pathlib import Path; ast.parse(Path(\"scripts/generalization/metrics_generalization.py\").read_text()); m=types.ModuleType(\"frozen_api\"); vals={\"REPO_ROOT\":Path(\".\"),\"SIDEREAL_FREQUENCY\":1.0,\"assert_frozen\":lambda:None,\"campaign_file_shas\":lambda:{},\"census_row\":lambda *a,**k:None,\"env_versions\":lambda:{},\"frozen_file_shas\":lambda:{},\"monthly_panel\":lambda *a,**k:None,\"nightly_panel\":lambda *a,**k:None,\"overall_result\":lambda x:x}; [setattr(m,k,v) for k,v in vals.items()]; sys.modules[\"frozen_api\"]=m; import pandas as pd; from metrics_generalization import surfaces; n=6; f=pd.DataFrame({\"label_positive\":[True]*n,\"best_status\":[\"confirmed\",\"confirmed\",\"candidate\",\"confirmed\",\"confirmed\",\"candidate\"],\"amp\":[0.4,0.8,1.2,2.5,6.0,float(\"nan\")],\"truth_period_days\":[0.01,0.02,0.03,0.04,0.05,0.06],\"freq_scorable\":[True]*n,\"eligible_any_pass\":[True]*n,\"best_candidate_matches_dominant\":[\"direct\",\"unmatched\",\"direct\",\"direct\",\"harmonic\",\"direct\"],\"median_exp_per_night\":[1.1,1.6,2.1,3.1,5.1,float(\"nan\")]}); out=surfaces(f,\"d2\"); names=(\"detection_exposure_amplitude\",\"freq_recovery_exposure_amplitude\"); print(\"syntax=ok\"); print(\"keys=\" + \",\".join(k for k in names if k in out)); [print(k+\" columns=\"+\",\".join(out[k].columns)) for k in names]; assert all({\"exp_per_night_bin\",\"amp_bin\"}.issubset(out[k].columns) for k in names)'" in /Users/jackneo/Documents/vonhippel-base9/astro-wd
+ succeeded in 1496ms:
+syntax=ok
+keys=detection_exposure_amplitude,freq_recovery_exposure_amplitude
+detection_exposure_amplitude columns=exp_per_night_bin,amp_bin,n,k
+freq_recovery_exposure_amplitude columns=exp_per_night_bin,amp_bin,n,k
+
+codex
+1. **Binding estimator column names — RESOLVED.**  
+   Exact columns are assigned in [metrics_generalization.py:170](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/metrics_generalization.py:170), [line 174](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/metrics_generalization.py:174), and [line 178](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/metrics_generalization.py:178). Missing-star rows also use these names at [line 842](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/metrics_generalization.py:842), and they flow into `per_star.csv` at [line 867](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/metrics_generalization.py:867).
+
+2. **Exposure × amplitude surfaces — RESOLVED.**  
+   `freq_recovery_exposure_amplitude` constructs cells containing both `exp_per_night_bin` and `amp_bin` at [line 628](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/metrics_generalization.py:628) and is registered at [line 635](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/metrics_generalization.py:635). `detection_exposure_amplitude` contains both coordinates at [line 648](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/metrics_generalization.py:648) and is registered at [line 653](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/metrics_generalization.py:653). The surface-writing loop emits both as CSVs at [line 879](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/metrics_generalization.py:879). A synthetic runtime probe confirmed both returned schemas contain both coordinate columns.
+
+**FREEZABLE: YES**
+tokens used
+42,180
