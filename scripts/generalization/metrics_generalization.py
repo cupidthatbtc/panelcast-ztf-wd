@@ -341,9 +341,8 @@ def completeness_tables(per_star: pd.DataFrame, dataset: str) -> pd.DataFrame:
                        & positives["high_available"].fillna(False)]
     for pass_name in PASSES:
         status_col = "best_status" if pass_name == "best" else f"{pass_name}_status"
-        match_col = (f"{'best' if pass_name == 'best' else pass_name}_match_primary"
-                     if use_dominant
-                     else ("best_candidate_matches_any_mode" if pass_name == "best" else f"{pass_name}_match"))
+        match_col = ("best_candidate_matches_dominant" if pass_name == "best"
+                     else f"{pass_name}_match_primary")
         for rule in RULES:
             for scope, frame in (
                 ("detection_eligible_roster", positives),
