@@ -31,13 +31,21 @@ assumed and as BLAS reduction-order differences predict.
   at 1e-12 relative: the frequency value `minimum + step × index` differs
   in the last bit because ARM computes it with a fused multiply-add
   (grid index shifts are 0 everywhere).
-- Decision-bearing float64 numerics (exact chi2 powers, Baluev FAPs,
-  amplitudes): last-bit drift, as on Colab. Raw float32 fast-method
-  periodogram readbacks (multiband top-peak `power`): up to 5.2e-5 relative
-  (FFT/extirpolation path differs between Accelerate and OpenBLAS/pocketfft).
-  A95 upper limits (95th-percentile quantile of float32 noise peaks):
-  median 1.4e-8, one star at 2.0e-3 relative — a reported limit, not a
-  decision.
+- CORRECTION (2026-08-29 01:30; an earlier revision of this file wrongly
+  carried Colab's ~1e-13 over to the Mac): decision-bearing float64
+  numerics on ARM drift up to **~7e-6 relative** — Baluev FAPs of stored
+  peaks up to 1.3e-6, window powers up to 6.4e-7, exact candidate powers
+  and amplitudes up to ~7e-6 (Accelerate's float64 linear algebra and the
+  float32 fast-method periodogram feeding the peak search differ from
+  OpenBLAS/pocketfft). Raw float32 readbacks (multiband top-peak `power`):
+  up to 5.2e-5. A95 upper limits: median 1.4e-8, one star 2.0e-3 — a
+  reported limit, not a decision.
+- Boundary analysis (all 25 stars, both passes, both bands): the decision
+  FAP closest to the 1e-3 confirmation threshold is 1.069e-3 (6.9% above;
+  star 2033382692116807296, low, zr) with platform drift 1.6e-11 — a
+  safety factor of ~4e9. Every FAP with drift > 1e-7 sits more than 1.4
+  decades from the threshold. No decision is within reach of the observed
+  drift.
 
 ## Three-platform summary
 
@@ -45,7 +53,7 @@ assumed and as BLAS reduction-order differences predict.
 |---|---|---|---|---|---|---|
 | Windows x86 (production) | PASS 25/25 | = | = | = | = | = |
 | Linux x86 (Colab, scipy-openblas) | FAIL 9/9 | = | = | ≤ 3.6e-13 | ≤ 3.6e-13 | ≤ 3.6e-13 |
-| macOS arm64 (Accelerate) | FAIL 25/25 | = | = (FMA last bit) | ~1e-13 | ≤ 5.2e-5 | ≤ 2.0e-3 |
+| macOS arm64 (Accelerate) | FAIL 25/25 | = | = (FMA last bit) | ≤ 7e-6 | ≤ 5.2e-5 | ≤ 2.0e-3 |
 
 ## Implication and proposed amendment (G2-AMENDMENT-1, not yet reviewed)
 
@@ -63,11 +71,16 @@ multiband_top5; best frequency within 1e-12 relative), (b) all stored
 top-peak grid positions and alias flags identical (frequencies within
 1e-12 relative — absorbs FMA last-bit differences), (c) decision-bearing
 float64 numerics (exact powers, Baluev FAPs, amplitudes, multiband weights)
-within 1e-9 relative, (d) raw float32 periodogram readbacks (top-peak
+within 1e-4 relative, (d) raw float32 periodogram readbacks (top-peak
 `power`) within 1e-3 relative and A95 limits within 1e-2 relative — both
-reported quantities, neither a decision, (e) the tier recorded in the
-attestation and propagated into run manifests and the results bundle
-README with the measured maxima. Strict tiers remain required for the
+reported quantities, neither a decision, (e) BOUNDARY RULE: for every
+replayed star, every decision FAP's relative distance from the 1e-3
+threshold exceeds 100 × that star's measured maximum FAP drift; and in
+CAMPAIGN outputs produced under this tier, every star whose best-candidate
+FAP lies within 1e-3 relative of the threshold is flagged
+`platform_boundary_sensitive` in per_star.csv (reported, never silently
+resolved), (f) the tier recorded in the attestation and propagated into
+run manifests and the results bundle README with the measured maxima. Strict tiers remain required for the
 production machine and for any claim of byte reproducibility of the
 published bundle. Campaign estimands (METRICS_SPEC) depend only on
 decisions and best-candidate frequencies, never on raw f32 readbacks; A95
