@@ -134,14 +134,27 @@ def decision_equivalence(published: dict, replayed: dict) -> dict:
                 fa is not None and abs(fa - fb) > 1e-12 * abs(fa)):
             decisions_identical = False
         for ta, tb in zip(pa.get("top_peaks", []), pb.get("top_peaks", [])):
-            if ta.get("frequency_per_day") != tb.get("frequency_per_day") \
+            fa, fb = ta.get("frequency_per_day"), tb.get("frequency_per_day")
+            # grid index identity; 1e-12 relative absorbs FMA last-bit
+            # differences in minimum + step * index across architectures
+            if fa is None or fb is None or abs(fa - fb) > 1e-12 * abs(fa) \
                     or ta.get("alias_flag") != tb.get("alias_flag"):
                 peaks_identical = False
     walk(published["passes"], replayed["passes"])
+    # reported upper limits (A95) derive from float32 periodogram noise
+    # quantiles and drift more than decision-bearing numerics; track apart
+    a95_worst = 0.0
+    for pass_name in ("low", "high"):
+        for band in ("zg", "zr"):
+            x = published["passes"].get(pass_name, {}).get(f"{band}_a95_mmag")
+            y = replayed["passes"].get(pass_name, {}).get(f"{band}_a95_mmag")
+            if x and y:
+                a95_worst = max(a95_worst, abs(x - y) / abs(x))
     return {"decisions_identical": decisions_identical,
             "top_peaks_identical": peaks_identical,
             "numeric_fields": n_numeric,
-            "max_relative_difference": worst}
+            "max_relative_difference": worst,
+            "a95_max_relative_difference": a95_worst}
 
 
 def published_schema_version(path: Path) -> int:
