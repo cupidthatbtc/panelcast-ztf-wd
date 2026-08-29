@@ -21,7 +21,10 @@ import time
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from pathlib import Path
 
+import pandas as pd
+
 from frozen_api import (
+    REPO_ROOT,
     analyze_star,
     assert_frozen,
     campaign_file_shas,
@@ -59,6 +62,16 @@ def validate_attestation(report_path: Path) -> dict:
             f"production runs require the FULL 928-UNIQUE-star baseline "
             f"attestation; this report covers {len(unique)} unique of "
             f"{len(report['stars'])} records"
+        )
+    catalog = pd.read_csv(
+        REPO_ROOT / "catalog-rebuild/results/2026-08-01_full/catalog/ls_full_catalog.csv",
+        dtype={"source_id": str},
+    )
+    expected = set(catalog["source_id"])
+    if unique != expected:
+        raise SystemExit(
+            f"attested roster is not the published 928-star catalog set: "
+            f"{len(unique - expected)} foreign, {len(expected - unique)} missing"
         )
     return report
 

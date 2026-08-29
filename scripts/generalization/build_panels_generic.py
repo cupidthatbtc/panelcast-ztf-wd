@@ -115,6 +115,13 @@ def main() -> None:
     args.out_dir.mkdir(parents=True, exist_ok=True)
     exposure_star_dir = args.out_dir / "exposure_stars"
     exposure_star_dir.mkdir(parents=True, exist_ok=True)
+    stale = list(exposure_star_dir.glob("*.csv.gz"))
+    if stale:
+        raise SystemExit(
+            f"{exposure_star_dir} already holds {len(stale)} shards — use a "
+            f"fresh out-dir (stale-shard guard; the emitted shard_index must "
+            f"describe exactly this run's output)"
+        )
 
     roster = pd.read_csv(args.roster, dtype={"source_id": str})
     if not args.allow_nonstandard_ids:
@@ -188,8 +195,7 @@ def main() -> None:
 
     pd.DataFrame(qc_rows).to_csv(args.out_dir / "crossmatch_qc.csv", index=False)
     pd.DataFrame(census_rows).to_csv(args.out_dir / "census_generic.csv", index=False)
-    shard_ids = sorted(
-        path.name.split(".csv")[0] for path in exposure_star_dir.glob("*.csv.gz"))
+    shard_ids = sorted(row["source_id"] for row in census_rows)
     (args.out_dir / "shard_index.txt").write_text(
         "\n".join(shard_ids) + "\n", encoding="utf-8")
     manifest = {

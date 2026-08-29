@@ -1,0 +1,418 @@
+Reading additional input from stdin...
+2026-08-29T02:10:31.744488Z ERROR codex_models_manager::cache: failed to load models cache: missing field `base_instructions` at line 97 column 5
+2026-08-29T02:10:32.969578Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest("http/request url is invalid: relative URL without a base")))
+OpenAI Codex v0.145.0
+--------
+workdir: /Users/jackneo/Documents/vonhippel-base9/astro-wd
+model: gpt-5.6-sol
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: xhigh
+reasoning summaries: none
+session id: 01a04b48-6b06-77f2-8242-96ebced5e7b4
+--------
+user
+Round-5 FINAL FREEZE VERDICT. Your round-4 residuals: generalization/reviews/G2r4/sol_referee4.md; dispositions: generalization/reviews/G2r4/RESPONSE.md. Verify ONLY your 2 execution-blocking items (amplitude-stationarity core-vs-stretch; P4 zero-usable-strata) against the current generalization/GENERALIZATION_PLAN.md and generalization/METRICS_SPEC.md. One line each RESOLVED/UNRESOLVED + evidence. Then: FREEZABLE YES/NO. If NO, only execution blockers.
+2026-08-29T02:10:33.247386Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest("http/request url is invalid: relative URL without a base")))
+2026-08-29T02:10:33.328584Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when AuthRequired(AuthRequiredError { www_authenticate_header: "Bearer realm=\"OAuth\", resource_metadata=\"https://circleback.ai/.well-known/oauth-protected-resource/api/mcp\", scope=\"user\"" })
+2026-08-29T02:10:34.271863Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest("http/request url is invalid: relative URL without a base")))
+warning: Exceeded skills context budget of 2%. All skill descriptions were removed and 33 additional skills were not included in the model-visible skills list.
+2026-08-29T02:11:05.128162Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 426 Upgrade Required, url: ws://127.0.0.1:17841/v1/responses
+codex
+I’ll compare only those two round-4 blockers with the current plan/spec and return the requested freeze verdict, without expanding scope.
+exec
+/bin/zsh -lc 'rg -n -C 5 "amplitude|stationar|core|stretch|P4|zero[- ]usable|usable strata|strata" generalization/reviews/G2r4/sol_referee4.md generalization/reviews/G2r4/RESPONSE.md generalization/GENERALIZATION_PLAN.md generalization/METRICS_SPEC.md' in /Users/jackneo/Documents/vonhippel-base9/astro-wd
+ succeeded in 0ms:
+generalization/reviews/G2r4/RESPONSE.md-9-follow-up). Note for round-5: the missing G2r3/RESPONSE.md the panel
+generalization/reviews/G2r4/RESPONSE.md-10-flagged was real — its write had been aborted by a failed command chain;
+generalization/reviews/G2r4/RESPONSE.md-11-recreated and committed.
+generalization/reviews/G2r4/RESPONSE.md-12-
+generalization/reviews/G2r4/RESPONSE.md-13-## referee4
+generalization/reviews/G2r4/RESPONSE.md:14:1. Amplitude-stationarity stretch-vs-core — FIXED: CORE and binding in the
+generalization/reviews/G2r4/RESPONSE.md-15-   plan run matrix (total ≤ 3,266 ≈ 1.6 d), matching the spec.
+generalization/reviews/G2r4/RESPONSE.md:16:2. P4 zero-usable-strata — FIXED in spec (K_t = ∅ excluded from usable,
+generalization/reviews/G2r4/RESPONSE.md-17-   y = 0 over |K_t| = 3 in eligible; denominator stays 103) and in code
+generalization/reviews/G2r4/RESPONSE.md:18:   (both denominators emitted with n_targets_zero_usable_strata).
+generalization/reviews/G2r4/RESPONSE.md-19-
+generalization/reviews/G2r4/RESPONSE.md-20-## stats4
+generalization/reviews/G2r4/RESPONSE.md-21-1. P5 completed-trials — FIXED: acceptance requires n_completed == 1000;
+generalization/reviews/G2r4/RESPONSE.md-22-   missing nulls break acceptance and are reported (n_scheduled vs
+generalization/reviews/G2r4/RESPONSE.md-23-   n_completed).
+generalization/reviews/G2r4/RESPONSE.md-24-2. Dominant headline + binding columns — FIXED: every dataset's headline
+generalization/reviews/G2r4/RESPONSE.md-25-   uses the dominant-match column; correct_frequency_fraction_detected
+generalization/reviews/G2r4/RESPONSE.md-26-   emitted per pass.
+generalization/reviews/G2r4/RESPONSE.md:27:3. P4 denominators + paired contrasts — FIXED: eligible + usable variants
+generalization/reviews/G2r4/RESPONSE.md-28-   in d2_cluster_completeness.csv; target-clustered paired
+generalization/reviews/G2r4/RESPONSE.md-29-   census-minus-LS discordance bootstrap row.
+generalization/reviews/G2r4/RESPONSE.md-30-4. PPV frame — FIXED: all sampled negatives retained (missing = cannot
+generalization/reviews/G2r4/RESPONSE.md-31-   trigger, stays in the SRS).
+generalization/reviews/G2r4/RESPONSE.md-32-5. Surfaces — FIXED: dominant match + S_best filter; detection
+generalization/reviews/G2r4/RESPONSE.md:33:   period×amplitude with unknown bins; exposure axis now real
+generalization/reviews/G2r4/RESPONSE.md-34-   median-exposures-per-night (zg_median_exp_per_night column added to
+generalization/reviews/G2r4/RESPONSE.md-35-   build_panels_generic census; template_exp_per_night in the D2 manifest).
+generalization/reviews/G2r4/RESPONSE.md-36-
+generalization/reviews/G2r4/RESPONSE.md-37-## methods4
+generalization/reviews/G2r4/RESPONSE.md-38-1. Panel gate — FIXED: finite-value checks on science columns; roster hash
+--
+generalization/reviews/G2r4/RESPONSE.md-51-3 — dominant-mode-dropout variant added as CORE (code: drop_dominant in
+generalization/reviews/G2r4/RESPONSE.md-52-build_truth_model; matrix ≤ +103); ±30% labeled a local sensitivity.
+generalization/reviews/G2r4/RESPONSE.md-53-4 — dSct=0 renamed the non-dSct comparison class (spec); attributed
+generalization/reviews/G2r4/RESPONSE.md-54-detection = the existing frequency-recovery primary (P2). 5 — sub-hour
+generalization/reviews/G2r4/RESPONSE.md-55-aperture-level caveat binding in plan + W4 adjudication + W3 check of Mo
+generalization/reviews/G2r4/RESPONSE.md:56:amplitude sinc-correction status. 6 — near-saturation subset promoted to
+generalization/reviews/G2r4/RESPONSE.md-57-the principal robustness lens; per-epoch saturation via frozen catflags QC
+generalization/reviews/G2r4/RESPONSE.md-58-noted.
+--
+generalization/METRICS_SPEC.md-21-  (detection-only); strict frequency matching is the separate
+generalization/METRICS_SPEC.md-22-  frequency-recovery estimand; paired controls contextualize native triggers.
+generalization/METRICS_SPEC.md-23-- **frequency-recovery completeness** — P(rule fires AND
+generalization/METRICS_SPEC.md-24-  best_candidate_matches_dominant | labeled positive AND freq-scorable AND
+generalization/METRICS_SPEC.md-25-  S_p = 1). Freq-scorable: D3 = Mo-joined with >=1 frequency and a defined
+generalization/METRICS_SPEC.md:26:  dominant amplitude (assert count == 456; "Mo-join-conditioned" label
+generalization/METRICS_SPEC.md-27-  mandatory; joined-vs-unjoined covariate table mandatory); D2 = >=1
+generalization/METRICS_SPEC.md-28-  RETAINED injected mode (from injected_modes.csv, post |sinc|>=0.3
+generalization/METRICS_SPEC.md-29-  rejection — never the original mode table); D1 = diagnostic only
+generalization/METRICS_SPEC.md-30-  (non-contemporaneous literature frequencies; see below).
+generalization/METRICS_SPEC.md-31-  S_p (per pass p): >=1 truth frequency inside pass p's search bounds
+generalization/METRICS_SPEC.md-32-  (low: [2/baseline, 48] / d; high: [24, 1440] / d); S_best = S_low OR
+generalization/METRICS_SPEC.md-33-  S_high. Known consequence stated up front: only ~10/456 D3 dominant
+generalization/METRICS_SPEC.md-34-  frequencies lie >= 24 / d, so D3 high-pass frequency recovery is a
+generalization/METRICS_SPEC.md-35-  near-empty cell and is reported as counts.
+generalization/METRICS_SPEC.md-36-  Mo-join MNAR limitation (binding statement): Mo inclusion required
+generalization/METRICS_SPEC.md:37:  SNR > 8 in Kepler photometry and is plausibly related to amplitude,
+generalization/METRICS_SPEC.md-38-  magnitude, and mode complexity; missingness for the 154 unjoined
+generalization/METRICS_SPEC.md-39-  positives is treated as informative — the frequency-recovery curve is
+generalization/METRICS_SPEC.md-40-  therefore a Mo-join-conditioned estimand, the joined-vs-unjoined
+generalization/METRICS_SPEC.md-41-  covariate table is mandatory, and DETECTION surfaces retain all 610
+generalization/METRICS_SPEC.md-42-  positives with the unjoined stars in an explicit `amp_unknown` bin so
+--
+generalization/METRICS_SPEC.md-59-  binary and other variables, which is why this is a trigger rate). Weights are
+generalization/METRICS_SPEC.md-60-  constant within the class and cancel: plain Wilson on the 2,314 sampled
+generalization/METRICS_SPEC.md-61-  negatives (no FPC — conservative). Triggered negatives adjudicated in W4
+generalization/METRICS_SPEC.md-62-  (plausible real variable vs unexplained), reported descriptively.
+generalization/METRICS_SPEC.md-63-- **Gaussian-null false-alarm rate (FPR_Gaussian, D2)** — P(confirmed |
+generalization/METRICS_SPEC.md:64:  arm-A zero-amplitude null), n = 1000; window allocation frozen as
+generalization/METRICS_SPEC.md-65-  deterministic cycling of the sorted 928-window pool (serial i -> window
+generalization/METRICS_SPEC.md-66-  i mod 928), noise seed = serial. Interval: EXACT one-sided
+generalization/METRICS_SPEC.md-67-  Clopper-Pearson upper bound at the OBSERVED event count x
+generalization/METRICS_SPEC.md-68-  (U = Beta_{0.95}(x+1, n-x)); acceptance criterion (confirmatory):
+generalization/METRICS_SPEC.md-69-  U_95(x, 1000) <= 0.005. Windows repeat; inference is conditional on the
+--
+generalization/METRICS_SPEC.md-100-Classification: no hits -> `unmatched`; hits in exactly one relation class ->
+generalization/METRICS_SPEC.md-101-that class (several DIRECT hits on different modes remain `direct`); hits in
+generalization/METRICS_SPEC.md-102-more than one relation class -> `ambiguous` (excluded from strict recovery).
+generalization/METRICS_SPEC.md-103-Named estimator columns encode both axes:
+generalization/METRICS_SPEC.md-104-`best_candidate_matches_dominant` (headline; D3 dominant Mo mode / D2
+generalization/METRICS_SPEC.md:105:largest-amplitude retained injected mode; D1 diagnostic) and
+generalization/METRICS_SPEC.md-106-`best_candidate_matches_any_mode` (secondary), plus
+generalization/METRICS_SPEC.md-107-`any_top_peak_matches_any_mode` (diagnostic over the 15 stored peaks).
+generalization/METRICS_SPEC.md-108-Chance-match calibration: truth lists permuted across stars (frozen seed
+generalization/METRICS_SPEC.md-109-20260829, 100 permutations) -> accidental direct-match rate beside every
+generalization/METRICS_SPEC.md-110-frequency-recovery table.
+--
+generalization/METRICS_SPEC.md-119-     best pass, unweighted, Wilson 95%}.
+generalization/METRICS_SPEC.md-120-  P2 D3 frequency recovery: {D3, Mo-joined S_best=1 subset, usable, rule 1 +
+generalization/METRICS_SPEC.md-121-     best_candidate_matches_dominant, Wilson 95%, beside chance-match rate}.
+generalization/METRICS_SPEC.md-122-  P3 D3 negative-class trigger rate: {D3, dSct=0 (2314), rule 1, best pass,
+generalization/METRICS_SPEC.md-123-     plain Wilson}.
+generalization/METRICS_SPEC.md:124:  P4 D2 conditional injection-recovery, algebraically:
+generalization/METRICS_SPEC.md-125-     p-hat = (1/103) Σ_t (1/|K_t|) Σ_{k in K_t} y_{t,k}, where y_{t,k} = 1
+generalization/METRICS_SPEC.md-126-     iff rule 1 fires (detection-only) on target t's stratum-k nominal
+generalization/METRICS_SPEC.md-127-     (1.7/0.80, de-dilution off, phase_draw 0) arm-B shard, and K_t ⊆
+generalization/METRICS_SPEC.md:128:     {0, 1, 2} is the set of strata with a usable result (missing strata
+generalization/METRICS_SPEC.md-129-     renormalize |K_t| and are flagged; the eligible-roster variant counts
+generalization/METRICS_SPEC.md-130-     a missing stratum as y = 0 with |K_t| = 3; a target with K_t = ∅ is
+generalization/METRICS_SPEC.md-131-     EXCLUDED from the usable estimand — reported as
+generalization/METRICS_SPEC.md:132:     n_targets_zero_usable_strata — and contributes y = 0 over |K_t| = 3
+generalization/METRICS_SPEC.md-133-     to the eligible estimand, whose denominator stays all 103 targets).
+generalization/METRICS_SPEC.md-134-     Both variants reported. Interval: target-cluster bootstrap 95%.
+generalization/METRICS_SPEC.md-135-  P5 FPR_Gaussian acceptance: {D2 arm A nulls, rule 1, exact one-sided CP
+generalization/METRICS_SPEC.md-136-     upper at observed x <= 0.5%} — the sole confirmatory decision.
+generalization/METRICS_SPEC.md-137-No claim direction reversal, endpoint swap, or denominator swap after the
+--
+generalization/METRICS_SPEC.md-155-  jointly; identical resample draws across scenarios (common random
+generalization/METRICS_SPEC.md-156-  numbers). Percentile 95% intervals; if a statistic is degenerate
+generalization/METRICS_SPEC.md-157-  (all-0/all-1), report the exact one-sided CP bound at the target level
+generalization/METRICS_SPEC.md-158-  instead. Pooled exact McNemar is PROHIBITED for D2; use the target-cluster
+generalization/METRICS_SPEC.md-159-  paired-difference bootstrap.
+generalization/METRICS_SPEC.md:160:- Sensitivity contrasts (D2 ladder, phase draws, amplitude-stationarity,
+generalization/METRICS_SPEC.md:161:  dominant-mode dropout — ALL core and binding; the ±30% multiplier is a
+generalization/METRICS_SPEC.md-162-  local sensitivity, never presented as an astrophysical uncertainty
+generalization/METRICS_SPEC.md-163-  envelope):
+generalization/METRICS_SPEC.md-164-  COMMON-SUBSET RULE — every contrast against nominal is computed with
+generalization/METRICS_SPEC.md-165-  nominal re-evaluated on the same median-window (K=1) subset and the same
+generalization/METRICS_SPEC.md-166-  bootstrap draws. Min-max across the 3x3 grid is a "prespecified
+generalization/METRICS_SPEC.md-167-  finite-grid sensitivity range", never a confidence band; endpoint
+generalization/METRICS_SPEC.md:168:  scenarios identified. De-dilution and amplitude-stationarity are separate
+generalization/METRICS_SPEC.md-169-  axes.
+generalization/METRICS_SPEC.md-170-
+generalization/METRICS_SPEC.md-171-## Complementarity (census vs L-S)
+generalization/METRICS_SPEC.md-172-
+generalization/METRICS_SPEC.md-173-Per dataset, on labeled positives with both methods available and usable:
+--
+generalization/METRICS_SPEC.md-177-D2). Exact McNemar secondary (D1/D3 only; marginal homogeneity, not
+generalization/METRICS_SPEC.md-178-complementarity).
+generalization/METRICS_SPEC.md-179-
+generalization/METRICS_SPEC.md-180-## Surfaces
+generalization/METRICS_SPEC.md-181-
+generalization/METRICS_SPEC.md:182:Surfaces exist for D2 and D3 only (D1 has no amplitude axis). Two
+generalization/METRICS_SPEC.md-183-endpoints, separate files: (a) rule-1 DETECTION completeness over ALL
+generalization/METRICS_SPEC.md:184:labeled positives — stars without a defined amplitude (the 154 unjoined
+generalization/METRICS_SPEC.md-185-D3 positives) fall in an explicit `amp_unknown` bin (bin index −1), so
+generalization/METRICS_SPEC.md-186-the full 610-star denominator is preserved; (b) frequency recovery over
+generalization/METRICS_SPEC.md-187-the scorable subset only. Coordinates per star (frozen): D3 = dominant Mo
+generalization/METRICS_SPEC.md-188-mode (period from dominant frequency; historical Kepler-band dominant
+generalization/METRICS_SPEC.md:189:amplitude, mmag — explicitly non-contemporaneous, not a ZTF-g threshold);
+generalization/METRICS_SPEC.md:190:D2 = largest-amplitude RETAINED injected mode (period; published TESS
+generalization/METRICS_SPEC.md:191:amplitude, ppt). Bins half-open [lo, hi); explicit underflow and overflow
+generalization/METRICS_SPEC.md-192-bins; no smoothing, no monotonic fitting, no interpolation. Edges frozen:
+generalization/METRICS_SPEC.md-193-period {100 s, 200 s, 500 s, 1000 s, 2000 s, 0.05 d, 0.2 d, 1 d, 10 d,
+generalization/METRICS_SPEC.md:194:100 d}; amplitude D3 {0.5, 1, 2, 5, 10, 20, 50} mmag with top bin
+generalization/METRICS_SPEC.md-195-[50, inf); D2 {0.5, 2, 5, 10, 30} ppt with top bin [30, inf);
+generalization/METRICS_SPEC.md-196-median-exposures-per-night {1, 1.5, 2, 3, 5} with top bin [5, inf).
+generalization/METRICS_SPEC.md-197-Cells below 5 stars: counts only. Amplitude axes are invariant across
+generalization/METRICS_SPEC.md:198:scenarios (never the ladder-scaled injected amplitude).
+generalization/METRICS_SPEC.md-199-
+generalization/METRICS_SPEC.md-200-## Eligibility and attrition
+generalization/METRICS_SPEC.md-201-
+generalization/METRICS_SPEC.md-202-Both denominators always reported (see detection completeness). Attrition
+generalization/METRICS_SPEC.md-203-table (roster -> fetched -> crossmatched -> QC-passed -> both-passes) by
+generalization/METRICS_SPEC.md:204:class, amplitude stratum (including `amp_unknown`), Mo-join status,
+generalization/METRICS_SPEC.md-205-magnitude, dominant period, Teff (declared the color surrogate — Murphy
+generalization/METRICS_SPEC.md-206-carries no color column and Teff is its physical equivalent), and crowding
+generalization/METRICS_SPEC.md-207-(cone object count, nearest-separation). The negative-sample balance
+generalization/METRICS_SPEC.md-208-diagnostic (sampled vs full-frame quantiles of gmag/Teff/RA/Dec) is part
+generalization/METRICS_SPEC.md:209:of the roster report (`roster_report.json`) and is a required output. D3 near-saturation strata: g <= 14.0 flagged,
+generalization/METRICS_SPEC.md-210-g > 14.0 safe (boundary in the flagged stratum). Unavailable passes never
+generalization/METRICS_SPEC.md-211-silently dropped; missing light curves enter eligible-roster estimands as
+generalization/METRICS_SPEC.md-212-non-detections.
+generalization/METRICS_SPEC.md-213-
+generalization/METRICS_SPEC.md-214-## Guards
+generalization/METRICS_SPEC.md-215-
+generalization/METRICS_SPEC.md-216-- Assert no campaign census ratio equals 2.5 exactly.
+generalization/METRICS_SPEC.md:217:- Assert every scored JSON has complete == true, both passes present.
+generalization/METRICS_SPEC.md:218:- D2 truth ONLY from injected_modes.csv; assert every scored D2 shard id
+generalization/METRICS_SPEC.md-219-  appears there (or is a null/control).
+generalization/METRICS_SPEC.md-220-- Manifest: SHA-256 of every input file, env versions, frozen + campaign
+generalization/METRICS_SPEC.md-221-  file SHAs, replay attestation reference, spec file SHA-256.
+generalization/METRICS_SPEC.md-222-
+generalization/METRICS_SPEC.md-223-## Outputs
+--
+generalization/GENERALIZATION_PLAN.md-24-  trigger rate).
+generalization/GENERALIZATION_PLAN.md-25-Banned phrases (G1): "quantified selection-function measurement", "real-sky
+generalization/GENERALIZATION_PLAN.md-26-completeness" (for D2), "D3 FPR", unqualified "purity". Estimand names in
+generalization/GENERALIZATION_PLAN.md-27-METRICS_SPEC.md are binding.
+generalization/GENERALIZATION_PLAN.md-28-
+generalization/GENERALIZATION_PLAN.md:29:## Frozen-core / adapter-shell architecture
+generalization/GENERALIZATION_PLAN.md-30-
+generalization/GENERALIZATION_PLAN.md-31-- Tag `frozen-2026-08-01` = branch point. Zero edits to any script that
+generalization/GENERALIZATION_PLAN.md-32-  produced the published bundle; the referee check is an empty
+generalization/GENERALIZATION_PLAN.md-33-  `git diff frozen-2026-08-01 -- scripts/<frozen five>`.
+generalization/GENERALIZATION_PLAN.md-34-- Frozen five: `run_catalog_lomb_scargle.py`, `run_lomb_scargle.py`,
+--
+generalization/GENERALIZATION_PLAN.md-102-## D3 — ZTF × Kepler delta Scuti (real ZTF light curves, external labels)
+generalization/GENERALIZATION_PLAN.md-103-
+generalization/GENERALIZATION_PLAN.md-104-- Labels: Murphy+2019 (VizieR J/MNRAS/485/2380/table1, 14,330 Kepler A/F
+generalization/GENERALIZATION_PLAN.md-105-  stars; `dSct` flag 0/1/2 — ships its own labeled negative class).
+generalization/GENERALIZATION_PLAN.md-106-- Amplitude axis: Mo+2026 (J/A+A/710/A245): table2 = 259,883 extracted
+generalization/GENERALIZATION_PLAN.md:107:  frequencies (SNR>8) for 1,838 delta Scutis → per-star dominant amplitude
+generalization/GENERALIZATION_PLAN.md-108-  (ppt × 1.0857 → mmag); table1 = confirmed super-Nyquist modes → the
+generalization/GENERALIZATION_PLAN.md-109-  sub-hour stratum (any confirmed SNF ⇒ real mode above Kepler LC Nyquist
+generalization/GENERALIZATION_PLAN.md-110-  283.2 µHz ⇒ P < 59 min). This replaces the originally scouted Bowman+2016
+generalization/GENERALIZATION_PLAN.md:111:  join: Bowman's VizieR table carries no amplitudes; Mo+2026 supersedes it
+generalization/GENERALIZATION_PLAN.md-112-  (and is itself the published Murphy×Bowman merge, 1,838 stars).
+generalization/GENERALIZATION_PLAN.md-113-- Roster (`build_d3_roster.py`, rebuilt 2026-08-28 post-G1): gmag ≥ 13.2
+generalization/GENERALIZATION_PLAN.md-114-  (Murphy/KIC g magnitude — the named saturation proxy), ALL 610 dSct=1
+generalization/GENERALIZATION_PLAN.md-115-  survivors + ALL 76 dSct=2 (own class, excluded from headline numbers) +
+generalization/GENERALIZATION_PLAN.md-116-  2,314 dSct=0 negatives as a frozen-seed (20260828) simple random sample
+generalization/GENERALIZATION_PLAN.md-117-  (inclusion probability exactly 2314/7292, weight exactly 7292/2314;
+generalization/GENERALIZATION_PLAN.md-118-  sampling_weight column carried into every weighted estimate) = 3,000.
+generalization/GENERALIZATION_PLAN.md-119-  Before any campaign L-S run, the realized crossmatch mapping and an
+generalization/GENERALIZATION_PLAN.md-120-  ambiguity-adjudication file are committed (crossmatch frozen as DATA,
+generalization/GENERALIZATION_PLAN.md-121-  not just procedure). Amplitude coverage of positives:
+generalization/GENERALIZATION_PLAN.md:122:  456/610 with dominant amplitude; 48 > 10 mmag; 254 in 1–10; 154 < 1;
+generalization/GENERALIZATION_PLAN.md-123-  290 sub-hour; median 1.77 mmag. The 1–10 mmag log ladder and the
+generalization/GENERALIZATION_PLAN.md-124-  sub-threshold majority make the completeness turn-on curve the headline
+generalization/GENERALIZATION_PLAN.md-125-  D3 deliverable, not a defect (pre-registered: risk 2).
+generalization/GENERALIZATION_PLAN.md-126-  Sub-hour stratum caveat (binding): a confirmed Mo super-Nyquist frequency
+generalization/GENERALIZATION_PLAN.md-127-  establishes a sub-hour signal in the KEPLER APERTURE, not automatically
+generalization/GENERALIZATION_PLAN.md:128:  in the ZTF-matched source (blends), and the per-star dominant amplitude
+generalization/GENERALIZATION_PLAN.md-129-  need not describe the super-Nyquist mode; sub-hour-stratum detections are
+generalization/GENERALIZATION_PLAN.md:130:  adjudicated in W4 alongside triggered negatives, and Mo amplitude
+generalization/GENERALIZATION_PLAN.md-131-  sinc-correction status gets verified against the paper in W3.
+generalization/GENERALIZATION_PLAN.md-132-- Acquisition: frozen `fetch_catalog_lightcurves.py --roster roster_d3.csv`
+generalization/GENERALIZATION_PLAN.md-133-  verbatim (10″ cone, 1.25 s cadence, resumable); frozen QC chain via
+generalization/GENERALIZATION_PLAN.md-134-  `build_panels_generic.py` (nearest-cluster crossmatch, catflags/chi cuts,
+generalization/GENERALIZATION_PLAN.md-135-  ≥20 exp/band, BJD_TDB at Palomar — all frozen functions).
+--
+generalization/GENERALIZATION_PLAN.md-144-
+generalization/GENERALIZATION_PLAN.md-145-## D2 — TESS-truth transplant (DAV signals in real ZTF windows)
+generalization/GENERALIZATION_PLAN.md-146-
+generalization/GENERALIZATION_PLAN.md-147-- Truth: Romero+2022 (MNRAS 511, 1574; arXiv:2201.04158; 74 new DAVs,
+generalization/GENERALIZATION_PLAN.md-148-  TESS Cy1–3) + Romero+2025 (ApJ 984, 112; arXiv:2407.07260; 32 new DAVs,
+generalization/GENERALIZATION_PLAN.md:149:  Cy4–5). Published per-mode tables: period [s] + amplitude [ppt] + per-star
+generalization/GENERALIZATION_PLAN.md-150-  FAP(1/1000) limit + 20-s-cadence flags. 2025 revisions apply: NOV
+generalization/GENERALIZATION_PLAN.md-151-  retractions (TIC 261400271, 804835539, 317620456) and updated mode lists
+generalization/GENERALIZATION_PLAN.md-152-  for re-observed 2022 objects — latest published solution wins.
+generalization/GENERALIZATION_PLAN.md-153-- Truth model, not interpolation (`d2_truth_model.py`): for 120-s sampling,
+generalization/GENERALIZATION_PLAN.md-154-  DAV P < 240 s is super-Nyquist (Nyquist period 240 s) and the boxcar
+--
+generalization/GENERALIZATION_PLAN.md-171-  band-integrated validation of the endpoints is a stated limitation (the
+generalization/GENERALIZATION_PLAN.md-172-  ladder is non-optional — zr carries most published confirmations) →
+generalization/GENERALIZATION_PLAN.md-173-  re-integrate the ZTF 30-s boxcar analytically → compose with the FROZEN
+generalization/GENERALIZATION_PLAN.md-174-  phase protocol: one independent phase per mode; base assignment
+generalization/GENERALIZATION_PLAN.md-175-  (phase_draw = 0) seeds PCG64(TIC) and is shared across bands and across
+generalization/GENERALIZATION_PLAN.md:176:  every bandpass/de-dilution/amplitude-scale variant; the two phase-draw
+generalization/GENERALIZATION_PLAN.md-177-  sensitivity variants d ∈ {1, 2} seed PCG64(TIC·10 + d) and change ONLY
+generalization/GENERALIZATION_PLAN.md-178-  the phase vector; shared t_ref keeps the frozen two-band rule meaningful.
+generalization/GENERALIZATION_PLAN.md-179-- Windows: templates from ALL 928 stars of the published catalog (G1 fix —
+generalization/GENERALIZATION_PLAN.md-180-  the earlier 510-not-detected pool conditioned on the pipeline's own
+generalization/GENERALIZATION_PLAN.md-181-  outcome), matched by median zg mag (|Δg| ≤ 0.25, widened when thin;
+--
+generalization/GENERALIZATION_PLAN.md-193-  q ∈ {0.10, 0.50, 0.90} (numpy round). Match label recorded per target.
+generalization/GENERALIZATION_PLAN.md-194-  D2 primary detection is post-injection rule firing (detection-only);
+generalization/GENERALIZATION_PLAN.md-195-  strict frequency matching is the separate frequency-recovery estimand;
+generalization/GENERALIZATION_PLAN.md-196-  native variability in the pool is contextualized by PAIRED UNINJECTED
+generalization/GENERALIZATION_PLAN.md-197-  CONTROLS (95-prefix; stable ids indexed over the sorted 928 pool): one
+generalization/GENERALIZATION_PLAN.md:198:  control shard per unique arm-B template window. W2 stretch: fetch real
+generalization/GENERALIZATION_PLAN.md-199-  ZTF light curves at the 103 Romero positions; usable self-windows form a
+generalization/GENERALIZATION_PLAN.md-200-  SEPARATE DIAGNOSTIC arm — they do not replace or enter the nominal K=3
+generalization/GENERALIZATION_PLAN.md-201-  aggregate.
+generalization/GENERALIZATION_PLAN.md-202-- Arms: B primary (signal + real ZTF mags, real magerr), A diagnostic for
+generalization/GENERALIZATION_PLAN.md-203-  positive injections; arm-A ZERO-AMPLITUDE NULLS are the campaign's sole
+generalization/GENERALIZATION_PLAN.md-204-  confirmatory endpoint (P5, METRICS_SPEC). Gaussian-null false-alarm rate
+generalization/GENERALIZATION_PLAN.md:205:  (`FPR_Gaussian`): 1,000 arm-A zero-amplitude simulations scheduled over
+generalization/GENERALIZATION_PLAN.md-206-  the 928-window frame by deterministic cycling (serial i → sorted-pool
+generalization/GENERALIZATION_PLAN.md-207-  window i mod 928, noise seed = serial); windows repeat, seeds do not.
+generalization/GENERALIZATION_PLAN.md-208-  Verification arm: ~20 SPOC light curves prewhitened to confirm published
+generalization/GENERALIZATION_PLAN.md-209-  solutions; everything else needs metadata only.
+generalization/GENERALIZATION_PLAN.md-210-- Run matrix (22 workers ≈ 84 runs/h). CORE scheduled total ≤ 3,266 ≈
+generalization/GENERALIZATION_PLAN.md-211-  1.6 d, all binding: arm B nominal (1.7/0.80) 103×3 = 309; arm A nominal
+generalization/GENERALIZATION_PLAN.md-212-  309; Gaussian nulls 1,000; paired controls ≤ 309 (unique arm-B windows);
+generalization/GENERALIZATION_PLAN.md-213-  ladder sensitivity MEDIAN-WINDOW-CONDITIONED: 8 non-nominal (R_g, R_rg)
+generalization/GENERALIZATION_PLAN.md-214-  points × 103 × 1 = 824; phase-draw sensitivity 2 × 103 = 206;
+generalization/GENERALIZATION_PLAN.md:215:  amplitude-stationarity axis (scale × {0.7, 1.3}) 2 × 103 = 206;
+generalization/GENERALIZATION_PLAN.md-216-  dominant-mode-dropout variant ≤ 103 (targets with ≥ 2 modes) — the
+generalization/GENERALIZATION_PLAN.md-217-  ±30% multiplier is a LOCAL sensitivity, not an astrophysical envelope;
+generalization/GENERALIZATION_PLAN.md-218-  DAV modes can vanish outright between epochs, which dropout probes
+generalization/GENERALIZATION_PLAN.md-219-  (all sensitivity axes: median window, arm B nominal ratios).
+generalization/GENERALIZATION_PLAN.md-220-  Stretch additions listed separately: Romero self-window diagnostic
+--
+generalization/GENERALIZATION_PLAN.md-240-  the laptop after D3 (+1 day; slip rule below).
+generalization/GENERALIZATION_PLAN.md-241-- Windows job launches escape the sshd job object via WMI
+generalization/GENERALIZATION_PLAN.md-242-  `Win32_Process.Create` (Start-Process children die with the ssh session —
+generalization/GENERALIZATION_PLAN.md-243-  found the hard way on the first replay launch).
+generalization/GENERALIZATION_PLAN.md-244-- Wall model (anchor 928 ≈ 11 h at 22 workers; cost scales with baseline):
+generalization/GENERALIZATION_PLAN.md:245:  D3@3,000 ≈ 1.2–1.9 d; D2 core ≈ 1.5 d; hard stop via 150-star pilot.
+generalization/GENERALIZATION_PLAN.md-246-  Disk binds, not time: `workers = min(22, floor(free_GB × 0.5 / 0.47))`,
+generalization/GENERALIZATION_PLAN.md-247-  scratch on local NVMe/RAM disk, never a synced folder.
+generalization/GENERALIZATION_PLAN.md-248-- Results bundles: `generalization/results/<date>_<dataset>/` mirroring the
+generalization/GENERALIZATION_PLAN.md-249-  existing convention (README, DATA_PROVENANCE, SHA256SUMS, acceptance.json).
+generalization/GENERALIZATION_PLAN.md-250-
+--
+generalization/reviews/G2r4/sol_referee4.md-1-The cited `G2r3/RESPONSE.md` is absent; I verified against the round-3 verdict and current documents.
+generalization/reviews/G2r4/sol_referee4.md-2-
+generalization/reviews/G2r4/sol_referee4.md-3-### Five minimal blockers
+generalization/reviews/G2r4/sol_referee4.md-4-
+generalization/reviews/G2r4/sol_referee4.md:5:1. **UNRESOLVED — Phase/amplitude protocol:** phase assignment is now deterministic, but amplitude stationarity remains a “stretch” in the plan while included in the binding sensitivity protocol ([Plan:161](/Users/jackneo/Documents/vonhippel-base9/astro-wd/generalization/GENERALIZATION_PLAN.md:161), [Plan:202](/Users/jackneo/Documents/vonhippel-base9/astro-wd/generalization/GENERALIZATION_PLAN.md:202), [Spec:155](/Users/jackneo/Documents/vonhippel-base9/astro-wd/generalization/METRICS_SPEC.md:155)).
+generalization/reviews/G2r4/sol_referee4.md:6:2. **UNRESOLVED — P4 algebra:** partial missing strata and eligible-roster zeros are defined, but \(K_t=\varnothing\) leaves \(1/|K_t|\) undefined while the outer denominator remains 103 ([Spec:122](/Users/jackneo/Documents/vonhippel-base9/astro-wd/generalization/METRICS_SPEC.md:122)).
+generalization/reviews/G2r4/sol_referee4.md-7-3. **RESOLVED — Template selection:** fallback, magnitude ties, total ordering, and round-half-even percentile indices are deterministic ([Plan:172](/Users/jackneo/Documents/vonhippel-base9/astro-wd/generalization/GENERALIZATION_PLAN.md:172)).
+generalization/reviews/G2r4/sol_referee4.md-8-4. **RESOLVED — D3 PPV interval:** the bootstrap now fixes census positives and applies the SRSWOR finite-population correction to negative-sample bootstrap deviations ([Spec:49](/Users/jackneo/Documents/vonhippel-base9/astro-wd/generalization/METRICS_SPEC.md:49)).
+generalization/reviews/G2r4/sol_referee4.md-9-5. **RESOLVED — D3 Mo-join scope:** MNAR is explicit, frequency recovery is Mo-conditioned, joined/unjoined comparison is mandatory, and detection retains all 610 via `amp_unknown` ([Spec:36](/Users/jackneo/Documents/vonhippel-base9/astro-wd/generalization/METRICS_SPEC.md:36), [Spec:174](/Users/jackneo/Documents/vonhippel-base9/astro-wd/generalization/METRICS_SPEC.md:174)).
+generalization/reviews/G2r4/sol_referee4.md-10-
+generalization/reviews/G2r4/sol_referee4.md-11-### Six new contradictions
+generalization/reviews/G2r4/sol_referee4.md-12-
+generalization/reviews/G2r4/sol_referee4.md-13-1. **RESOLVED — Phase sharing:** draw 0 shares phases across non-phase variants; draws 1–2 change only the phase vector using distinct deterministic seeds ([Plan:161](/Users/jackneo/Documents/vonhippel-base9/astro-wd/generalization/GENERALIZATION_PLAN.md:161)).
+generalization/reviews/G2r4/sol_referee4.md:14:2. **UNRESOLVED — Amplitude stationarity:** it is simultaneously a stretch addition and part of the binding sensitivity protocol ([Plan:202](/Users/jackneo/Documents/vonhippel-base9/astro-wd/generalization/GENERALIZATION_PLAN.md:202), [Spec:155](/Users/jackneo/Documents/vonhippel-base9/astro-wd/generalization/METRICS_SPEC.md:155)).
+generalization/reviews/G2r4/sol_referee4.md:15:3. **UNRESOLVED — P4 completeness:** the tuple now handles partially missing strata but still lacks a zero-usable-strata rule and corresponding usable denominator ([Spec:122](/Users/jackneo/Documents/vonhippel-base9/astro-wd/generalization/METRICS_SPEC.md:122)).
+generalization/reviews/G2r4/sol_referee4.md-16-4. **RESOLVED — D3 surface denominator:** detection uses all 610 with `amp_unknown`; frequency-recovery surfaces use only the scorable subset ([Spec:174](/Users/jackneo/Documents/vonhippel-base9/astro-wd/generalization/METRICS_SPEC.md:174)).
+generalization/reviews/G2r4/sol_referee4.md:17:5. **RESOLVED — Arm A role:** positive arm-A injections are diagnostic; zero-amplitude arm-A nulls alone are confirmatory ([Plan:189](/Users/jackneo/Documents/vonhippel-base9/astro-wd/generalization/GENERALIZATION_PLAN.md:189), [Spec:130](/Users/jackneo/Documents/vonhippel-base9/astro-wd/generalization/METRICS_SPEC.md:130)).
+generalization/reviews/G2r4/sol_referee4.md:18:6. **RESOLVED — D1 surface scope:** surfaces are explicitly D2/D3-only and amplitude bins are correctly labeled D3 and D2 ([Spec:172](/Users/jackneo/Documents/vonhippel-base9/astro-wd/generalization/METRICS_SPEC.md:172)).
+generalization/reviews/G2r4/sol_referee4.md-19-
+generalization/reviews/G2r4/sol_referee4.md-20-**FREEZABLE FOR EXECUTION? No.**
+generalization/reviews/G2r4/sol_referee4.md-21-
+generalization/reviews/G2r4/sol_referee4.md-22-Execution-blocking items only:
+generalization/reviews/G2r4/sol_referee4.md-23-
+generalization/reviews/G2r4/sol_referee4.md:24:- Decide whether amplitude-stationarity runs are mandatory or nonbinding, and make the plan/spec agree.
+generalization/reviews/G2r4/sol_referee4.md:25:- Define P4 when a target has zero usable strata, including the usable-estimator denominator and bootstrap inclusion rule.
+
+exec
+/bin/zsh -lc "nl -ba generalization/GENERALIZATION_PLAN.md | sed -n '188,226p'; nl -ba generalization/METRICS_SPEC.md | sed -n '112,170p'; nl -ba generalization/METRICS_SPEC.md | sed -n '223,260p'" in /Users/jackneo/Documents/vonhippel-base9/astro-wd
+ succeeded in 190ms:
+   112	## Detection rules and the preregistered primary family
+   113	
+   114	Rules (all four always reported): 1 `confirmed`, 2 `confirmed|candidate`,
+   115	3 `census` (any of six frozen ratios >= 2.5), 4 `either` (1 OR 3).
+   116	PRIMARY endpoints — complete tuples; everything else is pointwise
+   117	descriptive sensitivity:
+   118	  P1 D3 detection completeness: {D3, dSct=1 (610), eligible_roster, rule 1,
+   119	     best pass, unweighted, Wilson 95%}.
+   120	  P2 D3 frequency recovery: {D3, Mo-joined S_best=1 subset, usable, rule 1 +
+   121	     best_candidate_matches_dominant, Wilson 95%, beside chance-match rate}.
+   122	  P3 D3 negative-class trigger rate: {D3, dSct=0 (2314), rule 1, best pass,
+   123	     plain Wilson}.
+   124	  P4 D2 conditional injection-recovery, algebraically:
+   125	     p-hat = (1/103) Σ_t (1/|K_t|) Σ_{k in K_t} y_{t,k}, where y_{t,k} = 1
+   126	     iff rule 1 fires (detection-only) on target t's stratum-k nominal
+   127	     (1.7/0.80, de-dilution off, phase_draw 0) arm-B shard, and K_t ⊆
+   128	     {0, 1, 2} is the set of strata with a usable result (missing strata
+   129	     renormalize |K_t| and are flagged; the eligible-roster variant counts
+   130	     a missing stratum as y = 0 with |K_t| = 3; a target with K_t = ∅ is
+   131	     EXCLUDED from the usable estimand — reported as
+   132	     n_targets_zero_usable_strata — and contributes y = 0 over |K_t| = 3
+   133	     to the eligible estimand, whose denominator stays all 103 targets).
+   134	     Both variants reported. Interval: target-cluster bootstrap 95%.
+   135	  P5 FPR_Gaussian acceptance: {D2 arm A nulls, rule 1, exact one-sided CP
+   136	     upper at observed x <= 0.5%} — the sole confirmatory decision.
+   137	No claim direction reversal, endpoint swap, or denominator swap after the
+   138	first campaign L-S run.
+   139	
+   140	## Units of analysis and intervals
+   141	
+   142	- D1/D3: the star is the unit. Wilson 95% on unweighted proportions; plain
+   143	  Wilson on the negatives class (weights cancel); survey bootstrap for PPV;
+   144	  ESS-Wilson only for other descriptive weighted proportions, labeled
+   145	  approximate.
+   146	- D2: the TESS target (TIC) is the CLUSTER; inference is CONDITIONAL on the
+   147	  frozen window assignment (report unique window count and reuse table —
+   148	  windows repeat across targets, and a target-only bootstrap does not
+   149	  represent the 928-window frame; stated as a limitation).
+   150	  Estimator: per-target mean over its replicates within a scenario/stratum;
+   151	  aggregate = equal-weight mean over the 103 targets (a scenario mix, NOT
+   152	  the 928-window frame). Bootstrap: resample the 103 TICs with replacement
+   153	  (B = 2000, frozen seed 20260830), carrying ALL of a resampled target's
+   154	  replicates, paired census/L-S outcomes, phases, and scenario results
+   155	  jointly; identical resample draws across scenarios (common random
+   156	  numbers). Percentile 95% intervals; if a statistic is degenerate
+   157	  (all-0/all-1), report the exact one-sided CP bound at the target level
+   158	  instead. Pooled exact McNemar is PROHIBITED for D2; use the target-cluster
+   159	  paired-difference bootstrap.
+   160	- Sensitivity contrasts (D2 ladder, phase draws, amplitude-stationarity,
+   161	  dominant-mode dropout — ALL core and binding; the ±30% multiplier is a
+   162	  local sensitivity, never presented as an astrophysical uncertainty
+   163	  envelope):
+   164	  COMMON-SUBSET RULE — every contrast against nominal is computed with
+   165	  nominal re-evaluated on the same median-window (K=1) subset and the same
+   166	  bootstrap draws. Min-max across the 3x3 grid is a "prespecified
+   167	  finite-grid sensitivity range", never a confidence band; endpoint
+   168	  scenarios identified. De-dilution and amplitude-stationarity are separate
+   169	  axes.
+   170	
+   223	## Outputs
+   224	
+   225	`generalization/results/<date>_<dataset>/metrics/`: per_star.csv,
+   226	completeness_by_class_pass_rule.csv, contingency_complementarity.json,
+   227	trigger_rates.csv, ppv.csv (D3), fp_frequency_distribution.csv,
+   228	chance_match.json, surfaces/*.csv, sensitivity.csv, attrition.csv,
+   229	d2_cluster_completeness.csv (D2), manifest.json, inputs_sha256.json.
+   230	Figures via plot_generalization.py from these CSVs only.
+
+codex
+Amplitude-stationarity — **RESOLVED:** Plan makes ±30% runs CORE and binding ([GENERALIZATION_PLAN.md:210](/Users/jackneo/Documents/vonhippel-base9/astro-wd/generalization/GENERALIZATION_PLAN.md:210)); spec agrees ([METRICS_SPEC.md:160](/Users/jackneo/Documents/vonhippel-base9/astro-wd/generalization/METRICS_SPEC.md:160)).
+
+P4 zero-usable-strata — **UNRESOLVED:** \(K_t=\varnothing\) is excluded, but the usable formula still divides by 103 and the bootstrap still resamples all 103 without defining the usable denominator/exclusion calculation ([METRICS_SPEC.md:124](/Users/jackneo/Documents/vonhippel-base9/astro-wd/generalization/METRICS_SPEC.md:124), [METRICS_SPEC.md:146](/Users/jackneo/Documents/vonhippel-base9/astro-wd/generalization/METRICS_SPEC.md:146)).
+
+**FREEZABLE NO.**
+tokens used
+15,736

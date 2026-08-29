@@ -125,13 +125,17 @@ descriptive sensitivity:
      p-hat = (1/103) Σ_t (1/|K_t|) Σ_{k in K_t} y_{t,k}, where y_{t,k} = 1
      iff rule 1 fires (detection-only) on target t's stratum-k nominal
      (1.7/0.80, de-dilution off, phase_draw 0) arm-B shard, and K_t ⊆
-     {0, 1, 2} is the set of strata with a usable result (missing strata
-     renormalize |K_t| and are flagged; the eligible-roster variant counts
-     a missing stratum as y = 0 with |K_t| = 3; a target with K_t = ∅ is
-     EXCLUDED from the usable estimand — reported as
-     n_targets_zero_usable_strata — and contributes y = 0 over |K_t| = 3
-     to the eligible estimand, whose denominator stays all 103 targets).
-     Both variants reported. Interval: target-cluster bootstrap 95%.
+     {0, 1, 2} is the set of strata with a usable result. ELIGIBLE variant:
+     denominator all 103 targets; missing stratum counts y = 0 with
+     |K_t| = 3; a K_t = ∅ target contributes 0. USABLE variant:
+     p-hat_u = (1/(103 − n_∅)) Σ_{t: K_t ≠ ∅} (1/|K_t|) Σ_k y_{t,k} —
+     K_t = ∅ targets are excluded from numerator AND denominator, with
+     n_∅ reported as n_targets_zero_usable_strata. The bootstrap resamples
+     all 103 target labels with the common draw matrix for both variants;
+     a resampled-in K_t = ∅ target contributes 0 to the eligible statistic
+     and is dropped from that replicate's usable statistic (matching the
+     estimators). Both variants reported. Interval: target-cluster
+     bootstrap 95%.
   P5 FPR_Gaussian acceptance: {D2 arm A nulls, rule 1, exact one-sided CP
      upper at observed x <= 0.5%} — the sole confirmatory decision.
 No claim direction reversal, endpoint swap, or denominator swap after the

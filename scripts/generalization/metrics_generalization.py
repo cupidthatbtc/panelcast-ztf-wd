@@ -167,15 +167,15 @@ def score_star(json_path: Path, truth_freqs: list[float], primary_freq: float | 
                classify_match(float(f_peak), truth_freqs, tol) == "direct":
                 any_direct_top = True
     best_freq = row["best_frequency_per_day"]
-    row["best_match"] = (
+    row["best_candidate_matches_any_mode"] = (
         classify_match(float(best_freq), truth_freqs, tol)
         if best_freq is not None and truth_freqs else "unscored"
     )
-    row["best_match_primary"] = (
+    row["best_candidate_matches_dominant"] = (
         classify_match(float(best_freq), [primary_freq], tol)
         if best_freq is not None and primary_freq is not None else "unscored"
     )
-    row["matched_any_mode_diagnostic"] = any_direct_top
+    row["any_top_peak_matches_any_mode"] = any_direct_top
     row["eligible_any_pass"] = row["low_eligible"] or row["high_eligible"]
     return row
 
@@ -343,7 +343,7 @@ def completeness_tables(per_star: pd.DataFrame, dataset: str) -> pd.DataFrame:
         status_col = "best_status" if pass_name == "best" else f"{pass_name}_status"
         match_col = (f"{'best' if pass_name == 'best' else pass_name}_match_primary"
                      if use_dominant
-                     else ("best_match" if pass_name == "best" else f"{pass_name}_match"))
+                     else ("best_candidate_matches_any_mode" if pass_name == "best" else f"{pass_name}_match"))
         for rule in RULES:
             for scope, frame in (
                 ("detection_eligible_roster", positives),
@@ -469,7 +469,7 @@ def d2_cluster_bootstrap(per_star: pd.DataFrame) -> pd.DataFrame:
     endpoints = {
         "detection": lambda f: f["best_status"] == "confirmed",
         "freq_recovery": lambda f: (f["best_status"] == "confirmed")
-        & (f["best_match"] == "direct"),
+        & (f["best_candidate_matches_dominant"] == "direct"),
     }
     scenario_cols = ["arm", "ratio_g", "ratio_rg"]
     for extra in ("phase_draw", "amp_scale"):
@@ -598,7 +598,7 @@ def surfaces(per_star: pd.DataFrame, dataset: str) -> dict[str, pd.DataFrame]:
     scorable = positives[positives["freq_scorable"]
                          & positives["eligible_any_pass"]]
     if not scorable.empty:
-        match_col = "best_match_primary"
+        match_col = "best_candidate_matches_dominant"
         recovery = (scorable["best_status"] == "confirmed") & (
             scorable[match_col] == "direct")
         rows = []
@@ -615,10 +615,43 @@ def surfaces(per_star: pd.DataFrame, dataset: str) -> dict[str, pd.DataFrame]:
         out["freq_recovery_period_amplitude"] = pd.DataFrame(rows)
         if "median_exp_per_night" in scorable and \
                 scorable["median_exp_per_night"].notna().any():
-            out["freq_recovery_exposure_amplitude"] = pd.DataFrame(
-                surface_cells(scorable, recovery,
-                              scorable["median_exp_per_night"],
-                              EXP_PER_NIGHT_EDGES, "exp_per_night_bin"))
+            def epn_amp_cells(frame, success):
+                e_bins = np.where(
+                    np.isfinite(frame["median_exp_per_night"]),
+                    np.digitize(frame["median_exp_per_night"], EXP_PER_NIGHT_EDGES),
+                    -1)
+                ab = np.where(np.isfinite(frame["amp"]),
+                              np.digitize(frame["amp"], amp_edges), -1)
+                cells = []
+                for (eb, abin), idx in frame.groupby([e_bins, ab]).groups.items():
+                    k = int(success.loc[idx].sum())
+                    n = len(idx)
+                    entry = {"exp_per_night_bin": int(eb), "amp_bin": int(abin),
+                             "n": n, "k": k}
+                    if n >= MIN_CELL:
+                        entry.update(dict(zip(("p", "lo", "hi"), wilson(k, n))))
+                    cells.append(entry)
+                return pd.DataFrame(cells)
+
+            out["freq_recovery_exposure_amplitude"] = epn_amp_cells(
+                scorable, recovery)
+        if "median_exp_per_night" in positives and \
+                positives["median_exp_per_night"].notna().any():
+            e_bins_all = np.where(
+                np.isfinite(positives["median_exp_per_night"]),
+                np.digitize(positives["median_exp_per_night"],
+                            EXP_PER_NIGHT_EDGES), -1)
+            det_e_rows = []
+            for (eb, abin), idx in positives.groupby(
+                    [e_bins_all, a_bins_all]).groups.items():
+                k = int(detection.loc[idx].sum())
+                n = len(idx)
+                entry = {"exp_per_night_bin": int(eb), "amp_bin": int(abin),
+                         "n": n, "k": k}
+                if n >= MIN_CELL:
+                    entry.update(dict(zip(("p", "lo", "hi"), wilson(k, n))))
+                det_e_rows.append(entry)
+            out["detection_exposure_amplitude"] = pd.DataFrame(det_e_rows)
     return out
 
 
@@ -807,12 +840,12 @@ def main() -> None:
             missing.append(r.sid)
             record = {**r._asdict(),
                       "best_status": "missing", "low_status": "missing",
-                      "high_status": "missing", "best_match": "unscored",
-                      "best_match_primary": "unscored", "low_match": "unscored",
+                      "high_status": "missing", "best_candidate_matches_any_mode": "unscored",
+                      "best_candidate_matches_dominant": "unscored", "low_match": "unscored",
                       "high_match": "unscored", "low_eligible": False,
                       "high_eligible": False, "eligible_any_pass": False,
                       "best_frequency_per_day": None, "baseline_days": math.nan,
-                      "matched_any_mode_diagnostic": False,
+                      "any_top_peak_matches_any_mode": False,
                       "census_variable": census.get(r.sid, {}).get("census_variable")}
             rows.append(record)
             continue
