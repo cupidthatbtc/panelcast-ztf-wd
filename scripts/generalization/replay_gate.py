@@ -103,25 +103,30 @@ DECISION_FIELDS = ("status", "basis", "zg_alias", "zr_alias", "multiband_top5")
 def decision_equivalence(published: dict, replayed: dict) -> dict:
     """Report-only diagnostic (does NOT affect the pass criterion): are the
     pipeline's decisions identical and how large is the numeric drift?"""
-    worst = 0.0
+    worst = 0.0          # decision-bearing float64 numerics
+    f32_worst = 0.0      # raw float32 periodogram readbacks (top-peak power)
     n_numeric = 0
     decisions_identical = True
     peaks_identical = True
 
-    def walk(a, b):
-        nonlocal worst, n_numeric
+    def walk(a, b, key_name=""):
+        nonlocal worst, f32_worst, n_numeric
         if isinstance(a, dict):
             for key in a:
-                if key in b:
-                    walk(a[key], b[key])
+                if key in b and not key.endswith("_a95_mmag"):
+                    walk(a[key], b[key], key)
         elif isinstance(a, list):
             for x, y in zip(a, b):
-                walk(x, y)
+                walk(x, y, key_name)
         elif isinstance(a, (int, float)) and isinstance(b, (int, float)) \
                 and not isinstance(a, bool) and not isinstance(b, bool):
             n_numeric += 1
             if a != b:
-                worst = max(worst, abs(a - b) / max(abs(a), abs(b), 1e-300))
+                rel = abs(a - b) / max(abs(a), abs(b), 1e-300)
+                if key_name == "power":
+                    f32_worst = max(f32_worst, rel)
+                else:
+                    worst = max(worst, rel)
 
     for pass_name in ("low", "high"):
         pa = published["passes"].get(pass_name, {})
@@ -153,7 +158,8 @@ def decision_equivalence(published: dict, replayed: dict) -> dict:
     return {"decisions_identical": decisions_identical,
             "top_peaks_identical": peaks_identical,
             "numeric_fields": n_numeric,
-            "max_relative_difference": worst,
+            "f64_max_relative_difference": worst,
+            "f32_power_max_relative_difference": f32_worst,
             "a95_max_relative_difference": a95_worst}
 
 
