@@ -5,7 +5,9 @@ Captured 2026-08-28 from the machine and virtualenv that executed the published
 22 workers per `lomb-scargle/manifest.json`).
 
 - Python 3.12.12 (CPython, win_amd64)
-- numpy==2.3.3
+- numpy==2.3.5 (pip metadata in the venv claimed 2.3.3; the interpreter
+  imports 2.3.5, and the 2026-08-28 replay gate PASSED under 2.3.5 — the
+  runtime import is the authority)
 - scipy==1.16.3
 - astropy==8.0.1
 - astropy-iers-data==0.2026.7.27.0.56.29

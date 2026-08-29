@@ -1,5 +1,8 @@
-# Numerics-bearing pins from the 2026-08-01 production venv (Python 3.12.12).
-numpy==2.3.3
+# Numerics-bearing pins matching the env that PASSED the replay gate
+# (jacks-7i-5090, 2026-08-28: 25/25 published stars byte-reproduced).
+# The venv's pip metadata claimed numpy 2.3.3 but imports 2.3.5; the replay
+# verdict makes 2.3.5 the pin.
+numpy==2.3.5
 scipy==1.16.3
 astropy==8.0.1
 astropy-iers-data==0.2026.7.27.0.56.29

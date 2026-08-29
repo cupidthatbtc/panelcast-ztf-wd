@@ -1,4 +1,4 @@
-# Generalization campaign: three-dataset selection-function measurement
+# Generalization campaign: three-dataset response assessment of the frozen pipeline
 
 Branch `generalization/campaign-1` · frozen baseline tag `frozen-2026-08-01` ·
 deadline AAS 249 regular abstract Tue 2026-09-30.
@@ -9,9 +9,22 @@ The 2026-08-01 ZTF white-dwarf run showed the variance census and the blind
 Lomb-Scargle search have complementary selection functions — but on 19
 truth-labeled stars, with a known mechanism, and injections conditioned on two
 light curves. Red-team verdict: NO-GO as a discovery claim. The flip condition:
-run the *frozen* pipeline on independently labeled samples large enough to
-measure class-specific completeness and false-positive rate with uncertainty.
-This campaign does exactly that and nothing else.
+run the *frozen* pipeline on externally labeled samples large enough to
+measure class-specific response rates with uncertainty.
+
+G1 review (sol ×3, 2026-08-28) sharpened what this campaign can honestly
+claim — THREE SEPARATE response assessments, never pooled into one
+"selection function":
+- D1: the anchor (19 labeled WDs + 928-star catalog, published);
+- D2: conditional injection-recovery efficiency of the frozen search stage
+  (TESS-truth signals in real ZTF windows) — labeled as such, NOT real-sky
+  completeness and NOT an independently labeled sample;
+- D3: externally labeled, magnitude-restricted validation on real ZTF
+  photometry (detection completeness, frequency recovery, negative-class
+  trigger rate).
+Banned phrases (G1): "quantified selection-function measurement", "real-sky
+completeness" (for D2), "D3 FPR", unqualified "purity". Estimand names in
+METRICS_SPEC.md are binding.
 
 ## Frozen-core / adapter-shell architecture
 
@@ -39,8 +52,8 @@ This campaign does exactly that and nothing else.
 ### Campaign source_id convention
 
 19-digit numeric strings: `90…` D3 targets, `92…` D2 arm B, `93…` D2 arm A,
-`94…` D2 statistical nulls. No collision with Gaia DR3 ids; always valid for
-the frozen seed convention.
+`94…` D2 Gaussian nulls, `95…` D2 paired real-window controls. No collision
+with Gaia DR3 ids; always valid for the frozen seed convention.
 
 ### Replay gate (blocks everything)
 
@@ -49,11 +62,22 @@ published stars (all 7 schema-v2 + 18 stride-sampled schema-v1) and
 byte-compares against the committed bundle. Comparison tiers: raw-identical;
 identical after CRLF→LF normalization (git stored the bundle normalized);
 identical after the documented v1→v2 schema transform — 921/928 published
-files were written before commit `fa16d7f`, which added the
-`available`/`unavailable_reason` keys and bumped `schema_version` 1→2 while
-changing no numeric code path (diff on record). Gate passes only with zero
-mismatches AND at least one schema-v2 star reproducing with no transform.
-Campaign L-S runs are valid only on machine+env pairs that passed the gate.
+files were written before commit `fa16d7f` (parent `e917bd1`), which added
+sparse-input early-exit branches plus the `available`/`unavailable_reason`
+keys and bumped `schema_version` 1→2. For any star that yields candidates,
+the numeric path is unchanged (the new branches fire only on sparse inputs
+that previously crashed; all 7 v2 records exercise exactly those branches).
+The downgrade transform removes only the two added keys and byte-compares
+everything retained. Gate passes only with a nonempty roster, zero
+mismatches AND at least one schema-v2 star reproducing with no transform
+(unconditional). VERDICT 2026-08-28 (jacks-7i-5090, production venv):
+PASS — 7 identical_newline + 18 identical_v1_schema, 25/25.
+Campaign L-S runs are valid only on machine+env pairs that passed the gate;
+`run_generalization_ls.py` refuses to start without a matching PASS
+attestation (env fingerprint + frozen SHAs). Planned W2 hardening: one full
+928-star replay on the production machine as the definitive baseline, and a
+panel-stage golden replay (shard rebuild byte-compare incl. bjd_tdb, IERS
+auto-download disabled).
 
 ### Environment
 
@@ -83,10 +107,12 @@ No re-run; campaign metrics re-read the published per-star JSONs.
   283.2 µHz ⇒ P < 59 min). This replaces the originally scouted Bowman+2016
   join: Bowman's VizieR table carries no amplitudes; Mo+2026 supersedes it
   (and is itself the published Murphy×Bowman merge, 1,838 stars).
-- Roster (`build_d3_roster.py`, built 2026-08-28, deterministic, no RNG):
-  gmag ≥ 13.2 (ZTF saturation), ALL 610 dSct=1 survivors + ALL 76 dSct=2
-  (own class, excluded from headline numbers) + 2,314 dSct=0 negatives
-  stride-sampled in KIC order = 3,000. Amplitude coverage of positives:
+- Roster (`build_d3_roster.py`, rebuilt 2026-08-28 post-G1): gmag ≥ 13.2
+  (Murphy/KIC g magnitude — the named saturation proxy), ALL 610 dSct=1
+  survivors + ALL 76 dSct=2 (own class, excluded from headline numbers) +
+  2,314 dSct=0 negatives as a frozen-seed (20260828) simple random sample
+  (inclusion probability 0.317 recorded; sampling_weight column carried into
+  every weighted estimate) = 3,000. Amplitude coverage of positives:
   456/610 with dominant amplitude; 48 > 10 mmag; 254 in 1–10; 154 < 1;
   290 sub-hour; median 1.77 mmag. The 1–10 mmag log ladder and the
   sub-threshold majority make the completeness turn-on curve the headline
@@ -97,8 +123,9 @@ No re-run; campaign metrics re-read the published per-star JSONs.
   ≥20 exp/band, BJD_TDB at Palomar — all frozen functions).
 - Prespecified subsets: crowding (sep < 1.0″, ≤3 objects in cone),
   near-saturation (g < 14 flagged; g > 14 safe subset).
-- Caveat on record: dSct=0 means "not a delta Scuti", not "constant" —
-  D3 FPR is an upper bound.
+- Caveat on record: dSct=0 means "not a delta Scuti", not "constant" — the
+  D3 negative-class result is a TRIGGER RATE (never called FPR); triggered
+  negatives get adjudicated in W4 (plausible real variable vs unexplained).
 
 ## D2 — TESS-truth transplant (DAV signals in real ZTF windows)
 
@@ -113,18 +140,25 @@ No re-run; campaign metrics re-read the published per-star JSONs.
   table is evaluated analytically at the template's real `bjd_tdb`.
   Chain: ppt → mag (×1.0857e-3) → de-dilution OFF by default (SPOC PDCSAP is
   crowding-corrected; ON = prespecified variant) → de-integrate TESS sinc
-  (reject modes with |sinc| < 0.3, i.e. P < 197 s from 120-s data; prefer
+  (reject modes with |sinc| < 0.3, i.e. P < ~160 s from 120-s data; prefer
   20-s cadence solutions) → bandpass ladder A_g/A_TESS ∈ {1.4, 1.7, 2.1} ×
   A_r/A_g ∈ {0.70, 0.80, 0.90} (nominal 1.7/0.80 from an in-code blackbody
   derivative; the ladder is non-optional — zr carries most published
   confirmations) → re-integrate ZTF 30-s sinc analytically → compose
   phase-coherently in zg and zr (shared t_ref) so the frozen two-band rule
   keeps its meaning.
-- Windows: templates from the 510 not-detected stars of the published run,
-  matched by median zg mag (|Δg| ≤ 0.25), K=3 templates per target at
-  10/50/90th percentile of exposures-per-night (75% of zg nights are
-  single-exposure; per-night median subtraction annihilates 53% of zg data —
-  D2 largely measures that penalty; pre-registered, stratified: risk 3).
+- Windows: templates from ALL 928 stars of the published catalog (G1 fix —
+  the earlier 510-not-detected pool conditioned on the pipeline's own
+  outcome), matched by median zg mag (|Δg| ≤ 0.25, widened when thin;
+  flagged), K=3 per target at 10/50/90th percentile of exposures-per-night
+  (75% of zg nights are single-exposure; per-night median subtraction
+  annihilates 53% of zg data — pre-registered, stratified: risk 3).
+  Native variability in the pool is handled by strict frequency-matched
+  scoring plus PAIRED UNINJECTED CONTROLS (95-prefix): one control shard per
+  unique arm-B template window. W2 stretch: fetch real ZTF light curves at
+  the 103 Romero positions; where the frozen QC crossmatch succeeds, those
+  self-windows become the preferred templates (removes template-choice
+  conditioning entirely for that subset).
 - Arms: B primary (signal + real ZTF mags, real magerr), A diagnostic
   (synthetic Gaussian floor). FPR: 1,000 arm-A zero-amplitude nulls
   (510 not-detected windows, fresh deterministic noise seeds where windows
@@ -138,6 +172,9 @@ No re-run; campaign metrics re-read the published per-star JSONs.
   1 template (the median-n_exp one) = 824. Total ≈ 2,442 ≈ 1.2 d.
   De-dilution variant runs only for the SPOC verification-arm stars (dilution
   factors are not in the papers; CROWDSAP comes with the ~20 downloads).
+  Post-G1 additions: paired controls (~<=309, prefix 95) and a phase-draw
+  sensitivity axis (2 extra deterministic phase draws x 103 targets on the
+  median template, arm B nominal) ≈ +515 runs; total ≈ 2,960 ≈ 1.5 d.
 - Truth-model corrections found at implementation (2026-08-28): |sinc| ≥ 0.3
   rejection corresponds to P < ~160 s at 120-s cadence (the earlier "197 s"
   was the |sinc| = 0.5 point); D2 min published period is 115.9 s and 49/103
@@ -169,7 +206,7 @@ No re-run; campaign metrics re-read the published per-star JSONs.
 
 | Gate | When | Reviewer | Scope |
 |---|---|---|---|
-| G1 | now | sol ×3 | dataset choices, architecture, label independence, referee objections |
+| G1 | DONE 2026-08-28 | sol ×3 | 47 findings; dispositions in reviews/G1/RESPONSE.md; design fixes applied same day |
 | G2 | end W1 | sol ×5 | this file + METRICS_SPEC.md; frozen only after unanimous/addressed |
 | G3 | W2 pre-batch | Pro (inline code) | d2_truth_model + build_d2_shards: sinc algebra, bandpass, phase coherence, schema |
 | G4 | W3 mid-run | sol ×2 | pilot metrics sanity, run anomalies |
@@ -188,8 +225,12 @@ No re-run; campaign metrics re-read the published per-star JSONs.
 - W4 (Sep 18–25): metrics, ladders, figures, bundles, acceptance; G5;
   cross-dataset synthesis table.
 - Sep 26–30: abstract + G6; submit.
-- Slip rule: if only one new dataset lands by Sep 25, D2 alone + D1 flips the
-  red-team condition; the abstract states D3 as in progress.
+- Slip rule (revised at G1 — the old "D2 alone flips the condition" claim is
+  untenable since D2 is not an externally labeled sample): D3 is the dataset
+  that satisfies the external-label condition; if only ONE new dataset can
+  land by Sep 25 it must be D3, with D2 stated as in progress. If only D2
+  lands, the abstract is scoped to injection-recovery + D1 and makes no
+  external-validation claim.
 
 ## Top risks
 

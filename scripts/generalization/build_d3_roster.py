@@ -14,9 +14,11 @@ Sources (VizieR, cached under generalization/data/d3/raw with SHA-256 recorded):
                mode above the Kepler LC Nyquist (283.2 uHz), i.e. P < 59 min
                -> the sub-hour stratum.
 
-Selection (all deterministic, no RNG):
-  gmag >= 13.2 (ZTF saturation); ALL dSct=1 (610) and dSct=2 (76) survivors;
-  dSct=0 negatives stride-sampled in KIC order to reach --total.
+Selection:
+  gmag >= 13.2 (ZTF saturation; gmag is the Murphy/KIC g magnitude); ALL
+  dSct=1 (610) and dSct=2 (76) survivors; dSct=0 negatives drawn as a
+  frozen-seed simple random sample (seed 20260828) with the inclusion
+  probability recorded and a sampling_weight column carried into metrics.
 
 Labels are Kepler-derived only — zero circularity with ZTF. Negatives are
 "not a delta Sct", not "constant": campaign FPR from D3 is an upper bound
@@ -43,6 +45,7 @@ TAP_SYNC = "https://tapvizier.cds.unistra.fr/TAPVizieR/tap/sync"
 PPT_TO_MMAG = 1.0857  # dm = -2.5 log10(1 + dF/F) ~= 1.0857 (dF/F); 1 ppt -> 1.0857 mmag
 UHZ_TO_PER_DAY = 86400.0 / 1e6
 KEPLER_LC_NYQUIST_UHZ = 283.2
+NEGATIVE_SAMPLE_SEED = 20260828
 
 QUERIES = {
     "murphy2019_table1.csv": 'SELECT KIC, GaiaDR2, gmag, Teff, logg, dSct, _RA, _DE '
@@ -140,10 +143,14 @@ def main() -> None:
 
     positives = stars[stars["dSct"] == 1].sort_values("KIC")
     ambiguous = stars[stars["dSct"] == 2].sort_values("KIC")
-    negatives_pool = stars[stars["dSct"] == 0].sort_values("KIC")
+    negatives_pool = stars[stars["dSct"] == 0].sort_values("KIC").reset_index(drop=True)
     n_negatives = max(0, args.total - len(positives) - len(ambiguous))
-    stride = max(1, len(negatives_pool) // n_negatives)
-    negatives = negatives_pool.iloc[::stride][:n_negatives]
+    # frozen-seed simple random sample (G1 referee finding 15: KIC-order stride
+    # correlates with sky position/coverage); inclusion probability recorded so
+    # population rates can be reweighted
+    rng = np.random.Generator(np.random.PCG64(NEGATIVE_SAMPLE_SEED))
+    chosen = np.sort(rng.choice(len(negatives_pool), size=n_negatives, replace=False))
+    negatives = negatives_pool.iloc[chosen]
 
     roster = pd.concat([positives, ambiguous, negatives], ignore_index=True)
     roster["source_id"] = [campaign_id_for_kic(k) for k in roster["KIC"]]
@@ -154,6 +161,10 @@ def main() -> None:
     roster["label_variable"] = roster["dSct"].map({0: False, 1: True, 2: None})
     roster["label_periodic"] = roster["label_variable"]
     roster["near_saturation"] = roster["gmag"] < 14.0
+    roster["sampling_weight"] = [
+        (len(negatives_pool) / len(negatives)) if flag == 0 else 1.0
+        for flag in roster["dSct"]
+    ]
     roster["stratum"] = [
         amp_ladder_stratum(a, s) if flag == 1 else f"class_{flag}"
         for a, s, flag in zip(roster["amp_mmag"], roster["subhour"], roster["dSct"])
@@ -169,7 +180,7 @@ def main() -> None:
         "label_variable", "label_periodic", "gaia_g_mag",
         "KIC", "gmag", "Teff", "logg", "dSct", "dom_freq_uhz",
         "dom_freq_per_day", "dom_amp_ppt", "amp_mmag", "subhour",
-        "near_saturation", "stratum",
+        "near_saturation", "stratum", "sampling_weight",
     ]
     roster["gaia_g_mag"] = ""
     roster_path = args.out_dir / "roster_d3.csv"
@@ -185,7 +196,8 @@ def main() -> None:
             "ambiguous_dsct2": len(ambiguous),
             "negatives_dsct0": len(negatives),
             "negatives_pool": len(negatives_pool),
-            "negative_stride": stride,
+            "negative_sample_seed": NEGATIVE_SAMPLE_SEED,
+            "negative_inclusion_probability": n_negatives / len(negatives_pool),
         },
         "positives_amplitude_mmag": {
             "with_amplitude": int(np.isfinite(pos_amp).sum()),

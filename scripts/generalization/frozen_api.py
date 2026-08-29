@@ -47,7 +47,8 @@ CAMPAIGN_ID_PREFIXES = {
     "90": "D3 ZTF x Kepler delta Scuti (real ZTF light curves)",
     "92": "D2 arm B (TESS-truth signal + real ZTF photometry)",
     "93": "D2 arm A (TESS-truth signal + synthetic Gaussian floor)",
-    "94": "D2 statistical nulls (zero amplitude, arm-A floor)",
+    "94": "D2 Gaussian nulls (zero amplitude, arm-A floor)",
+    "95": "D2 paired real-window controls (uninjected template windows)",
 }
 
 
@@ -86,17 +87,41 @@ def env_versions() -> dict[str, str]:
     import pandas
     import scipy
 
+    blas = ""
+    try:
+        config = numpy.__config__.CONFIG["Build Dependencies"]["blas"]
+        blas = f"{config.get('name', '')} {config.get('version', '')}".strip()
+    except Exception:
+        pass
     return {
         "python": platform.python_version(),
         "platform": platform.platform(),
         "machine": platform.node(),
         "numpy": numpy.__version__,
+        "numpy_blas": blas,
         "scipy": scipy.__version__,
         "astropy": astropy.__version__,
         "astropy_iers_data": astropy_iers_data.__version__,
         "pyerfa": erfa.__version__,
         "pandas": pandas.__version__,
+        "omp_num_threads": os.environ.get("OMP_NUM_THREADS", ""),
+        "openblas_num_threads": os.environ.get("OPENBLAS_NUM_THREADS", ""),
     }
+
+
+def campaign_file_shas() -> dict[str, str]:
+    """SHA-256 of every campaign script + spec, recorded in every manifest so
+    adapter-shell drift is visible (G1 methods finding 9)."""
+    shas: dict[str, str] = {}
+    for path in sorted((REPO_ROOT / "scripts/generalization").glob("*.py")):
+        shas[f"scripts/generalization/{path.name}"] = hashlib.sha256(
+            path.read_bytes()
+        ).hexdigest()
+    for rel in ("generalization/GENERALIZATION_PLAN.md", "generalization/METRICS_SPEC.md"):
+        path = REPO_ROOT / rel
+        if path.exists():
+            shas[rel] = hashlib.sha256(path.read_bytes()).hexdigest()
+    return shas
 
 
 def campaign_id_ok(source_id: str) -> bool:
@@ -109,8 +134,18 @@ def campaign_id_ok(source_id: str) -> bool:
 
 
 assert_frozen()
-if str(SCRIPTS_DIR) not in sys.path:
-    sys.path.insert(0, str(SCRIPTS_DIR))
+_FROZEN_MODULES = (
+    "run_catalog_lomb_scargle",
+    "run_lomb_scargle",
+    "lomb_scargle_common",
+    "build_catalog_panels",
+)
+for _name in _FROZEN_MODULES:
+    if _name in sys.modules:
+        raise FrozenIntegrityError(
+            f"{_name} was imported before frozen_api verified it"
+        )
+sys.path.insert(0, str(SCRIPTS_DIR))
 
 from build_catalog_panels import (  # noqa: E402
     BANDS,
@@ -150,6 +185,13 @@ from run_lomb_scargle import (  # noqa: E402
     json_ready,
 )
 
+for _name in _FROZEN_MODULES:
+    _file = Path(sys.modules[_name].__file__).resolve()
+    if _file != (SCRIPTS_DIR / f"{_name}.py").resolve():
+        raise FrozenIntegrityError(
+            f"{_name} resolved to {_file}, not the SHA-verified copy"
+        )
+
 __all__ = [
     "REPO_ROOT",
     "SCRIPTS_DIR",
@@ -160,6 +202,7 @@ __all__ = [
     "frozen_file_shas",
     "assert_frozen",
     "env_versions",
+    "campaign_file_shas",
     "campaign_id_ok",
     "BANDS",
     "EXPOSURE_COLUMNS",

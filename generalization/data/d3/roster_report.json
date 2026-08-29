@@ -7,7 +7,8 @@
     "ambiguous_dsct2": 76,
     "negatives_dsct0": 2314,
     "negatives_pool": 7292,
-    "negative_stride": 3
+    "negative_sample_seed": 20260828,
+    "negative_inclusion_probability": 0.31733406472846953
   },
   "positives_amplitude_mmag": {
     "with_amplitude": 456,

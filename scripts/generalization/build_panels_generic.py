@@ -28,6 +28,12 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import pandas as pd
+from astropy.utils import iers
+
+# BJD generation must not depend on a live IERS download (G1 methods finding 6);
+# the pinned astropy-iers-data package supplies the table, recorded in the
+# manifest via env_versions().
+iers.conf.auto_download = False
 
 from frozen_api import (
     BANDS,

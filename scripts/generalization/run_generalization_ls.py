@@ -23,22 +23,55 @@ from pathlib import Path
 from frozen_api import (
     analyze_star,
     assert_frozen,
+    campaign_file_shas,
     campaign_id_ok,
     env_versions,
     frozen_file_shas,
     physical_workers,
 )
 
+# environment keys that must match between the replay attestation and this run
+ATTESTATION_KEYS = ("python", "numpy", "scipy", "astropy", "astropy_iers_data",
+                    "pyerfa", "pandas", "machine")
+
+
+def validate_attestation(report_path: Path) -> dict:
+    report = json.loads(report_path.read_text(encoding="utf-8"))
+    if not report.get("passed"):
+        raise SystemExit(f"replay attestation {report_path} is not a PASS")
+    current = env_versions()
+    mismatched = [
+        key for key in ATTESTATION_KEYS
+        if report["env"].get(key) != current.get(key)
+    ]
+    if mismatched:
+        raise SystemExit(
+            f"replay attestation env differs from this run: {mismatched} "
+            f"(attested {[report['env'].get(k) for k in mismatched]} vs "
+            f"current {[current.get(k) for k in mismatched]})"
+        )
+    if report.get("frozen_sha256") != frozen_file_shas():
+        raise SystemExit("replay attestation frozen SHAs differ from this checkout")
+    return report
+
 # One in-flight star holds two full-resolution float32 periodogram memmaps plus
-# the multiband combination on scratch; 0.47 GB covers the worst observed
-# baseline at samples_per_peak=10. Disk, not wall time, binds worker count.
-SCRATCH_GB_PER_WORKER = 0.47
+# the multiband combination on scratch; the worst published-catalog baseline
+# needs 0.471 GB for the three high-pass memmaps, so 0.52 adds ~10% headroom
+# for longer campaign baselines. Disk, not wall time, binds worker count.
+SCRATCH_GB_PER_WORKER = 0.52
 
 
 def preflight_workers(requested: int | None, work_root: Path) -> tuple[int, float]:
+    if requested is not None and requested < 1:
+        raise SystemExit(f"invalid --workers {requested}")
     free_gb = shutil.disk_usage(work_root).free / 1e9
-    ceiling = max(1, int(free_gb * 0.5 / SCRATCH_GB_PER_WORKER))
-    workers = min(requested or physical_workers(), ceiling)
+    ceiling = int(free_gb * 0.5 / SCRATCH_GB_PER_WORKER)
+    if ceiling < 1:
+        raise SystemExit(
+            f"scratch {work_root} has {free_gb:.1f} GB free — below one worker's "
+            f"{SCRATCH_GB_PER_WORKER} GB requirement"
+        )
+    workers = min(requested or physical_workers(), physical_workers(), ceiling)
     return workers, free_gb
 
 
@@ -89,10 +122,18 @@ def main() -> None:
                         help="pilot mode: first N stars only")
     parser.add_argument("--allow-nonstandard-ids", action="store_true",
                         help="permit non-campaign source_ids (replay/debug only)")
+    parser.add_argument("--replay-report", type=Path, required=True,
+                        help="replay_report.json from a PASSING replay_gate run "
+                             "on THIS machine+env; campaign runs refuse to start "
+                             "without one (G1 methods finding 1)")
     args = parser.parse_args()
 
     assert_frozen()
+    attestation = validate_attestation(args.replay_report)
     passes = tuple(args.passes.split(","))
+    if passes != ("low", "high") and not args.allow_nonstandard_ids:
+        raise SystemExit("production runs use exactly low,high (the frozen CLI's "
+                         "pass set); pass --allow-nonstandard-ids for debug runs")
     star_dir = args.out_dir / "stars"
     work_root = args.work_root or (args.out_dir / "work")
     star_dir.mkdir(parents=True, exist_ok=True)
@@ -181,7 +222,13 @@ def main() -> None:
         "wall_seconds": round(time.time() - started, 1),
         "shard_dir": str(args.shard_dir),
         "env": env_versions(),
-        "frozen_sha256": frozen_file_shas(),
+        "frozen_sha256": assert_frozen(),
+        "campaign_sha256": campaign_file_shas(),
+        "replay_attestation": {
+            "path": str(args.replay_report),
+            "wall_seconds": attestation.get("wall_seconds"),
+            "verdict_counts": attestation.get("verdict_counts"),
+        },
     }
     (args.out_dir / "manifest.json").write_text(
         json.dumps(manifest, indent=2) + "\n", encoding="utf-8"

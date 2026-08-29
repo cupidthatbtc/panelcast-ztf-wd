@@ -198,15 +198,17 @@ def main() -> None:
     counts: dict[str, int] = {}
     for verdict in verdicts.values():
         counts[verdict] = counts.get(verdict, 0) + 1
+    if not records:
+        raise SystemExit("empty replay roster — the gate cannot pass vacuously")
     strict_v2 = any(
         record["verdict"] in ("identical", "identical_newline")
         and record["published_schema_version"] == 2
         for record in records
     )
-    has_v2 = any(record["published_schema_version"] == 2 for record in records)
-    passed = all(record["verdict"] != "MISMATCH" for record in records) and (
-        strict_v2 or not has_v2
-    )
+    # strict_v2 is unconditional (G1 methods finding 2): a schema-v2 star that
+    # reproduces with no transform is the proof of full-byte reproduction, and
+    # the published bundle contains 7 of them — a roster without one is invalid.
+    passed = all(record["verdict"] != "MISMATCH" for record in records) and strict_v2
 
     report = {
         "gate": "replay_gate",
