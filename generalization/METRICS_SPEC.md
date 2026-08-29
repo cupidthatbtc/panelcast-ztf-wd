@@ -42,7 +42,19 @@ produces three separate response assessments with these named estimands:
 
 ## Frequency-match taxonomy (disjoint labels, strict first)
 
-Tolerance: 1.5 / baseline_days per star (the pipeline's own convention).
+Tolerance: 1.5 / baseline_days per star (the pipeline's own convention) plus
+a dataset truth-quantum term for truth-table rounding: D1 +0.0025 / d
+(literature frequencies tabulated to 2 decimals), D2/D3 +0 (exact / 6-decimal
+uHz). D1 truth frequencies are additionally NON-CONTEMPORANEOUS single-epoch
+tabulations of multi-mode pulsators (observed lit-vs-ZTF offsets reach 0.6%),
+so D1 frequency-recovery is reported as a DIAGNOSTIC only; D1's estimand is
+detection completeness. D1 labels come from the published master table
+(19 usable stars; 13 paper-variable, 5 paper-constant) with the frozen
+pipeline's eclipsing sanity control (2833849800205759360) excluded as class
+`transit_control` — it is a known variable and can serve neither class.
+Validation on record (2026-08-28): metrics_generalization on the published
+bundle reproduces all five published D1 numbers (11/13 L-S, 9/13 census,
+13/13 union, 0 confirmed + 1 candidate among 5 constants).
 For each detected candidate, in precedence order against the truth list
 (D3: Mo frequencies for that KIC; D2: injected modes):
 

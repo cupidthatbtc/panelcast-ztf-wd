@@ -1,0 +1,1024 @@
+Reading additional input from stdin...
+2026-08-29T01:19:37.819617Z ERROR codex_models_manager::cache: failed to load models cache: missing field `base_instructions` at line 97 column 5
+2026-08-29T01:19:51.340742Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest("http/request url is invalid: relative URL without a base")))
+OpenAI Codex v0.145.0
+--------
+workdir: /Users/jackneo/Documents/vonhippel-base9/astro-wd
+model: gpt-5.6-sol
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: xhigh
+reasoning summaries: none
+session id: 01a04b19-d13c-7122-81cb-b02d6e047fde
+--------
+user
+You are deciding whether an AAS 249 abstract based on this campaign would survive. Read generalization/GENERALIZATION_PLAN.md and generalization/METRICS_SPEC.md. Tasks: (1) internal-consistency audit — find every place the PLAN and the SPEC contradict each other or a number/name differs; (2) list the exact claims the design CAN support if results land as expected, in one sentence each; (3) draft the strongest honest 250-word abstract skeleton (numbers as placeholders) that a hostile referee could not reject on framing grounds; (4) list the 5 most likely failure modes between now and Sept 30 given the timeline in the plan, with mitigations. Be concrete.
+2026-08-29T01:19:51.704616Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when AuthRequired(AuthRequiredError { www_authenticate_header: "Bearer realm=\"OAuth\", resource_metadata=\"https://circleback.ai/.well-known/oauth-protected-resource/api/mcp\", scope=\"user\"" })
+2026-08-29T01:19:53.611816Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest("http/request url is invalid: relative URL without a base")))
+2026-08-29T01:19:54.651855Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest("http/request url is invalid: relative URL without a base")))
+warning: Exceeded skills context budget of 2%. All skill descriptions were removed and 33 additional skills were not included in the model-visible skills list.
+2026-08-29T01:20:24.989071Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 426 Upgrade Required, url: ws://127.0.0.1:17841/v1/responses
+codex
+I’m using the academic-writing skill because this is an abstract survivability and claim-calibration review. I’ll first read its instructions and both campaign documents, then cross-check every named metric, threshold, count, and deadline.
+exec
+/bin/zsh -lc "sed -n '1,240p' /Users/jackneo/.codex/plugins/cache/andrehuang-academic-writing-agents/academic-writing-agents/2.0.0/skills/academic/SKILL.md && sed -n '1,280p' generalization/GENERALIZATION_PLAN.md && sed -n '1,320p' generalization/METRICS_SPEC.md" in /Users/jackneo/Documents/vonhippel-base9/astro-wd
+ succeeded in 121ms:
+# Generalization campaign: three-dataset response assessment of the frozen pipeline
+
+Branch `generalization/campaign-1` · frozen baseline tag `frozen-2026-08-01` ·
+deadline AAS 249 regular abstract Tue 2026-09-30.
+
+## Claim under test
+
+The 2026-08-01 ZTF white-dwarf run showed the variance census and the blind
+Lomb-Scargle search have complementary selection functions — but on 19
+truth-labeled stars, with a known mechanism, and injections conditioned on two
+light curves. Red-team verdict: NO-GO as a discovery claim. The flip condition:
+run the *frozen* pipeline on externally labeled samples large enough to
+measure class-specific response rates with uncertainty.
+
+G1 review (sol ×3, 2026-08-28) sharpened what this campaign can honestly
+claim — THREE SEPARATE response assessments, never pooled into one
+"selection function":
+- D1: the anchor (19 labeled WDs + 928-star catalog, published);
+- D2: conditional injection-recovery efficiency of the frozen search stage
+  (TESS-truth signals in real ZTF windows) — labeled as such, NOT real-sky
+  completeness and NOT an independently labeled sample;
+- D3: externally labeled, magnitude-restricted validation on real ZTF
+  photometry (detection completeness, frequency recovery, negative-class
+  trigger rate).
+Banned phrases (G1): "quantified selection-function measurement", "real-sky
+completeness" (for D2), "D3 FPR", unqualified "purity". Estimand names in
+METRICS_SPEC.md are binding.
+
+## Frozen-core / adapter-shell architecture
+
+- Tag `frozen-2026-08-01` = branch point. Zero edits to any script that
+  produced the published bundle; the referee check is an empty
+  `git diff frozen-2026-08-01 -- scripts/<frozen five>`.
+- Frozen five: `run_catalog_lomb_scargle.py`, `run_lomb_scargle.py`,
+  `lomb_scargle_common.py`, `build_catalog_panels.py`,
+  `fetch_catalog_lightcurves.py`. SHA-256 pinned in
+  `scripts/generalization/frozen_api.py`; `assert_frozen()` runs at import and
+  at the top of every campaign script.
+- Campaign code lives in `scripts/generalization/` and imports the frozen
+  callables only through `frozen_api`. The frozen CLI never runs on campaign
+  data (its `main()` merges the WD roster and rewrites the published table);
+  `verify_cli_identity.py` proves the import path is byte-identical to the
+  CLI's internal call path.
+- Known frozen quirks are pinned by `tests/test_frozen_constants.py`, fixed by
+  nothing: the `>= 2.5` vs `> 2.5` census inconsistency (provably
+  non-affecting: 0 of 5,568 published ratios within 1e-4 of 2.5; campaign
+  metrics use `>=` and assert no campaign ratio equals 2.5 exactly), the
+  bootstrap's `int(source_id[-9:])` seed (harmless for 19-digit numeric
+  campaign ids by construction), duplicated pass-bound literals (AST-scan
+  test).
+
+### Campaign source_id convention
+
+19-digit numeric strings: `90…` D3 targets, `92…` D2 arm B, `93…` D2 arm A,
+`94…` D2 Gaussian nulls, `95…` D2 paired real-window controls. No collision
+with Gaia DR3 ids; always valid for the frozen seed convention.
+
+### Replay gate (blocks everything)
+
+`replay_gate.py` re-runs the frozen `analyze_star` through `frozen_api` on 25
+published stars (all 7 schema-v2 + 18 stride-sampled schema-v1) and
+byte-compares against the committed bundle. Comparison tiers: raw-identical;
+identical after CRLF→LF normalization (git stored the bundle normalized);
+identical after the documented v1→v2 schema transform — 921/928 published
+files were written before commit `fa16d7f` (parent `e917bd1`), which added
+sparse-input early-exit branches plus the `available`/`unavailable_reason`
+keys and bumped `schema_version` 1→2. For any star that yields candidates,
+the numeric path is unchanged (the new branches fire only on sparse inputs
+that previously crashed; all 7 v2 records exercise exactly those branches).
+The downgrade transform removes only the two added keys and byte-compares
+everything retained. Gate passes only with a nonempty roster, zero
+mismatches AND at least one schema-v2 star reproducing with no transform
+(unconditional). VERDICT 2026-08-28 (jacks-7i-5090, production venv):
+PASS — 7 identical_newline + 18 identical_v1_schema, 25/25.
+Campaign L-S runs are valid only on machine+env pairs that passed the gate;
+`run_generalization_ls.py` refuses to start without a matching PASS
+attestation (env fingerprint + frozen SHAs). Planned W2 hardening: one full
+928-star replay on the production machine as the definitive baseline, and a
+panel-stage golden replay (shard rebuild byte-compare incl. bjd_tdb, IERS
+auto-download disabled).
+
+### Environment
+
+The published run's venv (laptop `jacks-7i-5090`) is recorded in
+`generalization/env/FROZEN_ENV.md`; the numerics-bearing subset is pinned in
+`requirements-frozen.txt` (Python 3.12.12, numpy 2.3.x, scipy 1.16.3, astropy
+8.0.1, iers-data 0.2026.7.27, pyerfa 2.0.1.5, pandas 2.3.3). Discrepancy on
+record: pip metadata said numpy 2.3.3 but the venv imports 2.3.5; the replay
+gate verdict on that venv is the authority on whether the published numbers
+reproduce under what is actually installed. requirements-frozen.txt is updated
+to whatever passes the gate, and the manifest of every campaign run records
+`env_versions()` at runtime.
+
+## D1 — ZTF white dwarfs (anchor, done)
+
+The published 2026-08-01 bundle: 19-star truth roster + 928-star catalog.
+No re-run; campaign metrics re-read the published per-star JSONs.
+
+## D3 — ZTF × Kepler delta Scuti (real ZTF light curves, external labels)
+
+- Labels: Murphy+2019 (VizieR J/MNRAS/485/2380/table1, 14,330 Kepler A/F
+  stars; `dSct` flag 0/1/2 — ships its own labeled negative class).
+- Amplitude axis: Mo+2026 (J/A+A/710/A245): table2 = 259,883 extracted
+  frequencies (SNR>8) for 1,838 delta Scutis → per-star dominant amplitude
+  (ppt × 1.0857 → mmag); table1 = confirmed super-Nyquist modes → the
+  sub-hour stratum (any confirmed SNF ⇒ real mode above Kepler LC Nyquist
+  283.2 µHz ⇒ P < 59 min). This replaces the originally scouted Bowman+2016
+  join: Bowman's VizieR table carries no amplitudes; Mo+2026 supersedes it
+  (and is itself the published Murphy×Bowman merge, 1,838 stars).
+- Roster (`build_d3_roster.py`, rebuilt 2026-08-28 post-G1): gmag ≥ 13.2
+  (Murphy/KIC g magnitude — the named saturation proxy), ALL 610 dSct=1
+  survivors + ALL 76 dSct=2 (own class, excluded from headline numbers) +
+  2,314 dSct=0 negatives as a frozen-seed (20260828) simple random sample
+  (inclusion probability 0.317 recorded; sampling_weight column carried into
+  every weighted estimate) = 3,000. Amplitude coverage of positives:
+  456/610 with dominant amplitude; 48 > 10 mmag; 254 in 1–10; 154 < 1;
+  290 sub-hour; median 1.77 mmag. The 1–10 mmag log ladder and the
+  sub-threshold majority make the completeness turn-on curve the headline
+  D3 deliverable, not a defect (pre-registered: risk 2).
+- Acquisition: frozen `fetch_catalog_lightcurves.py --roster roster_d3.csv`
+  verbatim (10″ cone, 1.25 s cadence, resumable); frozen QC chain via
+  `build_panels_generic.py` (nearest-cluster crossmatch, catflags/chi cuts,
+  ≥20 exp/band, BJD_TDB at Palomar — all frozen functions).
+- Prespecified subsets: crowding (sep < 1.0″, ≤3 objects in cone),
+  near-saturation (g < 14 flagged; g > 14 safe subset).
+- Caveat on record: dSct=0 means "not a delta Scuti", not "constant" — the
+  D3 negative-class result is a TRIGGER RATE (never called FPR); triggered
+  negatives get adjudicated in W4 (plausible real variable vs unexplained).
+
+## D2 — TESS-truth transplant (DAV signals in real ZTF windows)
+
+- Truth: Romero+2022 (MNRAS 511, 1574; arXiv:2201.04158; 74 new DAVs,
+  TESS Cy1–3) + Romero+2025 (ApJ 984, 112; arXiv:2407.07260; 32 new DAVs,
+  Cy4–5). Published per-mode tables: period [s] + amplitude [ppt] + per-star
+  FAP(1/1000) limit + 20-s-cadence flags. 2025 revisions apply: NOV
+  retractions (TIC 261400271, 804835539, 317620456) and updated mode lists
+  for re-observed 2022 objects — latest published solution wins.
+- Truth model, not interpolation (`d2_truth_model.py`): DAV P < 240 s is
+  super-Nyquist AND past the first sinc null of TESS 120-s data; the mode
+  table is evaluated analytically at the template's real `bjd_tdb`.
+  Chain: ppt → mag (×1.0857e-3) → de-dilution OFF by default (SPOC PDCSAP is
+  crowding-corrected; ON = prespecified variant) → de-integrate TESS sinc
+  (reject modes with |sinc| < 0.3, i.e. P < ~160 s from 120-s data; prefer
+  20-s cadence solutions) → bandpass ladder A_g/A_TESS ∈ {1.4, 1.7, 2.1} ×
+  A_r/A_g ∈ {0.70, 0.80, 0.90} (nominal 1.7/0.80 from an in-code blackbody
+  derivative; the ladder is non-optional — zr carries most published
+  confirmations) → re-integrate ZTF 30-s sinc analytically → compose
+  phase-coherently in zg and zr (shared t_ref) so the frozen two-band rule
+  keeps its meaning.
+- Windows: templates from ALL 928 stars of the published catalog (G1 fix —
+  the earlier 510-not-detected pool conditioned on the pipeline's own
+  outcome), matched by median zg mag (|Δg| ≤ 0.25, widened when thin;
+  flagged), K=3 per target at 10/50/90th percentile of exposures-per-night
+  (75% of zg nights are single-exposure; per-night median subtraction
+  annihilates 53% of zg data — pre-registered, stratified: risk 3).
+  Native variability in the pool is handled by strict frequency-matched
+  scoring plus PAIRED UNINJECTED CONTROLS (95-prefix): one control shard per
+  unique arm-B template window. W2 stretch: fetch real ZTF light curves at
+  the 103 Romero positions; where the frozen QC crossmatch succeeds, those
+  self-windows become the preferred templates (removes template-choice
+  conditioning entirely for that subset).
+- Arms: B primary (signal + real ZTF mags, real magerr), A diagnostic
+  (synthetic Gaussian floor). FPR: 1,000 arm-A zero-amplitude nulls
+  (510 not-detected windows, fresh deterministic noise seeds where windows
+  repeat — windows repeat, noise does not; documented). Arm-B nulls are
+  tautological (templates ARE the not-detected set).
+  Verification arm: ~20 SPOC light curves prewhitened to confirm published
+  solutions; everything else needs metadata only.
+- Run matrix (sized to the 1-day wall budget at 22 workers ≈ 84 stars/h):
+  arm B nominal (1.7/0.80) 103×3 templates = 309; arm A nominal 309;
+  nulls 1,000; ladder sensitivity = 8 remaining (R_g, R_rg) points × 103 ×
+  1 template (the median-n_exp one) = 824. Total ≈ 2,442 ≈ 1.2 d.
+  De-dilution variant runs only for the SPOC verification-arm stars (dilution
+  factors are not in the papers; CROWDSAP comes with the ~20 downloads).
+  Post-G1 additions: paired controls (~<=309, prefix 95) and a phase-draw
+  sensitivity axis (2 extra deterministic phase draws x 103 targets on the
+  median template, arm B nominal) ≈ +515 runs; total ≈ 2,960 ≈ 1.5 d.
+- Truth-model corrections found at implementation (2026-08-28): |sinc| ≥ 0.3
+  rejection corresponds to P < ~160 s at 120-s cadence (the earlier "197 s"
+  was the |sinc| = 0.5 point); D2 min published period is 115.9 s and 49/103
+  stars carry 20-s solutions, so few modes are affected. Phases are
+  unpublished: drawn once per star from PCG64(seed=TIC), shared across bands
+  and ladder variants. Blackbody derivative at 11,500 K gives (1.43, 0.80) —
+  the ladder's low rung; upper rungs cover atmosphere-model/limb-darkening
+  uncertainty.
+
+## Metrics — see METRICS_SPEC.md (frozen before any campaign L-S run)
+
+## Execution topology
+
+- Mac: rosters, fetches, shard building, metrics, figures, git (authoritative).
+- Laptop `jacks-7i-5090` (22 workers): replay gate + D3 run. Desktop
+  (needs wake; offline 64 d): D2 + D3 overflow; if unreachable, D2 runs on
+  the laptop after D3 (+1 day; slip rule below).
+- Windows job launches escape the sshd job object via WMI
+  `Win32_Process.Create` (Start-Process children die with the ssh session —
+  found the hard way on the first replay launch).
+- Wall model (anchor 928 ≈ 11 h at 22 workers; cost scales with baseline):
+  D3@3,000 ≈ 1.2–1.9 d; D2 ≈ 1 d; hard stop via 150-star timing pilot.
+  Disk binds, not time: `workers = min(22, floor(free_GB × 0.5 / 0.47))`,
+  scratch on local NVMe/RAM disk, never a synced folder.
+- Results bundles: `generalization/results/<date>_<dataset>/` mirroring the
+  existing convention (README, DATA_PROVENANCE, SHA256SUMS, acceptance.json).
+
+## Review gates (sol@xhigh + ChatGPT Pro standing directive)
+
+| Gate | When | Reviewer | Scope |
+|---|---|---|---|
+| G1 | DONE 2026-08-28 | sol ×3 | 47 findings; dispositions in reviews/G1/RESPONSE.md; design fixes applied same day |
+| G2 | end W1 | sol ×5 | this file + METRICS_SPEC.md; frozen only after unanimous/addressed |
+| G3 | W2 pre-batch | Pro (inline code) | d2_truth_model + build_d2_shards: sinc algebra, bandpass, phase coherence, schema |
+| G4 | W3 mid-run | sol ×2 | pilot metrics sanity, run anomalies |
+| G5 | W4 | Pro + fresh-context verifier | results audit; every headline number re-derived from JSONs/CSVs |
+| G6 | Sep 26–29 | sol ×3 + ars-abstract | final abstract |
+
+## Timeline
+
+- W1 (Aug 28–Sep 3): tag+branch ✓, replay gate ✓(running), env pinning ✓,
+  frozen_api+tests ✓, D3 roster ✓, D3 IRSA fetch (overnight, running),
+  D2 sources downloaded ✓, PLAN+SPEC (this commit), G1, G2, D2 roster parser.
+- W2 (Sep 4–10): build_panels_generic on D3 → census; d2_truth_model + tests
+  + G3; build_d2_shards; verify_cli_identity; 150-star pilot; wake desktop.
+- W3 (Sep 11–17): D3 full run (laptop) ∥ D2 (desktop); metrics+plots against
+  pilot output; G4.
+- W4 (Sep 18–25): metrics, ladders, figures, bundles, acceptance; G5;
+  cross-dataset synthesis table.
+- Sep 26–30: abstract + G6; submit.
+- Slip rule (revised at G1 — the old "D2 alone flips the condition" claim is
+  untenable since D2 is not an externally labeled sample): D3 is the dataset
+  that satisfies the external-label condition; if only ONE new dataset can
+  land by Sep 25 it must be D3, with D2 stated as in progress. If only D2
+  lands, the abstract is scoped to injection-recovery + D1 and makes no
+  external-validation claim.
+
+## Top risks
+
+1. Env fails replay → pin/iterate until byte-identical; blocks all work.
+2. D3 completeness ≈ 0 below the a95 floor → stratification IS the
+   deliverable (turn-on curve).
+3. D2 high-pass ≈ 0 from the single-exposure-night penalty → pre-registered
+   expected headline, stratified to be explanatory.
+4. A_r/A_g lever → mandatory ladder; headline reported as a band.
+5. D3 negatives not constants → FPR an upper bound, stated.
+6. Desktop unreachable → D2 on laptop after D3 (+1 day).
+7. Romero mode tables are LaTeX prose with typos (comma decimals, stray
+   units) → parser with hard row-count and range asserts; G3 reviews the
+   parsed output against the PDFs.
+
+## Mandatory citations
+
+Sokolovsky+2017 (variability-index benchmark; data not public — comparison
+baseline only), Guidry+2021, Hermes+2017, Murphy+2019, Bowman+2016 (context),
+Mo+2026, Romero+2022, Romero+2025, Gentile Fusillo+2021, Masci+2019.
+# METRICS_SPEC — frozen before any campaign Lomb-Scargle run
+
+Implemented by `scripts/generalization/metrics_generalization.py`. Any change
+after the first campaign L-S run voids the prespecification and must be
+reported as such. Revised at G1 (2026-08-28) in response to the sol review
+panel — see `generalization/reviews/G1/RESPONSE.md`; frozen at G2.
+
+## Estimand vocabulary (names are binding)
+
+The campaign does NOT produce a single pooled "selection function". It
+produces three separate response assessments with these named estimands:
+
+- **detection completeness** — P(rule fires | labeled positive), per dataset,
+  class, pass rule. D3 denominator: all 610 dSct=1 (external labels).
+  D2 denominator: injection targets (synthetic positives — reported as
+  *conditional injection-recovery efficiency of the search stage*, never as
+  real-sky completeness).
+- **frequency-recovery completeness** — P(rule fires AND strict frequency
+  match | labeled positive AND frequency-scorable). D3 frequency-scorable:
+  the 456/610 with Mo+2026 rows (reported as "Mo-join-conditioned"; joined
+  vs unjoined covariates compared). D2: targets with >=1 injected mode
+  inside the pass's search bounds after sinc rejection (S_p = 1).
+  The missed-vs-wrong-frequency decomposition uses ONLY matching
+  denominators (both conditional on scorable/S_p = 1).
+- **correct-frequency fraction among detected positives** — what an earlier
+  draft called "purity"; it is not positive predictive value and is never
+  labeled purity. Class-level PPV is reported for D3 only, with sampling
+  weights (negatives carry weight pool/sample = 7292/2314), as a
+  prevalence-weighted estimate with the contaminated-negative caveat.
+- **negative-class trigger rate** — P(rule fires | Murphy dSct=0). NOT called
+  FPR: the class contains non-dSct variables; reported with sampling weights
+  and, after adjudication of triggered negatives (W4), split into
+  "plausible real variable" vs "unexplained".
+- **Gaussian-null false-alarm rate (FPR_Gaussian)** — P(confirmed | arm-A
+  zero-amplitude null), n = 1000 over the 928-window frame (windows repeat,
+  seeds do not). Acceptance criterion (preregistered): one-sided 95% upper
+  bound <= 0.5% at zero events. The FP frequency-distribution/alias audit is
+  descriptive only below 10 events.
+- **native trigger rate of the template pool** — P(confirmed | paired
+  uninjected control window), the 95-prefix arm. Context for D2 recovery,
+  not an FPR.
+
+## Frequency-match taxonomy (disjoint labels, strict first)
+
+Tolerance: 1.5 / baseline_days per star (the pipeline's own convention).
+For each detected candidate, in precedence order against the truth list
+(D3: Mo frequencies for that KIC; D2: injected modes):
+
+1. `direct` — within tolerance of a truth frequency;
+2. `harmonic` — within tolerance of 2f or f/2 of a truth frequency;
+3. `window_alias` — within tolerance of |f_truth ± k f_sid|, k = 1, 2
+   (sidereal-day family, the pipeline's own alias model);
+4. `ambiguous` — matches >1 truth frequency class above;
+5. `unmatched`.
+
+Headline frequency recovery counts `direct` only, scored against the
+pipeline's BEST candidate (`matched_primary`). D3's primary truth frequency
+is the DOMINANT Mo mode; any-mode direct matches are a secondary column.
+`matched_any_mode` over the 15 stored top_peaks is diagnostic only.
+Chance-match calibration: truth lists permuted across stars (frozen seed,
+100 permutations) → accidental direct-match rate reported beside every
+frequency-recovery table.
+
+## Detection rules (all four always reported; PRIMARY = rule 1)
+
+1. `confirmed` (headline), 2. `confirmed|candidate`, 3. `census`
+(any of six frozen ratios >= 2.5), 4. `either` (1 OR 3).
+Primary claim family (preregistered): rule 1, pass = best of {low, high}
+(the frozen `overall_result` ordering), nominal D2 variant (1.7/0.80,
+de-dilution off, arm B), per dataset. Everything else is labeled a
+pointwise descriptive sensitivity analysis; no simultaneous-coverage claim.
+
+## Units of analysis and intervals
+
+- D1/D3: the star is the unit; Wilson 95% intervals on independent per-star
+  proportions; weighted estimates use the effective-sample-size Wilson
+  approximation.
+- D2: the TESS target is the CLUSTER. K=3 template windows and ladder/phase
+  variants are correlated replicates, never pooled as independent trials.
+  Per-stratum (10/50/90th percentile window) proportions are reported
+  separately; aggregates are equal-weight standardized means over targets
+  with cluster bootstrap intervals (resample targets, keep all replicates;
+  B = 2000, frozen seed). Ladder results: nominal is primary; the min-max
+  across the 3x3 grid is a "prespecified finite-grid sensitivity range",
+  never a confidence band; endpoint scenarios identified.
+
+## Complementarity (census vs L-S)
+
+Primary table (per dataset, on labeled positives with both methods
+available): C = census flag; L = rule-1 detection (detection-only, no
+frequency requirement — symmetric margins). Report the full 2x2, both
+discordant fractions, union completeness, and incremental yields
+P(C=1,L=0), P(C=0,L=1) with intervals (Wilson for D3/D1; cluster bootstrap
+for D2). Exact McNemar is SECONDARY (marginal-homogeneity only; it does not
+measure complementarity).
+
+## Surfaces
+
+Completeness on (log P, log A) and (median exposures-per-night, log A).
+Amplitude axis is INVARIANT per dataset: D3 = historical Kepler-band
+dominant amplitude (mmag; explicitly non-contemporaneous, not a ZTF-g
+threshold); D2 = published TESS amplitude (ppt) for cross-variant surfaces,
+nominal injected A_g for the nominal-only surface. Bin edges frozen here:
+log P edges at P = {100 s, 200 s, 500 s, 1000 s, 2000 s, 0.05 d, 0.2 d,
+1 d, 10 d, 100 d}; amplitude edges {0.5, 1, 2, 5, 10, 20, 50, 200} mmag
+(D3) / {0.5, 2, 5, 10, 30, 100} ppt (D2); cells below 5 stars reported as
+counts only, no proportion.
+
+## Eligibility and attrition
+
+Two denominators, both always reported: P(rule | eligible roster target) and
+P(rule | usable light curve) (frozen QC crossmatch passed, both passes
+available). A full attrition table (roster -> fetched -> crossmatched ->
+QC-passed -> both-passes-complete) by class, amplitude stratum, and
+magnitude accompanies every dataset. Unavailable passes are never silently
+dropped.
+
+## Guards
+
+- Assert no campaign census ratio equals 2.5 exactly.
+- Assert every scored JSON has complete == true; both passes present.
+- Manifest: SHA-256 of every input file, env versions, frozen + campaign
+  file SHAs (frozen_api.campaign_file_shas), replay attestation reference,
+  spec git blob SHA.
+
+## Outputs
+
+`generalization/results/<date>_<dataset>/metrics/`: per_star.csv,
+completeness_by_class_pass_rule.csv, contingency_complementarity.json,
+trigger_rates.csv, fp_frequency_distribution.csv, chance_match.csv,
+surfaces/*.csv, sensitivity.csv, attrition.csv, manifest.json.
+Figures via plot_generalization.py from these CSVs only.
+
+codex
+Deployment plan: a consistency pass will enumerate literal mismatches and contradictions; a technical/logic pass will test denominators, independence, labels, and inferential scope; then I’ll synthesize the supportable claims, referee-proof abstract, and schedule risks. The main gap is operational timeline analysis, which I’ll handle directly from the dated dependencies and throughput assumptions.
+exec
+/bin/zsh -lc "wc -l /Users/jackneo/.codex/plugins/cache/andrehuang-academic-writing-agents/academic-writing-agents/2.0.0/skills/academic/academic-writing.md generalization/GENERALIZATION_PLAN.md generalization/METRICS_SPEC.md; sed -n '1,360p' /Users/jackneo/.codex/plugins/cache/andrehuang-academic-writing-agents/academic-writing-agents/2.0.0/skills/academic/academic-writing.md; if [ -f .claude/CLAUDE.md ]; then sed -n '1,260p' .claude/CLAUDE.md; fi; if [ -d .claude/agents ]; then for f in .claude/agents/*.md; do printf '%s\\n' \""'$f"; sed -n '"'1,50p' \""'$f"; done; fi' in /Users/jackneo/Documents/vonhippel-base9/astro-wd
+ succeeded in 119ms:
+# Academic Writing Principles (30)
+
+Distilled from thesis supervision, author self-review feedback, and Michael Black's "Writing a Good Scientific Paper" (March 2026).
+Canonical reference — all agents and workflows should consult this file.
+Organized into 6 categories that map to agent specializations.
+
+---
+
+## A. Structure & Narrative
+
+*Primary agents: logic-reviewer, consistency-checker*
+
+### A1. Recursive Consistency Checks
+For each chapter, section, and subsection — verify that terminology, section summary/intro, actual flow, and experiments all match. If a section says "we discuss X, Y, Z," the subsections must cover exactly X, Y, Z in that order.
+
+**Common violations**: Section intro promises three topics but delivers two; subsection order doesn't match the intro's enumeration; terminology drifts between sections (e.g., "feature" vs "representation").
+
+### A2. Logical Chaining with Transitions
+Every paragraph, section, and chapter should be "chained" logically. The end of one section should motivate the start of the next. Never leave two adjacent paragraphs without a transition. Section-level transitions are necessary but insufficient — paragraph-to-paragraph connections are the more common failure mode.
+
+**Common violations**: Abrupt topic shifts between paragraphs; sections that start with no connection to what came before; chapter endings that don't set up the next chapter; adjacent paragraphs on related subtopics connected only by thematic proximity rather than explicit bridging.
+
+### A3. Figure/Table Definition Order
+Ensure that figure/table definition order in the source matches the order they are first mentioned and discussed in the text. Teaser figures may appear early but must still be discussed promptly.
+
+**Common violations**: LaTeX source defines Figure 5 before Figure 3; a figure is \input'd early but not referenced until much later.
+
+### A4. Close Every Paragraph
+The last sentence of a paragraph should conclude, synthesize, or motivate the next paragraph — not trail off. A strong closer draws an implication, states a principle, or poses a question the next paragraph answers.
+
+**Common violations**: Paragraphs ending with "subsequently", "which we detail below", or a bare citation; final sentences that introduce new information without resolution; paragraphs that simply stop after the last piece of evidence.
+
+### A5. Claim-First Exposition
+State the conceptual contribution or objective before diving into technical details. The reader should know *what* and *why* before *how*. The first 1–2 sentences of each section or subsection should declare the goal before presenting formulas or procedures.
+
+**Common violations**: Sections that open with equations or implementation details before stating the purpose; subsections that dive into "how" without first explaining "what" or "why"; method descriptions that defer the motivation to the end.
+
+### A6. Goal-Problem-Solution Rhythm
+Every section — from the full paper down to individual subsections — should follow a Goal-Problem-Solution (GPS) rhythm. **Goal**: what are we trying to achieve? **Problem**: what makes this hard or what's missing? **Solution**: how do we address it? This rhythm gives the reader a reason to care before presenting the technical content. Sections that jump to solutions without establishing the goal and problem lose the reader's motivation.
+
+**Common violations**: Method sections that present techniques without first stating what problem each technique solves; introduction paragraphs that list contributions without establishing the gap; subsections that describe "how" without "why this is needed."
+
+### A7. The Nugget — One Key Insight Per Paper
+Every paper should orbit a single key insight — the "nugget" — that the reader takes away. All sections, experiments, and figures should serve this central message. If you cannot state the nugget in one sentence, the paper's focus is unclear. The nugget is not the method; it is the insight that makes the method work or the finding that changes how we think about the problem.
+
+**Common violations**: Papers that present multiple loosely connected contributions without a unifying insight; abstracts that list techniques rather than stating what was learned; conclusion sections that enumerate results rather than crystallizing the takeaway.
+
+---
+
+## B. Prose & Style
+
+*Primary agents: writing-reviewer, prose-polisher*
+
+### B1. Avoid Exhaustive-Sounding Enumerations
+When listing examples, use "such as" rather than "for" to avoid implying the list is complete. ("benchmarks for X, Y, Z" -> "benchmarks such as X, Y, Z")
+
+**Common violations**: "for" used with partial lists; enumerations that imply completeness when the list is illustrative.
+
+### B2. Avoid Negation-Contrast Structures
+Rephrase "not X, but Y" / "not because... but because..." / "not that... but that..." positively. These are a strong AI-writing marker. E.g., "not because it is rarer, but because no one defined it" -> "because no one had conceptualized it as a category, regardless of how often it occurs."
+
+**Common violations**: Sentences structured around negation before stating the actual point; double negatives; "not only... but also" used excessively.
+
+### B3. Avoid Colloquial Terminology in Titles/Formal Claims
+Vivid phrases can appear parenthetically but should not be primary terminology. Use formal terms in titles; introduce colloquial terms once parenthetically.
+
+**Common violations**: Informal shorthand used as section titles; colloquial metaphors presented as formal definitions.
+
+### B4. Match Discussion Tone to Thesis Voice
+Discussion/findings should flow as analytical prose (claim -> evidence -> mechanism -> example -> principle), not flat report-style enumeration. The author's voice is deductive, first-person plural, active, with calibrated hedging. See the project CLAUDE.md for the full style profile.
+
+**Common violations**: Bullet-point style findings; flat enumeration without analytical depth; discussion sections that read like lists rather than arguments.
+
+### B5. One Idea Per Sentence
+Split sentences that pack multiple distinct claims (method + contrast + result). Each sentence should advance exactly one point. If a sentence needs "while", "unlike", or a semicolon to stitch together separate claims, it should be two sentences.
+
+**Common violations**: Sentences with "unlike X which...", "while prior work does A, we do B and achieve C", or subordinate clauses introducing separate claims from the main clause; compound sentences where each half could stand alone as a distinct contribution.
+
+### B6. Calibrated Confidence Language
+Use assertive language for empirical facts ("achieves", "outperforms", "yields") and hedged language for causal explanations ("we observe", "we hypothesize", "this suggests"). Do not hedge facts or assert mechanisms.
+
+**Common violations**: "because" / "due to" / "leads to" used with assertive tone for unproven causal mechanisms; "may" / "might" / "could" modifying reported numerical results; mixing confidence levels within the same sentence.
+
+### B7. Ruthless Conciseness
+Every word must earn its place. Academic writing is not about sounding sophisticated — it is about communicating precisely with minimal friction. Cut filler phrases ("it is important to note that", "in the context of"), compress relative clauses into participles or appositives, and prefer short Anglo-Saxon words over long Latinate ones when meaning is preserved ("use" not "utilize", "show" not "demonstrate"). A paragraph that says in 100 words what could be said in 60 is not thorough — it is wasteful.
+
+**Common violations**: "It is worth noting that" (cut entirely); "in order to" -> "to"; "a large number of" -> "many"; "due to the fact that" -> "because"; "plays an important role in" -> "affects"; padding sentences with "importantly", "interestingly", "notably" as openers; restating in the conclusion what was already said in the abstract and introduction with only cosmetic changes.
+
+### B8. AI-Writing Tell Detection
+Actively scan for and eliminate patterns that mark text as AI-generated. Common tells: (1) "not X, but Y" negation-contrast (see B2), (2) "delve", "leverage", "landscape", "tapestry", "multifaceted", "paradigm shift", (3) sentences starting with "Moreover", "Furthermore", "Additionally" in sequence, (4) formulaic transitions ("Building on this", "Taking this a step further"), (5) hollow intensifiers ("crucial", "vital", "essential" used interchangeably), (6) mirroring the user's exact phrasing back, (7) overly balanced "on one hand / on the other hand" structures. Replace with direct, specific language.
+
+**Common violations**: Three consecutive paragraphs starting with "Moreover" / "Furthermore" / "Additionally"; using "delve into" instead of "examine" or "analyze"; "leverage" as a verb when "use" suffices; "the landscape of X" as a vague framing; sentences that begin with a gerund phrase restating the previous sentence ("Building on the above analysis, we...").
+
+---
+
+## C. Math & Equations
+
+*Primary agents: technical-reviewer*
+
+### C1. Math for Clarity, Not Complexity
+Use formal notation to make difficult concepts precise when applicable, but theories should serve to *clarify*, not confuse or overwhelm. If notation doesn't add precision, drop it. Introduce no more than two new symbols per sentence. When a passage requires multiple definitions, space them across sentences with interleaving explanation.
+
+**Common violations**: Introducing notation used only once; over-formalizing intuitive concepts; inconsistent symbol meanings across sections; multiple new symbols defined in a single sentence without intervening explanation.
+
+### C2. Triple Explanation — Text, Equation, Figure
+Key concepts deserve explanation through all three modalities: intuitive text, formal equation, and visual figure. The text gives the reader intuition and motivation. The equation makes it precise. The figure makes it concrete and memorable. Not every concept needs all three, but any concept central to the paper's contribution should have at least two, and the core idea should have all three. The three explanations should reinforce each other, not merely repeat.
+
+**Common violations**: Core methods described only via equations with no intuitive text; figures that illustrate the pipeline but not the key mathematical insight; text that paraphrases an equation without adding intuition; methods explained in text and equations but with no figure to ground the reader's understanding.
+
+### C3. Equation-Code Correspondence
+When a paper presents both mathematical formulations and implementation details (pseudocode, algorithm blocks, or references to released code), the notation should map clearly to the implementation. Variable names in equations should correspond to variable names in code or pseudocode. If the mapping is non-trivial, state it explicitly. Readers who want to implement the method should not need to reverse-engineer the connection.
+
+**Common violations**: Equations using $\alpha$ and $\beta$ while pseudocode uses `lr` and `momentum` without mapping; algorithm blocks that introduce new variable names not present in the mathematical formulation; loss functions defined differently in the equation and the code; dimension ordering (e.g., batch-first vs channel-first) differing between equations and implementation without comment.
+
+---
+
+## D. Figures & Tables
+
+*Primary agents: consistency-checker, latex-layout-auditor, latex-figure-specialist*
+
+### D1. Active Figure Use
+Use figures to explain or illustrate complicated concepts. If a concept is hard to convey in text alone, create a figure. Consider whether every major chapter section has adequate visual support.
+
+**Common violations**: Long stretches of dense text with no visual support; figures that decorate rather than explain; missing overview/pipeline figures for method sections.
+
+### D2. Cross-Reference All Floats
+Never let any figure or table "just be there." Every float must be explicitly referenced and discussed in the surrounding text.
+
+**Common violations**: Figures placed in the document but never mentioned with \ref; tables referenced once without discussion of their content.
+
+### D3. Figure-Text-Caption Consistency
+Always match what the figure shows, what the caption says, and what the body text says. If they describe the same concept differently, reconcile them. If a figure places items in certain positions (e.g., a 2D plot), the text must match that placement.
+
+**Common violations**: Caption describes elements not visible in the figure; body text says "top-left" when the item is bottom-right; caption and text use different terminology for the same element.
+
+### D4. One Figure, One Message
+Do not layer multiple stories onto one visualization. If a figure answers two questions, consider splitting.
+
+**Common violations**: Figures with too many subplots serving different arguments; a single figure trying to show both the method pipeline and the results.
+
+### D5. Interpret Figures, Don't Just Reference
+When referencing a figure, tell the reader what to look for. Not just "as shown in Figure X" — say what the figure reveals, what pattern to notice, or what comparison matters. This extends principle D2 (which checks existence of reference; this checks quality of reference).
+
+**Common violations**: Bare "see Figure X" or "as shown in Figure X" without interpretive guidance; figure references that state the figure exists but not what it demonstrates; paragraphs that rely on the reader to independently extract the figure's message.
+
+### D6. Figure Row Alignment
+Use `[t]` alignment on subfigures in multi-row grids to ensure rows align at their tops. When subfigures in a row have different heights (e.g., one has a caption and others do not, or one is a PNG and others are PDFs), `[b]` alignment causes visual misalignment. Add explicit height constraints (`\includegraphics[height=X]`) when images within a row have different aspect ratios.
+
+**Common violations**: Using `[b]` alignment in subfigure grids (the default in many templates); rows where captions appear only on some subfigures, pushing others up or down; mixing raster and vector formats without height normalization.
+
+### D7. Figure Caption Self-Sufficiency
+A caption should be understandable without reading the body text. It should state what the figure shows, define any abbreviations or symbols used in the figure, and highlight the key takeaway. Readers often scan figures and captions before deciding whether to read the full text — the caption is the figure's elevator pitch.
+
+**Common violations**: Captions that say only "Results on dataset X" without explaining what the axes, colors, or groups represent; captions that reference terms defined only in the body text; captions that describe the visual layout ("Left: ..., Right: ...") without stating the message; captions missing units on reported quantities.
+
+---
+
+## E. Citations & Bibliography
+
+*Primary agents: technical-reviewer, bibliography-auditor*
+
+### E1. Cite All Named Models/Benchmarks/Datasets
+At first use in each section, even if cited earlier in the thesis. Readers may jump to individual sections.
+
+**Common violations**: Named methods mentioned without citation after the first chapter; benchmark names used without references in experiment sections that readers may access directly.
+
+### E2. Citation Completeness at First Mention
+Cite foundational methods and models (SIFT, HOG, CNN/AlexNet, Transformer, etc.) at their first mention in each chapter, even if they are well-known. Readers may start from any chapter; a bare mention without citation forces them to search for the reference.
+
+**Common violations**: Named methods mentioned without citation after their first appearance in Ch. 1; acronyms like "CNN" or "ViT" used without a citation in chapters that readers may access independently; benchmark names (ImageNet, COCO) used without references in experiment sections.
+
+### E3. Bibliography Hygiene
+Bibliography entries should be complete, consistent, and up-to-date. Check: (1) every entry has the required fields for its type (authors, title, year, venue/journal, pages, DOI where available), (2) title capitalization is protected with braces for proper nouns and acronyms (e.g., `{ImageNet}`, `{BERT}`), (3) arXiv-only citations are updated to their published versions when available, (4) author names are consistent across entries (not "Vaswani, A." in one and "Ashish Vaswani" in another), (5) venue names are consistent (not "NeurIPS" in one entry and "Advances in Neural Information Processing Systems" in another — pick one style), (6) no "?" markers appear in the compiled PDF (indicating unresolved references). Run `biber --validate-datamodel` or check the .blg file for warnings.
+
+**Common violations**: arXiv preprints cited when a published version exists at a top venue; missing page numbers or DOIs; inconsistent venue abbreviations; title-cased titles without brace protection causing lowercase output; duplicate bib entries under different keys; entries with placeholder fields ("to appear", "forthcoming") that were never updated.
+
+---
+
+## F. Process & Meta
+
+*Primary agents: writing-reviewer (final pass)*
+
+### F1. Strategic Limitation Placement
+How and where to discuss limitations depends on the document type. **Peer-reviewed papers**: Be strategic — don't expose weaknesses prematurely. Options: (a) acknowledge briefly with a potential fix ("While X assumes Y, this can be mitigated by Z"), (b) place in a dedicated limitations section after results build confidence, (c) frame as future work rather than weakness. **Thesis / internal documents**: Discuss limitations earlier and more clearly, at the point the design decision is made, so the reader (supervisor, committee) sees the author's awareness of assumptions and tradeoffs.
+
+**Common violations**: Limitations mentioned in the method section of a paper before the reader has seen results; limitations omitted entirely from a thesis chapter; limitations listed without mitigation or context; defensive tone when discussing known constraints.
+
+### F2. Negation-Contrast Audit
+Before finalizing any chapter, search for "not...but" patterns and rephrase positively. Negation-contrast structures ("not X, but Y") are a strong AI-writing marker per Principle B2. A final-pass grep for patterns like `is not.*but`, `not to.*but to`, `not how.*but` catches residual instances.
+
+**Common violations**: Sentences structured as "the question is not X but Y" (rephrase: "the question is Y"); "the goal is not to X but to Y" (rephrase: "the goal is to Y: ..."); "not only...but also" used to combine two claims that should be separate sentences.
+
+collab: SpawnAgent
+2026-08-29T01:21:01.367344Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest("http/request url is invalid: relative URL without a base")))
+2026-08-29T01:21:01.691030Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest("http/request url is invalid: relative URL without a base")))
+2026-08-29T01:21:01.765242Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when AuthRequired(AuthRequiredError { www_authenticate_header: "Bearer realm=\"OAuth\", resource_metadata=\"https://circleback.ai/.well-known/oauth-protected-resource/api/mcp\", scope=\"user\"" })
+2026-08-29T01:21:02.724887Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest("http/request url is invalid: relative URL without a base")))
+collab: SpawnAgent
+2026-08-29T01:21:07.324063Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest("http/request url is invalid: relative URL without a base")))
+2026-08-29T01:21:07.724185Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest("http/request url is invalid: relative URL without a base")))
+2026-08-29T01:21:07.795412Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when AuthRequired(AuthRequiredError { www_authenticate_header: "Bearer realm=\"OAuth\", resource_metadata=\"https://circleback.ai/.well-known/oauth-protected-resource/api/mcp\", scope=\"user\"" })
+2026-08-29T01:21:08.741648Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest("http/request url is invalid: relative URL without a base")))
+collab: SpawnAgent
+2026-08-29T01:21:18.020634Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest("http/request url is invalid: relative URL without a base")))
+2026-08-29T01:21:18.336517Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest("http/request url is invalid: relative URL without a base")))
+2026-08-29T01:21:18.486737Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when AuthRequired(AuthRequiredError { www_authenticate_header: "Bearer realm=\"OAuth\", resource_metadata=\"https://circleback.ai/.well-known/oauth-protected-resource/api/mcp\", scope=\"user\"" })
+2026-08-29T01:21:19.400401Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest("http/request url is invalid: relative URL without a base")))
+2026-08-29T01:21:37.529332Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 426 Upgrade Required, url: ws://127.0.0.1:17841/v1/responses
+2026-08-29T01:21:44.532434Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 426 Upgrade Required, url: ws://127.0.0.1:17841/v1/responses
+2026-08-29T01:21:52.934459Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 426 Upgrade Required, url: ws://127.0.0.1:17841/v1/responses
+codex
+The first hard inconsistency is already visible: the D2 template pool is described as all 928 published windows, but the null paragraph still says 510 pipeline “not-detected” windows and even calls the arm-B templates that same set. That stale pre-G1 wording changes the null estimand, so it is abstract-relevant rather than cosmetic.
+collab: Wait
+collab: Wait
+collab: Wait
+exec
+/bin/zsh -lc "nl -ba generalization/GENERALIZATION_PLAN.md | sed -n '1,280p'; nl -ba generalization/METRICS_SPEC.md | sed -n '1,180p'; date -j -f '%Y-%m-%d' '2026-09-30' '+%A %Y-%m-%d'" in /Users/jackneo/Documents/vonhippel-base9/astro-wd
+ succeeded in 0ms:
+     1	# Generalization campaign: three-dataset response assessment of the frozen pipeline
+     2	
+     3	Branch `generalization/campaign-1` · frozen baseline tag `frozen-2026-08-01` ·
+     4	deadline AAS 249 regular abstract Tue 2026-09-30.
+     5	
+     6	## Claim under test
+     7	
+     8	The 2026-08-01 ZTF white-dwarf run showed the variance census and the blind
+     9	Lomb-Scargle search have complementary selection functions — but on 19
+    10	truth-labeled stars, with a known mechanism, and injections conditioned on two
+    11	light curves. Red-team verdict: NO-GO as a discovery claim. The flip condition:
+    12	run the *frozen* pipeline on externally labeled samples large enough to
+    13	measure class-specific response rates with uncertainty.
+    14	
+    15	G1 review (sol ×3, 2026-08-28) sharpened what this campaign can honestly
+    16	claim — THREE SEPARATE response assessments, never pooled into one
+    17	"selection function":
+    18	- D1: the anchor (19 labeled WDs + 928-star catalog, published);
+    19	- D2: conditional injection-recovery efficiency of the frozen search stage
+    20	  (TESS-truth signals in real ZTF windows) — labeled as such, NOT real-sky
+    21	  completeness and NOT an independently labeled sample;
+    22	- D3: externally labeled, magnitude-restricted validation on real ZTF
+    23	  photometry (detection completeness, frequency recovery, negative-class
+    24	  trigger rate).
+    25	Banned phrases (G1): "quantified selection-function measurement", "real-sky
+    26	completeness" (for D2), "D3 FPR", unqualified "purity". Estimand names in
+    27	METRICS_SPEC.md are binding.
+    28	
+    29	## Frozen-core / adapter-shell architecture
+    30	
+    31	- Tag `frozen-2026-08-01` = branch point. Zero edits to any script that
+    32	  produced the published bundle; the referee check is an empty
+    33	  `git diff frozen-2026-08-01 -- scripts/<frozen five>`.
+    34	- Frozen five: `run_catalog_lomb_scargle.py`, `run_lomb_scargle.py`,
+    35	  `lomb_scargle_common.py`, `build_catalog_panels.py`,
+    36	  `fetch_catalog_lightcurves.py`. SHA-256 pinned in
+    37	  `scripts/generalization/frozen_api.py`; `assert_frozen()` runs at import and
+    38	  at the top of every campaign script.
+    39	- Campaign code lives in `scripts/generalization/` and imports the frozen
+    40	  callables only through `frozen_api`. The frozen CLI never runs on campaign
+    41	  data (its `main()` merges the WD roster and rewrites the published table);
+    42	  `verify_cli_identity.py` proves the import path is byte-identical to the
+    43	  CLI's internal call path.
+    44	- Known frozen quirks are pinned by `tests/test_frozen_constants.py`, fixed by
+    45	  nothing: the `>= 2.5` vs `> 2.5` census inconsistency (provably
+    46	  non-affecting: 0 of 5,568 published ratios within 1e-4 of 2.5; campaign
+    47	  metrics use `>=` and assert no campaign ratio equals 2.5 exactly), the
+    48	  bootstrap's `int(source_id[-9:])` seed (harmless for 19-digit numeric
+    49	  campaign ids by construction), duplicated pass-bound literals (AST-scan
+    50	  test).
+    51	
+    52	### Campaign source_id convention
+    53	
+    54	19-digit numeric strings: `90…` D3 targets, `92…` D2 arm B, `93…` D2 arm A,
+    55	`94…` D2 Gaussian nulls, `95…` D2 paired real-window controls. No collision
+    56	with Gaia DR3 ids; always valid for the frozen seed convention.
+    57	
+    58	### Replay gate (blocks everything)
+    59	
+    60	`replay_gate.py` re-runs the frozen `analyze_star` through `frozen_api` on 25
+    61	published stars (all 7 schema-v2 + 18 stride-sampled schema-v1) and
+    62	byte-compares against the committed bundle. Comparison tiers: raw-identical;
+    63	identical after CRLF→LF normalization (git stored the bundle normalized);
+    64	identical after the documented v1→v2 schema transform — 921/928 published
+    65	files were written before commit `fa16d7f` (parent `e917bd1`), which added
+    66	sparse-input early-exit branches plus the `available`/`unavailable_reason`
+    67	keys and bumped `schema_version` 1→2. For any star that yields candidates,
+    68	the numeric path is unchanged (the new branches fire only on sparse inputs
+    69	that previously crashed; all 7 v2 records exercise exactly those branches).
+    70	The downgrade transform removes only the two added keys and byte-compares
+    71	everything retained. Gate passes only with a nonempty roster, zero
+    72	mismatches AND at least one schema-v2 star reproducing with no transform
+    73	(unconditional). VERDICT 2026-08-28 (jacks-7i-5090, production venv):
+    74	PASS — 7 identical_newline + 18 identical_v1_schema, 25/25.
+    75	Campaign L-S runs are valid only on machine+env pairs that passed the gate;
+    76	`run_generalization_ls.py` refuses to start without a matching PASS
+    77	attestation (env fingerprint + frozen SHAs). Planned W2 hardening: one full
+    78	928-star replay on the production machine as the definitive baseline, and a
+    79	panel-stage golden replay (shard rebuild byte-compare incl. bjd_tdb, IERS
+    80	auto-download disabled).
+    81	
+    82	### Environment
+    83	
+    84	The published run's venv (laptop `jacks-7i-5090`) is recorded in
+    85	`generalization/env/FROZEN_ENV.md`; the numerics-bearing subset is pinned in
+    86	`requirements-frozen.txt` (Python 3.12.12, numpy 2.3.x, scipy 1.16.3, astropy
+    87	8.0.1, iers-data 0.2026.7.27, pyerfa 2.0.1.5, pandas 2.3.3). Discrepancy on
+    88	record: pip metadata said numpy 2.3.3 but the venv imports 2.3.5; the replay
+    89	gate verdict on that venv is the authority on whether the published numbers
+    90	reproduce under what is actually installed. requirements-frozen.txt is updated
+    91	to whatever passes the gate, and the manifest of every campaign run records
+    92	`env_versions()` at runtime.
+    93	
+    94	## D1 — ZTF white dwarfs (anchor, done)
+    95	
+    96	The published 2026-08-01 bundle: 19-star truth roster + 928-star catalog.
+    97	No re-run; campaign metrics re-read the published per-star JSONs.
+    98	
+    99	## D3 — ZTF × Kepler delta Scuti (real ZTF light curves, external labels)
+   100	
+   101	- Labels: Murphy+2019 (VizieR J/MNRAS/485/2380/table1, 14,330 Kepler A/F
+   102	  stars; `dSct` flag 0/1/2 — ships its own labeled negative class).
+   103	- Amplitude axis: Mo+2026 (J/A+A/710/A245): table2 = 259,883 extracted
+   104	  frequencies (SNR>8) for 1,838 delta Scutis → per-star dominant amplitude
+   105	  (ppt × 1.0857 → mmag); table1 = confirmed super-Nyquist modes → the
+   106	  sub-hour stratum (any confirmed SNF ⇒ real mode above Kepler LC Nyquist
+   107	  283.2 µHz ⇒ P < 59 min). This replaces the originally scouted Bowman+2016
+   108	  join: Bowman's VizieR table carries no amplitudes; Mo+2026 supersedes it
+   109	  (and is itself the published Murphy×Bowman merge, 1,838 stars).
+   110	- Roster (`build_d3_roster.py`, rebuilt 2026-08-28 post-G1): gmag ≥ 13.2
+   111	  (Murphy/KIC g magnitude — the named saturation proxy), ALL 610 dSct=1
+   112	  survivors + ALL 76 dSct=2 (own class, excluded from headline numbers) +
+   113	  2,314 dSct=0 negatives as a frozen-seed (20260828) simple random sample
+   114	  (inclusion probability 0.317 recorded; sampling_weight column carried into
+   115	  every weighted estimate) = 3,000. Amplitude coverage of positives:
+   116	  456/610 with dominant amplitude; 48 > 10 mmag; 254 in 1–10; 154 < 1;
+   117	  290 sub-hour; median 1.77 mmag. The 1–10 mmag log ladder and the
+   118	  sub-threshold majority make the completeness turn-on curve the headline
+   119	  D3 deliverable, not a defect (pre-registered: risk 2).
+   120	- Acquisition: frozen `fetch_catalog_lightcurves.py --roster roster_d3.csv`
+   121	  verbatim (10″ cone, 1.25 s cadence, resumable); frozen QC chain via
+   122	  `build_panels_generic.py` (nearest-cluster crossmatch, catflags/chi cuts,
+   123	  ≥20 exp/band, BJD_TDB at Palomar — all frozen functions).
+   124	- Prespecified subsets: crowding (sep < 1.0″, ≤3 objects in cone),
+   125	  near-saturation (g < 14 flagged; g > 14 safe subset).
+   126	- Caveat on record: dSct=0 means "not a delta Scuti", not "constant" — the
+   127	  D3 negative-class result is a TRIGGER RATE (never called FPR); triggered
+   128	  negatives get adjudicated in W4 (plausible real variable vs unexplained).
+   129	
+   130	## D2 — TESS-truth transplant (DAV signals in real ZTF windows)
+   131	
+   132	- Truth: Romero+2022 (MNRAS 511, 1574; arXiv:2201.04158; 74 new DAVs,
+   133	  TESS Cy1–3) + Romero+2025 (ApJ 984, 112; arXiv:2407.07260; 32 new DAVs,
+   134	  Cy4–5). Published per-mode tables: period [s] + amplitude [ppt] + per-star
+   135	  FAP(1/1000) limit + 20-s-cadence flags. 2025 revisions apply: NOV
+   136	  retractions (TIC 261400271, 804835539, 317620456) and updated mode lists
+   137	  for re-observed 2022 objects — latest published solution wins.
+   138	- Truth model, not interpolation (`d2_truth_model.py`): DAV P < 240 s is
+   139	  super-Nyquist AND past the first sinc null of TESS 120-s data; the mode
+   140	  table is evaluated analytically at the template's real `bjd_tdb`.
+   141	  Chain: ppt → mag (×1.0857e-3) → de-dilution OFF by default (SPOC PDCSAP is
+   142	  crowding-corrected; ON = prespecified variant) → de-integrate TESS sinc
+   143	  (reject modes with |sinc| < 0.3, i.e. P < ~160 s from 120-s data; prefer
+   144	  20-s cadence solutions) → bandpass ladder A_g/A_TESS ∈ {1.4, 1.7, 2.1} ×
+   145	  A_r/A_g ∈ {0.70, 0.80, 0.90} (nominal 1.7/0.80 from an in-code blackbody
+   146	  derivative; the ladder is non-optional — zr carries most published
+   147	  confirmations) → re-integrate ZTF 30-s sinc analytically → compose
+   148	  phase-coherently in zg and zr (shared t_ref) so the frozen two-band rule
+   149	  keeps its meaning.
+   150	- Windows: templates from ALL 928 stars of the published catalog (G1 fix —
+   151	  the earlier 510-not-detected pool conditioned on the pipeline's own
+   152	  outcome), matched by median zg mag (|Δg| ≤ 0.25, widened when thin;
+   153	  flagged), K=3 per target at 10/50/90th percentile of exposures-per-night
+   154	  (75% of zg nights are single-exposure; per-night median subtraction
+   155	  annihilates 53% of zg data — pre-registered, stratified: risk 3).
+   156	  Native variability in the pool is handled by strict frequency-matched
+   157	  scoring plus PAIRED UNINJECTED CONTROLS (95-prefix): one control shard per
+   158	  unique arm-B template window. W2 stretch: fetch real ZTF light curves at
+   159	  the 103 Romero positions; where the frozen QC crossmatch succeeds, those
+   160	  self-windows become the preferred templates (removes template-choice
+   161	  conditioning entirely for that subset).
+   162	- Arms: B primary (signal + real ZTF mags, real magerr), A diagnostic
+   163	  (synthetic Gaussian floor). FPR: 1,000 arm-A zero-amplitude nulls
+   164	  (510 not-detected windows, fresh deterministic noise seeds where windows
+   165	  repeat — windows repeat, noise does not; documented). Arm-B nulls are
+   166	  tautological (templates ARE the not-detected set).
+   167	  Verification arm: ~20 SPOC light curves prewhitened to confirm published
+   168	  solutions; everything else needs metadata only.
+   169	- Run matrix (sized to the 1-day wall budget at 22 workers ≈ 84 stars/h):
+   170	  arm B nominal (1.7/0.80) 103×3 templates = 309; arm A nominal 309;
+   171	  nulls 1,000; ladder sensitivity = 8 remaining (R_g, R_rg) points × 103 ×
+   172	  1 template (the median-n_exp one) = 824. Total ≈ 2,442 ≈ 1.2 d.
+   173	  De-dilution variant runs only for the SPOC verification-arm stars (dilution
+   174	  factors are not in the papers; CROWDSAP comes with the ~20 downloads).
+   175	  Post-G1 additions: paired controls (~<=309, prefix 95) and a phase-draw
+   176	  sensitivity axis (2 extra deterministic phase draws x 103 targets on the
+   177	  median template, arm B nominal) ≈ +515 runs; total ≈ 2,960 ≈ 1.5 d.
+   178	- Truth-model corrections found at implementation (2026-08-28): |sinc| ≥ 0.3
+   179	  rejection corresponds to P < ~160 s at 120-s cadence (the earlier "197 s"
+   180	  was the |sinc| = 0.5 point); D2 min published period is 115.9 s and 49/103
+   181	  stars carry 20-s solutions, so few modes are affected. Phases are
+   182	  unpublished: drawn once per star from PCG64(seed=TIC), shared across bands
+   183	  and ladder variants. Blackbody derivative at 11,500 K gives (1.43, 0.80) —
+   184	  the ladder's low rung; upper rungs cover atmosphere-model/limb-darkening
+   185	  uncertainty.
+   186	
+   187	## Metrics — see METRICS_SPEC.md (frozen before any campaign L-S run)
+   188	
+   189	## Execution topology
+   190	
+   191	- Mac: rosters, fetches, shard building, metrics, figures, git (authoritative).
+   192	- Laptop `jacks-7i-5090` (22 workers): replay gate + D3 run. Desktop
+   193	  (needs wake; offline 64 d): D2 + D3 overflow; if unreachable, D2 runs on
+   194	  the laptop after D3 (+1 day; slip rule below).
+   195	- Windows job launches escape the sshd job object via WMI
+   196	  `Win32_Process.Create` (Start-Process children die with the ssh session —
+   197	  found the hard way on the first replay launch).
+   198	- Wall model (anchor 928 ≈ 11 h at 22 workers; cost scales with baseline):
+   199	  D3@3,000 ≈ 1.2–1.9 d; D2 ≈ 1 d; hard stop via 150-star timing pilot.
+   200	  Disk binds, not time: `workers = min(22, floor(free_GB × 0.5 / 0.47))`,
+   201	  scratch on local NVMe/RAM disk, never a synced folder.
+   202	- Results bundles: `generalization/results/<date>_<dataset>/` mirroring the
+   203	  existing convention (README, DATA_PROVENANCE, SHA256SUMS, acceptance.json).
+   204	
+   205	## Review gates (sol@xhigh + ChatGPT Pro standing directive)
+   206	
+   207	| Gate | When | Reviewer | Scope |
+   208	|---|---|---|---|
+   209	| G1 | DONE 2026-08-28 | sol ×3 | 47 findings; dispositions in reviews/G1/RESPONSE.md; design fixes applied same day |
+   210	| G2 | end W1 | sol ×5 | this file + METRICS_SPEC.md; frozen only after unanimous/addressed |
+   211	| G3 | W2 pre-batch | Pro (inline code) | d2_truth_model + build_d2_shards: sinc algebra, bandpass, phase coherence, schema |
+   212	| G4 | W3 mid-run | sol ×2 | pilot metrics sanity, run anomalies |
+   213	| G5 | W4 | Pro + fresh-context verifier | results audit; every headline number re-derived from JSONs/CSVs |
+   214	| G6 | Sep 26–29 | sol ×3 + ars-abstract | final abstract |
+   215	
+   216	## Timeline
+   217	
+   218	- W1 (Aug 28–Sep 3): tag+branch ✓, replay gate ✓(running), env pinning ✓,
+   219	  frozen_api+tests ✓, D3 roster ✓, D3 IRSA fetch (overnight, running),
+   220	  D2 sources downloaded ✓, PLAN+SPEC (this commit), G1, G2, D2 roster parser.
+   221	- W2 (Sep 4–10): build_panels_generic on D3 → census; d2_truth_model + tests
+   222	  + G3; build_d2_shards; verify_cli_identity; 150-star pilot; wake desktop.
+   223	- W3 (Sep 11–17): D3 full run (laptop) ∥ D2 (desktop); metrics+plots against
+   224	  pilot output; G4.
+   225	- W4 (Sep 18–25): metrics, ladders, figures, bundles, acceptance; G5;
+   226	  cross-dataset synthesis table.
+   227	- Sep 26–30: abstract + G6; submit.
+   228	- Slip rule (revised at G1 — the old "D2 alone flips the condition" claim is
+   229	  untenable since D2 is not an externally labeled sample): D3 is the dataset
+   230	  that satisfies the external-label condition; if only ONE new dataset can
+   231	  land by Sep 25 it must be D3, with D2 stated as in progress. If only D2
+   232	  lands, the abstract is scoped to injection-recovery + D1 and makes no
+   233	  external-validation claim.
+   234	
+   235	## Top risks
+   236	
+   237	1. Env fails replay → pin/iterate until byte-identical; blocks all work.
+   238	2. D3 completeness ≈ 0 below the a95 floor → stratification IS the
+   239	   deliverable (turn-on curve).
+   240	3. D2 high-pass ≈ 0 from the single-exposure-night penalty → pre-registered
+   241	   expected headline, stratified to be explanatory.
+   242	4. A_r/A_g lever → mandatory ladder; headline reported as a band.
+   243	5. D3 negatives not constants → FPR an upper bound, stated.
+   244	6. Desktop unreachable → D2 on laptop after D3 (+1 day).
+   245	7. Romero mode tables are LaTeX prose with typos (comma decimals, stray
+   246	   units) → parser with hard row-count and range asserts; G3 reviews the
+   247	   parsed output against the PDFs.
+   248	
+   249	## Mandatory citations
+   250	
+   251	Sokolovsky+2017 (variability-index benchmark; data not public — comparison
+   252	baseline only), Guidry+2021, Hermes+2017, Murphy+2019, Bowman+2016 (context),
+   253	Mo+2026, Romero+2022, Romero+2025, Gentile Fusillo+2021, Masci+2019.
+     1	# METRICS_SPEC — frozen before any campaign Lomb-Scargle run
+     2	
+     3	Implemented by `scripts/generalization/metrics_generalization.py`. Any change
+     4	after the first campaign L-S run voids the prespecification and must be
+     5	reported as such. Revised at G1 (2026-08-28) in response to the sol review
+     6	panel — see `generalization/reviews/G1/RESPONSE.md`; frozen at G2.
+     7	
+     8	## Estimand vocabulary (names are binding)
+     9	
+    10	The campaign does NOT produce a single pooled "selection function". It
+    11	produces three separate response assessments with these named estimands:
+    12	
+    13	- **detection completeness** — P(rule fires | labeled positive), per dataset,
+    14	  class, pass rule. D3 denominator: all 610 dSct=1 (external labels).
+    15	  D2 denominator: injection targets (synthetic positives — reported as
+    16	  *conditional injection-recovery efficiency of the search stage*, never as
+    17	  real-sky completeness).
+    18	- **frequency-recovery completeness** — P(rule fires AND strict frequency
+    19	  match | labeled positive AND frequency-scorable). D3 frequency-scorable:
+    20	  the 456/610 with Mo+2026 rows (reported as "Mo-join-conditioned"; joined
+    21	  vs unjoined covariates compared). D2: targets with >=1 injected mode
+    22	  inside the pass's search bounds after sinc rejection (S_p = 1).
+    23	  The missed-vs-wrong-frequency decomposition uses ONLY matching
+    24	  denominators (both conditional on scorable/S_p = 1).
+    25	- **correct-frequency fraction among detected positives** — what an earlier
+    26	  draft called "purity"; it is not positive predictive value and is never
+    27	  labeled purity. Class-level PPV is reported for D3 only, with sampling
+    28	  weights (negatives carry weight pool/sample = 7292/2314), as a
+    29	  prevalence-weighted estimate with the contaminated-negative caveat.
+    30	- **negative-class trigger rate** — P(rule fires | Murphy dSct=0). NOT called
+    31	  FPR: the class contains non-dSct variables; reported with sampling weights
+    32	  and, after adjudication of triggered negatives (W4), split into
+    33	  "plausible real variable" vs "unexplained".
+    34	- **Gaussian-null false-alarm rate (FPR_Gaussian)** — P(confirmed | arm-A
+    35	  zero-amplitude null), n = 1000 over the 928-window frame (windows repeat,
+    36	  seeds do not). Acceptance criterion (preregistered): one-sided 95% upper
+    37	  bound <= 0.5% at zero events. The FP frequency-distribution/alias audit is
+    38	  descriptive only below 10 events.
+    39	- **native trigger rate of the template pool** — P(confirmed | paired
+    40	  uninjected control window), the 95-prefix arm. Context for D2 recovery,
+    41	  not an FPR.
+    42	
+    43	## Frequency-match taxonomy (disjoint labels, strict first)
+    44	
+    45	Tolerance: 1.5 / baseline_days per star (the pipeline's own convention).
+    46	For each detected candidate, in precedence order against the truth list
+    47	(D3: Mo frequencies for that KIC; D2: injected modes):
+    48	
+    49	1. `direct` — within tolerance of a truth frequency;
+    50	2. `harmonic` — within tolerance of 2f or f/2 of a truth frequency;
+    51	3. `window_alias` — within tolerance of |f_truth ± k f_sid|, k = 1, 2
+    52	   (sidereal-day family, the pipeline's own alias model);
+    53	4. `ambiguous` — matches >1 truth frequency class above;
+    54	5. `unmatched`.
+    55	
+    56	Headline frequency recovery counts `direct` only, scored against the
+    57	pipeline's BEST candidate (`matched_primary`). D3's primary truth frequency
+    58	is the DOMINANT Mo mode; any-mode direct matches are a secondary column.
+    59	`matched_any_mode` over the 15 stored top_peaks is diagnostic only.
+    60	Chance-match calibration: truth lists permuted across stars (frozen seed,
+    61	100 permutations) → accidental direct-match rate reported beside every
+    62	frequency-recovery table.
+    63	
+    64	## Detection rules (all four always reported; PRIMARY = rule 1)
+    65	
+    66	1. `confirmed` (headline), 2. `confirmed|candidate`, 3. `census`
+    67	(any of six frozen ratios >= 2.5), 4. `either` (1 OR 3).
+    68	Primary claim family (preregistered): rule 1, pass = best of {low, high}
+    69	(the frozen `overall_result` ordering), nominal D2 variant (1.7/0.80,
+    70	de-dilution off, arm B), per dataset. Everything else is labeled a
+    71	pointwise descriptive sensitivity analysis; no simultaneous-coverage claim.
+    72	
+    73	## Units of analysis and intervals
+    74	
+    75	- D1/D3: the star is the unit; Wilson 95% intervals on independent per-star
+    76	  proportions; weighted estimates use the effective-sample-size Wilson
+    77	  approximation.
+    78	- D2: the TESS target is the CLUSTER. K=3 template windows and ladder/phase
+    79	  variants are correlated replicates, never pooled as independent trials.
+    80	  Per-stratum (10/50/90th percentile window) proportions are reported
+    81	  separately; aggregates are equal-weight standardized means over targets
+    82	  with cluster bootstrap intervals (resample targets, keep all replicates;
+    83	  B = 2000, frozen seed). Ladder results: nominal is primary; the min-max
+    84	  across the 3x3 grid is a "prespecified finite-grid sensitivity range",
+    85	  never a confidence band; endpoint scenarios identified.
+    86	
+    87	## Complementarity (census vs L-S)
+    88	
+    89	Primary table (per dataset, on labeled positives with both methods
+    90	available): C = census flag; L = rule-1 detection (detection-only, no
+    91	frequency requirement — symmetric margins). Report the full 2x2, both
+    92	discordant fractions, union completeness, and incremental yields
+    93	P(C=1,L=0), P(C=0,L=1) with intervals (Wilson for D3/D1; cluster bootstrap
+    94	for D2). Exact McNemar is SECONDARY (marginal-homogeneity only; it does not
+    95	measure complementarity).
+    96	
+    97	## Surfaces
+    98	
+    99	Completeness on (log P, log A) and (median exposures-per-night, log A).
+   100	Amplitude axis is INVARIANT per dataset: D3 = historical Kepler-band
+   101	dominant amplitude (mmag; explicitly non-contemporaneous, not a ZTF-g
+   102	threshold); D2 = published TESS amplitude (ppt) for cross-variant surfaces,
+   103	nominal injected A_g for the nominal-only surface. Bin edges frozen here:
+   104	log P edges at P = {100 s, 200 s, 500 s, 1000 s, 2000 s, 0.05 d, 0.2 d,
+   105	1 d, 10 d, 100 d}; amplitude edges {0.5, 1, 2, 5, 10, 20, 50, 200} mmag
+   106	(D3) / {0.5, 2, 5, 10, 30, 100} ppt (D2); cells below 5 stars reported as
+   107	counts only, no proportion.
+   108	
+   109	## Eligibility and attrition
+   110	
+   111	Two denominators, both always reported: P(rule | eligible roster target) and
+   112	P(rule | usable light curve) (frozen QC crossmatch passed, both passes
+   113	available). A full attrition table (roster -> fetched -> crossmatched ->
+   114	QC-passed -> both-passes-complete) by class, amplitude stratum, and
+   115	magnitude accompanies every dataset. Unavailable passes are never silently
+   116	dropped.
+   117	
+   118	## Guards
+   119	
+   120	- Assert no campaign census ratio equals 2.5 exactly.
+   121	- Assert every scored JSON has complete == true; both passes present.
+   122	- Manifest: SHA-256 of every input file, env versions, frozen + campaign
+   123	  file SHAs (frozen_api.campaign_file_shas), replay attestation reference,
+   124	  spec git blob SHA.
+   125	
+   126	## Outputs
+   127	
+   128	`generalization/results/<date>_<dataset>/metrics/`: per_star.csv,
+   129	completeness_by_class_pass_rule.csv, contingency_complementarity.json,
+   130	trigger_rates.csv, fp_frequency_distribution.csv, chance_match.csv,
+   131	surfaces/*.csv, sensitivity.csv, attrition.csv, manifest.json.
+   132	Figures via plot_generalization.py from these CSVs only.
+Wednesday 2026-09-30
+
+collab: Wait
+collab: Wait
