@@ -37,13 +37,17 @@ import time
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from pathlib import Path
 
+import math
+
 from frozen_api import (
     REPO_ROOT,
     analyze_star,
     assert_frozen,
     campaign_file_shas,
     env_versions,
+    grid_for,
     json_ready,
+    overall_result,
     physical_workers,
 )
 
@@ -54,6 +58,18 @@ PUBLISHED_STARS = (
 
 def normalize(raw: bytes) -> bytes:
     return raw.replace(b"\r\n", b"\n")
+
+
+def project_v1(replayed: dict) -> dict:
+    """The documented v1->v2 projection (commit fa16d7f added two keys)."""
+    downgraded = dict(replayed)
+    downgraded["schema_version"] = 1
+    downgraded["passes"] = {
+        name: {k: v for k, v in pass_result.items()
+               if k not in ("available", "unavailable_reason")}
+        for name, pass_result in replayed["passes"].items()
+    }
+    return downgraded
 
 
 def schema_v1_bytes(replayed: dict) -> bytes:
@@ -97,68 +113,129 @@ def first_difference(published: object, replayed: object, path: str = "$") -> st
     return ""
 
 
-DECISION_FIELDS = ("status", "basis", "zg_alias", "zr_alias", "multiband_top5")
+DECISION_FIELDS = ("status", "basis", "zg_alias", "zr_alias", "multiband_top5",
+                   "available", "unavailable_reason")
+PEAK_FLAG_FIELDS = ("series", "rank", "alias_flag", "window_alias",
+                    "stronger_peak_sidereal_alias")
+F32_READBACK_KEYS = {"power"}  # only when series == "multiband" (raw memmap readback)
+
+
+def grid_index(frequency: float, pass_name: str, baseline: float) -> int:
+    grid = grid_for(pass_name, baseline)
+    return int(round((frequency - grid.minimum) / grid.step))
 
 
 def decision_equivalence(published: dict, replayed: dict) -> dict:
-    """Report-only diagnostic (does NOT affect the pass criterion): are the
-    pipeline's decisions identical and how large is the numeric drift?"""
-    worst = 0.0          # decision-bearing float64 numerics
-    f32_worst = 0.0      # raw float32 periodogram readbacks (top-peak power)
+    """Report-only diagnostic (does NOT affect the strict pass criterion).
+    FAIL-CLOSED: any structural difference (missing key, list length,
+    nonfinite value, pass presence) is a recorded problem; decisions are
+    identical only when the problem list is empty."""
+    problems: list[str] = []
+    f64_worst = f32_worst = a95_worst = 0.0
     n_numeric = 0
-    decisions_identical = True
-    peaks_identical = True
+    baseline = float(published.get("baseline_days", 0.0) or 0.0)
+    if replayed.get("baseline_days") != published.get("baseline_days"):
+        problems.append("baseline_days differs")
 
-    def walk(a, b, key_name=""):
-        nonlocal worst, f32_worst, n_numeric
+    def rel(a: float, b: float) -> float:
+        return abs(a - b) / max(abs(a), abs(b), 1e-300)
+
+    def walk(a, b, path, key="", series=None):
+        nonlocal f64_worst, f32_worst, n_numeric
+        if isinstance(a, dict) != isinstance(b, dict) or isinstance(a, list) != isinstance(b, list):
+            problems.append(f"{path}: type differs"); return
         if isinstance(a, dict):
-            for key in a:
-                if key in b and not key.endswith("_a95_mmag"):
-                    walk(a[key], b[key], key)
-        elif isinstance(a, list):
-            for x, y in zip(a, b):
-                walk(x, y, key_name)
-        elif isinstance(a, (int, float)) and isinstance(b, (int, float)) \
-                and not isinstance(a, bool) and not isinstance(b, bool):
-            n_numeric += 1
+            if set(a) != set(b):
+                problems.append(f"{path}: keys differ {sorted(set(a) ^ set(b))[:4]}")
+            for k in a:
+                if k in b and not k.endswith("_a95_mmag"):
+                    walk(a[k], b[k], f"{path}.{k}", k, a.get("series", series))
+            return
+        if isinstance(a, list):
+            if len(a) != len(b):
+                problems.append(f"{path}: length {len(a)} != {len(b)}"); return
+            for i, (x, y) in enumerate(zip(a, b)):
+                walk(x, y, f"{path}[{i}]", key, series)
+            return
+        if isinstance(a, bool) or isinstance(b, bool) or a is None or b is None:
             if a != b:
-                rel = abs(a - b) / max(abs(a), abs(b), 1e-300)
-                if key_name == "power":
-                    f32_worst = max(f32_worst, rel)
+                problems.append(f"{path}: {a!r} != {b!r}")
+            return
+        if isinstance(a, (int, float)) and isinstance(b, (int, float)):
+            n_numeric += 1
+            fa, fb = float(a), float(b)
+            if not (math.isfinite(fa) and math.isfinite(fb)):
+                if not (math.isnan(fa) and math.isnan(fb)) and fa != fb:
+                    problems.append(f"{path}: nonfinite {a!r} vs {b!r}")
+                return
+            if fa != fb:
+                if key in F32_READBACK_KEYS and series == "multiband":
+                    f32_worst = max(f32_worst, rel(fa, fb))
                 else:
-                    worst = max(worst, rel)
+                    f64_worst = max(f64_worst, rel(fa, fb))
+            return
+        if a != b:
+            problems.append(f"{path}: {a!r} != {b!r}")
 
     for pass_name in ("low", "high"):
-        pa = published["passes"].get(pass_name, {})
-        pb = replayed["passes"].get(pass_name, {})
+        pa = published["passes"].get(pass_name)
+        pb = replayed["passes"].get(pass_name)
+        if (pa is None) != (pb is None):
+            problems.append(f"{pass_name}: pass presence differs"); continue
+        if pa is None:
+            continue
         for key in DECISION_FIELDS:
             if pa.get(key) != pb.get(key):
-                decisions_identical = False
+                problems.append(f"{pass_name}.{key}: {pa.get(key)!r} != {pb.get(key)!r}")
         fa, fb = pa.get("frequency_per_day"), pb.get("frequency_per_day")
-        if (fa is None) != (fb is None) or (
-                fa is not None and abs(fa - fb) > 1e-12 * abs(fa)):
-            decisions_identical = False
-        for ta, tb in zip(pa.get("top_peaks", []), pb.get("top_peaks", [])):
-            fa, fb = ta.get("frequency_per_day"), tb.get("frequency_per_day")
-            # grid index identity; 1e-12 relative absorbs FMA last-bit
-            # differences in minimum + step * index across architectures
-            if fa is None or fb is None or abs(fa - fb) > 1e-12 * abs(fa) \
-                    or ta.get("alias_flag") != tb.get("alias_flag"):
-                peaks_identical = False
-    walk(published["passes"], replayed["passes"])
-    # reported upper limits (A95) derive from float32 periodogram noise
-    # quantiles and drift more than decision-bearing numerics; track apart
-    a95_worst = 0.0
-    for pass_name in ("low", "high"):
+        if (fa is None) != (fb is None):
+            problems.append(f"{pass_name}.frequency: presence differs")
+        elif fa is not None:
+            if rel(fa, fb) > 1e-12:
+                problems.append(f"{pass_name}.frequency: {fa} != {fb}")
+            elif baseline and grid_index(fa, pass_name, baseline) != grid_index(fb, pass_name, baseline):
+                problems.append(f"{pass_name}.frequency: grid index differs")
+        ta, tb = pa.get("top_peaks", []), pb.get("top_peaks", [])
+        if len(ta) != len(tb):
+            problems.append(f"{pass_name}.top_peaks: length {len(ta)} != {len(tb)}")
+        for i, (x, y) in enumerate(zip(ta, tb)):
+            for key in PEAK_FLAG_FIELDS:
+                if x.get(key) != y.get(key):
+                    problems.append(f"{pass_name}.top_peaks[{i}].{key}: {x.get(key)!r} != {y.get(key)!r}")
+            fx, fy = x.get("frequency_per_day"), y.get("frequency_per_day")
+            if fx is None or fy is None or rel(fx, fy) > 1e-12 or (
+                    baseline and grid_index(fx, pass_name, baseline) != grid_index(fy, pass_name, baseline)):
+                problems.append(f"{pass_name}.top_peaks[{i}]: grid position differs")
         for band in ("zg", "zr"):
-            x = published["passes"].get(pass_name, {}).get(f"{band}_a95_mmag")
-            y = replayed["passes"].get(pass_name, {}).get(f"{band}_a95_mmag")
-            if x and y:
-                a95_worst = max(a95_worst, abs(x - y) / abs(x))
-    return {"decisions_identical": decisions_identical,
-            "top_peaks_identical": peaks_identical,
+            x, y = pa.get(f"{band}_a95_mmag"), pb.get(f"{band}_a95_mmag")
+            if (x is None) != (y is None):
+                problems.append(f"{pass_name}.{band}_a95: presence differs")
+            elif x is not None and y is not None:
+                if not (math.isfinite(x) and math.isfinite(y)):
+                    if not (math.isnan(x) and math.isnan(y)):
+                        problems.append(f"{pass_name}.{band}_a95: nonfinite")
+                elif x == 0 or y == 0:
+                    if x != y:
+                        problems.append(f"{pass_name}.{band}_a95: zero vs nonzero")
+                else:
+                    a95_worst = max(a95_worst, rel(x, y))
+    walk(published["passes"], replayed["passes"], "passes")
+    # derived OVERALL identity (best pass chosen by status then best_band_fap)
+    try:
+        oa, ob = overall_result(published), overall_result(replayed)
+        for key in ("best_pass", "blind_status", "basis"):
+            if oa.get(key) != ob.get(key):
+                problems.append(f"overall.{key}: {oa.get(key)!r} != {ob.get(key)!r}")
+        fa, fb = oa.get("best_frequency_per_day"), ob.get("best_frequency_per_day")
+        if (fa is None) != (fb is None) or (fa is not None and rel(fa, fb) > 1e-12):
+            problems.append("overall.best_frequency differs")
+    except Exception as exc:  # noqa: BLE001
+        problems.append(f"overall_result failed: {exc!r}")
+    return {"decisions_identical": not problems,
+            "top_peaks_identical": not any("top_peaks" in q for q in problems),
+            "problems": problems[:12],
             "numeric_fields": n_numeric,
-            "f64_max_relative_difference": worst,
+            "f64_max_relative_difference": f64_worst,
             "f32_power_max_relative_difference": f32_worst,
             "a95_max_relative_difference": a95_worst}
 
@@ -211,8 +288,9 @@ def compare_star(star: str, published_dir: Path, replay_dir: Path) -> dict[str, 
         return record
     record["verdict"] = "MISMATCH"
     published_obj = json.loads(published_norm.decode("utf-8"))
-    record["first_difference"] = first_difference(published_obj, replayed)
-    record["decision_equivalence"] = decision_equivalence(published_obj, replayed)
+    compared = project_v1(replayed) if record["published_schema_version"] == 1 else replayed
+    record["first_difference"] = first_difference(published_obj, compared)
+    record["decision_equivalence"] = decision_equivalence(published_obj, compared)
     return record
 
 

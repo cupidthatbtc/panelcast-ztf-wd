@@ -810,10 +810,45 @@ def main() -> None:
     parser.add_argument("--crossmatch-qc", type=Path, default=None,
                         help="d3: crossmatch_qc.csv from build_panels_generic "
                              "(enables the crowding sensitivity subset)")
+    parser.add_argument("--run-manifest", type=Path, default=None,
+                        help="manifest.json written by run_generalization_ls for "
+                             "the stars-dir; REQUIRED for d2/d3 — binds the scored "
+                             "JSONs to their replay attestation and tier")
     args = parser.parse_args()
 
     assert_frozen()
     campaign_shas_start = campaign_file_shas()
+    attestation_record: dict = {"tier": "published_bundle"}
+    boundary_margin = 1e-9
+    if args.dataset in ("d2", "d3"):
+        if args.run_manifest is None:
+            raise SystemExit("d2/d3 metrics require --run-manifest (attestation binding)")
+        run_manifest = json.loads(args.run_manifest.read_text(encoding="utf-8"))
+        att_path = Path(run_manifest.get("replay_attestation", {}).get("path", ""))
+        if not att_path.exists():
+            raise SystemExit(f"run manifest's replay attestation not found: {att_path}")
+        attestation = json.loads(att_path.read_text(encoding="utf-8"))
+        if attestation.get("gate") != "replay_gate" or attestation.get("passed") is not True:
+            # decision-equivalent tier: allowed ONLY if every star's diagnostic is clean
+            diag = [s_.get("decision_equivalence") for s_ in attestation.get("stars", [])]
+            if not diag or any(d is None or not d.get("decisions_identical") for d in diag):
+                raise SystemExit("attestation is neither a strict PASS nor fully decision-equivalent")
+            tier = "decision_identical"
+            f64_max = max(d["f64_max_relative_difference"] for d in diag)
+            boundary_margin = max(100.0 * f64_max, 1e-9)
+        else:
+            tier = "strict"
+            f64_max = 0.0
+        if run_manifest.get("frozen_sha256") != frozen_file_shas():
+            raise SystemExit("run manifest frozen SHAs differ from this checkout")
+        attestation_record = {
+            "tier": tier, "path": str(att_path),
+            "sha256": sha256_file(att_path),
+            "roster_size": attestation.get("roster_size", len(attestation.get("stars", []))),
+            "f64_max_relative_difference": f64_max,
+            "boundary_margin_relative": boundary_margin,
+            "run_manifest_sha256": sha256_file(args.run_manifest),
+        }
     if args.dataset == "d1":
         truth = truth_d1()
     elif args.dataset == "d3":
@@ -862,6 +897,29 @@ def main() -> None:
     per_star = pd.DataFrame(rows)
     if per_star.empty:
         raise SystemExit("no stars scored")
+    # platform-boundary audit (amendment-1): decisions whose FAP sits within
+    # the attested drift margin of the 1e-3 threshold, best-pass near-ties,
+    # and frequency matches within the margin of the match tolerance — all
+    # REPORTED; under the decision_identical tier they require strict-env
+    # recomputation before the estimates are authoritative
+    def fap_near(x):
+        return x is not None and isinstance(x, (int, float)) and x > 0 \
+            and abs(x - 1e-3) / 1e-3 <= boundary_margin
+    flags = []
+    for r in rows:
+        near = []
+        for pn in ("low", "high"):
+            js = json.loads((args.stars_dir / f"{r['sid']}.json").read_text()) \
+                if (args.stars_dir / f"{r['sid']}.json").exists() else None
+            if not js:
+                continue
+            p_ = js["passes"].get(pn, {})
+            for band in ("zg", "zr"):
+                if fap_near(p_.get(f"{band}_fap")):
+                    near.append(f"{pn}.{band}_fap")
+        flags.append(near)
+    per_star["platform_boundary_sensitive"] = [bool(f) for f in flags]
+    per_star["platform_boundary_fields"] = [";".join(f) for f in flags]
 
     args.out_dir.mkdir(parents=True, exist_ok=True)
     per_star.drop(columns=["truth_freqs"]).to_csv(
@@ -899,9 +957,11 @@ def main() -> None:
         "missing_star_json": len(missing),
         "missing_ids_first5": missing[:5],
         "census_available": int(per_star["census_variable"].notna().sum()),
+        "platform_boundary_sensitive": int(per_star["platform_boundary_sensitive"].sum()),
     }
     manifest = {
         "dataset": args.dataset,
+        "replay_attestation": attestation_record,
         "spec_sha256": sha256_file(REPO_ROOT / "generalization/METRICS_SPEC.md"),
         "attrition": attrition,
         "inputs_sha256_count": len(inputs),
