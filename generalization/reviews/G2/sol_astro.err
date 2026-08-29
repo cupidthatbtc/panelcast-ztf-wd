@@ -2030,3 +2030,672 @@ web search: '825'
 web search: 
 web search: 
 web search: 
+web search: https://www.aanda.org/articles/aa/pdf/2020/06/aa37470-20.pdf
+web search: 
+web search: site:archive.stsci.edu/missions/tess/doc TESS Instrument Handbook 2 second exposures 20 second 120 second cadence duty cycle coadds ...
+exec
+/bin/zsh -lc 'python3 -c $'"'import numpy as np\\ndef resp(P,keep):\\n t=(np.arange(60)+.5)*2\\n return abs(np.exp(2j*np.pi*t[keep]/P).mean()*np.sinc(2/P))\\npatterns={\"all\":np.ones(60,dtype=bool),\"drop_edges\":np.tile([0,1,1,1,1,1,1,1,1,0],6).astype(bool),\"drop_minmax_sim\":None}\\nfor P in [115.9,126.84,140,160,180,200,240,300,500,800]:\\n vals=[]\\n phase=np.linspace(0,2*np.pi,721,endpoint=False)\\n sim=[]\\n t=(np.arange(60)+.5)*2\\n for ph in phase:\\n  keep=np.ones(60,dtype=bool)\\n  y=np.cos(2*np.pi*t/P+ph)\\n  for g in range(6):\\n   q=np.arange(10*g,10*g+10); keep[q[np.argmax(y[q])]]=False; keep[q[np.argmin(y[q])]]=False\\n  sim.append(abs(np.exp(2j*np.pi*t[keep]/P).mean()*np.sinc(2/P)))\\n print(P,\"box120\",abs(np.sinc(120/P)),\"drop_edges\",resp(P,patterns[\"drop_edges\"]),\"CRM range\",min(sim),max(sim),\"mean\",np.mean(sim),\"box96\",abs(np.sinc(96/P)))'" in /Users/jackneo/Documents/vonhippel-base9/astro-wd
+ succeeded in 431ms:
+115.9 box120 0.034096378252390286 drop_edges 0.03471302511464806 CRM range 0.017206874530816752 0.03891204512159739 mean 0.03494887171768441 box96 0.19738450510417635
+126.84 box120 0.05672772997682962 drop_edges 0.05758071246583036 CRM range 0.04140043791149288 0.0613728521317385 mean 0.05763244295508297 box96 0.2909090341453605
+140 box120 0.16112773088475874 drop_edges 0.16310886704755664 CRM range 0.1556714937501687 0.16984036757967877 mean 0.16288245433613932 box96 0.38741050454759296
+160 box120 0.3001054387190354 drop_edges 0.30291904752508714 CRM range 0.2993477533385254 0.3042574736539143 mean 0.30257862311957034 box96 0.5045511524271047
+180 box120 0.4134966715663441 drop_edges 0.41655123029241814 CRM range 0.40985306002140454 0.4223489319444162 mean 0.4162112771294151 box96 0.5935615337286805
+200 box120 0.5045511524271047 drop_edges 0.5075641932727581 CRM range 0.5029175147160515 0.5112695826936613 mean 0.5072584493511724 box96 0.6618370298633003
+240 box120 0.6366197723675814 drop_edges 0.6392530601280304 CRM range 0.6349357158214664 0.6432785803842427 mean 0.6390367038941881 box96 0.756826728640657
+300 box120 0.756826728640657 drop_edges 0.75882604605001 CRM range 0.7556424630039819 0.7616492964171411 mean 0.7586846792028679 box96 0.8398685183385703
+500 box120 0.9079087973983508 drop_edges 0.9087701765534965 CRM range 0.9074371897495841 0.9098936243725296 mean 0.9087374277374932 box96 0.9404547637090438
+800 box120 0.963397762004116 drop_edges 0.9637545116414667 CRM range 0.9632073164064335 0.9642082804513773 mean 0.9637451253948256 box96 0.9764807038876557
+
+exec
+/bin/zsh -lc 'python3 -c $'"'import pandas as pd, numpy as np\\nt=pd.read_csv(\"generalization/data/d2/d2_targets.csv\")\\nm=pd.read_csv(\"generalization/data/d2/d2_modes.csv\").merge(t[[\"tic\",\"cadence_s\",\"paper\",\"sectors\"]],on=[\"tic\",\"paper\"],how=\"left\")\\nprint(\"targets\",t.tic.nunique(),\"modes\",len(m))\\nfor p in [160,240,350,800,1000]: print(\"period<\",p,\"modes\",int((m.period_s<p).sum()),\"targets\",m.loc[m.period_s<p,\"tic\"].nunique(),\"120s modes\",int(((m.period_s<p)&(m.cadence_s==120)).sum()),\"120s targets\",m.loc[(m.period_s<p)&(m.cadence_s==120),\"tic\"].nunique())\\nfor p in [800,1000]: print(\"period>\",p,\"modes\",int((m.period_s>p).sum()),\"targets\",m.loc[m.period_s>p,\"tic\"].nunique())\\nprint(\"amp bins\",pd.cut(m.amp_ppt,[0,10,30,50,100,200,500],right=False).value_counts().sort_index().to_dict())\\nprint(\"short 120s\")\\nprint(m[(m.period_s<240)&(m.cadence_s==120)][[\"tic\",\"paper\",\"sectors\",\"period_s\",\"amp_ppt\"]].sort_values([\"tic\",\"period_s\"]).to_string(index=False))\\n# sinc correction summaries by assigned cadence\\nx=np.pi*m.cadence_s/m.period_s\\nm[\"sinc\"]=np.sin(x)/x\\nm[\"corr\"]=1/abs(m.sinc)\\nprint(\"correction quantiles\",m.groupby(\"cadence_s\").corr.quantile([0,.5,.9,.95,.99,1]).to_string())\\n# count targets all modes >800 and any >800\\ng=m.groupby(\"tic\").period_s.agg([\"min\",\"max\"])\\nprint(\"targets all >800\",int((g[\"min\"]>800).sum()),\"any >800\",int((g[\"max\"]>800).sum()))'" in /Users/jackneo/Documents/vonhippel-base9/astro-wd
+ exited 1 in 2020ms:
+Traceback (most recent call last):
+targets 103 modes 341
+period< 160 modes 5 targets 3 120s modes 1 120s targets 1
+period< 240 modes 10 targets 4 120s modes 1 120s targets 1
+period< 350 modes 68 targets 44 120s modes 23 120s targets 19
+period< 800 modes 242 targets 93 120s modes 90 120s targets 49
+period< 1000 modes 315 targets 99 120s modes 124 120s targets 52
+period> 800 modes 98 targets 48
+period> 1000 modes 26 targets 18
+amp bins {Interval(0, 10, closed='left'): 226, Interval(10, 30, closed='left'): 99, Interval(30, 50, closed='left'): 10, Interval(50, 100, closed='left'): 6, Interval(100, 200, closed='left'): 0, Interval(200, 500, closed='left'): 0}
+short 120s
+      tic      paper   sectors  period_s  amp_ppt
+220555122 romero2022 1-3,28,30    137.54     2.29
+  File "<string>", line 14, in <module>
+    print("correction quantiles",m.groupby("cadence_s").corr.quantile([0,.5,.9,.95,.99,1]).to_string())
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'function' object has no attribute 'quantile'
+
+exec
+/bin/zsh -lc 'python3 -c $'"'import pandas as pd, numpy as np\\nt=pd.read_csv(\"generalization/data/d2/d2_targets.csv\")\\nm=pd.read_csv(\"generalization/data/d2/d2_modes.csv\").merge(t[[\"tic\",\"cadence_s\",\"paper\",\"sectors\"]],on=[\"tic\",\"paper\"],how=\"left\")\\nx=np.pi*m.cadence_s/m.period_s\\nm[\"sincv\"]=np.sin(x)/x\\nm[\"factor\"]=1/abs(m.sincv)\\nprint(m.groupby(\"cadence_s\")[\"factor\"].quantile([0,.5,.9,.95,.99,1]).to_string())\\ng=m.groupby(\"tic\").period_s.agg([\"min\",\"max\"])\\nprint(\"targets all >800\",int((g[\"min\"]>800).sum()),\"any >800\",int((g[\"max\"]>800).sum()))\\nprint(\"targets only one mode\",int((t.n_modes==1).sum()),\"multi\",int((t.n_modes>1).sum()))'" in /Users/jackneo/Documents/vonhippel-base9/astro-wd
+ succeeded in 592ms:
+cadence_s      
+20         0.00    1.000186
+           0.50    1.001741
+           0.90    1.009254
+           0.95    1.010278
+           0.99    1.041702
+           1.00    1.050694
+120        0.00    1.007334
+           0.50    1.058639
+           0.90    1.334623
+           0.95    1.433846
+           0.99    1.533234
+           1.00    7.028013
+targets all >800 10 any >800 48
+targets only one mode 27 multi 76
+
+exec
+/bin/zsh -lc 'python3 -c $'"'import pandas as pd\\nt=pd.read_csv(\"generalization/data/d2/d2_targets.csv\")\\ndef mixed(s): return \"f\" in str(s) and any(not x.startswith(\"f\") for x in str(s).split(\",\"))\\nt[\"mixed\"]=t.sectors.map(mixed)\\nm=pd.read_csv(\"generalization/data/d2/d2_modes.csv\").merge(t[[\"tic\",\"paper\",\"mixed\",\"sectors\"]],on=[\"tic\",\"paper\"])\\nq=m[m.mixed]\\nprint(\"mixed targets\",q.tic.nunique(),\"modes\",len(q))\\nfor p in [160,240,350,500,800]: print(\"mixed modes <\",p,int((q.period_s<p).sum()),\"targets\",q.loc[q.period_s<p,\"tic\"].nunique())\\nprint(q[q.period_s<350][[\"tic\",\"sectors\",\"period_s\",\"amp_ppt\"]].sort_values([\"tic\",\"period_s\"]).to_string(index=False))'" in /Users/jackneo/Documents/vonhippel-base9/astro-wd
+ succeeded in 493ms:
+mixed targets 33 modes 141
+mixed modes < 160 3 targets 1
+mixed modes < 240 8 targets 2
+mixed modes < 350 34 targets 17
+mixed modes < 500 61 targets 27
+mixed modes < 800 107 targets 30
+      tic                             sectors  period_s  amp_ppt
+  7675859                   25,26,f40,f52-f54    254.49     4.14
+ 33717565   27-29,32,35-36,39,f61-f63,f65-f68    243.02     2.04
+ 55650407               11-13,f27-f39,f61-f64    126.84     1.80
+ 55650407               11-13,f27-f39,f61-f64    127.03     0.48
+ 55650407               11-13,f27-f39,f61-f64    153.26     0.41
+ 55650407               11-13,f27-f39,f61-f64    199.52     0.59
+ 55650407               11-13,f27-f39,f61-f64    200.08     4.42
+ 55650407               11-13,f27-f39,f61-f64    200.66     0.88
+ 55650407               11-13,f27-f39,f61-f64    206.70     0.39
+ 55650407               11-13,f27-f39,f61-f64    261.61     0.47
+ 55650407               11-13,f27-f39,f61-f64    262.46     7.19
+ 55650407               11-13,f27-f39,f61-f64    318.01     0.59
+ 55650407               11-13,f27-f39,f61-f64    320.76     1.59
+ 63281499                          01,f28,f68    269.13     2.31
+ 63281499                          01,f28,f68    320.51     7.40
+141179495                              22,f49    253.86     4.46
+141976247             1-8,10-13,27-34,f35-f37    261.72     0.86
+192937035                           20,47,f60    298.27     5.25
+238815671                           01,f27-28    257.59     9.22
+238815671                           01,f27-28    287.29     6.86
+264172524 14-16,18-26,f40-f41,f47-f51,f53-f60    336.26     2.78
+343296348                       12-13,f39,f66    287.26     7.11
+343296348                       12-13,f39,f66    288.27    10.81
+394015496                           01,27-f28    309.31     4.08
+394015496                           01,27-f28    309.79     5.38
+394015496                           01,27-f28    310.27     4.64
+453210132                          34,f44-f46    200.31     6.93
+631161222                           27,29,f68    346.79     6.16
+631344957                           28-29,f68    313.44     6.44
+661119673                        19,43-44,f59    313.10    19.11
+800126377                          f44-f45,61    325.05    10.18
+800126377                          f44-f45,61    326.31     9.26
+900762564                   f40-41,47,f53,f60    260.78     4.61
+900762564                   f40-41,47,f53,f60    268.39     5.12
+
+exec
+/bin/zsh -lc 'python3 -c $'"'import pandas as pd\\nt=pd.read_csv(\"generalization/data/d2/d2_targets.csv\")\\nprint(t.paper.value_counts().to_dict())\\nprint(\"long modes by paper\")\\nm=pd.read_csv(\"generalization/data/d2/d2_modes.csv\")\\nprint(m.assign(long=m.period_s>800).groupby(\"paper\").long.agg([\"count\",\"sum\",\"mean\"]).to_string())'" in /Users/jackneo/Documents/vonhippel-base9/astro-wd
+ succeeded in 1203ms:
+{'romero2022': 53, 'romero2025': 32, 'romero2025old': 18}
+long modes by paper
+               count  sum      mean
+paper                              
+romero2022       148   47  0.317568
+romero2025        78   28  0.358974
+romero2025old    115   23  0.200000
+
+web search: 
+web search: site:irsa.ipac.caltech.edu ZTF saturation g 13.2 magnitude documentation ...
+exec
+/bin/zsh -lc 'rg -n "10|cone|sep|match|nearest|object|ra|dec|cluster" scripts/fetch_catalog_lightcurves.py scripts/build_catalog_panels.py scripts/generalization/build_panels_generic.py | head -260' in /Users/jackneo/Documents/vonhippel-base9/astro-wd
+ succeeded in 7934ms:
+scripts/fetch_catalog_lightcurves.py:7:import random
+scripts/fetch_catalog_lightcurves.py:17:CONE_RADIUS_DEG = 10.0 / 3600.0
+scripts/fetch_catalog_lightcurves.py:21:def build_url(ra: str, dec: str) -> str:
+scripts/fetch_catalog_lightcurves.py:22:    params = {
+scripts/fetch_catalog_lightcurves.py:23:        "POS": f"CIRCLE {ra} {dec} {CONE_RADIUS_DEG:.10f}",
+scripts/fetch_catalog_lightcurves.py:28:    return BASE_URL + "?" + urllib.parse.urlencode(params)
+scripts/fetch_catalog_lightcurves.py:32:    for attempt in range(retries + 1):
+scripts/fetch_catalog_lightcurves.py:39:                return response.read().decode("utf-8", errors="replace"), attempt
+scripts/fetch_catalog_lightcurves.py:43:                raise
+scripts/fetch_catalog_lightcurves.py:46:                raise
+scripts/fetch_catalog_lightcurves.py:47:        delay = min(60.0, 2.0 ** attempt) + random.uniform(0.0, 0.5)
+scripts/fetch_catalog_lightcurves.py:49:    raise RuntimeError("unreachable retry loop")
+scripts/fetch_catalog_lightcurves.py:61:def log_event(path: Path, payload: dict[str, object]) -> None:
+scripts/fetch_catalog_lightcurves.py:80:        default=ROOT / "data/raw/catalog_lc_cache",
+scripts/fetch_catalog_lightcurves.py:88:        raise ValueError("the full-catalog fetch requires at least one second between requests")
+scripts/fetch_catalog_lightcurves.py:98:    print(f"[fetch] {len(stars):,} targets; 10 arcsec cone; sleep={args.sleep:.2f}s", flush=True)
+scripts/fetch_catalog_lightcurves.py:99:    for index, star in enumerate(stars, 1):
+scripts/fetch_catalog_lightcurves.py:106:                text, attempts = fetch(build_url(star["ra"], star["dec"]), args.retries)
+scripts/fetch_catalog_lightcurves.py:107:                temporary = output.with_suffix(".csv.part")
+scripts/fetch_catalog_lightcurves.py:108:                temporary.write_text(text, encoding="utf-8", newline="")
+scripts/fetch_catalog_lightcurves.py:109:                temporary.replace(output)
+scripts/fetch_catalog_lightcurves.py:144:        "cone_radius_arcsec": 10.0,
+scripts/fetch_catalog_lightcurves.py:156:        raise SystemExit(1)
+scripts/build_catalog_panels.py:2:"""Build crossmatched exposure, nightly, monthly, and census products."""
+scripts/build_catalog_panels.py:36:    "ra",
+scripts/build_catalog_panels.py:37:    "dec",
+scripts/build_catalog_panels.py:61:def angular_separation_arcsec(
+scripts/build_catalog_panels.py:62:    ra1: np.ndarray | float,
+scripts/build_catalog_panels.py:63:    dec1: np.ndarray | float,
+scripts/build_catalog_panels.py:64:    ra2: np.ndarray | float,
+scripts/build_catalog_panels.py:65:    dec2: np.ndarray | float,
+scripts/build_catalog_panels.py:66:) -> np.ndarray:
+scripts/build_catalog_panels.py:67:    ra1_rad = np.deg2rad(ra1)
+scripts/build_catalog_panels.py:68:    dec1_rad = np.deg2rad(dec1)
+scripts/build_catalog_panels.py:69:    ra2_rad = np.deg2rad(ra2)
+scripts/build_catalog_panels.py:70:    dec2_rad = np.deg2rad(dec2)
+scripts/build_catalog_panels.py:71:    delta_ra = ra1_rad - ra2_rad
+scripts/build_catalog_panels.py:73:        np.sin(dec1_rad) * np.sin(dec2_rad)
+scripts/build_catalog_panels.py:74:        + np.cos(dec1_rad) * np.cos(dec2_rad) * np.cos(delta_ra)
+scripts/build_catalog_panels.py:76:    return np.rad2deg(np.arccos(np.clip(cos_angle, -1.0, 1.0))) * 3600.0
+scripts/build_catalog_panels.py:79:def read_cache(path: Path) -> pd.DataFrame:
+scripts/build_catalog_panels.py:87:        "ra",
+scripts/build_catalog_panels.py:88:        "dec",
+scripts/build_catalog_panels.py:92:        frame = pd.read_csv(path, low_memory=False)
+scripts/build_catalog_panels.py:94:        return pd.DataFrame(columns=sorted(required))
+scripts/build_catalog_panels.py:95:    missing = required - set(frame.columns)
+scripts/build_catalog_panels.py:97:        raise ValueError(f"missing cache columns: {sorted(missing)}")
+scripts/build_catalog_panels.py:98:    return frame
+scripts/build_catalog_panels.py:101:def select_nearest_source(
+scripts/build_catalog_panels.py:102:    frame: pd.DataFrame,
+scripts/build_catalog_panels.py:103:    target_ra: float,
+scripts/build_catalog_panels.py:104:    target_dec: float,
+scripts/build_catalog_panels.py:105:) -> tuple[pd.DataFrame, float, int, int]:
+scripts/build_catalog_panels.py:106:    coordinates = frame.dropna(subset=["oid", "ra", "dec"]).copy()
+scripts/build_catalog_panels.py:108:        return frame.iloc[0:0].copy(), math.nan, 0, 0
+scripts/build_catalog_panels.py:110:    objects = coordinates.groupby("oid", as_index=False).agg(
+scripts/build_catalog_panels.py:111:        object_ra=("ra", "median"),
+scripts/build_catalog_panels.py:112:        object_dec=("dec", "median"),
+scripts/build_catalog_panels.py:114:    objects["target_separation_arcsec"] = angular_separation_arcsec(
+scripts/build_catalog_panels.py:115:        objects["object_ra"].to_numpy(),
+scripts/build_catalog_panels.py:116:        objects["object_dec"].to_numpy(),
+scripts/build_catalog_panels.py:117:        target_ra,
+scripts/build_catalog_panels.py:118:        target_dec,
+scripts/build_catalog_panels.py:120:    nearest = objects.loc[objects["target_separation_arcsec"].idxmin()]
+scripts/build_catalog_panels.py:121:    objects["nearest_object_separation_arcsec"] = angular_separation_arcsec(
+scripts/build_catalog_panels.py:122:        objects["object_ra"].to_numpy(),
+scripts/build_catalog_panels.py:123:        objects["object_dec"].to_numpy(),
+scripts/build_catalog_panels.py:124:        float(nearest["object_ra"]),
+scripts/build_catalog_panels.py:125:        float(nearest["object_dec"]),
+scripts/build_catalog_panels.py:128:        objects.loc[
+scripts/build_catalog_panels.py:129:            objects["nearest_object_separation_arcsec"] <= OID_CLUSTER_ARCSEC,
+scripts/build_catalog_panels.py:133:    selected = frame[frame["oid"].astype(str).isin(selected_oids)].copy()
+scripts/build_catalog_panels.py:134:    return selected, float(nearest["target_separation_arcsec"]), len(objects), len(selected_oids)
+scripts/build_catalog_panels.py:137:def clean_rows(frame: pd.DataFrame) -> tuple[pd.DataFrame, dict[str, int]]:
+scripts/build_catalog_panels.py:138:    band_ok = frame["filtercode"].isin(BANDS)
+scripts/build_catalog_panels.py:139:    catflags = pd.to_numeric(frame["catflags"], errors="coerce")
+scripts/build_catalog_panels.py:140:    mag = pd.to_numeric(frame["mag"], errors="coerce")
+scripts/build_catalog_panels.py:141:    magerr = pd.to_numeric(frame["magerr"], errors="coerce")
+scripts/build_catalog_panels.py:142:    chi = pd.to_numeric(frame["chi"], errors="coerce")
+scripts/build_catalog_panels.py:143:    mjd = pd.to_numeric(frame["mjd"], errors="coerce")
+scripts/build_catalog_panels.py:152:        "selected_rows": len(frame),
+scripts/build_catalog_panels.py:173:    cleaned = frame.loc[keep].copy()
+scripts/build_catalog_panels.py:182:def add_bjd(frame: pd.DataFrame, ra: float, dec: float) -> pd.DataFrame:
+scripts/build_catalog_panels.py:184:        frame["mjd"].to_numpy(),
+scripts/build_catalog_panels.py:189:    coordinate = SkyCoord(ra * u.deg, dec * u.deg, frame="icrs")
+scripts/build_catalog_panels.py:190:    frame = frame.copy()
+scripts/build_catalog_panels.py:191:    frame["bjd_tdb"] = (
+scripts/build_catalog_panels.py:192:        times.tdb + times.light_travel_time(coordinate, kind="barycentric")
+scripts/build_catalog_panels.py:194:    return frame
+scripts/build_catalog_panels.py:197:def nightly_panel(frame: pd.DataFrame) -> pd.DataFrame:
+scripts/build_catalog_panels.py:198:    rows: list[dict[str, object]] = []
+scripts/build_catalog_panels.py:199:    for (source_id, band, night), group in frame.groupby(
+scripts/build_catalog_panels.py:227:    return pd.DataFrame(rows, columns=NIGHTLY_COLUMNS)
+scripts/build_catalog_panels.py:230:def monthly_panel(nightly: pd.DataFrame) -> pd.DataFrame:
+scripts/build_catalog_panels.py:231:    frame = nightly.copy()
+scripts/build_catalog_panels.py:232:    frame["month_id"] = pd.to_datetime(frame["night_date"]).dt.to_period("M").astype(str)
+scripts/build_catalog_panels.py:234:        frame.groupby(["source_id", "band", "month_id"], as_index=False)
+scripts/build_catalog_panels.py:258:    meta: object,
+scripts/build_catalog_panels.py:259:    exposures: pd.DataFrame,
+scripts/build_catalog_panels.py:260:    nightly: pd.DataFrame,
+scripts/build_catalog_panels.py:261:    monthly: pd.DataFrame,
+scripts/build_catalog_panels.py:262:) -> dict[str, object]:
+scripts/build_catalog_panels.py:277:        exp["residual"] = exp["mag"] - exp.groupby("night_mjd")["mag"].transform("median")
+scripts/build_catalog_panels.py:283:        row[f"{band}_exposure_ratio"] = scatter_over_error(exp["residual"], exp["magerr"])
+scripts/build_catalog_panels.py:284:        row[f"{band}_nightly_ratio"] = scatter_over_error(night["mag_binned"], night["mag_err"])
+scripts/build_catalog_panels.py:285:        row[f"{band}_monthly_ratio"] = scatter_over_error(month["mag_binned"], month["mag_err"])
+scripts/build_catalog_panels.py:287:    ratio_columns = [f"{band}_{cadence}_ratio" for band in BANDS for cadence in ("exposure", "nightly", "monthly")]
+scripts/build_catalog_panels.py:290:        for column in ratio_columns
+scripts/build_catalog_panels.py:292:    row["census_g_nightly"] = bool(row["zg_nightly_ratio"] >= 2.5)
+scripts/build_catalog_panels.py:293:    row["census_g_monthly"] = bool(row["zg_monthly_ratio"] >= 2.5)
+scripts/build_catalog_panels.py:298:def write_frame(handle: object, frame: pd.DataFrame, columns: list[str], header: bool) -> None:
+scripts/build_catalog_panels.py:299:    frame.to_csv(handle, columns=columns, index=False, header=header, lineterminator="\n")
+scripts/build_catalog_panels.py:312:        default=ROOT / "data/raw/catalog_lc_cache",
+scripts/build_catalog_panels.py:326:        raise ValueError("rebuilt roster must contain 1,423 rows")
+scripts/build_catalog_panels.py:331:    qc_rows: list[dict[str, object]] = []
+scripts/build_catalog_panels.py:332:    census_rows: list[dict[str, object]] = []
+scripts/build_catalog_panels.py:333:    crossmatched = 0
+scripts/build_catalog_panels.py:340:        for index, meta in enumerate(roster.itertuples(index=False), 1):
+scripts/build_catalog_panels.py:342:            qc: dict[str, object] = {
+scripts/build_catalog_panels.py:357:                raw = read_cache(cache_path)
+scripts/build_catalog_panels.py:358:                qc["raw_rows"] = len(raw)
+scripts/build_catalog_panels.py:359:                selected, separation, n_objects, n_selected_objects = select_nearest_source(
+scripts/build_catalog_panels.py:360:                    raw,
+scripts/build_catalog_panels.py:361:                    float(meta.ra),
+scripts/build_catalog_panels.py:362:                    float(meta.dec),
+scripts/build_catalog_panels.py:366:                qc["nearest_separation_arcsec"] = separation
+scripts/build_catalog_panels.py:367:                qc["ztf_objects_in_cone"] = n_objects
+scripts/build_catalog_panels.py:368:                qc["selected_ztf_objects"] = n_selected_objects
+scripts/build_catalog_panels.py:376:                qc[f"{band}_raw_rows"] = int((raw["filtercode"] == band).sum())
+scripts/build_catalog_panels.py:378:            is_crossmatched = all(
+scripts/build_catalog_panels.py:381:            qc["crossmatched"] = is_crossmatched
+scripts/build_catalog_panels.py:383:            if not is_crossmatched:
+scripts/build_catalog_panels.py:386:            crossmatched += 1
+scripts/build_catalog_panels.py:388:            clean = add_bjd(clean, float(meta.ra), float(meta.dec))
+scripts/build_catalog_panels.py:396:            write_frame(exposure_handle, clean, EXPOSURE_COLUMNS, crossmatched == 1)
+scripts/build_catalog_panels.py:397:            write_frame(nightly_handle, nightly, NIGHTLY_COLUMNS, crossmatched == 1)
+scripts/build_catalog_panels.py:398:            write_frame(monthly_handle, monthly, MONTHLY_COLUMNS, crossmatched == 1)
+scripts/build_catalog_panels.py:402:                print(f"[panels] {index:,}/{len(roster):,}; crossmatched={crossmatched:,}", flush=True)
+scripts/build_catalog_panels.py:404:    qc_frame = pd.DataFrame(qc_rows)
+scripts/build_catalog_panels.py:405:    census = pd.DataFrame(census_rows)
+scripts/build_catalog_panels.py:406:    qc_frame.to_csv(args.out_dir / "crossmatch_qc.csv", index=False)
+scripts/build_catalog_panels.py:414:        "stage_b_core_fraction": 1359 / 1423,
+scripts/build_catalog_panels.py:416:        "crossmatch_rule": "nearest ZTF coordinate cluster; >=20 QC-passing exposures in zg and zr",
+scripts/build_catalog_panels.py:417:        "nearest_cluster_radius_arcsec": OID_CLUSTER_ARCSEC,
+scripts/build_catalog_panels.py:419:        "crossmatched_count": crossmatched,
+scripts/build_catalog_panels.py:420:        "known_roster_crossmatched": len(known),
+scripts/build_catalog_panels.py:435:    print(f"crossmatched {crossmatched:,}/{len(roster):,}; known roster {len(known)}/20")
+scripts/generalization/build_panels_generic.py:5:every scientific operation (nearest-cluster crossmatch, row QC, BJD_TDB
+scripts/generalization/build_panels_generic.py:6:conversion, nightly/monthly binning, 2.5-ratio census) is the frozen function
+scripts/generalization/build_panels_generic.py:9:Roster CSV contract (build_d3_roster.py writes this):
+scripts/generalization/build_panels_generic.py:12:  ra, dec       ICRS degrees for the ZTF cone
+scripts/generalization/build_panels_generic.py:33:# BJD generation must not depend on a live IERS download (G1 methods finding 6);
+scripts/generalization/build_panels_generic.py:54:    select_nearest_source,
+scripts/generalization/build_panels_generic.py:106:            raise SystemExit(f"{len(bad)} roster ids violate the campaign convention: {bad[:3]}")
+scripts/generalization/build_panels_generic.py:108:    qc_rows: list[dict[str, object]] = []
+scripts/generalization/build_panels_generic.py:109:    census_rows: list[dict[str, object]] = []
+scripts/generalization/build_panels_generic.py:110:    crossmatched = 0
+scripts/generalization/build_panels_generic.py:112:    for index, (_, row) in enumerate(roster.iterrows(), 1):
+scripts/generalization/build_panels_generic.py:115:        qc: dict[str, object] = {
+scripts/generalization/build_panels_generic.py:127:            raw = read_cache(cache_path)
+scripts/generalization/build_panels_generic.py:128:            qc["raw_rows"] = len(raw)
+scripts/generalization/build_panels_generic.py:129:            selected, separation, n_objects, n_selected = select_nearest_source(
+scripts/generalization/build_panels_generic.py:130:                raw, float(row["ra"]), float(row["dec"])
+scripts/generalization/build_panels_generic.py:134:            qc["nearest_separation_arcsec"] = separation
+scripts/generalization/build_panels_generic.py:135:            qc["ztf_objects_in_cone"] = n_objects
+scripts/generalization/build_panels_generic.py:136:            qc["selected_ztf_objects"] = n_selected
+scripts/generalization/build_panels_generic.py:144:            qc[f"{band}_raw_rows"] = int((raw["filtercode"] == band).sum())
+scripts/generalization/build_panels_generic.py:146:        is_crossmatched = all(
+scripts/generalization/build_panels_generic.py:149:        qc["crossmatched"] = is_crossmatched
+scripts/generalization/build_panels_generic.py:151:        if not is_crossmatched:
+scripts/generalization/build_panels_generic.py:154:        crossmatched += 1
+scripts/generalization/build_panels_generic.py:156:        clean = add_bjd(clean, float(row["ra"]), float(row["dec"]))
+scripts/generalization/build_panels_generic.py:165:            print(f"[panels-generic] {index:,}/{len(roster):,}; crossmatched={crossmatched:,}",
+scripts/generalization/build_panels_generic.py:168:    pd.DataFrame(qc_rows).to_csv(args.out_dir / "crossmatch_qc.csv", index=False)
+scripts/generalization/build_panels_generic.py:169:    pd.DataFrame(census_rows).to_csv(args.out_dir / "census_generic.csv", index=False)
+scripts/generalization/build_panels_generic.py:174:        "crossmatched_count": crossmatched,
+scripts/generalization/build_panels_generic.py:175:        "crossmatch_rule": "frozen: nearest ZTF coordinate cluster; "
+scripts/generalization/build_panels_generic.py:185:    print(f"[panels-generic] crossmatched {crossmatched:,}/{len(roster):,}")
+
+exec
+/bin/zsh -lc "nl -ba scripts/build_catalog_panels.py | sed -n '1,180p'" in /Users/jackneo/Documents/vonhippel-base9/astro-wd
+ succeeded in 230ms:
+     1	#!/usr/bin/env python3
+     2	"""Build crossmatched exposure, nightly, monthly, and census products."""
+     3	
+     4	import argparse
+     5	import gzip
+     6	import json
+     7	import math
+     8	from pathlib import Path
+     9	
+    10	import astropy.units as u
+    11	from astropy.coordinates import EarthLocation, SkyCoord
+    12	from astropy.time import Time
+    13	import numpy as np
+    14	import pandas as pd
+    15	
+    16	ROOT = Path(__file__).resolve().parents[1]
+    17	PALOMAR = EarthLocation.from_geodetic(
+    18	    lon=-116.8630 * u.deg,
+    19	    lat=33.3563 * u.deg,
+    20	    height=1706 * u.m,
+    21	)
+    22	BANDS = ("zg", "zr")
+    23	MIN_EXPOSURES_PER_BAND = 20
+    24	OID_CLUSTER_ARCSEC = 1.5
+    25	
+    26	EXPOSURE_COLUMNS = [
+    27	    "source_id",
+    28	    "band",
+    29	    "oid",
+    30	    "mjd",
+    31	    "bjd_tdb",
+    32	    "night_mjd",
+    33	    "mag",
+    34	    "magerr",
+    35	    "chi",
+    36	    "ra",
+    37	    "dec",
+    38	]
+    39	NIGHTLY_COLUMNS = [
+    40	    "source_id",
+    41	    "band",
+    42	    "night_mjd",
+    43	    "night_date",
+    44	    "mag_binned",
+    45	    "mag_err",
+    46	    "n_exp",
+    47	]
+    48	MONTHLY_COLUMNS = [
+    49	    "source_id",
+    50	    "band",
+    51	    "month_id",
+    52	    "month_date",
+    53	    "year",
+    54	    "mag_binned",
+    55	    "mag_err",
+    56	    "n_exp",
+    57	    "n_nights",
+    58	]
+    59	
+    60	
+    61	def angular_separation_arcsec(
+    62	    ra1: np.ndarray | float,
+    63	    dec1: np.ndarray | float,
+    64	    ra2: np.ndarray | float,
+    65	    dec2: np.ndarray | float,
+    66	) -> np.ndarray:
+    67	    ra1_rad = np.deg2rad(ra1)
+    68	    dec1_rad = np.deg2rad(dec1)
+    69	    ra2_rad = np.deg2rad(ra2)
+    70	    dec2_rad = np.deg2rad(dec2)
+    71	    delta_ra = ra1_rad - ra2_rad
+    72	    cos_angle = (
+    73	        np.sin(dec1_rad) * np.sin(dec2_rad)
+    74	        + np.cos(dec1_rad) * np.cos(dec2_rad) * np.cos(delta_ra)
+    75	    )
+    76	    return np.rad2deg(np.arccos(np.clip(cos_angle, -1.0, 1.0))) * 3600.0
+    77	
+    78	
+    79	def read_cache(path: Path) -> pd.DataFrame:
+    80	    required = {
+    81	        "oid",
+    82	        "mjd",
+    83	        "mag",
+    84	        "magerr",
+    85	        "catflags",
+    86	        "filtercode",
+    87	        "ra",
+    88	        "dec",
+    89	        "chi",
+    90	    }
+    91	    try:
+    92	        frame = pd.read_csv(path, low_memory=False)
+    93	    except pd.errors.EmptyDataError:
+    94	        return pd.DataFrame(columns=sorted(required))
+    95	    missing = required - set(frame.columns)
+    96	    if missing:
+    97	        raise ValueError(f"missing cache columns: {sorted(missing)}")
+    98	    return frame
+    99	
+   100	
+   101	def select_nearest_source(
+   102	    frame: pd.DataFrame,
+   103	    target_ra: float,
+   104	    target_dec: float,
+   105	) -> tuple[pd.DataFrame, float, int, int]:
+   106	    coordinates = frame.dropna(subset=["oid", "ra", "dec"]).copy()
+   107	    if coordinates.empty:
+   108	        return frame.iloc[0:0].copy(), math.nan, 0, 0
+   109	    coordinates["oid"] = coordinates["oid"].astype(str)
+   110	    objects = coordinates.groupby("oid", as_index=False).agg(
+   111	        object_ra=("ra", "median"),
+   112	        object_dec=("dec", "median"),
+   113	    )
+   114	    objects["target_separation_arcsec"] = angular_separation_arcsec(
+   115	        objects["object_ra"].to_numpy(),
+   116	        objects["object_dec"].to_numpy(),
+   117	        target_ra,
+   118	        target_dec,
+   119	    )
+   120	    nearest = objects.loc[objects["target_separation_arcsec"].idxmin()]
+   121	    objects["nearest_object_separation_arcsec"] = angular_separation_arcsec(
+   122	        objects["object_ra"].to_numpy(),
+   123	        objects["object_dec"].to_numpy(),
+   124	        float(nearest["object_ra"]),
+   125	        float(nearest["object_dec"]),
+   126	    )
+   127	    selected_oids = set(
+   128	        objects.loc[
+   129	            objects["nearest_object_separation_arcsec"] <= OID_CLUSTER_ARCSEC,
+   130	            "oid",
+   131	        ]
+   132	    )
+   133	    selected = frame[frame["oid"].astype(str).isin(selected_oids)].copy()
+   134	    return selected, float(nearest["target_separation_arcsec"]), len(objects), len(selected_oids)
+   135	
+   136	
+   137	def clean_rows(frame: pd.DataFrame) -> tuple[pd.DataFrame, dict[str, int]]:
+   138	    band_ok = frame["filtercode"].isin(BANDS)
+   139	    catflags = pd.to_numeric(frame["catflags"], errors="coerce")
+   140	    mag = pd.to_numeric(frame["mag"], errors="coerce")
+   141	    magerr = pd.to_numeric(frame["magerr"], errors="coerce")
+   142	    chi = pd.to_numeric(frame["chi"], errors="coerce")
+   143	    mjd = pd.to_numeric(frame["mjd"], errors="coerce")
+   144	
+   145	    valid_catflags = catflags.eq(0)
+   146	    valid_mag = np.isfinite(mag)
+   147	    valid_magerr = np.isfinite(magerr) & magerr.gt(0)
+   148	    valid_chi = np.isfinite(chi) & chi.lt(4)
+   149	    valid_mjd = np.isfinite(mjd)
+   150	    keep = band_ok & valid_catflags & valid_mag & valid_magerr & valid_chi & valid_mjd
+   151	    counts = {
+   152	        "selected_rows": len(frame),
+   153	        "drop_unsupported_band": int((~band_ok).sum()),
+   154	        "drop_catflags": int((band_ok & ~valid_catflags).sum()),
+   155	        "drop_invalid_mag": int((band_ok & valid_catflags & ~valid_mag).sum()),
+   156	        "drop_invalid_magerr": int(
+   157	            (band_ok & valid_catflags & valid_mag & ~valid_magerr).sum()
+   158	        ),
+   159	        "drop_chi": int(
+   160	            (band_ok & valid_catflags & valid_mag & valid_magerr & ~valid_chi).sum()
+   161	        ),
+   162	        "drop_invalid_mjd": int(
+   163	            (
+   164	                band_ok
+   165	                & valid_catflags
+   166	                & valid_mag
+   167	                & valid_magerr
+   168	                & valid_chi
+   169	                & ~valid_mjd
+   170	            ).sum()
+   171	        ),
+   172	    }
+   173	    cleaned = frame.loc[keep].copy()
+   174	    cleaned["band"] = cleaned["filtercode"]
+   175	    for column, values in (("mag", mag), ("magerr", magerr), ("chi", chi), ("mjd", mjd)):
+   176	        cleaned[column] = values.loc[cleaned.index].astype(float)
+   177	    cleaned["oid"] = cleaned["oid"].astype(str)
+   178	    cleaned["night_mjd"] = np.floor(cleaned["mjd"]).astype(int)
+   179	    return cleaned, counts
+   180	
+
+web search: 
+web search: Kepler pixel scale 3.98 arcsec crowding contamination Kepler Instrument Handbook aperture blends ...
+web search: 
+web search: https://arxiv.org/html/1902.01932
+web search: 
+web search: "1.01" arcsec pixel ZTF "2.0" seeing ...
+web search: 
+web search: VizieR J/MNRAS/485/2380 dSct flag 0 1 2 description ...
+web search: 
+web search: https://arxiv.org/abs/2003.11481
+web search: 
+web search: Hermes 2017 ApJS 232 23 DAV mode linewidth 800 s coherence ...
+web search: 
+web search: 
+web search: 
+web search: Kepler Input Catalog 13.2 million sources 105 square degrees Brown 2011 ...
+exec
+/bin/zsh -lc "nl -ba scripts/fetch_catalog_lightcurves.py | sed -n '1,170p'" in /Users/jackneo/Documents/vonhippel-base9/astro-wd
+ succeeded in 0ms:
+     1	#!/usr/bin/env python3
+     2	"""Fetch full-history ZTF g/r light curves for the rebuilt catalog."""
+     3	
+     4	import argparse
+     5	import csv
+     6	import json
+     7	import random
+     8	import time
+     9	import urllib.error
+    10	import urllib.parse
+    11	import urllib.request
+    12	from datetime import datetime, timezone
+    13	from pathlib import Path
+    14	
+    15	ROOT = Path(__file__).resolve().parents[1]
+    16	BASE_URL = "https://irsa.ipac.caltech.edu/cgi-bin/ZTF/nph_light_curves"
+    17	CONE_RADIUS_DEG = 10.0 / 3600.0
+    18	RETRYABLE_CODES = {429, 500, 502, 503, 504}
+    19	
+    20	
+    21	def build_url(ra: str, dec: str) -> str:
+    22	    params = {
+    23	        "POS": f"CIRCLE {ra} {dec} {CONE_RADIUS_DEG:.10f}",
+    24	        "BANDNAME": "g,r",
+    25	        "FORMAT": "CSV",
+    26	        "BAD_CATFLAGS_MASK": "32768",
+    27	    }
+    28	    return BASE_URL + "?" + urllib.parse.urlencode(params)
+    29	
+    30	
+    31	def fetch(url: str, retries: int) -> tuple[str, int]:
+    32	    for attempt in range(retries + 1):
+    33	        try:
+    34	            request = urllib.request.Request(
+    35	                url,
+    36	                headers={"User-Agent": "panelcast-ztf-wd-catalog/1.0"},
+    37	            )
+    38	            with urllib.request.urlopen(request, timeout=180) as response:
+    39	                return response.read().decode("utf-8", errors="replace"), attempt
+    40	        except urllib.error.HTTPError as exc:
+    41	            retryable = exc.code in RETRYABLE_CODES
+    42	            if not retryable or attempt == retries:
+    43	                raise
+    44	        except (TimeoutError, urllib.error.URLError):
+    45	            if attempt == retries:
+    46	                raise
+    47	        delay = min(60.0, 2.0 ** attempt) + random.uniform(0.0, 0.5)
+    48	        time.sleep(delay)
+    49	    raise RuntimeError("unreachable retry loop")
+    50	
+    51	
+    52	def row_count(text: str) -> int:
+    53	    lines = (
+    54	        line
+    55	        for line in text.splitlines()
+    56	        if line.strip() and not line.startswith("\\") and not line.startswith("|")
+    57	    )
+    58	    return max(0, sum(1 for _ in lines) - 1)
+    59	
+    60	
+    61	def log_event(path: Path, payload: dict[str, object]) -> None:
+    62	    payload = {
+    63	        "time_utc": datetime.now(timezone.utc).isoformat(),
+    64	        **payload,
+    65	    }
+    66	    with path.open("a", encoding="utf-8") as handle:
+    67	        handle.write(json.dumps(payload, sort_keys=True) + "\n")
+    68	
+    69	
+    70	def main() -> None:
+    71	    parser = argparse.ArgumentParser()
+    72	    parser.add_argument(
+    73	        "--roster",
+    74	        type=Path,
+    75	        default=ROOT / "data/roster/jestin2026_rebuilt_candidates.csv",
+    76	    )
+    77	    parser.add_argument(
+    78	        "--cache-dir",
+    79	        type=Path,
+    80	        default=ROOT / "data/raw/catalog_lc_cache",
+    81	    )
+    82	    parser.add_argument("--sleep", type=float, default=1.25)
+    83	    parser.add_argument("--retries", type=int, default=6)
+    84	    parser.add_argument("--limit", type=int)
+    85	    args = parser.parse_args()
+    86	
+    87	    if args.sleep < 1.0:
+    88	        raise ValueError("the full-catalog fetch requires at least one second between requests")
+    89	    args.cache_dir.mkdir(parents=True, exist_ok=True)
+    90	    event_log = args.cache_dir / "fetch_events.jsonl"
+    91	
+    92	    with args.roster.open(newline="", encoding="utf-8") as handle:
+    93	        stars = list(csv.DictReader(handle))
+    94	    if args.limit is not None:
+    95	        stars = stars[: args.limit]
+    96	
+    97	    totals = {"fetched": 0, "skipped": 0, "empty": 0, "failed": 0, "retried": 0}
+    98	    print(f"[fetch] {len(stars):,} targets; 10 arcsec cone; sleep={args.sleep:.2f}s", flush=True)
+    99	    for index, star in enumerate(stars, 1):
+   100	        source_id = star["source_id"]
+   101	        output = args.cache_dir / f"{source_id}.csv"
+   102	        if output.exists() and output.stat().st_size > 0:
+   103	            totals["skipped"] += 1
+   104	        else:
+   105	            try:
+   106	                text, attempts = fetch(build_url(star["ra"], star["dec"]), args.retries)
+   107	                temporary = output.with_suffix(".csv.part")
+   108	                temporary.write_text(text, encoding="utf-8", newline="")
+   109	                temporary.replace(output)
+   110	                rows = row_count(text)
+   111	                totals["fetched"] += 1
+   112	                totals["empty"] += int(rows == 0)
+   113	                totals["retried"] += int(attempts > 0)
+   114	                log_event(
+   115	                    event_log,
+   116	                    {
+   117	                        "source_id": source_id,
+   118	                        "status": "fetched",
+   119	                        "rows": rows,
+   120	                        "retries": attempts,
+   121	                        "bytes": output.stat().st_size,
+   122	                    },
+   123	                )
+   124	            except Exception as exc:
+   125	                totals["failed"] += 1
+   126	                log_event(
+   127	                    event_log,
+   128	                    {
+   129	                        "source_id": source_id,
+   130	                        "status": "failed",
+   131	                        "error": repr(exc),
+   132	                    },
+   133	                )
+   134	                print(f"[fetch] FAILED {source_id}: {exc}", flush=True)
+   135	            time.sleep(args.sleep)
+   136	
+   137	        if index % 25 == 0 or index == len(stars):
+   138	            counts = " ".join(f"{key}={value}" for key, value in totals.items())
+   139	            print(f"[fetch] {index:,}/{len(stars):,} {counts}", flush=True)
+   140	
+   141	    manifest = {
+   142	        "roster": str(args.roster),
+   143	        "targets": len(stars),
+   144	        "cone_radius_arcsec": 10.0,
+   145	        "bands": ["zg", "zr"],
+   146	        "sleep_seconds": args.sleep,
+   147	        "max_retries": args.retries,
+   148	        **totals,
+   149	    }
+   150	    (args.cache_dir / "fetch_manifest.json").write_text(
+   151	        json.dumps(manifest, indent=2) + "\n",
+   152	        encoding="utf-8",
+   153	    )
+   154	    print(f"[fetch] DONE {json.dumps(manifest, sort_keys=True)}", flush=True)
+   155	    if totals["failed"]:
+   156	        raise SystemExit(1)
+   157	
+   158	
+   159	if __name__ == "__main__":
+   160	    main()
+
+exec
+/bin/zsh -lc 'python3 -c $'"'import pandas as pd\\np=\"generalization/data/d3/raw/\"\\nm=pd.read_csv(p+\"murphy2019_table1.csv\")\\nf=pd.read_csv(p+\"mo2026_table2.csv\")\\ns=pd.read_csv(p+\"mo2026_table1.csv\")\\nd=f.loc[f.groupby(\"KIC\").Amp.idxmax(),[\"KIC\",\"Freq\",\"Amp\"]]\\npos=m[(m.dSct==1)&(m.gmag>=13.2)].merge(d,on=\"KIC\").copy()\\nlow=set(pos.loc[pos.Freq<5/0.0864,\"KIC\"])\\nmt=pos.merge(s[[\"KIC\",\"Freq\",\"fR\",\"C\"]],on=[\"KIC\",\"Freq\"],how=\"inner\")\\nsnf=set(mt.KIC)\\nprint(\"low\",len(low),\"snf\",len(snf),\"overlap\",len(low&snf),\"union\",len(low|snf),\"joined\",len(pos))\\nprint(mt[mt.KIC.isin(low)][[\"KIC\",\"Freq\",\"fR\",\"C\"]].to_string(index=False))'" in /Users/jackneo/Documents/vonhippel-base9/astro-wd
+ succeeded in 782ms:
+low 127 snf 40 overlap 0 union 167 joined 456
+Empty DataFrame
+Columns: [KIC, Freq, fR, C]
+Index: []
+
