@@ -41,6 +41,7 @@ from frozen_api import (
     REPO_ROOT,
     analyze_star,
     assert_frozen,
+    campaign_file_shas,
     env_versions,
     json_ready,
     physical_workers,
@@ -223,6 +224,10 @@ def main() -> None:
         "workers": workers,
         "env": env_versions(),
         "frozen_sha256": assert_frozen(),
+        "campaign_sha256": campaign_file_shas(),
+        "roster_digest": __import__("hashlib").sha256(
+            ",".join(stars).encode()).hexdigest(),
+        "roster_size": len(stars),
     }
     report_path = args.out_dir / "replay_report.json"
     report_path.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")

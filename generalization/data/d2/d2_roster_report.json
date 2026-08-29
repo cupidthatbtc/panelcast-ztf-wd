@@ -25,6 +25,30 @@
   ],
   "provenance_sha256": {
     "romero2022_src.tar.gz": "4432c09d36bfdc1fa971047ab8dc05f10a8efcbc1abad0f216415d50de2eed81",
-    "romero2025_src.tar.gz": "850aed26994853ecf4d59c0bb45e827317571b91e0bec2382591636aed8b4eb8"
+    "romero2025_src.tar.gz": "850aed26994853ecf4d59c0bb45e827317571b91e0bec2382591636aed8b4eb8",
+    "romero2022_src/NewTess.tex": "f1f3502414e42b32e2c864d5b1608e4ec9c0e61388b1af6b581199598f2d1e0c",
+    "romero2025_src/NewTESS.tex": "c92ee7e0d5684706a3d814580b779f805f29cccff4637dac19d9f0f6178f8d00"
+  },
+  "outputs_sha256": {
+    "d2_targets.csv": "4faf2117a23e3ac6b38b59fb3067c53e7a638ec7e553bd42d9c4a6c52af0cb57",
+    "d2_modes.csv": "0b82a937e40df985d43c4b5febed7b24a3fdb90590373d335428ae4fc86b117e",
+    "d2_modes_all_solutions.csv": "5f375e5a2e93efbb4d3ed2d40832f1d0650d08cd00d3522618d745688c3b7c60"
+  },
+  "campaign_sha256": {
+    "scripts/generalization/build_d2_roster.py": "901c95c64825c42125a066c2678c195b520d99e64c0a9a528eef41872361acbe",
+    "scripts/generalization/build_d2_shards.py": "4427e50a7c8f21b62422d5cb7a2e7ec16be892b6d1440fbb441faa319a1a7e58",
+    "scripts/generalization/build_d3_roster.py": "3d7b2d23ffa6a21acf20fde3b998f5d69a0637ade643048c5d457f022b75c056",
+    "scripts/generalization/build_panels_generic.py": "fb27f1af53c852fb78650a716678b7191ce5f451599a8a99fffec9e672793241",
+    "scripts/generalization/d2_truth_model.py": "4394d4fcc92030485a6420f688e751fd9f79af002cde138f6ce3e8f2c2b2c84c",
+    "scripts/generalization/frozen_api.py": "7f238ac2ea2b248a33d2563b548370bb2a83b4b20bd7a5d9272cfb288cd1b105",
+    "scripts/generalization/metrics_generalization.py": "53acfc6efa23f86fd24a05f3cda7cb725d88fc9747bece866a2cdd30d61057af",
+    "scripts/generalization/panel_golden_gate.py": "abe29feb28005b09fba3cfbc8b85d3f8f6a1cd531e0ae40eb6de1bc0884ba643",
+    "scripts/generalization/plot_generalization.py": "bc15d358c4cd13dd70e20bd41f02fca74887b7bf8b2bcad72ed5a126caadc8cc",
+    "scripts/generalization/replay_gate.py": "ff7e091f46cdea9f76ed32dee1eac1bf53d44ed42fb4919a9dcc1ea3a0ffc993",
+    "scripts/generalization/run_generalization_ls.py": "fd30b34e7cc706d5877dcb640f66d96acf76ac2d698cd5022250bff7ef319dcd",
+    "scripts/generalization/verify_cli_identity.py": "840d233f78ff8fc289f2b77661479d02bcfbab26b4f3fa6bdc413b7959905728",
+    "scripts/generalization/watch_run.py": "6e74a6bb66e3bb6aff4c4941a75e02e14745c576e2e435e676dd17e965dc3a8e",
+    "generalization/GENERALIZATION_PLAN.md": "79739297ea31dd4baa59736fac03be4378cdf50663a17ff391d4fe3fbc9fbfef",
+    "generalization/METRICS_SPEC.md": "a675b62fbaf8de8159a5c2b5fc20bd71d33e061908fb45ebff309b13b993a87b"
   }
 }

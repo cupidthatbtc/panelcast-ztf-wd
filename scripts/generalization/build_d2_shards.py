@@ -31,9 +31,11 @@ pre-registered dominant penalty (plan risk 3).
 Run matrix (plan): nominal (1.7, 0.80) on K=3 for arms A+B; the other 8
 ladder points on the median template only; 1,000 nulls.
 
-Campaign id layout (19 digits): AA TTTTTTTTTT K GR 0000
+Campaign id layout (19 digits): AA TTTTTTTTTT K GR PS 00
   AA arm prefix (92/93), T zero-padded TIC, K template index (0/1/2),
-  G/R ladder indices (1-3) into {1.4,1.7,2.1} x {0.70,0.80,0.90}, 22=nominal.
+  G/R ladder indices (1-3) into {1.4,1.7,2.1} x {0.70,0.80,0.90} (22 =
+  nominal), P phase-draw (0-2), S amplitude-scale code (0 = 1.0, 1 = 0.7,
+  2 = 1.3).
   Nulls: 94 + 17-digit serial. Controls: 95 + 17-digit index of the template
   in the SORTED FIXED 928-window pool — stable across invocations and roster
   subsets (G2 methods finding 3). Full mapping in shard_manifest.csv.
@@ -119,8 +121,13 @@ def match_templates(stats: pd.DataFrame, gmag: float) -> tuple[list[str], str]:
     return picks, label
 
 
-def campaign_id(arm_prefix: str, tic: int, k: int, g_idx: int, r_idx: int) -> str:
-    return f"{arm_prefix}{tic:010d}{k}{g_idx}{r_idx}0000"
+AMP_SCALE_CODES = {1.0: 0, 0.7: 1, 1.3: 2}
+
+
+def campaign_id(arm_prefix: str, tic: int, k: int, g_idx: int, r_idx: int,
+                phase_draw: int = 0, amp_scale: float = 1.0) -> str:
+    return (f"{arm_prefix}{tic:010d}{k}{g_idx}{r_idx}"
+            f"{phase_draw}{AMP_SCALE_CODES[amp_scale]}00")
 
 
 def write_shard(path: Path, frame: pd.DataFrame) -> None:
@@ -161,13 +168,21 @@ def main() -> None:
     parser.add_argument("--exposures", type=Path, default=PUBLISHED / "data/exposures.csv.gz")
     parser.add_argument("--catalog", type=Path,
                         default=PUBLISHED / "catalog/ls_full_catalog.csv")
-    parser.add_argument("--arms", default="b,ctrl,a,ladder,nulls")
+    parser.add_argument("--arms", default="b,ctrl,a,ladder,phase,ampscale,nulls")
     parser.add_argument("--limit", type=int, default=None, help="pilot: first N targets")
+    parser.add_argument("--resume", action="store_true",
+                        help="permit writing into a non-empty shard directory")
     args = parser.parse_args()
 
     assert_frozen()
     arms = set(args.arms.split(","))
     args.out_dir.mkdir(parents=True, exist_ok=True)
+    existing = list(args.out_dir.glob("*.csv.gz"))
+    if existing and not args.resume:
+        raise SystemExit(
+            f"{args.out_dir} already holds {len(existing)} shards; pass "
+            f"--resume to add to it, or use a fresh directory (stale-shard guard)"
+        )
     targets = pd.read_csv(args.d2_dir / "d2_targets.csv")
     modes = pd.read_csv(args.d2_dir / "d2_modes.csv")
     if args.limit:
@@ -202,16 +217,28 @@ def main() -> None:
         if "ladder" in arms:
             variants.extend((gi, ri, g, r, (1,)) for gi, ri, g, r in ladder
                             if not (g == NOMINAL_G and r == NOMINAL_RG))
-        for gi, ri, g, r, template_ks in variants:
+        if "phase" in arms:
+            variants.extend((nominal[0], nominal[1], nominal[2], nominal[3], (1,),
+                             d, 1.0) for d in (1, 2))
+        if "ampscale" in arms:
+            variants.extend((nominal[0], nominal[1], nominal[2], nominal[3], (1,),
+                             0, sc) for sc in (0.7, 1.3))
+        for entry in variants:
+            gi, ri, g, r, template_ks = entry[:5]
+            phase_draw = entry[5] if len(entry) > 5 else 0
+            amp_scale = entry[6] if len(entry) > 6 else 1.0
             model = build_truth_model(
                 int(target.tic), periods, amps, float(target.cadence_s),
-                ratio_g=g, ratio_rg=r,
+                ratio_g=g, ratio_rg=r, amplitude_scale=amp_scale,
+                phase_draw=phase_draw,
             )
             for k in template_ks:
                 template_id = picks[k]
                 template = frames[template_id]
                 arm_list = []
-                if g == NOMINAL_G and r == NOMINAL_RG:
+                nominal_scenario = (g == NOMINAL_G and r == NOMINAL_RG
+                                    and phase_draw == 0 and amp_scale == 1.0)
+                if nominal_scenario:
                     if "b" in arms:
                         arm_list.append(("92", False))
                     if "a" in arms:
@@ -219,7 +246,8 @@ def main() -> None:
                 else:
                     arm_list.append(("92", False))
                 for prefix, gaussian in arm_list:
-                    sid = campaign_id(prefix, int(target.tic), k, gi, ri)
+                    sid = campaign_id(prefix, int(target.tic), k, gi, ri,
+                                      phase_draw, amp_scale)
                     if not campaign_id_ok(sid):
                         raise SystemExit(f"bad campaign id {sid}")
                     shard = synthesize(template, model, sid, gaussian, seed=int(sid[2:]))
@@ -242,6 +270,7 @@ def main() -> None:
                         "tic": int(target.tic), "template_source_id": template_id,
                         "template_status": stats.set_index("source_id")["blind_status"].get(template_id, ""),
                         "template_k": k, "ratio_g": g, "ratio_rg": r,
+                        "phase_draw": phase_draw, "amp_scale": amp_scale,
                         "match": match_label,
                         "control_campaign_id": control_id(template_id) if not gaussian else "",
                         "n_modes_injected": len(model.modes),

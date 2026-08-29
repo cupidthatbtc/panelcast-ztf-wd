@@ -66,7 +66,9 @@ def plot_completeness(metrics_dir: Path, out_dir: Path, dataset: str) -> None:
 
 
 def plot_turn_on(metrics_dir: Path, out_dir: Path, dataset: str) -> None:
-    path = metrics_dir / "surfaces" / "period_amplitude.csv"
+    path = metrics_dir / "surfaces" / "freq_recovery_period_amplitude.csv"
+    if not path.exists():
+        return
     surface = pd.read_csv(path)
     if surface.empty or "p" not in surface.columns:
         return

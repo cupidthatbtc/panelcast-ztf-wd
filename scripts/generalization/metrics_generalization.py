@@ -8,7 +8,8 @@ taxonomy against dataset truth, and emits the spec's output files. Datasets:
       truth = Jestin roster + literature periods; census = published CSV.
   d3  campaign Kepler dSct run; truth = roster_d3.csv + Mo+2026 frequencies;
       census = build_panels_generic output.
-  d2  campaign injection run; truth = shard_manifest.csv + d2_modes.csv;
+  d2  campaign injection run; truth = shard_manifest.csv + injected_modes.csv
+      (the actually-injected post-sinc-rejection mode set, never d2_modes);
       census computed from the shards with frozen functions; the TESS target
       is the cluster (bootstrap over targets).
 """
@@ -52,9 +53,9 @@ MIN_CELL = 5
 TRUTH_QUANTUM_PER_DAY = {"d1": 0.0025, "d2": 0.0, "d3": 0.0}
 PERIOD_EDGES_DAYS = [100 / 86400, 200 / 86400, 500 / 86400, 1000 / 86400,
                      2000 / 86400, 0.05, 0.2, 1.0, 10.0, 100.0]
-AMP_EDGES = {"d1": [0.5, 1, 2, 5, 10, 20, 50, 200],
-             "d3": [0.5, 1, 2, 5, 10, 20, 50, 200],
-             "d2": [0.5, 2, 5, 10, 30, 100]}
+AMP_EDGES = {"d3": [0.5, 1, 2, 5, 10, 20, 50],
+             "d2": [0.5, 2, 5, 10, 30]}
+EXP_PER_NIGHT_EDGES = [1.0, 1.5, 2.0, 3.0, 5.0]
 
 
 def wilson(k: float, n: float) -> tuple[float, float, float]:
@@ -79,17 +80,18 @@ def weighted_wilson(successes: np.ndarray, weights: np.ndarray) -> dict:
 
 
 def classify_match(freq: float, truth: list[float], tol: float) -> str:
+    """Evaluate EVERY (truth mode, relation) predicate — no short-circuit
+    (spec: hits in more than one relation class -> ambiguous)."""
     classes: set[str] = set()
     for f_t in truth:
         if abs(freq - f_t) <= tol:
             classes.add("direct")
-        elif abs(freq - 2.0 * f_t) <= tol or abs(freq - 0.5 * f_t) <= tol:
+        if abs(freq - 2.0 * f_t) <= tol or abs(freq - 0.5 * f_t) <= tol:
             classes.add("harmonic")
-        else:
-            for k in (1, 2):
-                for sign in (1.0, -1.0):
-                    if abs(freq - abs(f_t + sign * k * SIDEREAL_FREQUENCY)) <= tol:
-                        classes.add("window_alias")
+        for k in (1, 2):
+            for sign in (1.0, -1.0):
+                if abs(freq - abs(f_t + sign * k * SIDEREAL_FREQUENCY)) <= tol:
+                    classes.add("window_alias")
     if not classes:
         return "unmatched"
     if len(classes) > 1:
@@ -105,7 +107,10 @@ def pass_eligible(truth: list[float], pass_name: str, baseline: float) -> bool:
 
 
 def rule_fired(rule: str, status: str, census_flag) -> bool | None:
-    # status "missing" (no usable light curve) fires no L-S rule
+    if status == "missing":
+        # no usable light curve: unconditionally a non-detection under every
+        # rule in the eligible-roster estimand
+        return False
     if rule == "confirmed":
         return status == "confirmed"
     if rule == "confirmed_or_candidate":
@@ -150,6 +155,10 @@ def score_star(json_path: Path, truth_freqs: list[float], primary_freq: float | 
         row[f"{name}_match"] = (
             classify_match(float(freq), truth_freqs, tol)
             if freq is not None and truth_freqs else "unscored"
+        )
+        row[f"{name}_match_primary"] = (
+            classify_match(float(freq), [primary_freq], tol)
+            if freq is not None and primary_freq is not None else "unscored"
         )
         row[f"{name}_eligible"] = pass_eligible(truth_freqs, name, baseline)
         for peak in p.get("top_peaks", []):
@@ -272,6 +281,8 @@ def truth_d2(shards_dir: Path) -> pd.DataFrame:
             "freq_scorable": arm in ("A", "B") and bool(truth),
             "arm": arm, "template_k": r.template_k,
             "ratio_g": float(r.ratio_g), "ratio_rg": float(r.ratio_rg),
+            "phase_draw": int(getattr(r, "phase_draw", 0)),
+            "amp_scale": float(getattr(r, "amp_scale", 1.0)),
             "template_status": getattr(r, "template_status", ""),
         })
     return pd.DataFrame(rows)
@@ -316,14 +327,17 @@ def completeness_tables(per_star: pd.DataFrame, dataset: str) -> pd.DataFrame:
     # primary frequency-match column: D3 scores the DOMINANT Mo mode (any-mode
     # is secondary/diagnostic); D2 scores the exact injected list; D1 is
     # diagnostic-only either way (spec).
-    primary_match = {"d1": "best_match_primary", "d2": "best_match",
-                     "d3": "best_match_primary"}[dataset]
+    use_dominant = dataset in ("d1", "d3")
     rows = []
     positives = per_star[per_star["label_positive"] == True]  # noqa: E712
-    usable = positives[positives["best_status"] != "missing"]
+    usable = positives[(positives["best_status"] != "missing")
+                       & positives["low_available"].fillna(False)
+                       & positives["high_available"].fillna(False)]
     for pass_name in PASSES:
         status_col = "best_status" if pass_name == "best" else f"{pass_name}_status"
-        match_col = primary_match if pass_name == "best" else f"{pass_name}_match"
+        match_col = (f"{'best' if pass_name == 'best' else pass_name}_match_primary"
+                     if use_dominant
+                     else ("best_match" if pass_name == "best" else f"{pass_name}_match"))
         for rule in RULES:
             for scope, frame in (
                 ("detection_eligible_roster", positives),
@@ -334,6 +348,8 @@ def completeness_tables(per_star: pd.DataFrame, dataset: str) -> pd.DataFrame:
                        else usable[f"{pass_name}_eligible"])
                 ]),
             ):
+                if scope == "freq_recovery_scorable" and rule in ("census", "either"):
+                    continue  # frequency outcomes exist only for L-S rules
                 if frame.empty:
                     rows.append({"pass": pass_name, "rule": rule, "scope": scope,
                                  "n": 0, "ess": 0.0, "p": math.nan,
@@ -345,8 +361,7 @@ def completeness_tables(per_star: pd.DataFrame, dataset: str) -> pd.DataFrame:
                 )
                 ok = fired.notna()
                 success = fired[ok].astype(bool)
-                if scope == "freq_recovery_scorable" and rule in (
-                        "confirmed", "confirmed_or_candidate", "either"):
+                if scope == "freq_recovery_scorable":
                     success = success & (frame.loc[ok, match_col] == "direct")
                 stats = weighted_wilson(
                     success.to_numpy(dtype=float),
@@ -356,7 +371,7 @@ def completeness_tables(per_star: pd.DataFrame, dataset: str) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
-def contingency(per_star: pd.DataFrame) -> dict:
+def contingency(per_star: pd.DataFrame, dataset: str = "d1") -> dict:
     from scipy.stats import binomtest
     frame = per_star[(per_star["label_positive"] == True)  # noqa: E712
                      & per_star["census_variable"].notna()
@@ -374,10 +389,12 @@ def contingency(per_star: pd.DataFrame) -> dict:
         "incremental_census_only": dict(zip(("p", "lo", "hi"), wilson(b, n))) if n else {},
         "incremental_ls_only": dict(zip(("p", "lo", "hi"), wilson(c, n))) if n else {},
     }
-    if b + c:
+    if b + c and dataset != "d2":
         out["mcnemar_exact_p_secondary"] = float(
             binomtest(min(b, c), b + c, 0.5).pvalue * 1.0
         )
+    if dataset == "d2":
+        out["mcnemar"] = "prohibited for d2 (cluster structure); use the target-cluster paired-difference bootstrap"
     return out
 
 
@@ -407,46 +424,127 @@ def chance_match_rate(per_star: pd.DataFrame) -> dict:
             "accidental_direct_match_rate_p95": float(np.quantile(rates, 0.95))}
 
 
+def cp_one_sided_bounds(k: int, n: int) -> tuple[float, float]:
+    from scipy.stats import beta
+    lower = float(beta.ppf(0.05, k, n - k + 1)) if k > 0 else 0.0
+    upper = float(beta.ppf(0.95, k + 1, n - k)) if k < n else 1.0
+    return lower, upper
+
+
 def d2_cluster_bootstrap(per_star: pd.DataFrame) -> pd.DataFrame:
-    frame = per_star[per_star.get("arm").isin(["A", "B"])] if "arm" in per_star else per_star.iloc[0:0]
+    """P4 machinery: per (scenario, endpoint), per-stratum rates and the
+    equal-weight (1/3 per K stratum) scenario-standardized mean over targets;
+    COMMON RANDOM NUMBERS — one resample-index matrix shared by every
+    scenario; degenerate statistics fall back to target-level exact CP."""
+    if "arm" not in per_star:
+        return pd.DataFrame()
+    frame = per_star[per_star["arm"].isin(["A", "B"])]
     if frame.empty:
         return pd.DataFrame()
+    clusters = np.array(sorted(frame["cluster"].unique()))
     rng = np.random.Generator(np.random.PCG64(BOOTSTRAP_SEED))
+    draws = rng.integers(0, len(clusters), size=(BOOTSTRAP_B, len(clusters)))
     rows = []
-    for (arm, k), stratum in frame.groupby(["arm", "template_k"]):
-        success = (stratum["best_status"] == "confirmed") & (stratum["best_match"] == "direct")
-        per_target = success.groupby(stratum["cluster"]).mean()
-        point = float(per_target.mean())
-        clusters = per_target.index.to_numpy()
-        boots = []
-        for _ in range(BOOTSTRAP_B):
-            sample = rng.choice(clusters, size=len(clusters), replace=True)
-            boots.append(float(per_target.loc[sample].mean()))
-        rows.append({"arm": arm, "template_k": int(k), "n_targets": len(clusters),
-                     "p": point, "lo": float(np.quantile(boots, 0.025)),
-                     "hi": float(np.quantile(boots, 0.975))})
+    endpoints = {
+        "detection": lambda f: f["best_status"] == "confirmed",
+        "freq_recovery": lambda f: (f["best_status"] == "confirmed")
+        & (f["best_match"] == "direct"),
+    }
+    scenario_cols = ["arm", "ratio_g", "ratio_rg"]
+    for extra in ("phase_draw", "amp_scale"):
+        if extra in frame:
+            scenario_cols.append(extra)
+    for keys, scenario in frame.groupby(scenario_cols):
+        arm, g, r = keys[0], keys[1], keys[2]
+        for endpoint, predicate in endpoints.items():
+            success = predicate(scenario)
+            # per (target, stratum) rates, then equal-weight stratum mean
+            per_ts = success.groupby(
+                [scenario["cluster"], scenario["template_k"]]).mean()
+            per_target = per_ts.groupby(level=0).mean()
+            aligned = per_target.reindex(clusters)
+            observed = aligned.dropna()
+            if observed.empty:
+                continue
+            point = float(observed.mean())
+            values = aligned.to_numpy(dtype=float)
+            boots = []
+            for b in range(BOOTSTRAP_B):
+                sample = values[draws[b]]
+                sample = sample[~np.isnan(sample)]
+                if sample.size:
+                    boots.append(float(sample.mean()))
+            target_hits = observed.round(6)
+            degenerate = (target_hits == 0).all() or (target_hits == 1).all()
+            if degenerate:
+                k_deg = int((target_hits == 1).sum())
+                lo, hi = cp_one_sided_bounds(k_deg, len(observed))
+            else:
+                lo = float(np.quantile(boots, 0.025))
+                hi = float(np.quantile(boots, 0.975))
+            rows.append({
+                "arm": arm, "ratio_g": g, "ratio_rg": r, "endpoint": endpoint,
+                "n_targets": int(len(observed)),
+                "n_strata_mean": float(per_ts.groupby(level=0).size().mean()),
+                "p": point, "lo": lo, "hi": hi,
+                "interval": "cp_one_sided" if degenerate else "cluster_bootstrap",
+            })
     return pd.DataFrame(rows)
 
 
-def surfaces(per_star: pd.DataFrame, dataset: str) -> pd.DataFrame:
-    positives = per_star[(per_star["label_positive"] == True)  # noqa: E712
-                         & per_star["freq_scorable"]]
-    if positives.empty:
-        return pd.DataFrame()
-    amp_edges = AMP_EDGES[dataset]
+def surface_cells(frame: pd.DataFrame, success: pd.Series,
+                  x_values: pd.Series, edges: list[float],
+                  x_name: str) -> list[dict]:
+    """Half-open [lo, hi) bins; bin 0 = underflow, bin len(edges) = overflow;
+    NaN x -> bin -1 ("unknown"). Cells below MIN_CELL: counts only."""
+    bins = np.where(np.isfinite(x_values), np.digitize(x_values, edges), -1)
     rows = []
-    p_bins = np.digitize(positives["truth_period_days"], PERIOD_EDGES_DAYS)
-    a_bins = np.digitize(positives["amp"], amp_edges)
-    success = (positives["best_status"] == "confirmed") & (positives["best_match"] == "direct")
-    for (pb, ab), idx in positives.groupby([p_bins, a_bins]).groups.items():
-        cell = positives.loc[idx]
+    for b, idx in frame.groupby(bins).groups.items():
         k = int(success.loc[idx].sum())
-        n = len(cell)
-        entry = {"period_bin": int(pb), "amp_bin": int(ab), "n": n, "k": k}
+        n = len(idx)
+        entry = {x_name: int(b), "n": n, "k": k}
         if n >= MIN_CELL:
             entry.update(dict(zip(("p", "lo", "hi"), wilson(k, n))))
         rows.append(entry)
-    return pd.DataFrame(rows)
+    return rows
+
+
+def surfaces(per_star: pd.DataFrame, dataset: str) -> dict[str, pd.DataFrame]:
+    if dataset == "d1":
+        return {}  # no amplitude axis for D1 (spec)
+    out: dict[str, pd.DataFrame] = {}
+    amp_edges = AMP_EDGES[dataset]
+    positives = per_star[per_star["label_positive"] == True]  # noqa: E712
+    # detection endpoint: ALL positives; unknown-amplitude stars form their
+    # own bin (-1) so the 154 unjoined D3 positives stay in the denominator
+    detection = positives["best_status"] == "confirmed"
+    out["detection_amplitude"] = pd.DataFrame(
+        surface_cells(positives, detection, positives["amp"], amp_edges, "amp_bin"))
+    # frequency-recovery endpoint: scorable subset only
+    use_dominant = dataset in ("d1", "d3")
+    scorable = positives[positives["freq_scorable"]]
+    if not scorable.empty:
+        match_col = "best_match_primary" if use_dominant else "best_match"
+        recovery = (scorable["best_status"] == "confirmed") & (
+            scorable[match_col] == "direct")
+        rows = []
+        p_bins = np.digitize(scorable["truth_period_days"], PERIOD_EDGES_DAYS)
+        a_bins = np.where(np.isfinite(scorable["amp"]),
+                          np.digitize(scorable["amp"], amp_edges), -1)
+        for (pb, ab), idx in scorable.groupby([p_bins, a_bins]).groups.items():
+            k = int(recovery.loc[idx].sum())
+            n = len(idx)
+            entry = {"period_bin": int(pb), "amp_bin": int(ab), "n": n, "k": k}
+            if n >= MIN_CELL:
+                entry.update(dict(zip(("p", "lo", "hi"), wilson(k, n))))
+            rows.append(entry)
+        out["freq_recovery_period_amplitude"] = pd.DataFrame(rows)
+        if "n_exp_zg" in scorable and "baseline_days" in scorable:
+            epn = scorable["n_exp_zg"] / scorable["baseline_days"].clip(lower=1)
+            out["freq_recovery_exposure_amplitude"] = pd.DataFrame(
+                surface_cells(scorable, recovery, epn,
+                              EXP_PER_NIGHT_EDGES, "exp_per_night_bin"))
+    return out
 
 
 def trigger_rates(per_star: pd.DataFrame, dataset: str) -> pd.DataFrame:
@@ -463,14 +561,25 @@ def trigger_rates(per_star: pd.DataFrame, dataset: str) -> pd.DataFrame:
                                     negatives.loc[ok, "weight"].to_numpy(dtype=float))
             rows.append({"quantity": "negative_class_trigger_rate", "rule": rule, **stats})
     if dataset == "d2" and "arm" in per_star:
-        for arm, name in (("null", "fpr_gaussian"), ("ctrl", "native_trigger_rate")):
-            subset = per_star[per_star["arm"] == arm]
-            if subset.empty:
-                continue
-            fired = subset["best_status"] == "confirmed"
+        nulls = per_star[per_star["arm"] == "null"]
+        if not nulls.empty:
+            x = int((nulls["best_status"] == "confirmed").sum())
+            n = len(nulls)
+            _, upper = cp_one_sided_bounds(x, n)
+            rows.append({
+                "quantity": "fpr_gaussian", "rule": "confirmed",
+                "n": n, "k": x, "p": x / n,
+                "cp_one_sided_95_upper": upper,
+                "acceptance_u95_leq_0.005": bool(upper <= 0.005),
+                "n_is_1000": bool(n == 1000),
+            })
+        controls = per_star[per_star["arm"] == "ctrl"]
+        if not controls.empty:
+            fired = controls["best_status"] == "confirmed"
             stats = weighted_wilson(fired.to_numpy(dtype=float),
-                                    np.ones(len(subset)))
-            rows.append({"quantity": name, "rule": "confirmed", **stats})
+                                    np.ones(len(controls)))
+            rows.append({"quantity": "native_trigger_rate", "rule": "confirmed",
+                         **stats})
     return pd.DataFrame(rows)
 
 
@@ -506,11 +615,16 @@ def ppv_d3(per_star: pd.DataFrame) -> dict:
         (per_star[per_star["class_label"] == "dsct_flag2"]["best_status"]
          == "confirmed").sum()
     )
+    # SRSWOR finite-population correction: sampling fraction f = 2314/7292;
+    # bootstrap deviations rescaled by sqrt(1 - f) about the point estimate
+    fpc = math.sqrt(1.0 - 2314.0 / 7292.0)
+    rescaled = [point + fpc * (b - point) for b in boots]
     return {
         "estimand": "frame_specific_label_ppv",
         "p": point,
-        "lo": float(np.quantile(boots, 0.025)) if boots else math.nan,
-        "hi": float(np.quantile(boots, 0.975)) if boots else math.nan,
+        "lo": float(np.quantile(rescaled, 0.025)) if rescaled else math.nan,
+        "hi": float(np.quantile(rescaled, 0.975)) if rescaled else math.nan,
+        "interval": "survey_bootstrap_fpc_rescaled",
         "n_triggered": int(len(triggered)),
         "bootstrap_B_effective": len(boots),
         "dsct2_triggered_reported_separately": triggered_ambiguous,
@@ -546,8 +660,13 @@ def sensitivity_table(per_star: pd.DataFrame, dataset: str,
         # common-subset rule: nominal recomputed on the SAME median-window
         # (k=1) subset used by every non-nominal scenario
         median_b = per_star[(per_star["arm"] == "B") & (per_star["template_k"] == 1)]
-        for (g, r), scenario in median_b.groupby(["ratio_g", "ratio_rg"]):
-            rate(scenario, "arm_b_median_window", f"ladder_g{g}_rg{r}")
+        group_cols = ["ratio_g", "ratio_rg"]
+        for extra in ("phase_draw", "amp_scale"):
+            if extra in median_b:
+                group_cols.append(extra)
+        for keys, scenario in median_b.groupby(group_cols):
+            label = "_".join(f"{c}{v}" for c, v in zip(group_cols, keys))
+            rate(scenario, "arm_b_median_window", label)
     if dataset == "d3":
         positives = per_star[(per_star["label_positive"] == True)  # noqa: E712
                              & (per_star["best_status"] != "missing")]
@@ -583,6 +702,7 @@ def main() -> None:
     args = parser.parse_args()
 
     assert_frozen()
+    campaign_shas_start = campaign_file_shas()
     if args.dataset == "d1":
         truth = truth_d1()
     elif args.dataset == "d3":
@@ -638,14 +758,15 @@ def main() -> None:
     completeness_tables(per_star, args.dataset).to_csv(
         args.out_dir / "completeness_by_class_pass_rule.csv", index=False)
     (args.out_dir / "contingency_complementarity.json").write_text(
-        json.dumps(contingency(per_star), indent=2) + "\n", encoding="utf-8")
+        json.dumps(contingency(per_star, args.dataset), indent=2) + "\n",
+        encoding="utf-8")
     trigger_rates(per_star, args.dataset).to_csv(
         args.out_dir / "trigger_rates.csv", index=False)
     (args.out_dir / "chance_match.json").write_text(
         json.dumps(chance_match_rate(per_star), indent=2) + "\n", encoding="utf-8")
-    surface = surfaces(per_star, args.dataset)
     (args.out_dir / "surfaces").mkdir(exist_ok=True)
-    surface.to_csv(args.out_dir / "surfaces" / "period_amplitude.csv", index=False)
+    for name, surface in surfaces(per_star, args.dataset).items():
+        surface.to_csv(args.out_dir / "surfaces" / f"{name}.csv", index=False)
     if args.dataset == "d2":
         d2_cluster_bootstrap(per_star).to_csv(
             args.out_dir / "d2_cluster_completeness.csv", index=False)
@@ -679,6 +800,8 @@ def main() -> None:
         "frozen_sha256": frozen_file_shas(),
         "campaign_sha256": campaign_file_shas(),
     }
+    if campaign_file_shas() != campaign_shas_start:
+        raise SystemExit("campaign code changed while metrics were running")
     (args.out_dir / "manifest.json").write_text(
         json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
     (args.out_dir / "inputs_sha256.json").write_text(

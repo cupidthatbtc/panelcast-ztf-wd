@@ -53,6 +53,11 @@ def validate_attestation(report_path: Path) -> dict:
         )
     if report.get("frozen_sha256") != frozen_file_shas():
         raise SystemExit("replay attestation frozen SHAs differ from this checkout")
+    if len(report["stars"]) != 928:
+        raise SystemExit(
+            f"production runs require the FULL 928-star baseline attestation; "
+            f"this report covers {len(report['stars'])} stars"
+        )
     return report
 
 # One in-flight star holds two full-resolution float32 periodogram memmaps plus
@@ -161,6 +166,9 @@ def main() -> None:
                         help="optional newline-separated campaign_id subset (a shard)")
     parser.add_argument("--limit", type=int, default=None,
                         help="pilot mode: first N stars only")
+    parser.add_argument("--expect-count", type=int, default=None,
+                        help="assert the shard dir holds exactly N shards "
+                             "(stale-directory guard)")
     parser.add_argument("--allow-nonstandard-ids", action="store_true",
                         help="permit non-campaign source_ids (replay/debug only)")
     parser.add_argument("--replay-report", type=Path, required=True,
@@ -170,6 +178,7 @@ def main() -> None:
     args = parser.parse_args()
 
     assert_frozen()
+    campaign_shas_start = campaign_file_shas()
     attestation = validate_attestation(args.replay_report)
     passes = tuple(args.passes.split(","))
     if passes != ("low", "high") and not args.allow_nonstandard_ids:
@@ -180,6 +189,13 @@ def main() -> None:
     star_dir.mkdir(parents=True, exist_ok=True)
     work_root.mkdir(parents=True, exist_ok=True)
 
+    if args.expect_count is not None:
+        found = len(list(args.shard_dir.glob("*.csv.gz")))
+        if found != args.expect_count:
+            raise SystemExit(
+                f"shard dir holds {found} shards, expected {args.expect_count} "
+                f"— stale or incomplete directory"
+            )
     only = None
     if args.stars_file:
         only = {line.strip() for line in args.stars_file.read_text().splitlines() if line.strip()}
@@ -273,6 +289,8 @@ def main() -> None:
             "verdict_counts": attestation.get("verdict_counts"),
         },
     }
+    if campaign_file_shas() != campaign_shas_start:
+        raise SystemExit("campaign code changed mid-run — results void")
     (args.out_dir / "manifest.json").write_text(
         json.dumps(manifest, indent=2) + "\n", encoding="utf-8"
     )

@@ -69,6 +69,18 @@ def test_phase_determinism_and_band_coherence():
     assert np.allclose(zr, 0.80 * zg, atol=1e-12)
 
 
+def test_phase_draw_variants():
+    base = build_truth_model(777, [300.0, 500.0], [5.0, 3.0], cadence_s=120.0)
+    d1 = build_truth_model(777, [300.0, 500.0], [5.0, 3.0], cadence_s=120.0,
+                           phase_draw=1)
+    d1b = build_truth_model(777, [300.0, 500.0], [5.0, 3.0], cadence_s=120.0,
+                            phase_draw=1)
+    assert [m.phase_rad for m in d1.modes] == [m.phase_rad for m in d1b.modes]
+    assert [m.phase_rad for m in base.modes] != [m.phase_rad for m in d1.modes]
+    # amplitudes identical across phase draws
+    assert [m.amp_g_mag for m in base.modes] == [m.amp_g_mag for m in d1.modes]
+
+
 def test_zero_amplitude_null():
     null = build_truth_model(9, [300.0], [5.0], cadence_s=120.0, amplitude_scale=0.0)
     time = np.linspace(0.0, 1.0, 100)

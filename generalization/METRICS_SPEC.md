@@ -33,6 +33,14 @@ Three separate response assessments; never pooled.
   S_high. Known consequence stated up front: only ~10/456 D3 dominant
   frequencies lie >= 24 / d, so D3 high-pass frequency recovery is a
   near-empty cell and is reported as counts.
+  Mo-join MNAR limitation (binding statement): Mo inclusion required
+  SNR > 8 in Kepler photometry and is plausibly related to amplitude,
+  magnitude, and mode complexity; missingness for the 154 unjoined
+  positives is treated as informative — the frequency-recovery curve is
+  therefore a Mo-join-conditioned estimand, the joined-vs-unjoined
+  covariate table is mandatory, and DETECTION surfaces retain all 610
+  positives with the unjoined stars in an explicit `amp_unknown` bin so
+  their detection behavior is visible beside the joined sample.
   The missed-vs-wrong-frequency decomposition uses matching denominators
   only: P(D AND M | Y=1, F=1, S_p=1) vs P(D | Y=1, F=1, S_p=1).
 - **correct-frequency fraction among detected positives** —
@@ -41,8 +49,10 @@ Three separate response assessments; never pooled.
 - **frame-specific label PPV (D3 only)** — among triggered roster members of
   the weighted frame {dSct=1 census positives, dSct=0 SRS negatives; dSct=2
   EXCLUDED, reported separately}: weighted fraction labeled dSct=1.
-  Interval: survey bootstrap (B=2000, frozen seed) resampling the 2,314
-  sampled negatives with replacement, positives held fixed (census).
+  Interval: FPC-rescaled survey bootstrap (B=2000, frozen seed): the 2,314
+  negatives are resampled with replacement, positives held fixed (census),
+  and bootstrap deviations are rescaled by sqrt(1 − f) with sampling
+  fraction f = 2314/7292 (SRSWOR finite-population correction).
   No transfer to other prevalences. Output: ppv.csv.
 - **negative-class trigger rate (D3)** — P(rule fires | dSct=0). Weights are
   constant within the class and cancel: plain Wilson on the 2,314 sampled
@@ -109,10 +119,14 @@ descriptive sensitivity:
      best_candidate_matches_dominant, Wilson 95%, beside chance-match rate}.
   P3 D3 negative-class trigger rate: {D3, dSct=0 (2314), rule 1, best pass,
      plain Wilson}.
-  P4 D2 conditional injection-recovery: {D2 arm B nominal (1.7/0.80,
-     de-dilution off), K=3 strata separately + equal-weight
-     scenario-standardized mean over targets, rule 1 detection-only,
-     target-cluster bootstrap 95%}.
+  P4 D2 conditional injection-recovery, algebraically:
+     p-hat = (1/103) Σ_t (1/|K_t|) Σ_{k in K_t} y_{t,k}, where y_{t,k} = 1
+     iff rule 1 fires (detection-only) on target t's stratum-k nominal
+     (1.7/0.80, de-dilution off, phase_draw 0) arm-B shard, and K_t ⊆
+     {0, 1, 2} is the set of strata with a usable result (missing strata
+     renormalize |K_t| and are flagged; the eligible-roster variant counts
+     a missing stratum as y = 0 with |K_t| = 3). Both variants reported.
+     Interval: target-cluster bootstrap 95%.
   P5 FPR_Gaussian acceptance: {D2 arm A nulls, rule 1, exact one-sided CP
      upper at observed x <= 0.5%} — the sole confirmatory decision.
 No claim direction reversal, endpoint swap, or denominator swap after the
@@ -157,15 +171,19 @@ complementarity).
 
 ## Surfaces
 
-Endpoint: rule-1 detection completeness, and separately frequency recovery
-on the scorable subset. Coordinates per star (frozen): D3 = dominant Mo
+Surfaces exist for D2 and D3 only (D1 has no amplitude axis). Two
+endpoints, separate files: (a) rule-1 DETECTION completeness over ALL
+labeled positives — stars without a defined amplitude (the 154 unjoined
+D3 positives) fall in an explicit `amp_unknown` bin (bin index −1), so
+the full 610-star denominator is preserved; (b) frequency recovery over
+the scorable subset only. Coordinates per star (frozen): D3 = dominant Mo
 mode (period from dominant frequency; historical Kepler-band dominant
 amplitude, mmag — explicitly non-contemporaneous, not a ZTF-g threshold);
 D2 = largest-amplitude RETAINED injected mode (period; published TESS
 amplitude, ppt). Bins half-open [lo, hi); explicit underflow and overflow
 bins; no smoothing, no monotonic fitting, no interpolation. Edges frozen:
 period {100 s, 200 s, 500 s, 1000 s, 2000 s, 0.05 d, 0.2 d, 1 d, 10 d,
-100 d}; amplitude D3/D1 {0.5, 1, 2, 5, 10, 20, 50} mmag with top bin
+100 d}; amplitude D3 {0.5, 1, 2, 5, 10, 20, 50} mmag with top bin
 [50, inf); D2 {0.5, 2, 5, 10, 30} ppt with top bin [30, inf);
 median-exposures-per-night {1, 1.5, 2, 3, 5} with top bin [5, inf).
 Cells below 5 stars: counts only. Amplitude axes are invariant across
@@ -176,8 +194,11 @@ scenarios (never the ladder-scaled injected amplitude).
 Both denominators always reported (see detection completeness). Attrition
 table (roster -> fetched -> crossmatched -> QC-passed -> both-passes) by
 class, amplitude stratum (including `amp_unknown`), Mo-join status,
-magnitude, dominant period, Teff, and crowding (cone object count,
-nearest-separation). D3 near-saturation strata: g <= 14.0 flagged,
+magnitude, dominant period, Teff (declared the color surrogate — Murphy
+carries no color column and Teff is its physical equivalent), and crowding
+(cone object count, nearest-separation). The negative-sample balance
+diagnostic (sampled vs full-frame quantiles of gmag/Teff/RA/Dec) is part
+of the roster report (`roster_report.json`) and is a required output. D3 near-saturation strata: g <= 14.0 flagged,
 g > 14.0 safe (boundary in the flagged stratum). Unavailable passes never
 silently dropped; missing light curves enter eligible-roster estimands as
 non-detections.

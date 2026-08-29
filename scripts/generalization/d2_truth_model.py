@@ -26,9 +26,12 @@ Amplitude chain (GENERALIZATION_PLAN.md, D2):
        numbers are quoted as the band across the ladder.
     -> re-integrate the ZTF 30-s exposure: multiply by sinc(pi f 30s).
 
-Phases are unpublished: drawn once per star from PCG64(seed=TIC), shared
-across bands and across every ladder variant (variant-stable), with a shared
-t_ref so the two-band evidence rule keeps its meaning.
+Phase protocol (frozen): each mode gets ONE independent phase; the base
+assignment (phase_draw=0) seeds PCG64(TIC) and is shared across bands and
+across every bandpass/de-dilution/amplitude-scale variant (variant-stable).
+The two phase-draw sensitivity variants d in {1, 2} seed PCG64(TIC*10 + d)
+— the ONLY thing that changes between phase draws is the phase vector.
+A shared t_ref keeps the two-band evidence rule meaningful.
 """
 
 from __future__ import annotations
@@ -115,11 +118,16 @@ def build_truth_model(
     ratio_rg: float = NOMINAL_RG,
     dedilution: float | None = None,
     amplitude_scale: float = 1.0,
+    phase_draw: int = 0,
 ) -> TruthModel:
-    """amplitude_scale=0.0 builds a zero-amplitude null with the same modes."""
+    """amplitude_scale=0.0 builds a zero-amplitude null with the same modes;
+    phase_draw in {0, 1, 2} selects the frozen phase assignment (0 = base)."""
     if len(periods_s) != len(amps_ppt):
         raise ValueError("periods and amplitudes must align")
-    rng = np.random.Generator(np.random.PCG64(int(tic)))
+    if phase_draw not in (0, 1, 2):
+        raise ValueError("phase_draw must be 0, 1, or 2")
+    seed = int(tic) if phase_draw == 0 else int(tic) * 10 + phase_draw
+    rng = np.random.Generator(np.random.PCG64(seed))
     phases = rng.uniform(0.0, 2.0 * np.pi, size=len(periods_s))
     modes: list[TruthMode] = []
     rejected: list[dict] = []

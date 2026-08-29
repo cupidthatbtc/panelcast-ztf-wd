@@ -157,21 +157,27 @@ No re-run; campaign metrics re-read the published per-star JSONs.
   (1.43, 0.80) ≈ the low rung; the ADOPTED nominal (1.7, 0.80) is the grid
   midpoint covering atmosphere-model/limb-darkening uncertainty (the ladder
   is non-optional — zr carries most published confirmations) →
-  re-integrate the ZTF 30-s boxcar analytically → compose with per-mode
-  independent phases (PCG64(TIC), one draw per mode) shared across bands
-  and all variants, and a shared t_ref, so the frozen two-band rule keeps
-  its meaning.
+  re-integrate the ZTF 30-s boxcar analytically → compose with the FROZEN
+  phase protocol: one independent phase per mode; base assignment
+  (phase_draw = 0) seeds PCG64(TIC) and is shared across bands and across
+  every bandpass/de-dilution/amplitude-scale variant; the two phase-draw
+  sensitivity variants d ∈ {1, 2} seed PCG64(TIC·10 + d) and change ONLY
+  the phase vector; shared t_ref keeps the frozen two-band rule meaningful.
 - Windows: templates from ALL 928 stars of the published catalog (G1 fix —
   the earlier 510-not-detected pool conditioned on the pipeline's own
   outcome), matched by median zg mag (|Δg| ≤ 0.25, widened when thin;
   flagged), K=3 per target at 10/50/90th percentile of exposures-per-night
   (75% of zg nights are single-exposure; per-night median subtraction
   annihilates 53% of zg data — pre-registered, stratified: risk 3).
-  Template matching is fully algorithmic (zero analyst discretion): pool
-  filter |median_zg − target_G| ≤ 0.25, widened to 0.5 if fewer than 3
-  candidates, else the 9 nearest in magnitude; candidates sorted by
-  (median exposures-per-night, source_id); picks at indices
-  round(q·(n−1)) for q ∈ {0.10, 0.50, 0.90}; match label recorded.
+  Template matching is a TOTAL deterministic algorithm (zero analyst
+  discretion): candidate pool = stars with |median_zg − target_G| ≤ 0.25;
+  if fewer than 3, the pool widens once to ≤ 0.5; if still fewer than 3,
+  the pool is the 9 smallest |Δmag| stars, magnitude ties broken by
+  ascending source_id (pandas argsort is stable over the source_id-sorted
+  stats table); the pool is then sorted lexicographically by
+  (median exposures-per-night, source_id) — a total order, so no residual
+  ties — and picks are indices round-half-even(q·(n−1)) for
+  q ∈ {0.10, 0.50, 0.90} (numpy round). Match label recorded per target.
   D2 primary detection is post-injection rule firing (detection-only);
   strict frequency matching is the separate frequency-recovery estimand;
   native variability in the pool is contextualized by PAIRED UNINJECTED
@@ -180,8 +186,9 @@ No re-run; campaign metrics re-read the published per-star JSONs.
   ZTF light curves at the 103 Romero positions; usable self-windows form a
   SEPARATE DIAGNOSTIC arm — they do not replace or enter the nominal K=3
   aggregate.
-- Arms: B primary (signal + real ZTF mags, real magerr), A diagnostic
-  (synthetic Gaussian floor). Gaussian-null false-alarm rate
+- Arms: B primary (signal + real ZTF mags, real magerr), A diagnostic for
+  positive injections; arm-A ZERO-AMPLITUDE NULLS are the campaign's sole
+  confirmatory endpoint (P5, METRICS_SPEC). Gaussian-null false-alarm rate
   (`FPR_Gaussian`): 1,000 arm-A zero-amplitude simulations scheduled over
   the 928-window frame by deterministic cycling (serial i → sorted-pool
   window i mod 928, noise seed = serial); windows repeat, seeds do not.
@@ -202,11 +209,11 @@ No re-run; campaign metrics re-read the published per-star JSONs.
 - Truth-model corrections found at implementation (2026-08-28): |sinc| ≥ 0.3
   rejection corresponds to P < ~160 s at 120-s cadence (the earlier "197 s"
   was the |sinc| = 0.5 point); D2 min published period is 115.9 s and 49/103
-  stars carry 20-s solutions, so few modes are affected. Phases are
-  unpublished: drawn once per star from PCG64(seed=TIC), shared across bands
-  and ladder variants. Blackbody derivative at 11,500 K gives (1.43, 0.80) —
-  the ladder's low rung; upper rungs cover atmosphere-model/limb-darkening
-  uncertainty.
+  stars carry 20-s solutions, so few modes are affected. Phase protocol is
+  frozen above (per-mode independent; PCG64(TIC) base; PCG64(TIC·10+d)
+  for the two phase-draw variants). Blackbody derivative at 11,500 K gives
+  (1.43, 0.80) ≈ the 1.4/0.80 low rung; upper rungs cover
+  atmosphere-model/limb-darkening uncertainty; 1.7 is the adopted midpoint.
 
 ## Metrics — see METRICS_SPEC.md (frozen before any campaign L-S run)
 

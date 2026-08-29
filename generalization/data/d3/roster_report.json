@@ -56,6 +56,74 @@
       "bytes": 633916
     }
   },
+  "roster_sha256": "d04f6e4ecde3492f5ee0807d4cf725df8081c4cf91e0c417707146fef86ba7e9",
+  "campaign_sha256": {
+    "scripts/generalization/build_d2_roster.py": "901c95c64825c42125a066c2678c195b520d99e64c0a9a528eef41872361acbe",
+    "scripts/generalization/build_d2_shards.py": "4427e50a7c8f21b62422d5cb7a2e7ec16be892b6d1440fbb441faa319a1a7e58",
+    "scripts/generalization/build_d3_roster.py": "3d7b2d23ffa6a21acf20fde3b998f5d69a0637ade643048c5d457f022b75c056",
+    "scripts/generalization/build_panels_generic.py": "fb27f1af53c852fb78650a716678b7191ce5f451599a8a99fffec9e672793241",
+    "scripts/generalization/d2_truth_model.py": "4394d4fcc92030485a6420f688e751fd9f79af002cde138f6ce3e8f2c2b2c84c",
+    "scripts/generalization/frozen_api.py": "7f238ac2ea2b248a33d2563b548370bb2a83b4b20bd7a5d9272cfb288cd1b105",
+    "scripts/generalization/metrics_generalization.py": "53acfc6efa23f86fd24a05f3cda7cb725d88fc9747bece866a2cdd30d61057af",
+    "scripts/generalization/panel_golden_gate.py": "abe29feb28005b09fba3cfbc8b85d3f8f6a1cd531e0ae40eb6de1bc0884ba643",
+    "scripts/generalization/plot_generalization.py": "bc15d358c4cd13dd70e20bd41f02fca74887b7bf8b2bcad72ed5a126caadc8cc",
+    "scripts/generalization/replay_gate.py": "ff7e091f46cdea9f76ed32dee1eac1bf53d44ed42fb4919a9dcc1ea3a0ffc993",
+    "scripts/generalization/run_generalization_ls.py": "fd30b34e7cc706d5877dcb640f66d96acf76ac2d698cd5022250bff7ef319dcd",
+    "scripts/generalization/verify_cli_identity.py": "840d233f78ff8fc289f2b77661479d02bcfbab26b4f3fa6bdc413b7959905728",
+    "scripts/generalization/watch_run.py": "6e74a6bb66e3bb6aff4c4941a75e02e14745c576e2e435e676dd17e965dc3a8e",
+    "generalization/GENERALIZATION_PLAN.md": "79739297ea31dd4baa59736fac03be4378cdf50663a17ff391d4fe3fbc9fbfef",
+    "generalization/METRICS_SPEC.md": "a675b62fbaf8de8159a5c2b5fc20bd71d33e061908fb45ebff309b13b993a87b"
+  },
+  "negative_balance_diagnostics": {
+    "gmag": {
+      "pool_quantiles": [
+        13.388,
+        14.066,
+        15.294
+      ],
+      "sample_quantiles": [
+        13.385,
+        14.049,
+        15.214
+      ]
+    },
+    "Teff": {
+      "pool_quantiles": [
+        6536.0,
+        6671.0,
+        7193.8
+      ],
+      "sample_quantiles": [
+        6536.0,
+        6675.0,
+        7207.4
+      ]
+    },
+    "_RA": {
+      "pool_quantiles": [
+        286.372,
+        292.95,
+        297.682
+      ],
+      "sample_quantiles": [
+        286.164,
+        293.098,
+        297.713
+      ]
+    },
+    "_DE": {
+      "pool_quantiles": [
+        39.453,
+        44.118,
+        49.058
+      ],
+      "sample_quantiles": [
+        39.473,
+        44.099,
+        49.043
+      ]
+    }
+  },
   "conversions": {
     "ppt_to_mmag": 1.0857,
     "uhz_to_per_day": 0.0864,

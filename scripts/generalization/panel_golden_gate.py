@@ -42,8 +42,10 @@ from frozen_api import (  # noqa: E402
     REPO_ROOT,
     add_bjd,
     assert_frozen,
+    campaign_file_shas,
     clean_rows,
     env_versions,
+    frozen_file_shas,
     read_cache,
     select_nearest_source,
 )
@@ -78,6 +80,8 @@ def compare_star(rebuilt: pd.DataFrame, reference: pd.DataFrame) -> dict:
     import numpy as np
     bjd_a = rebuilt["bjd_tdb"].to_numpy(dtype=float)
     bjd_b = reference["bjd_tdb"].to_numpy(dtype=float)
+    if not (np.isfinite(bjd_a).all() and np.isfinite(bjd_b).all()):
+        return {"verdict": "MISMATCH", "reason": "nonfinite bjd_tdb"}
     bjd_ulp = np.abs(bjd_a - bjd_b) / np.spacing(np.abs(bjd_b))
     if (bjd_ulp > 1.0).any():
         worst = int(np.argmax(bjd_ulp))
@@ -91,6 +95,8 @@ def compare_star(rebuilt: pd.DataFrame, reference: pd.DataFrame) -> dict:
     for col in META_COLUMNS:
         a = rebuilt[col].to_numpy(dtype=float)
         b = reference[col].to_numpy(dtype=float)
+        if not (np.isfinite(a).all() and np.isfinite(b).all()):
+            return {"verdict": "MISMATCH", "reason": f"nonfinite {col}"}
         ulp = np.spacing(np.abs(b))
         if (np.abs(a - b) > ulp).any():
             worst = int(np.argmax(np.abs(a - b) / np.maximum(ulp, 1e-300)))
@@ -107,10 +113,13 @@ def compare_star(rebuilt: pd.DataFrame, reference: pd.DataFrame) -> dict:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--count", type=int, default=5)
+    parser.add_argument("--count", type=int, default=5,
+                        help="stars to replay (>= 1 enforced)")
     parser.add_argument("--out", type=Path,
                         default=REPO_ROOT / "outputs/generalization/panel_golden_report.json")
     args = parser.parse_args()
+    if args.count < 1:
+        raise SystemExit("--count must be >= 1 (a vacuous gate cannot pass)")
     assert_frozen()
 
     roster = pd.read_csv(REPO_ROOT / "data/roster/jestin2026_rebuilt_candidates.csv",
@@ -144,11 +153,23 @@ def main() -> None:
             records.append(record)
             print(f"[panel-golden] {source_id}: {record['verdict']}", flush=True)
 
+    ids = [r["source_id"] for r in records]
+    if not records or len(set(ids)) != len(ids):
+        raise SystemExit("empty or duplicated star sample — gate invalid")
     passed = all(
         r["verdict"] in ("identical", "identical_1ulp") for r in records
-    )
+    ) and len(records) >= args.count
+    import hashlib
     report = {"gate": "panel_golden_gate", "passed": passed, "stars": records,
-              "env": env_versions()}
+              "env": env_versions(),
+              "frozen_sha256": frozen_file_shas(),
+              "campaign_sha256": campaign_file_shas(),
+              "inputs": {
+                  "exposures_sha256": hashlib.sha256(
+                      (PUBLISHED / "data/exposures.csv.gz").read_bytes()).hexdigest(),
+                  "raw_cache_sha256": hashlib.sha256(
+                      (PUBLISHED / "data/irsa_raw_cache.tar.gz").read_bytes()).hexdigest(),
+              }}
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
     print(f"[panel-golden] {'PASS' if passed else 'FAIL'} -> {args.out}")
