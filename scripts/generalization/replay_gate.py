@@ -97,6 +97,53 @@ def first_difference(published: object, replayed: object, path: str = "$") -> st
     return ""
 
 
+DECISION_FIELDS = ("status", "basis", "zg_alias", "zr_alias", "multiband_top5")
+
+
+def decision_equivalence(published: dict, replayed: dict) -> dict:
+    """Report-only diagnostic (does NOT affect the pass criterion): are the
+    pipeline's decisions identical and how large is the numeric drift?"""
+    worst = 0.0
+    n_numeric = 0
+    decisions_identical = True
+    peaks_identical = True
+
+    def walk(a, b):
+        nonlocal worst, n_numeric
+        if isinstance(a, dict):
+            for key in a:
+                if key in b:
+                    walk(a[key], b[key])
+        elif isinstance(a, list):
+            for x, y in zip(a, b):
+                walk(x, y)
+        elif isinstance(a, (int, float)) and isinstance(b, (int, float)) \
+                and not isinstance(a, bool) and not isinstance(b, bool):
+            n_numeric += 1
+            if a != b:
+                worst = max(worst, abs(a - b) / max(abs(a), abs(b), 1e-300))
+
+    for pass_name in ("low", "high"):
+        pa = published["passes"].get(pass_name, {})
+        pb = replayed["passes"].get(pass_name, {})
+        for key in DECISION_FIELDS:
+            if pa.get(key) != pb.get(key):
+                decisions_identical = False
+        fa, fb = pa.get("frequency_per_day"), pb.get("frequency_per_day")
+        if (fa is None) != (fb is None) or (
+                fa is not None and abs(fa - fb) > 1e-12 * abs(fa)):
+            decisions_identical = False
+        for ta, tb in zip(pa.get("top_peaks", []), pb.get("top_peaks", [])):
+            if ta.get("frequency_per_day") != tb.get("frequency_per_day") \
+                    or ta.get("alias_flag") != tb.get("alias_flag"):
+                peaks_identical = False
+    walk(published["passes"], replayed["passes"])
+    return {"decisions_identical": decisions_identical,
+            "top_peaks_identical": peaks_identical,
+            "numeric_fields": n_numeric,
+            "max_relative_difference": worst}
+
+
 def published_schema_version(path: Path) -> int:
     return int(json.loads(path.read_text(encoding="utf-8"))["schema_version"])
 
@@ -144,9 +191,9 @@ def compare_star(star: str, published_dir: Path, replay_dir: Path) -> dict[str, 
         record["verdict"] = "identical_v1_schema"
         return record
     record["verdict"] = "MISMATCH"
-    record["first_difference"] = first_difference(
-        json.loads(published_norm.decode("utf-8")), replayed
-    )
+    published_obj = json.loads(published_norm.decode("utf-8"))
+    record["first_difference"] = first_difference(published_obj, replayed)
+    record["decision_equivalence"] = decision_equivalence(published_obj, replayed)
     return record
 
 

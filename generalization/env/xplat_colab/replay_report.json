@@ -1,0 +1,104 @@
+{
+  "gate": "replay_gate",
+  "passed": false,
+  "verdict_counts": {
+    "MISMATCH": 9
+  },
+  "stars": [
+    {
+      "source_id": "5453725283205041024",
+      "published_schema_version": 2,
+      "verdict": "MISMATCH",
+      "first_difference": "$.passes.low.multiband_zg_weight: 0.47851081408432455 != 0.47851081408432444"
+    },
+    {
+      "source_id": "5456112705203412352",
+      "published_schema_version": 2,
+      "verdict": "MISMATCH",
+      "first_difference": "$.passes.low.top_peaks[0].amplitude_error_mmag: 5.453377731220191 != 5.45337773122019"
+    },
+    {
+      "source_id": "5598661329740179712",
+      "published_schema_version": 2,
+      "verdict": "MISMATCH",
+      "first_difference": "$.passes.low.multiband_zg_weight: 0.27824273868168947 != 0.27824273868168886"
+    },
+    {
+      "source_id": "5645504991845223936",
+      "published_schema_version": 2,
+      "verdict": "MISMATCH",
+      "first_difference": "$.passes.low.best_band_fap: 0.052276789346663605 != 0.05227678934666295"
+    },
+    {
+      "source_id": "5654689998440806912",
+      "published_schema_version": 2,
+      "verdict": "MISMATCH",
+      "first_difference": "$.passes.low.multiband_zg_weight: 0.5121799803668244 != 0.5121799803668245"
+    },
+    {
+      "source_id": "5657176543986789248",
+      "published_schema_version": 2,
+      "verdict": "MISMATCH",
+      "first_difference": "$.passes.low.best_band_fap: 6.655560798111305e-10 != 6.655560798111306e-10"
+    },
+    {
+      "source_id": "6185371175372936064",
+      "published_schema_version": 2,
+      "verdict": "MISMATCH",
+      "first_difference": "$.passes.low.best_band_fap: 6.117893349909637e-09 != 6.117893349909889e-09"
+    },
+    {
+      "source_id": "740483560857296768",
+      "published_schema_version": 1,
+      "verdict": "MISMATCH",
+      "first_difference": "$.passes.high.available: only in replay"
+    },
+    {
+      "source_id": "4235280071072332672",
+      "published_schema_version": 1,
+      "verdict": "MISMATCH",
+      "first_difference": "$.passes.high.available: only in replay"
+    }
+  ],
+  "wall_seconds": 60.2,
+  "completion_offsets_seconds": {
+    "5645504991845223936": 8.3,
+    "5598661329740179712": 8.4,
+    "6185371175372936064": 8.7,
+    "5456112705203412352": 8.8,
+    "5657176543986789248": 8.8,
+    "5453725283205041024": 8.8,
+    "5654689998440806912": 11.4,
+    "740483560857296768": 54.2,
+    "4235280071072332672": 60.2
+  },
+  "workers": 8,
+  "resumed_outputs": 0,
+  "env": {
+    "python": "3.13.15",
+    "platform": "Linux-6.6.122+-x86_64-with-glibc2.35",
+    "machine": "adcfcda3be7e",
+    "numpy": "2.3.5",
+    "numpy_blas": "scipy-openblas 0.3.30",
+    "scipy": "1.16.3",
+    "astropy": "8.0.1",
+    "astropy_iers_data": "0.2026.7.27.0.56.29",
+    "pyerfa": "2.0.1.5",
+    "pandas": "2.3.3",
+    "omp_num_threads": "",
+    "openblas_num_threads": ""
+  },
+  "frozen_sha256": {
+    "scripts/run_catalog_lomb_scargle.py": "34a4de5d234cab07dc3231e5671f4220f5c4ab1bdd4b3d92183bb7e443da6c46",
+    "scripts/run_lomb_scargle.py": "ce9211254949969b5d2e7a93f350eb387014aaf0a15f939753c599c1261a4e78",
+    "scripts/lomb_scargle_common.py": "5ed3983e6a9b91f86b4ba2afc37025ba97fee4ef8a0086259140618927bfef7d",
+    "scripts/build_catalog_panels.py": "1fb659cfdf6997751bc7589b70bdd26fa0d210f49e0e9da5da82bcbb1a5d9794",
+    "scripts/fetch_catalog_lightcurves.py": "e28f4ade76fedf78e056b26b62549a4c5dfc1e0c76d5d127876cce7b3cb3ed82"
+  },
+  "campaign_sha256": {
+    "scripts/generalization/frozen_api.py": "127eb86ad19c0b08aac6f832087f1b8c430d8f15e80b334d30892f94df78de16",
+    "scripts/generalization/replay_gate.py": "c73549848e5adef1d9f4c996f469911156490011e8ff990e519a7e6015d91375"
+  },
+  "roster_digest": "1751236add1a0019a410e6baefed674be7c751f126fbab272ac3d6d8f2de5eea",
+  "roster_size": 9
+}
