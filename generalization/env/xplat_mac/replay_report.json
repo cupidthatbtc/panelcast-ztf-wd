@@ -1,0 +1,405 @@
+{
+  "gate": "replay_gate",
+  "passed": false,
+  "verdict_counts": {
+    "MISMATCH": 25
+  },
+  "stars": [
+    {
+      "source_id": "1004340654352214656",
+      "published_schema_version": 1,
+      "verdict": "MISMATCH",
+      "first_difference": "$.passes.high.available: only in replay",
+      "decision_equivalence": {
+        "decisions_identical": true,
+        "top_peaks_identical": true,
+        "numeric_fields": 302,
+        "max_relative_difference": 0.00015096492046823103,
+        "a95_max_relative_difference": 0.00015096492046823103
+      }
+    },
+    {
+      "source_id": "1273088783971336576",
+      "published_schema_version": 1,
+      "verdict": "MISMATCH",
+      "first_difference": "$.passes.high.available: only in replay",
+      "decision_equivalence": {
+        "decisions_identical": true,
+        "top_peaks_identical": true,
+        "numeric_fields": 302,
+        "max_relative_difference": 7.472475078354296e-05,
+        "a95_max_relative_difference": 7.4730334989201e-05
+      }
+    },
+    {
+      "source_id": "1587611884756030720",
+      "published_schema_version": 1,
+      "verdict": "MISMATCH",
+      "first_difference": "$.baseline_days: 2188.0364311081357 != 2188.0364311086014",
+      "decision_equivalence": {
+        "decisions_identical": true,
+        "top_peaks_identical": true,
+        "numeric_fields": 302,
+        "max_relative_difference": 0.0005270679987927852,
+        "a95_max_relative_difference": 0.0005273459459651965
+      }
+    },
+    {
+      "source_id": "183138612392838784",
+      "published_schema_version": 1,
+      "verdict": "MISMATCH",
+      "first_difference": "$.baseline_days: 2762.3247560984455 != 2762.32475609798",
+      "decision_equivalence": {
+        "decisions_identical": true,
+        "top_peaks_identical": true,
+        "numeric_fields": 302,
+        "max_relative_difference": 0.0015328319582127439,
+        "a95_max_relative_difference": 0.0015328319582127439
+      }
+    },
+    {
+      "source_id": "2033382692116807296",
+      "published_schema_version": 1,
+      "verdict": "MISMATCH",
+      "first_difference": "$.passes.high.available: only in replay",
+      "decision_equivalence": {
+        "decisions_identical": true,
+        "top_peaks_identical": true,
+        "numeric_fields": 302,
+        "max_relative_difference": 1.1558261442039244e-06,
+        "a95_max_relative_difference": 8.796624817879438e-08
+      }
+    },
+    {
+      "source_id": "2237288944557097600",
+      "published_schema_version": 1,
+      "verdict": "MISMATCH",
+      "first_difference": "$.passes.high.available: only in replay",
+      "decision_equivalence": {
+        "decisions_identical": true,
+        "top_peaks_identical": true,
+        "numeric_fields": 302,
+        "max_relative_difference": 9.624447382397723e-05,
+        "a95_max_relative_difference": 9.624447382397723e-05
+      }
+    },
+    {
+      "source_id": "258439731372229120",
+      "published_schema_version": 1,
+      "verdict": "MISMATCH",
+      "first_difference": "$.passes.high.available: only in replay",
+      "decision_equivalence": {
+        "decisions_identical": true,
+        "top_peaks_identical": true,
+        "numeric_fields": 302,
+        "max_relative_difference": 3.842102324099583e-05,
+        "a95_max_relative_difference": 3.8422499472741045e-05
+      }
+    },
+    {
+      "source_id": "2873505301968425984",
+      "published_schema_version": 1,
+      "verdict": "MISMATCH",
+      "first_difference": "$.passes.high.available: only in replay",
+      "decision_equivalence": {
+        "decisions_identical": true,
+        "top_peaks_identical": true,
+        "numeric_fields": 302,
+        "max_relative_difference": 1.5963625084707426e-06,
+        "a95_max_relative_difference": 9.416930143016469e-07
+      }
+    },
+    {
+      "source_id": "3117810051152885760",
+      "published_schema_version": 1,
+      "verdict": "MISMATCH",
+      "first_difference": "$.passes.high.available: only in replay",
+      "decision_equivalence": {
+        "decisions_identical": true,
+        "top_peaks_identical": true,
+        "numeric_fields": 302,
+        "max_relative_difference": 5.034859279201407e-05,
+        "a95_max_relative_difference": 5.034859279201407e-05
+      }
+    },
+    {
+      "source_id": "3287636940687565824",
+      "published_schema_version": 1,
+      "verdict": "MISMATCH",
+      "first_difference": "$.passes.high.available: only in replay",
+      "decision_equivalence": {
+        "decisions_identical": true,
+        "top_peaks_identical": true,
+        "numeric_fields": 302,
+        "max_relative_difference": 0.00021683452444763303,
+        "a95_max_relative_difference": 0.00021683452444763303
+      }
+    },
+    {
+      "source_id": "3549471753507182592",
+      "published_schema_version": 1,
+      "verdict": "MISMATCH",
+      "first_difference": "$.passes.high.available: only in replay",
+      "decision_equivalence": {
+        "decisions_identical": true,
+        "top_peaks_identical": true,
+        "numeric_fields": 302,
+        "max_relative_difference": 9.077161595189288e-07,
+        "a95_max_relative_difference": 3.481281565550867e-08
+      }
+    },
+    {
+      "source_id": "3775831167254103424",
+      "published_schema_version": 1,
+      "verdict": "MISMATCH",
+      "first_difference": "$.passes.high.available: only in replay",
+      "decision_equivalence": {
+        "decisions_identical": true,
+        "top_peaks_identical": true,
+        "numeric_fields": 302,
+        "max_relative_difference": 5.8034822169122006e-06,
+        "a95_max_relative_difference": 4.1674110654069676e-07
+      }
+    },
+    {
+      "source_id": "4093340502968374528",
+      "published_schema_version": 1,
+      "verdict": "MISMATCH",
+      "first_difference": "$.passes.high.available: only in replay",
+      "decision_equivalence": {
+        "decisions_identical": true,
+        "top_peaks_identical": true,
+        "numeric_fields": 302,
+        "max_relative_difference": 9.904352566875663e-05,
+        "a95_max_relative_difference": 9.904352566875663e-05
+      }
+    },
+    {
+      "source_id": "4334641562477923712",
+      "published_schema_version": 1,
+      "verdict": "MISMATCH",
+      "first_difference": "$.passes.high.available: only in replay",
+      "decision_equivalence": {
+        "decisions_identical": true,
+        "top_peaks_identical": true,
+        "numeric_fields": 302,
+        "max_relative_difference": 2.479786424313906e-05,
+        "a95_max_relative_difference": 2.479786424313906e-05
+      }
+    },
+    {
+      "source_id": "462506821746606464",
+      "published_schema_version": 1,
+      "verdict": "MISMATCH",
+      "first_difference": "$.passes.high.available: only in replay",
+      "decision_equivalence": {
+        "decisions_identical": true,
+        "top_peaks_identical": true,
+        "numeric_fields": 302,
+        "max_relative_difference": 0.0019670483317213434,
+        "a95_max_relative_difference": 0.0019709252369205753
+      }
+    },
+    {
+      "source_id": "542190594071254656",
+      "published_schema_version": 1,
+      "verdict": "MISMATCH",
+      "first_difference": "$.passes.high.available: only in replay",
+      "decision_equivalence": {
+        "decisions_identical": true,
+        "top_peaks_identical": true,
+        "numeric_fields": 302,
+        "max_relative_difference": 0.0004261188624529819,
+        "a95_max_relative_difference": 0.0004261188624529819
+      }
+    },
+    {
+      "source_id": "5453725283205041024",
+      "published_schema_version": 2,
+      "verdict": "MISMATCH",
+      "first_difference": "$.passes.low.best_band_fap: 0.974073397676374 != 0.9740734025279886",
+      "decision_equivalence": {
+        "decisions_identical": true,
+        "top_peaks_identical": true,
+        "numeric_fields": 160,
+        "max_relative_difference": 1.5086223317895666e-07,
+        "a95_max_relative_difference": 4.3394018843646507e-08
+      }
+    },
+    {
+      "source_id": "5456112705203412352",
+      "published_schema_version": 2,
+      "verdict": "MISMATCH",
+      "first_difference": "$.baseline_days: 1590.6910422346555 != 1590.6910422351211",
+      "decision_equivalence": {
+        "decisions_identical": true,
+        "top_peaks_identical": true,
+        "numeric_fields": 160,
+        "max_relative_difference": 6.948236924013603e-08,
+        "a95_max_relative_difference": 0.0
+      }
+    },
+    {
+      "source_id": "5598661329740179712",
+      "published_schema_version": 2,
+      "verdict": "MISMATCH",
+      "first_difference": "$.passes.low.best_band_fap: 0.9299912583453012 != 0.9299912786773231",
+      "decision_equivalence": {
+        "decisions_identical": true,
+        "top_peaks_identical": true,
+        "numeric_fields": 160,
+        "max_relative_difference": 4.635864032503592e-08,
+        "a95_max_relative_difference": 1.967199591380481e-08
+      }
+    },
+    {
+      "source_id": "5645504991845223936",
+      "published_schema_version": 2,
+      "verdict": "MISMATCH",
+      "first_difference": "$.passes.low.best_band_fap: 0.052276789346663605 != 0.05227678775734937",
+      "decision_equivalence": {
+        "decisions_identical": true,
+        "top_peaks_identical": true,
+        "numeric_fields": 160,
+        "max_relative_difference": 4.762748051073928e-08,
+        "a95_max_relative_difference": 0.0
+      }
+    },
+    {
+      "source_id": "5654689998440806912",
+      "published_schema_version": 2,
+      "verdict": "MISMATCH",
+      "first_difference": "$.passes.low.best_band_fap: 0.9990235705869698 != 0.9990235707945982",
+      "decision_equivalence": {
+        "decisions_identical": true,
+        "top_peaks_identical": true,
+        "numeric_fields": 160,
+        "max_relative_difference": 1.1125468128842248e-07,
+        "a95_max_relative_difference": 2.630932306234916e-08
+      }
+    },
+    {
+      "source_id": "5657176543986789248",
+      "published_schema_version": 2,
+      "verdict": "MISMATCH",
+      "first_difference": "$.baseline_days: 1599.6688830228522 != 1599.668883023318",
+      "decision_equivalence": {
+        "decisions_identical": true,
+        "top_peaks_identical": true,
+        "numeric_fields": 160,
+        "max_relative_difference": 1.8871137768915974e-08,
+        "a95_max_relative_difference": 1.8060679751786767e-09
+      }
+    },
+    {
+      "source_id": "6185371175372936064",
+      "published_schema_version": 2,
+      "verdict": "MISMATCH",
+      "first_difference": "$.passes.low.best_band_fap: 6.117893349909637e-09 != 6.117893374151931e-09",
+      "decision_equivalence": {
+        "decisions_identical": true,
+        "top_peaks_identical": true,
+        "numeric_fields": 160,
+        "max_relative_difference": 8.71481795311759e-08,
+        "a95_max_relative_difference": 0.0
+      }
+    },
+    {
+      "source_id": "6332172027974304512",
+      "published_schema_version": 1,
+      "verdict": "MISMATCH",
+      "first_difference": "$.passes.high.available: only in replay",
+      "decision_equivalence": {
+        "decisions_identical": true,
+        "top_peaks_identical": true,
+        "numeric_fields": 302,
+        "max_relative_difference": 0.00027355162956256167,
+        "a95_max_relative_difference": 0.00027355162956256167
+      }
+    },
+    {
+      "source_id": "722446385752579840",
+      "published_schema_version": 1,
+      "verdict": "MISMATCH",
+      "first_difference": "$.passes.high.available: only in replay",
+      "decision_equivalence": {
+        "decisions_identical": true,
+        "top_peaks_identical": true,
+        "numeric_fields": 302,
+        "max_relative_difference": 0.0004776528613373827,
+        "a95_max_relative_difference": 0.0004776528613373827
+      }
+    }
+  ],
+  "wall_seconds": 1.4,
+  "completion_offsets_seconds": {
+    "1004340654352214656": 1.2,
+    "1273088783971336576": 1.2,
+    "1587611884756030720": 1.2,
+    "183138612392838784": 1.2,
+    "2033382692116807296": 1.2,
+    "2237288944557097600": 1.2,
+    "258439731372229120": 1.2,
+    "2873505301968425984": 1.2,
+    "3117810051152885760": 1.2,
+    "3287636940687565824": 1.2,
+    "3549471753507182592": 1.2,
+    "3775831167254103424": 1.2,
+    "4093340502968374528": 1.2,
+    "4334641562477923712": 1.2,
+    "462506821746606464": 1.2,
+    "542190594071254656": 1.2,
+    "5453725283205041024": 1.2,
+    "5456112705203412352": 1.2,
+    "5598661329740179712": 1.2,
+    "5645504991845223936": 1.2,
+    "5654689998440806912": 1.2,
+    "5657176543986789248": 1.2,
+    "6185371175372936064": 1.2,
+    "6332172027974304512": 1.2,
+    "722446385752579840": 1.2
+  },
+  "workers": 8,
+  "resumed_outputs": 25,
+  "env": {
+    "python": "3.12.13",
+    "platform": "macOS-27.0-arm64-arm-64bit",
+    "machine": "MacBook-Pro.local",
+    "numpy": "2.3.5",
+    "numpy_blas": "accelerate unknown",
+    "scipy": "1.16.3",
+    "astropy": "8.0.1",
+    "astropy_iers_data": "0.2026.7.27.0.56.29",
+    "pyerfa": "2.0.1.5",
+    "pandas": "2.3.3",
+    "omp_num_threads": "",
+    "openblas_num_threads": ""
+  },
+  "frozen_sha256": {
+    "scripts/run_catalog_lomb_scargle.py": "34a4de5d234cab07dc3231e5671f4220f5c4ab1bdd4b3d92183bb7e443da6c46",
+    "scripts/run_lomb_scargle.py": "ce9211254949969b5d2e7a93f350eb387014aaf0a15f939753c599c1261a4e78",
+    "scripts/lomb_scargle_common.py": "5ed3983e6a9b91f86b4ba2afc37025ba97fee4ef8a0086259140618927bfef7d",
+    "scripts/build_catalog_panels.py": "1fb659cfdf6997751bc7589b70bdd26fa0d210f49e0e9da5da82bcbb1a5d9794",
+    "scripts/fetch_catalog_lightcurves.py": "e28f4ade76fedf78e056b26b62549a4c5dfc1e0c76d5d127876cce7b3cb3ed82"
+  },
+  "campaign_sha256": {
+    "scripts/generalization/build_d2_roster.py": "901c95c64825c42125a066c2678c195b520d99e64c0a9a528eef41872361acbe",
+    "scripts/generalization/build_d2_shards.py": "111624846b70d506ac617038e0c30ef68a1849df7cb638f2aad6f78743ae3e9d",
+    "scripts/generalization/build_d3_roster.py": "3d7b2d23ffa6a21acf20fde3b998f5d69a0637ade643048c5d457f022b75c056",
+    "scripts/generalization/build_panels_generic.py": "759bff3db9f28513ac914c869424140392d3c5244b80fca8c67c0bc8271d875a",
+    "scripts/generalization/d2_spoc_verification.py": "62d21dce2a70d233495cabc7b6f963510812dc2f387396c6e7789bfaca6b5503",
+    "scripts/generalization/d2_truth_model.py": "7306e7913ee90ecff70bd7fc9aef30580b0608d4e66b71b0965211bc6123c813",
+    "scripts/generalization/frozen_api.py": "127eb86ad19c0b08aac6f832087f1b8c430d8f15e80b334d30892f94df78de16",
+    "scripts/generalization/metrics_generalization.py": "1b6b37d9db09f263d51a8e33afbd701d3f4114f196799d423b5cf72aed5624cd",
+    "scripts/generalization/panel_golden_gate.py": "e5a6d5df176e92b02eecf0f5235a059d8782c565f5b84b3c9a3d0fc3c6849655",
+    "scripts/generalization/plot_generalization.py": "699f1041bcaf85c3f514af812761d4858bbd3573dd74716486d687b0b13dcc05",
+    "scripts/generalization/replay_gate.py": "37511fbf82f829274eef1129e00bded4fc2a01b74346eaef6bb5a6a17deadea5",
+    "scripts/generalization/run_generalization_ls.py": "9ed83127095eec4be1b76b18ca21d7921505d01643a0006cf89554e1ce707acb",
+    "scripts/generalization/verify_cli_identity.py": "840d233f78ff8fc289f2b77661479d02bcfbab26b4f3fa6bdc413b7959905728",
+    "scripts/generalization/watch_run.py": "6e74a6bb66e3bb6aff4c4941a75e02e14745c576e2e435e676dd17e965dc3a8e",
+    "generalization/GENERALIZATION_PLAN.md": "8bb8cd8f6ed61722aee5c95ea2a207af0f7f9074dd0e40cbdbb23d907d6baaaf",
+    "generalization/METRICS_SPEC.md": "5d8d589ae73a608ada2f6f37c82e1be0ba63de9002b0a17c118410cccdf27824"
+  },
+  "roster_digest": "f9ed516907e4abc73d7c1f1eb52cf44e4e2b7f52a8485b3ff441f570dfb7b363",
+  "roster_size": 25
+}
