@@ -29,7 +29,10 @@ warnings.filterwarnings("ignore")
 N_TARGETS = 20
 BLIND_MODES = 10
 MATCH_REL_TOL = 1e-3
-FREQ_MIN_PER_DAY = 4.0
+# blind search floor sits ABOVE the stitched-sector systematics band and at
+# the long-period edge of the DAV range (P = 2200 s -> 39.3 / d); a 4 / d
+# floor lets inter-sector red noise beat the pulsations in raw power
+FREQ_MIN_PER_DAY = 35.0
 FREQ_MAX_PER_DAY = 1250.0
 
 
