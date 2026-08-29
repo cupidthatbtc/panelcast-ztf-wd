@@ -1,0 +1,1486 @@
+{
+  "summary": {
+    "targets_attempted": 20,
+    "targets_ok": 20,
+    "dominant_matches": 8,
+    "directed_modes_total": 63,
+    "directed_confirmed_snr4": 37,
+    "crowdsap_available": 20
+  },
+  "targets": [
+    {
+      "tic": 1860439362,
+      "cadence_s": 120,
+      "n_sectors": 4,
+      "n_points": 61206,
+      "crowdsap_median": 0.030951115,
+      "crowdsap_all": [
+        0.03904933,
+        0.02899953,
+        0.02704439,
+        0.0329027
+      ],
+      "directed": [
+        {
+          "period_s": 461.79,
+          "published_amp_ppt": 67.71,
+          "recovered_amp_ppt": 47.62734375503549,
+          "amp_ratio": 0.7034019163348914,
+          "snr": 8.270813420892928
+        },
+        {
+          "period_s": 575.26,
+          "published_amp_ppt": 88.17,
+          "recovered_amp_ppt": 30.780750222490813,
+          "amp_ratio": 0.34910684158433497,
+          "snr": 5.345287433091707
+        }
+      ],
+      "directed_confirmed_snr4": 2,
+      "n_published_modes": 2,
+      "blind_top": [
+        {
+          "frequency_per_day": 870.2029293329656,
+          "period_s": 99.28718588229526,
+          "amp_ppt": 75.39921748109641,
+          "snr": 13.111965172289612
+        },
+        {
+          "frequency_per_day": 719.852091780536,
+          "period_s": 120.02465643503483,
+          "amp_ppt": 72.88192619936129,
+          "snr": 12.690980929487626
+        },
+        {
+          "frequency_per_day": 532.9083243757816,
+          "period_s": 162.12919942882112,
+          "amp_ppt": 62.7168554173846,
+          "snr": 10.931585162805314
+        },
+        {
+          "frequency_per_day": 719.8437823002732,
+          "period_s": 120.0260419335808,
+          "amp_ppt": 60.131336145694554,
+          "snr": 10.490338229436007
+        },
+        {
+          "frequency_per_day": 720.1119314741585,
+          "period_s": 119.98134765400773,
+          "amp_ppt": 51.886928821801604,
+          "snr": 9.058326708935558
+        }
+      ],
+      "blind_dominant_matches_published": false
+    },
+    {
+      "tic": 1944049427,
+      "cadence_s": 120,
+      "n_sectors": 4,
+      "n_points": 68315,
+      "crowdsap_median": 0.09958644,
+      "crowdsap_all": [
+        0.08956231,
+        0.1302961,
+        0.07542016,
+        0.10961057
+      ],
+      "directed": [
+        {
+          "period_s": 606.27,
+          "published_amp_ppt": 85.79,
+          "recovered_amp_ppt": 29.182386427826554,
+          "amp_ratio": 0.340160699706569,
+          "snr": 5.2951043514383995
+        }
+      ],
+      "directed_confirmed_snr4": 1,
+      "n_published_modes": 1,
+      "blind_top": [
+        {
+          "frequency_per_day": 720.6627070718523,
+          "period_s": 119.88965039006195,
+          "amp_ppt": 119.31764969447833,
+          "snr": 21.724395889483976
+        },
+        {
+          "frequency_per_day": 718.6618395753524,
+          "period_s": 120.22344201697506,
+          "amp_ppt": 101.3659224953831,
+          "snr": 18.501952371391514
+        },
+        {
+          "frequency_per_day": 720.6640237207862,
+          "period_s": 119.88943135237564,
+          "amp_ppt": 87.26005656521525,
+          "snr": 15.956810598208333
+        },
+        {
+          "frequency_per_day": 577.477574396793,
+          "period_s": 149.61619953857004,
+          "amp_ppt": 73.36082571891781,
+          "snr": 13.432831929382925
+        },
+        {
+          "frequency_per_day": 721.3431951291726,
+          "period_s": 119.77655100014931,
+          "amp_ppt": 58.78267491706515,
+          "snr": 10.77263493272037
+        }
+      ],
+      "blind_dominant_matches_published": false
+    },
+    {
+      "tic": 313109945,
+      "cadence_s": 120,
+      "n_sectors": 10,
+      "n_points": 174121,
+      "crowdsap_median": 0.077362495,
+      "crowdsap_all": [
+        0.07808302,
+        0.07421324,
+        0.0774752,
+        0.07834422,
+        0.07778279,
+        0.07806137,
+        0.0757525,
+        0.07669412,
+        0.07724979,
+        0.07512899
+      ],
+      "directed": [
+        {
+          "period_s": 253.55,
+          "published_amp_ppt": 14.86,
+          "recovered_amp_ppt": 3.3604547470227577,
+          "amp_ratio": 0.22614096547932422,
+          "snr": 1.939671424032432
+        },
+        {
+          "period_s": 266.69,
+          "published_amp_ppt": 51.83,
+          "recovered_amp_ppt": 18.13896101228602,
+          "amp_ratio": 0.3499703070091843,
+          "snr": 10.469899756377027
+        },
+        {
+          "period_s": 298.89,
+          "published_amp_ppt": 84.01,
+          "recovered_amp_ppt": 34.41693059457333,
+          "amp_ratio": 0.4096765931981113,
+          "snr": 19.865625875886654
+        },
+        {
+          "period_s": 408.41,
+          "published_amp_ppt": 16.52,
+          "recovered_amp_ppt": 5.6465040360856245,
+          "amp_ratio": 0.341798065138355,
+          "snr": 3.2591906003740947
+        },
+        {
+          "period_s": 452.06,
+          "published_amp_ppt": 34.62,
+          "recovered_amp_ppt": 15.019749992282124,
+          "amp_ratio": 0.4338460425269245,
+          "snr": 8.669475427976558
+        },
+        {
+          "period_s": 529.42,
+          "published_amp_ppt": 23.81,
+          "recovered_amp_ppt": 9.976976910329556,
+          "amp_ratio": 0.4190246497408466,
+          "snr": 5.758761378454167
+        },
+        {
+          "period_s": 668.61,
+          "published_amp_ppt": 33.33,
+          "recovered_amp_ppt": 13.91198098841519,
+          "amp_ratio": 0.41740116976943265,
+          "snr": 8.03006557336291
+        }
+      ],
+      "directed_confirmed_snr4": 5,
+      "n_published_modes": 7,
+      "blind_top": [
+        {
+          "frequency_per_day": 289.0654857703525,
+          "period_s": 298.8942099737231,
+          "amp_ppt": 75.75086306423644,
+          "snr": 43.96581244249908
+        },
+        {
+          "frequency_per_day": 289.21148466816385,
+          "period_s": 298.74332307077583,
+          "amp_ppt": 58.35177411945395,
+          "snr": 33.97950325633998
+        },
+        {
+          "frequency_per_day": 323.9700456094047,
+          "period_s": 266.691322765588,
+          "amp_ppt": 47.71996264171961,
+          "snr": 27.85018449797199
+        },
+        {
+          "frequency_per_day": 289.35771384814836,
+          "period_s": 298.59235079988827,
+          "amp_ppt": 33.438716157886155,
+          "snr": 19.536786431426766
+        },
+        {
+          "frequency_per_day": 191.12601694233848,
+          "period_s": 452.0577647263289,
+          "amp_ppt": 23.839927399538205,
+          "snr": 13.936398289377092
+        }
+      ],
+      "blind_dominant_matches_published": true
+    },
+    {
+      "tic": 116373308,
+      "cadence_s": 120,
+      "n_sectors": 3,
+      "n_points": 46898,
+      "crowdsap_median": 0.20857728,
+      "crowdsap_all": [
+        0.15205732,
+        0.20857728,
+        0.21757896
+      ],
+      "directed": [
+        {
+          "period_s": 361.81,
+          "published_amp_ppt": 59.3,
+          "recovered_amp_ppt": 1.279283102166443,
+          "amp_ratio": 0.021573070862840524,
+          "snr": 1.1771772079045058
+        }
+      ],
+      "directed_confirmed_snr4": 0,
+      "n_published_modes": 1,
+      "blind_top": [
+        {
+          "frequency_per_day": 238.8044593004395,
+          "period_s": 361.8022890070922,
+          "amp_ppt": 16.46552818332367,
+          "snr": 15.18854936605239
+        },
+        {
+          "frequency_per_day": 720.0810940415237,
+          "period_s": 119.98648584851989,
+          "amp_ppt": 13.994697615041648,
+          "snr": 12.933483390723133
+        },
+        {
+          "frequency_per_day": 720.121464961138,
+          "period_s": 119.97975925445112,
+          "amp_ppt": 11.649049233302659,
+          "snr": 10.778877357417723
+        },
+        {
+          "frequency_per_day": 719.7612425609542,
+          "period_s": 120.03980610651325,
+          "amp_ppt": 11.598950913833587,
+          "snr": 10.74569942626321
+        },
+        {
+          "frequency_per_day": 719.8673178296056,
+          "period_s": 120.0221177709461,
+          "amp_ppt": 9.648715427244099,
+          "snr": 8.946317919516497
+        }
+      ],
+      "blind_dominant_matches_published": true
+    },
+    {
+      "tic": 661119673,
+      "cadence_s": 120,
+      "n_sectors": 6,
+      "n_points": 91169,
+      "crowdsap_median": 0.14509627,
+      "crowdsap_all": [
+        0.16486853,
+        0.20867716,
+        0.10129263,
+        0.15902221,
+        0.12123385,
+        0.13117033
+      ],
+      "directed": [
+        {
+          "period_s": 313.1,
+          "published_amp_ppt": 19.11,
+          "recovered_amp_ppt": 11.153603652224144,
+          "amp_ratio": 0.5836527290541154,
+          "snr": 4.38811137734116
+        },
+        {
+          "period_s": 626.37,
+          "published_amp_ppt": 46.78,
+          "recovered_amp_ppt": 38.80576380636522,
+          "amp_ratio": 0.8295374905165716,
+          "snr": 15.267174536112249
+        }
+      ],
+      "directed_confirmed_snr4": 2,
+      "n_published_modes": 2,
+      "blind_top": [
+        {
+          "frequency_per_day": 137.93765599179207,
+          "period_s": 626.369930522389,
+          "amp_ppt": 38.473166754177356,
+          "snr": 15.155375921988833
+        },
+        {
+          "frequency_per_day": 720.2060462391603,
+          "period_s": 119.96566878488684,
+          "amp_ppt": 19.54684700214685,
+          "snr": 7.7024143269966645
+        },
+        {
+          "frequency_per_day": 720.201308164234,
+          "period_s": 119.96645801745396,
+          "amp_ppt": 18.57743954486938,
+          "snr": 7.322576312555057
+        },
+        {
+          "frequency_per_day": 720.1879061808711,
+          "period_s": 119.9686904743734,
+          "amp_ppt": 17.5900184748851,
+          "snr": 6.935200897134259
+        },
+        {
+          "frequency_per_day": 857.9566400649538,
+          "period_s": 100.70438990187064,
+          "amp_ppt": 17.200058466596136,
+          "snr": 6.783163028948704
+        }
+      ],
+      "blind_dominant_matches_published": true
+    },
+    {
+      "tic": 1108505075,
+      "cadence_s": 120,
+      "n_sectors": 7,
+      "n_points": 114120,
+      "crowdsap_median": 0.01449831,
+      "crowdsap_all": [
+        0.02136945,
+        0.00806529,
+        0.01574354,
+        0.00636868,
+        0.01573063,
+        0.01449831,
+        0.00782493
+      ],
+      "directed": [
+        {
+          "period_s": 693.55,
+          "published_amp_ppt": 45.47,
+          "recovered_amp_ppt": 6.75283475764305,
+          "amp_ratio": 0.14851187063213217,
+          "snr": 2.380428476665184
+        },
+        {
+          "period_s": 1323.54,
+          "published_amp_ppt": 36.69,
+          "recovered_amp_ppt": 6.405203850663667,
+          "amp_ratio": 0.1745762837466249,
+          "snr": 2.25788579051311
+        },
+        {
+          "period_s": 1801.77,
+          "published_amp_ppt": 36.09,
+          "recovered_amp_ppt": 5.382892519500537,
+          "amp_ratio": 0.14915191242728004,
+          "snr": 1.8975128372191086
+        }
+      ],
+      "directed_confirmed_snr4": 0,
+      "n_published_modes": 3,
+      "blind_top": [
+        {
+          "frequency_per_day": 720.0758096830594,
+          "period_s": 119.98736638303245,
+          "amp_ppt": 95.18654352896577,
+          "snr": 33.726986052255505
+        },
+        {
+          "frequency_per_day": 720.0338953581031,
+          "period_s": 119.99435103958496,
+          "amp_ppt": 72.52814726865653,
+          "snr": 25.771268258140854
+        },
+        {
+          "frequency_per_day": 720.122893441427,
+          "period_s": 119.9795212551836,
+          "amp_ppt": 65.13332453011141,
+          "snr": 23.198623900730507
+        },
+        {
+          "frequency_per_day": 719.8712677772728,
+          "period_s": 120.02145920724821,
+          "amp_ppt": 63.98420668025326,
+          "snr": 22.839613993287795
+        },
+        {
+          "frequency_per_day": 720.2213921050742,
+          "period_s": 119.96311265827407,
+          "amp_ppt": 59.03880231783703,
+          "snr": 21.115005744045284
+        }
+      ],
+      "blind_dominant_matches_published": false
+    },
+    {
+      "tic": 800153845,
+      "cadence_s": 120,
+      "n_sectors": 7,
+      "n_points": 111424,
+      "crowdsap_median": 0.1227918,
+      "crowdsap_all": [
+        0.10747314,
+        0.1227918,
+        0.07942443,
+        0.12639534,
+        0.14472631,
+        0.0541518,
+        0.17106271
+      ],
+      "directed": [
+        {
+          "period_s": 712.44,
+          "published_amp_ppt": 17.89,
+          "recovered_amp_ppt": 2.5909149196474024,
+          "amp_ratio": 0.14482475794563457,
+          "snr": 1.3318551584250433
+        },
+        {
+          "period_s": 878.34,
+          "published_amp_ppt": 42.93,
+          "recovered_amp_ppt": 7.580376669312467,
+          "amp_ratio": 0.1765752776452939,
+          "snr": 3.8966790044972295
+        }
+      ],
+      "directed_confirmed_snr4": 0,
+      "n_published_modes": 2,
+      "blind_top": [
+        {
+          "frequency_per_day": 716.2436166571161,
+          "period_s": 120.62934732074807,
+          "amp_ppt": 21.152106738310202,
+          "snr": 10.878971606495506
+        },
+        {
+          "frequency_per_day": 717.1840401012613,
+          "period_s": 120.47116941949926,
+          "amp_ppt": 20.341508519818554,
+          "snr": 10.467202296485794
+        },
+        {
+          "frequency_per_day": 723.1530490083999,
+          "period_s": 119.47678312146121,
+          "amp_ppt": 19.94954590788906,
+          "snr": 10.270371228582368
+        },
+        {
+          "frequency_per_day": 722.2455580271908,
+          "period_s": 119.62690395216976,
+          "amp_ppt": 19.738588901548205,
+          "snr": 10.166472284540317
+        },
+        {
+          "frequency_per_day": 720.1207420767424,
+          "period_s": 119.97987969466439,
+          "amp_ppt": 19.039088297166316,
+          "snr": 9.810413244155988
+        }
+      ],
+      "blind_dominant_matches_published": false
+    },
+    {
+      "tic": 1173423962,
+      "cadence_s": 120,
+      "n_sectors": 3,
+      "n_points": 45449,
+      "crowdsap_median": 0.2475266,
+      "crowdsap_all": [
+        0.2475266,
+        0.24872965,
+        0.23466779
+      ],
+      "directed": [
+        {
+          "period_s": 618.36,
+          "published_amp_ppt": 38.36,
+          "recovered_amp_ppt": 7.223330458076851,
+          "amp_ratio": 0.18830371371420362,
+          "snr": 1.749453726170345
+        },
+        {
+          "period_s": 794.8,
+          "published_amp_ppt": 30.33,
+          "recovered_amp_ppt": 9.503333436934026,
+          "amp_ratio": 0.3133311387053751,
+          "snr": 2.3016587969740896
+        }
+      ],
+      "directed_confirmed_snr4": 0,
+      "n_published_modes": 2,
+      "blind_top": [
+        {
+          "frequency_per_day": 719.7709993032279,
+          "period_s": 120.03817892585177,
+          "amp_ppt": 32.245226623844715,
+          "snr": 7.81469078775417
+        },
+        {
+          "frequency_per_day": 859.7321933674029,
+          "period_s": 100.49641116914337,
+          "amp_ppt": 28.036068402825997,
+          "snr": 6.798046764185245
+        },
+        {
+          "frequency_per_day": 719.9852224617849,
+          "period_s": 120.0024629735868,
+          "amp_ppt": 58.71825840011265,
+          "snr": 14.243941840156522
+        },
+        {
+          "frequency_per_day": 719.965547502457,
+          "period_s": 120.00574235769963,
+          "amp_ppt": 37.420470842520714,
+          "snr": 9.081729977409621
+        },
+        {
+          "frequency_per_day": 1223.5411783653083,
+          "period_s": 70.6147055184798,
+          "amp_ppt": 23.572238303183926,
+          "snr": 5.722905769230016
+        }
+      ],
+      "blind_dominant_matches_published": false
+    },
+    {
+      "tic": 610337553,
+      "cadence_s": 120,
+      "n_sectors": 2,
+      "n_points": 44678,
+      "crowdsap_median": 0.14602013,
+      "crowdsap_all": [
+        0.16731888,
+        0.12472138
+      ],
+      "directed": [
+        {
+          "period_s": 759.6,
+          "published_amp_ppt": 32.36,
+          "recovered_amp_ppt": 10.426903538722723,
+          "amp_ratio": 0.32221580774792097,
+          "snr": 5.853681746477637
+        },
+        {
+          "period_s": 922.68,
+          "published_amp_ppt": 15.42,
+          "recovered_amp_ppt": 5.14953659428556,
+          "amp_ratio": 0.33395178951268223,
+          "snr": 2.890958783002279
+        }
+      ],
+      "directed_confirmed_snr4": 1,
+      "n_published_modes": 2,
+      "blind_top": [
+        {
+          "frequency_per_day": 720.0175024186781,
+          "period_s": 119.9970830011294,
+          "amp_ppt": 58.78858249880546,
+          "snr": 33.03847967971655
+        },
+        {
+          "frequency_per_day": 720.0669043241248,
+          "period_s": 119.98885031537102,
+          "amp_ppt": 16.511081877044255,
+          "snr": 9.287154816712127
+        },
+        {
+          "frequency_per_day": 720.1491518207606,
+          "period_s": 119.97514651173854,
+          "amp_ppt": 17.297552325904885,
+          "snr": 9.739817178182468
+        },
+        {
+          "frequency_per_day": 606.2626721568794,
+          "period_s": 142.51248504648615,
+          "amp_ppt": 14.909684804179072,
+          "snr": 8.401899182471588
+        },
+        {
+          "frequency_per_day": 720.5048455399777,
+          "period_s": 119.91591803279002,
+          "amp_ppt": 13.437986025147575,
+          "snr": 7.577440842781129
+        }
+      ],
+      "blind_dominant_matches_published": false
+    },
+    {
+      "tic": 900228144,
+      "cadence_s": 120,
+      "n_sectors": 1,
+      "n_points": 15305,
+      "crowdsap_median": 0.32620531,
+      "crowdsap_all": [
+        0.32620531
+      ],
+      "directed": [
+        {
+          "period_s": 542.77,
+          "published_amp_ppt": 18.81,
+          "recovered_amp_ppt": 18.761256373525374,
+          "amp_ratio": 0.9974086322979997,
+          "snr": 5.438398252766215
+        },
+        {
+          "period_s": 578.17,
+          "published_amp_ppt": 29.82,
+          "recovered_amp_ppt": 29.377810860578077,
+          "amp_ratio": 0.9851713903614379,
+          "snr": 8.515860136089733
+        },
+        {
+          "period_s": 826.54,
+          "published_amp_ppt": 28.02,
+          "recovered_amp_ppt": 27.670994869266373,
+          "amp_ratio": 0.9875444278824544,
+          "snr": 8.021098755501084
+        }
+      ],
+      "directed_confirmed_snr4": 3,
+      "n_published_modes": 3,
+      "blind_top": [
+        {
+          "frequency_per_day": 615.4626089969194,
+          "period_s": 140.3822080123026,
+          "amp_ppt": 29.70049046180369,
+          "snr": 8.630321337950452
+        },
+        {
+          "frequency_per_day": 570.5573108141056,
+          "period_s": 151.43088759430543,
+          "amp_ppt": 29.543649252607338,
+          "snr": 8.605487042366223
+        },
+        {
+          "frequency_per_day": 879.1712685945073,
+          "period_s": 98.27436710724625,
+          "amp_ppt": 18.514558333678735,
+          "snr": 5.398056322412144
+        },
+        {
+          "frequency_per_day": 753.1560776767509,
+          "period_s": 114.71725789761501,
+          "amp_ppt": 15.127819605652265,
+          "snr": 4.413432825041828
+        },
+        {
+          "frequency_per_day": 1165.3277435592627,
+          "period_s": 74.14223206950203,
+          "amp_ppt": 14.955176445050414,
+          "snr": 4.365780416803002
+        }
+      ],
+      "blind_dominant_matches_published": false
+    },
+    {
+      "tic": 2045970633,
+      "cadence_s": 120,
+      "n_sectors": 8,
+      "n_points": 119872,
+      "crowdsap_median": 0.050475624999999996,
+      "crowdsap_all": [
+        0.03777109,
+        0.08917493,
+        0.05335859,
+        0.03608698,
+        0.06327482,
+        0.06018443,
+        0.04759266,
+        0.04316503
+      ],
+      "directed": [
+        {
+          "period_s": 726.49,
+          "published_amp_ppt": 26.1,
+          "recovered_amp_ppt": 5.597213251459099,
+          "amp_ratio": 0.2144526149984329,
+          "snr": 2.119378442105234
+        },
+        {
+          "period_s": 883.61,
+          "published_amp_ppt": 28.82,
+          "recovered_amp_ppt": 7.755119601773522,
+          "amp_ratio": 0.26908811942309235,
+          "snr": 2.936467231378389
+        },
+        {
+          "period_s": 930.02,
+          "published_amp_ppt": 27.01,
+          "recovered_amp_ppt": 4.570485622152827,
+          "amp_ratio": 0.16921457320077107,
+          "snr": 1.7306091911037156
+        }
+      ],
+      "directed_confirmed_snr4": 0,
+      "n_published_modes": 3,
+      "blind_top": [
+        {
+          "frequency_per_day": 727.0786976600857,
+          "period_s": 118.83170319534322,
+          "amp_ppt": 105.3827922202603,
+          "snr": 40.17071652720636
+        },
+        {
+          "frequency_per_day": 712.9257511349532,
+          "period_s": 121.19074091860783,
+          "amp_ppt": 76.5436758066625,
+          "snr": 29.281728592787378
+        },
+        {
+          "frequency_per_day": 712.9232128732417,
+          "period_s": 121.19117240100582,
+          "amp_ppt": 45.449291693237925,
+          "snr": 17.40855985587407
+        },
+        {
+          "frequency_per_day": 727.0762929910959,
+          "period_s": 118.83209620899865,
+          "amp_ppt": 39.41766434418258,
+          "snr": 15.112618190503783
+        },
+        {
+          "frequency_per_day": 722.8273764787745,
+          "period_s": 119.53061382496918,
+          "amp_ppt": 29.250398075376914,
+          "snr": 11.220408216242008
+        }
+      ],
+      "blind_dominant_matches_published": false
+    },
+    {
+      "tic": 631161222,
+      "cadence_s": 120,
+      "n_sectors": 6,
+      "n_points": 90601,
+      "crowdsap_median": 0.35582362,
+      "crowdsap_all": [
+        0.33203858,
+        0.33962646,
+        0.46327299,
+        0.42461479,
+        0.32800716,
+        0.37202078
+      ],
+      "directed": [
+        {
+          "period_s": 346.79,
+          "published_amp_ppt": 6.16,
+          "recovered_amp_ppt": 1.8767808496993228,
+          "amp_ratio": 0.30467221586027965,
+          "snr": 2.210659953354777
+        },
+        {
+          "period_s": 367.44,
+          "published_amp_ppt": 8.35,
+          "recovered_amp_ppt": 1.8719218007998544,
+          "amp_ratio": 0.22418225159279695,
+          "snr": 2.204936480198511
+        },
+        {
+          "period_s": 403.63,
+          "published_amp_ppt": 12.45,
+          "recovered_amp_ppt": 7.831083817009924,
+          "amp_ratio": 0.6290027162256968,
+          "snr": 9.224232753867891
+        },
+        {
+          "period_s": 466.62,
+          "published_amp_ppt": 10.29,
+          "recovered_amp_ppt": 5.922351107522309,
+          "amp_ratio": 0.5755443253180087,
+          "snr": 6.975936708435289
+        },
+        {
+          "period_s": 679.82,
+          "published_amp_ppt": 26.27,
+          "recovered_amp_ppt": 14.27253755709784,
+          "amp_ratio": 0.5433017722534389,
+          "snr": 16.811620395254504
+        },
+        {
+          "period_s": 707.97,
+          "published_amp_ppt": 15.8,
+          "recovered_amp_ppt": 13.040435799276613,
+          "amp_ratio": 0.8253440379288995,
+          "snr": 15.360327872257063
+        }
+      ],
+      "directed_confirmed_snr4": 4,
+      "n_published_modes": 6,
+      "blind_top": [
+        {
+          "frequency_per_day": 127.09221138286674,
+          "period_s": 679.8213600967176,
+          "amp_ppt": 24.650905381640367,
+          "snr": 29.172335976677473
+        },
+        {
+          "frequency_per_day": 122.04770767645346,
+          "period_s": 707.9198916955085,
+          "amp_ppt": 15.829953901948773,
+          "snr": 18.76984734649967
+        },
+        {
+          "frequency_per_day": 122.04269325925027,
+          "period_s": 707.948978284706,
+          "amp_ppt": 12.69544713668833,
+          "snr": 15.072072229930779
+        },
+        {
+          "frequency_per_day": 214.05724893786214,
+          "period_s": 403.6303392139769,
+          "amp_ppt": 11.429819433887642,
+          "snr": 13.583321215264489
+        },
+        {
+          "frequency_per_day": 185.16255071558638,
+          "period_s": 466.61703279683286,
+          "amp_ppt": 8.894644257972299,
+          "snr": 10.577017925717083
+        }
+      ],
+      "blind_dominant_matches_published": true
+    },
+    {
+      "tic": 600589802,
+      "cadence_s": 120,
+      "n_sectors": 3,
+      "n_points": 46054,
+      "crowdsap_median": 0.09880909,
+      "crowdsap_all": [
+        0.09880909,
+        0.10462722,
+        0.08501317
+      ],
+      "directed": [
+        {
+          "period_s": 479.61,
+          "published_amp_ppt": 8.37,
+          "recovered_amp_ppt": 3.8847810198200827,
+          "amp_ratio": 0.4641315435866288,
+          "snr": 3.7850695008692496
+        },
+        {
+          "period_s": 530.15,
+          "published_amp_ppt": 12.13,
+          "recovered_amp_ppt": 1.862892773250359,
+          "amp_ratio": 0.15357731024322827,
+          "snr": 1.815077499463852
+        },
+        {
+          "period_s": 868.64,
+          "published_amp_ppt": 17.2,
+          "recovered_amp_ppt": 7.0229625706182635,
+          "amp_ratio": 0.40831177736152696,
+          "snr": 6.8427026635917345
+        },
+        {
+          "period_s": 959.02,
+          "published_amp_ppt": 25.88,
+          "recovered_amp_ppt": 9.102138139684989,
+          "amp_ratio": 0.35170549225985276,
+          "snr": 8.868511581333873
+        },
+        {
+          "period_s": 966.99,
+          "published_amp_ppt": 8.87,
+          "recovered_amp_ppt": 3.607245102139164,
+          "amp_ratio": 0.40667926743395316,
+          "snr": 3.514657157921164
+        }
+      ],
+      "directed_confirmed_snr4": 2,
+      "n_published_modes": 5,
+      "blind_top": [
+        {
+          "frequency_per_day": 720.1751438027948,
+          "period_s": 119.97081646524984,
+          "amp_ppt": 15.164971738797052,
+          "snr": 14.811818400373594
+        },
+        {
+          "frequency_per_day": 719.8739387120673,
+          "period_s": 120.02101389387562,
+          "amp_ppt": 12.640570488261918,
+          "snr": 12.366856600740254
+        },
+        {
+          "frequency_per_day": 810.0815095636794,
+          "period_s": 106.65593397698483,
+          "amp_ppt": 11.82458839771087,
+          "snr": 11.585386618359735
+        },
+        {
+          "frequency_per_day": 810.0808707405814,
+          "period_s": 106.65601808497532,
+          "amp_ppt": 13.117645866646262,
+          "snr": 12.875393878670693
+        },
+        {
+          "frequency_per_day": 719.9918015736563,
+          "period_s": 120.00136641994963,
+          "amp_ppt": 20.825176867278966,
+          "snr": 20.46712976555095
+        }
+      ],
+      "blind_dominant_matches_published": false
+    },
+    {
+      "tic": 2026445610,
+      "cadence_s": 120,
+      "n_sectors": 8,
+      "n_points": 120698,
+      "crowdsap_median": 0.316743075,
+      "crowdsap_all": [
+        0.31867209,
+        0.3683269,
+        0.31481406,
+        0.29572013,
+        0.2614983,
+        0.46045485,
+        0.32815468,
+        0.26877892
+      ],
+      "directed": [
+        {
+          "period_s": 317.74,
+          "published_amp_ppt": 15.17,
+          "recovered_amp_ppt": 3.197703812231737,
+          "amp_ratio": 0.21079128623808419,
+          "snr": 2.6188837586028204
+        },
+        {
+          "period_s": 815.53,
+          "published_amp_ppt": 20.52,
+          "recovered_amp_ppt": 3.424277126465473,
+          "amp_ratio": 0.1668751036289217,
+          "snr": 2.804444776014693
+        },
+        {
+          "period_s": 825.25,
+          "published_amp_ppt": 25.56,
+          "recovered_amp_ppt": 2.9804280975825184,
+          "amp_ratio": 0.11660516813703124,
+          "snr": 2.4409373715556315
+        }
+      ],
+      "directed_confirmed_snr4": 0,
+      "n_published_modes": 3,
+      "blind_top": [
+        {
+          "frequency_per_day": 161.20720630916946,
+          "period_s": 535.9561894168596,
+          "amp_ppt": 16.432964295020316,
+          "snr": 13.468523150798884
+        },
+        {
+          "frequency_per_day": 261.4666316226802,
+          "period_s": 330.4436954872427,
+          "amp_ppt": 10.147203391972841,
+          "snr": 8.319072256087093
+        },
+        {
+          "frequency_per_day": 137.6528631513716,
+          "period_s": 627.6658401575652,
+          "amp_ppt": 8.932010852577406,
+          "snr": 7.324437392080148
+        },
+        {
+          "frequency_per_day": 605.8449555992963,
+          "period_s": 142.610744220085,
+          "amp_ppt": 8.066802996173877,
+          "snr": 6.6161480534903685
+        },
+        {
+          "frequency_per_day": 834.0400787253666,
+          "period_s": 103.59214407542862,
+          "amp_ppt": 7.347983073662876,
+          "snr": 6.027500756641451
+        }
+      ],
+      "blind_dominant_matches_published": false
+    },
+    {
+      "tic": 804899734,
+      "cadence_s": 120,
+      "n_sectors": 12,
+      "n_points": 195186,
+      "crowdsap_median": 0.119852895,
+      "crowdsap_all": [
+        0.1349258,
+        0.13419712,
+        0.15175988,
+        0.08430616,
+        0.11447847,
+        0.12522732,
+        0.09319325,
+        0.10403163,
+        0.06332341,
+        0.1081758,
+        0.16920723,
+        0.16031101
+      ],
+      "directed": [
+        {
+          "period_s": 394.71,
+          "published_amp_ppt": 24.02,
+          "recovered_amp_ppt": 13.294738547299744,
+          "amp_ratio": 0.5534862009700143,
+          "snr": 10.201460005617884
+        },
+        {
+          "period_s": 558.78,
+          "published_amp_ppt": 11.31,
+          "recovered_amp_ppt": 3.817818509826132,
+          "amp_ratio": 0.3375613182870143,
+          "snr": 2.9295290537781526
+        }
+      ],
+      "directed_confirmed_snr4": 1,
+      "n_published_modes": 2,
+      "blind_top": [
+        {
+          "frequency_per_day": 218.89605177747282,
+          "period_s": 394.7078958182089,
+          "amp_ppt": 22.30573277449982,
+          "snr": 17.12872978039121
+        },
+        {
+          "frequency_per_day": 719.7697518709836,
+          "period_s": 120.03838696390082,
+          "amp_ppt": 16.268009319495523,
+          "snr": 12.497343186644564
+        },
+        {
+          "frequency_per_day": 719.886339671994,
+          "period_s": 120.01894637890605,
+          "amp_ppt": 16.215190039646608,
+          "snr": 12.461709061251824
+        },
+        {
+          "frequency_per_day": 719.8321428767031,
+          "period_s": 120.02798271096249,
+          "amp_ppt": 14.299204021837507,
+          "snr": 10.992663118584675
+        },
+        {
+          "frequency_per_day": 720.1189402417041,
+          "period_s": 119.98017990055962,
+          "amp_ppt": 13.726942675019519,
+          "snr": 10.555778121430967
+        }
+      ],
+      "blind_dominant_matches_published": true
+    },
+    {
+      "tic": 1102346472,
+      "cadence_s": 120,
+      "n_sectors": 9,
+      "n_points": 125678,
+      "crowdsap_median": 0.31952888,
+      "crowdsap_all": [
+        0.28632218,
+        0.40855959,
+        0.30338168,
+        0.31952888,
+        0.24354732,
+        0.56805927,
+        0.42725816,
+        0.40507853,
+        0.14661931
+      ],
+      "directed": [
+        {
+          "period_s": 458.13,
+          "published_amp_ppt": 23.45,
+          "recovered_amp_ppt": 17.72733487054447,
+          "amp_ratio": 0.755963107485905,
+          "snr": 13.51797264925208
+        },
+        {
+          "period_s": 1489.65,
+          "published_amp_ppt": 7.27,
+          "recovered_amp_ppt": 5.736340667402313,
+          "amp_ratio": 0.7890427327926154,
+          "snr": 4.374244454398083
+        }
+      ],
+      "directed_confirmed_snr4": 2,
+      "n_published_modes": 2,
+      "blind_top": [
+        {
+          "frequency_per_day": 188.59405826904296,
+          "period_s": 458.1268402249672,
+          "amp_ppt": 21.557048950508165,
+          "snr": 16.456025044089476
+        },
+        {
+          "frequency_per_day": 719.9003638685788,
+          "period_s": 120.01660832022128,
+          "amp_ppt": 19.33582232051347,
+          "snr": 14.773075433110378
+        },
+        {
+          "frequency_per_day": 719.8946693971255,
+          "period_s": 120.01755766903445,
+          "amp_ppt": 20.791268678441746,
+          "snr": 15.900862407551122
+        },
+        {
+          "frequency_per_day": 719.8955454696568,
+          "period_s": 120.01741161439332,
+          "amp_ppt": 16.827687678256524,
+          "snr": 12.878127816215319
+        },
+        {
+          "frequency_per_day": 720.2741548152593,
+          "period_s": 119.95432492251571,
+          "amp_ppt": 16.68162640537537,
+          "snr": 12.774607032969701
+        }
+      ],
+      "blind_dominant_matches_published": true
+    },
+    {
+      "tic": 800420812,
+      "cadence_s": 120,
+      "n_sectors": 4,
+      "n_points": 62822,
+      "crowdsap_median": 0.21543147499999998,
+      "crowdsap_all": [
+        0.4231945,
+        0.25719732,
+        0.17366563,
+        0.15625933
+      ],
+      "directed": [
+        {
+          "period_s": 333.75,
+          "published_amp_ppt": 10.84,
+          "recovered_amp_ppt": 9.246718213799452,
+          "amp_ratio": 0.8530182854058536,
+          "snr": 4.729608029680805
+        },
+        {
+          "period_s": 507.76,
+          "published_amp_ppt": 23.31,
+          "recovered_amp_ppt": 13.100460263185605,
+          "amp_ratio": 0.5620103073009698,
+          "snr": 6.700760271986024
+        }
+      ],
+      "directed_confirmed_snr4": 2,
+      "n_published_modes": 2,
+      "blind_top": [
+        {
+          "frequency_per_day": 170.15717273607143,
+          "period_s": 507.76584149064297,
+          "amp_ppt": 23.044977362771313,
+          "snr": 11.800341826907776
+        },
+        {
+          "frequency_per_day": 716.4433747754298,
+          "period_s": 120.59571355109844,
+          "amp_ppt": 10.097898270447239,
+          "snr": 5.171800366317698
+        },
+        {
+          "frequency_per_day": 170.27179392996112,
+          "period_s": 507.42403075602414,
+          "amp_ppt": 9.987962812694887,
+          "snr": 5.116560885093653
+        },
+        {
+          "frequency_per_day": 517.8003882736982,
+          "period_s": 166.85966630509904,
+          "amp_ppt": 9.822111004423231,
+          "snr": 5.032613648616183
+        },
+        {
+          "frequency_per_day": 258.8777975131658,
+          "period_s": 333.74820409465957,
+          "amp_ppt": 9.745452288106808,
+          "snr": 4.994326706285731
+        }
+      ],
+      "blind_dominant_matches_published": true
+    },
+    {
+      "tic": 1989866634,
+      "cadence_s": 120,
+      "n_sectors": 3,
+      "n_points": 43906,
+      "crowdsap_median": 0.18847446,
+      "crowdsap_all": [
+        0.19194441,
+        0.18831913,
+        0.18847446
+      ],
+      "directed": [
+        {
+          "period_s": 613.97,
+          "published_amp_ppt": 22.22,
+          "recovered_amp_ppt": 11.655291047203562,
+          "amp_ratio": 0.5245405511792782,
+          "snr": 5.970949987131826
+        }
+      ],
+      "directed_confirmed_snr4": 1,
+      "n_published_modes": 1,
+      "blind_top": [
+        {
+          "frequency_per_day": 140.72668156853763,
+          "period_s": 613.9560674421283,
+          "amp_ppt": 31.976789747741964,
+          "snr": 16.43183852581933
+        },
+        {
+          "frequency_per_day": 719.792371767488,
+          "period_s": 120.03461468734415,
+          "amp_ppt": 28.106444179736577,
+          "snr": 14.476767656304881
+        },
+        {
+          "frequency_per_day": 719.8604037284023,
+          "period_s": 120.02327055704824,
+          "amp_ppt": 24.089365577485342,
+          "snr": 12.429262358751659
+        },
+        {
+          "frequency_per_day": 720.2416266488239,
+          "period_s": 119.95974240201338,
+          "amp_ppt": 22.977823889598255,
+          "snr": 11.874628230037516
+        },
+        {
+          "frequency_per_day": 720.3213134875042,
+          "period_s": 119.94647164011596,
+          "amp_ppt": 24.424156515889127,
+          "snr": 12.644725836083914
+        }
+      ],
+      "blind_dominant_matches_published": true
+    },
+    {
+      "tic": 902514572,
+      "cadence_s": 120,
+      "n_sectors": 4,
+      "n_points": 66336,
+      "crowdsap_median": 0.415807335,
+      "crowdsap_all": [
+        0.42066863,
+        0.40352044,
+        0.43786067,
+        0.41094604
+      ],
+      "directed": [
+        {
+          "period_s": 401.51,
+          "published_amp_ppt": 17.24,
+          "recovered_amp_ppt": 10.668517169351821,
+          "amp_ratio": 0.6188235017025419,
+          "snr": 4.491748481060885
+        },
+        {
+          "period_s": 829.56,
+          "published_amp_ppt": 21.94,
+          "recovered_amp_ppt": 7.654611653580717,
+          "amp_ratio": 0.34888840718234804,
+          "snr": 3.222808729863167
+        },
+        {
+          "period_s": 831.13,
+          "published_amp_ppt": 22.21,
+          "recovered_amp_ppt": 11.06103361483879,
+          "amp_ratio": 0.498020423900891,
+          "snr": 4.65700904350085
+        },
+        {
+          "period_s": 1879.21,
+          "published_amp_ppt": 18.11,
+          "recovered_amp_ppt": 8.004133074891147,
+          "amp_ratio": 0.44197311291502744,
+          "snr": 3.3699671670056315
+        }
+      ],
+      "directed_confirmed_snr4": 2,
+      "n_published_modes": 4,
+      "blind_top": [
+        {
+          "frequency_per_day": 615.9783061167226,
+          "period_s": 140.26468000908451,
+          "amp_ppt": 18.718754467622322,
+          "snr": 7.884818905775433
+        },
+        {
+          "frequency_per_day": 615.8445727946126,
+          "period_s": 140.29513909317967,
+          "amp_ppt": 17.72384659527217,
+          "snr": 7.4688768656327325
+        },
+        {
+          "frequency_per_day": 720.4809646256313,
+          "period_s": 119.91989274122497,
+          "amp_ppt": 14.509631368787367,
+          "snr": 6.116125203003941
+        },
+        {
+          "frequency_per_day": 719.7848550362723,
+          "period_s": 120.03586821182284,
+          "amp_ppt": 13.950146222135421,
+          "snr": 5.881791992170898
+        },
+        {
+          "frequency_per_day": 721.3175658826278,
+          "period_s": 119.78080679939927,
+          "amp_ppt": 13.75647224892585,
+          "snr": 5.801607650210055
+        }
+      ],
+      "blind_dominant_matches_published": false
+    },
+    {
+      "tic": 353727306,
+      "cadence_s": 120,
+      "n_sectors": 9,
+      "n_points": 131030,
+      "crowdsap_median": 0.3976104,
+      "crowdsap_all": [
+        0.3852734,
+        0.32189444,
+        0.45213321,
+        0.3976104,
+        0.43029419,
+        0.35781017,
+        0.4638837,
+        0.41994002,
+        0.33510262
+      ],
+      "directed": [
+        {
+          "period_s": 399.56,
+          "published_amp_ppt": 5.07,
+          "recovered_amp_ppt": 1.688338912578261,
+          "amp_ratio": 0.333005702678158,
+          "snr": 3.0482582079879674
+        },
+        {
+          "period_s": 404.84,
+          "published_amp_ppt": 8.54,
+          "recovered_amp_ppt": 3.755183130964469,
+          "amp_ratio": 0.4397169942581346,
+          "snr": 6.779899294022695
+        },
+        {
+          "period_s": 463.54,
+          "published_amp_ppt": 5.7,
+          "recovered_amp_ppt": 2.2834004725945127,
+          "amp_ratio": 0.4005965741393882,
+          "snr": 4.122628567554967
+        },
+        {
+          "period_s": 470.24,
+          "published_amp_ppt": 9.35,
+          "recovered_amp_ppt": 2.4039070803195766,
+          "amp_ratio": 0.2571023615315055,
+          "snr": 4.340200557028192
+        },
+        {
+          "period_s": 545.82,
+          "published_amp_ppt": 22.0,
+          "recovered_amp_ppt": 6.916802504074283,
+          "amp_ratio": 0.31440011382155836,
+          "snr": 12.488132476836949
+        },
+        {
+          "period_s": 729.84,
+          "published_amp_ppt": 5.48,
+          "recovered_amp_ppt": 3.065312653793305,
+          "amp_ratio": 0.5593636229549825,
+          "snr": 5.534353551506913
+        },
+        {
+          "period_s": 750.84,
+          "published_amp_ppt": 5.49,
+          "recovered_amp_ppt": 4.192639421099061,
+          "amp_ratio": 0.7636865976501022,
+          "snr": 7.569716857963327
+        },
+        {
+          "period_s": 771.3,
+          "published_amp_ppt": 5.22,
+          "recovered_amp_ppt": 3.1503987716538595,
+          "amp_ratio": 0.6035246688992069,
+          "snr": 5.687974637428692
+        },
+        {
+          "period_s": 873.87,
+          "published_amp_ppt": 8.94,
+          "recovered_amp_ppt": 5.6846234052584705,
+          "amp_ratio": 0.6358639155770102,
+          "snr": 10.263460627071469
+        },
+        {
+          "period_s": 876.08,
+          "published_amp_ppt": 8.1,
+          "recovered_amp_ppt": 4.6781739994131595,
+          "amp_ratio": 0.5775523456065629,
+          "snr": 8.446338697679007
+        }
+      ],
+      "directed_confirmed_snr4": 9,
+      "n_published_modes": 10,
+      "blind_top": [
+        {
+          "frequency_per_day": 561.7321042490506,
+          "period_s": 153.80997337779635,
+          "amp_ppt": 9.983003010676818,
+          "snr": 18.04647405166302
+        },
+        {
+          "frequency_per_day": 561.7305018299896,
+          "period_s": 153.8104121434185,
+          "amp_ppt": 9.761721051553394,
+          "snr": 17.66746888153061
+        },
+        {
+          "frequency_per_day": 561.7391815999028,
+          "period_s": 153.80803552624207,
+          "amp_ppt": 10.233153521917037,
+          "snr": 18.544990571303117
+        },
+        {
+          "frequency_per_day": 561.7867200320425,
+          "period_s": 153.79502027935447,
+          "amp_ppt": 7.505001525273508,
+          "snr": 13.610520504311548
+        },
+        {
+          "frequency_per_day": 878.2663540463893,
+          "period_s": 98.3756232968893,
+          "amp_ppt": 7.526977362680429,
+          "snr": 13.660091023281316
+        }
+      ],
+      "blind_dominant_matches_published": false
+    }
+  ]
+}
