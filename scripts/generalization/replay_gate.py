@@ -160,6 +160,11 @@ def main() -> None:
     parser.add_argument("--count", type=int, default=25)
     parser.add_argument("--stars", nargs="*", help="explicit star list (overrides --count)")
     parser.add_argument("--workers", type=int, default=None)
+    parser.add_argument("--resume", action="store_true",
+                        help="keep complete per-star outputs already produced by a "
+                             "previous run of THIS gate in the same out-dir (same code "
+                             "+ env, verified by the drift/attestation checks) instead "
+                             "of recomputing them; crash recovery for the full-928 run")
     args = parser.parse_args()
 
     assert_frozen()
@@ -174,8 +179,19 @@ def main() -> None:
     missing = [s for s in stars if not (args.shard_dir / f"{s}.csv.gz").exists()]
     if missing:
         raise SystemExit(f"missing shards for: {missing}")
+    reused = 0
     for star in stars:
-        (replay_dir / f"{star}.json").unlink(missing_ok=True)
+        existing = replay_dir / f"{star}.json"
+        if args.resume and existing.exists():
+            try:
+                if json.loads(existing.read_text(encoding="utf-8")).get("complete"):
+                    reused += 1
+                    continue
+            except json.JSONDecodeError:
+                pass
+        existing.unlink(missing_ok=True)
+    if reused:
+        print(f"[replay] resume: reusing {reused} complete outputs", flush=True)
 
     print(f"[replay] {len(stars)} stars, workers={workers}", flush=True)
     started = time.time()
@@ -223,6 +239,7 @@ def main() -> None:
         "wall_seconds": round(time.time() - started, 1),
         "completion_offsets_seconds": durations,
         "workers": workers,
+        "resumed_outputs": reused,
         "env": env_versions(),
         "frozen_sha256": assert_frozen(),
         "campaign_sha256": campaign_start,
