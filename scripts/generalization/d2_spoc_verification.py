@@ -36,6 +36,37 @@ FREQ_MIN_PER_DAY = 35.0
 FREQ_MAX_PER_DAY = 1250.0
 
 
+def parse_sectors(text: str) -> set[int]:
+    """'19,43-44,f59' -> {19, 43, 44, 59} (the 'f' marks 20-s cadence)."""
+    sectors: set[int] = set()
+    for token in str(text).replace("f", "").split(","):
+        token = token.strip()
+        if not token:
+            continue
+        if "-" in token:
+            lo, hi = token.split("-")
+            sectors.update(range(int(lo), int(hi) + 1))
+        else:
+            sectors.add(int(token))
+    return sectors
+
+
+def directed_check(time_d, flux, published):
+    noise = float(np.sqrt(2.0 / len(time_d)) * np.std(flux))
+    directed = []
+    for row in published.itertuples(index=False):
+        freq = 86400.0 / row.period_s
+        amp, _ = fit_amplitude(time_d, flux, freq)
+        directed.append({
+            "period_s": row.period_s,
+            "published_amp_ppt": row.amp_ppt,
+            "recovered_amp_ppt": amp * 1000.0,
+            "amp_ratio": amp * 1000.0 / row.amp_ppt if row.amp_ppt else None,
+            "snr": amp / noise if noise else 0.0,
+        })
+    return directed
+
+
 def fit_amplitude(time_d: np.ndarray, flux: np.ndarray, freq_per_day: float):
     phase = 2.0 * np.pi * freq_per_day * time_d
     design = np.column_stack((np.ones_like(time_d), np.sin(phase), np.cos(phase)))
@@ -101,36 +132,50 @@ def main() -> None:
                 float(lc.meta.get("CROWDSAP")) for lc in collection
                 if lc.meta.get("CROWDSAP") is not None
             ]
+            published = modes[modes["tic"] == tic]
+            target_row = targets[targets["tic"] == tic].iloc[0]
+            paper_sectors = parse_sectors(target_row["sectors"])
+            # PRIMARY: the published solution evaluated on the PUBLISHED
+            # sectors (tests parser + solution fidelity); SECONDARY: the same
+            # solution on every available sector (tests epoch persistence —
+            # long-period DAV modes are nonstationary, so this can legitimately
+            # fail while the primary check passes)
+            paper_lcs = [lc for lc in collection
+                         if int(lc.meta.get("SECTOR", -1)) in paper_sectors]
+            if not paper_lcs:
+                paper_lcs = list(collection)
+                entry["paper_sector_match"] = False
+            else:
+                entry["paper_sector_match"] = True
+            import lightkurve as _lk
+            primary = _lk.LightCurveCollection(paper_lcs).stitch().remove_nans()
+            t_primary = np.asarray(primary.time.value, dtype=float)
+            f_primary = np.asarray(primary.flux.value, dtype=float)
+            f_primary = f_primary / np.median(f_primary) - 1.0
             stitched = collection.stitch().remove_nans()
             time_d = np.asarray(stitched.time.value, dtype=float)
             flux = np.asarray(stitched.flux.value, dtype=float)
             flux = flux / np.median(flux) - 1.0
             entry.update({
                 "n_sectors": len(collection),
+                "n_paper_sectors_used": len(paper_lcs),
+                "paper_sectors": sorted(paper_sectors),
                 "n_points": int(len(time_d)),
                 "crowdsap_median": float(np.median(crowdsap)) if crowdsap else None,
                 "crowdsap_all": crowdsap,
             })
 
-            published = modes[modes["tic"] == tic]
-            noise = float(np.sqrt(2.0 / len(time_d)) * np.std(flux))
-            directed = []
-            for row in published.itertuples(index=False):
-                freq = 86400.0 / row.period_s
-                amp, _ = fit_amplitude(time_d, flux, freq)
-                directed.append({
-                    "period_s": row.period_s,
-                    "published_amp_ppt": row.amp_ppt,
-                    "recovered_amp_ppt": amp * 1000.0,
-                    "amp_ratio": amp * 1000.0 / row.amp_ppt if row.amp_ppt else None,
-                    "snr": amp / noise if noise else 0.0,
-                })
+            directed = directed_check(t_primary, f_primary, published)
             entry["directed"] = directed
             entry["directed_confirmed_snr4"] = int(
                 sum(1 for d in directed if d["snr"] >= 4.0))
             entry["n_published_modes"] = len(directed)
+            persistence = directed_check(time_d, flux, published)
+            entry["directed_all_sectors"] = persistence
+            entry["persistence_confirmed_snr4"] = int(
+                sum(1 for d in persistence if d["snr"] >= 4.0))
 
-            blind = prewhiten(time_d, flux, BLIND_MODES)
+            blind = prewhiten(t_primary, f_primary, BLIND_MODES)
             entry["blind_top"] = blind[:5]
             pub_dom_period = float(
                 published.loc[published["amp_ppt"].idxmax(), "period_s"])
@@ -162,6 +207,10 @@ def main() -> None:
         "directed_modes_total": sum(e.get("n_published_modes", 0) for e in ok),
         "directed_confirmed_snr4": sum(
             e.get("directed_confirmed_snr4", 0) for e in ok),
+        "persistence_confirmed_snr4": sum(
+            e.get("persistence_confirmed_snr4", 0) for e in ok),
+        "paper_sector_matched": sum(
+            1 for e in ok if e.get("paper_sector_match")),
         "crowdsap_available": sum(
             1 for e in ok if e.get("crowdsap_median") is not None),
     }
