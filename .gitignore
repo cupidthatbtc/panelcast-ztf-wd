@@ -17,3 +17,7 @@ __pycache__/
 
 # paper manuscript source: local provenance only, not redistributable
 data/roster/_source_provenance/jestin2026_draft.tex
+
+# generalization campaign
+.venv-gen/
+generalization/data/*/raw/

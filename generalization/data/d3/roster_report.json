@@ -1,0 +1,63 @@
+{
+  "roster": "/Users/jackneo/Documents/vonhippel-base9/astro-wd/generalization/data/d3/roster_d3.csv",
+  "mag_cut": 13.2,
+  "counts": {
+    "total": 3000,
+    "positives_dsct1": 610,
+    "ambiguous_dsct2": 76,
+    "negatives_dsct0": 2314,
+    "negatives_pool": 7292,
+    "negative_stride": 3
+  },
+  "positives_amplitude_mmag": {
+    "with_amplitude": 456,
+    "without_amplitude": 154,
+    "gt10": 48,
+    "1to10": 254,
+    "lt1": 154,
+    "subhour": 290,
+    "quantiles": {
+      "0.05": 0.173,
+      "0.25": 0.712,
+      "0.5": 1.769,
+      "0.75": 4.429,
+      "0.95": 24.238
+    }
+  },
+  "strata": {
+    "class_0": 2314,
+    "subhour": 290,
+    "amp_unknown": 154,
+    "class_2": 76,
+    "amp_lt1": 65,
+    "amp_ladder_4": 22,
+    "amp_ladder_1": 17,
+    "amp_gt10": 16,
+    "amp_ladder_2": 14,
+    "amp_ladder_3": 13,
+    "amp_ladder_5": 11,
+    "amp_ladder_6": 8
+  },
+  "provenance": {
+    "murphy2019_table1.csv": {
+      "query": "SELECT KIC, GaiaDR2, gmag, Teff, logg, dSct, _RA, _DE FROM \"J/MNRAS/485/2380/table1\"",
+      "sha256": "809be478d5deff4ba245b60f13d32bc5f75debb9868393a37daa8383d06c6d57",
+      "bytes": 943035
+    },
+    "mo2026_table2.csv": {
+      "query": "SELECT KIC, Freq, Amp FROM \"J/A+A/710/A245/table2\"",
+      "sha256": "f9b43552789065d949b5776f1311b93c7f9003dea5019f7e796f68d76cf9961e",
+      "bytes": 6623519
+    },
+    "mo2026_table1.csv": {
+      "query": "SELECT KIC, Freq, Amp, fR, C, SC FROM \"J/A+A/710/A245/table1\"",
+      "sha256": "ad3d7a613080671c21da03aa5a0a072acfa89bb1afde08ec951345b1111fde99",
+      "bytes": 633916
+    }
+  },
+  "conversions": {
+    "ppt_to_mmag": 1.0857,
+    "uhz_to_per_day": 0.0864,
+    "kepler_lc_nyquist_uhz": 283.2
+  }
+}
