@@ -1,0 +1,30 @@
+{
+  "targets": 103,
+  "from_2022_only": 53,
+  "from_2025_new": 32,
+  "superseded_by_2025old": 18,
+  "nov_dropped": [
+    261400271,
+    317620456,
+    804835539
+  ],
+  "modes_total": 341,
+  "modes_per_star_median": 3.0,
+  "period_s_range": [
+    115.924,
+    1879.21
+  ],
+  "amp_ppt_range": [
+    0.39,
+    88.17
+  ],
+  "stars_with_20s_cadence": 49,
+  "gmag_range": [
+    13.53,
+    17.48
+  ],
+  "provenance_sha256": {
+    "romero2022_src.tar.gz": "4432c09d36bfdc1fa971047ab8dc05f10a8efcbc1abad0f216415d50de2eed81",
+    "romero2025_src.tar.gz": "850aed26994853ecf4d59c0bb45e827317571b91e0bec2382591636aed8b4eb8"
+  }
+}

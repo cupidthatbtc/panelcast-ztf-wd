@@ -126,11 +126,26 @@ No re-run; campaign metrics re-read the published per-star JSONs.
   single-exposure; per-night median subtraction annihilates 53% of zg data —
   D2 largely measures that penalty; pre-registered, stratified: risk 3).
 - Arms: B primary (signal + real ZTF mags, real magerr), A diagnostic
-  (synthetic Gaussian floor). FPR: 1,000 arm-A zero-amplitude nulls over
-  1,000 distinct real windows (Wilson upper ~0.4% at zero confirmed);
-  arm-B nulls are tautological (templates ARE the not-detected set).
+  (synthetic Gaussian floor). FPR: 1,000 arm-A zero-amplitude nulls
+  (510 not-detected windows, fresh deterministic noise seeds where windows
+  repeat — windows repeat, noise does not; documented). Arm-B nulls are
+  tautological (templates ARE the not-detected set).
   Verification arm: ~20 SPOC light curves prewhitened to confirm published
   solutions; everything else needs metadata only.
+- Run matrix (sized to the 1-day wall budget at 22 workers ≈ 84 stars/h):
+  arm B nominal (1.7/0.80) 103×3 templates = 309; arm A nominal 309;
+  nulls 1,000; ladder sensitivity = 8 remaining (R_g, R_rg) points × 103 ×
+  1 template (the median-n_exp one) = 824. Total ≈ 2,442 ≈ 1.2 d.
+  De-dilution variant runs only for the SPOC verification-arm stars (dilution
+  factors are not in the papers; CROWDSAP comes with the ~20 downloads).
+- Truth-model corrections found at implementation (2026-08-28): |sinc| ≥ 0.3
+  rejection corresponds to P < ~160 s at 120-s cadence (the earlier "197 s"
+  was the |sinc| = 0.5 point); D2 min published period is 115.9 s and 49/103
+  stars carry 20-s solutions, so few modes are affected. Phases are
+  unpublished: drawn once per star from PCG64(seed=TIC), shared across bands
+  and ladder variants. Blackbody derivative at 11,500 K gives (1.43, 0.80) —
+  the ladder's low rung; upper rungs cover atmosphere-model/limb-darkening
+  uncertainty.
 
 ## Metrics — see METRICS_SPEC.md (frozen before any campaign L-S run)
 
