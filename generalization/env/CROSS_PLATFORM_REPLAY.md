@@ -89,3 +89,45 @@ enters only descriptive tables.
 This is a process amendment to the frozen plan's replay section, not an
 estimand change; it requires its own sol review round and, if approved, an
 entry in reviews/G2_FREEZE.md as amendment 1.
+
+## Root cause of the cross-platform frequency last-bit drift (2026-08-29 01:50)
+
+For 4 of the 25 gate stars (1587611884756030720, 183138612392838784,
+5456112705203412352, 5657176543986789248) the replayed `baseline_days`
+differs from the published value by 1024–2048 ulps of the baseline — which
+is exactly ONE ulp of a BJD_TDB value (~4.7e-10 d ≈ 40 µs). On the Mac the
+replayed baseline equals both a correctly-rounded parse (`float()`) and a
+pandas re-parse of the shard's 17-significant-digit `bjd_tdb` strings; the
+published value therefore reflects the production machine's pandas fast
+float parser rounding one endpoint by one ulp. Because the frozen grid
+step is 1/(10 × baseline), every grid frequency of those stars shifts by
+~2e-13 relative — the "FMA last-bit" attribution above is superseded: the
+source is CSV float parsing inside the frozen `load_star`, a platform
+property of pandas' C parser, not of the linear algebra. Grid INDICES are
+unaffected; decisions are unaffected. Under the fail-closed comparator,
+`baseline_days` must be compared with a 1e-12 relative tolerance (2048 ulps
+of a 2000-day baseline is 4.5e-13) rather than exact equality; the
+comparator committed for the overnight 928-star run compares it exactly, so
+that report will list `baseline_days differs` for the affected stars — to
+be re-classified, not hidden, in the resubmission.
+
+## Amendment-1 round-1 verdicts (2026-08-29 01:20)
+
+methods: REJECT (comparator fail-open; resume-based Mac evidence not
+generation-bound; 25-star scope insufficient; boundary flag must force
+strict-environment recomputation; more boundaries than FAP; metrics
+provenance gap; freeze plan-SHA erratum). stats: APPROVE-WITH-CHANGES
+(boundary audit incl. best-pass ties + match boundaries, strict
+recomputation authoritative, derived overall identity; P5 flips between
+x=1 and x=2). referee: APPROVE-WITH-CHANGES (disclosure wording in
+reviews/G2A1/sol_referee.md; separate byte-reproducibility from
+decision-equivalence).
+
+Actions taken the same night: fail-closed comparator (both-direction keys,
+list lengths, finite masks, exact grid indices via the frozen grid, derived
+`overall_result` identity, f32 = multiband peak power only, v1 projection);
+metrics binds d2/d3 to run manifest + attestation + tier and emits the
+platform-boundary audit; G2_FREEZE erratum; FRESH no-resume full-928 Mac
+replay launched 01:40 (≈7.5 h). Resubmission after that run with: baseline
+tolerance, the full-928 decision-equivalence result, strict-recomputation
+protocol for flagged stars, and the required record fields.
