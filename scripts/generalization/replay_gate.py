@@ -11,9 +11,12 @@ Comparison tiers, strongest first:
                              bundle newline-normalized; Windows writes CRLF)
   identical_v1_schema        equal after the documented v1->v2 schema transform:
                              the run that produced 921/928 published files
-                             predates commit fa16d7f, which added the
-                             `available`/`unavailable_reason` keys and bumped
-                             schema_version 1->2 while changing no numeric path.
+                             predates commit fa16d7f, which added sparse-input
+                             early-exit branches plus the `available`/
+                             `unavailable_reason` keys and bumped schema_version
+                             1->2; for any star that yields candidates the
+                             numeric path is unchanged (the new branches fire
+                             only on sparse inputs that previously crashed).
                              The replayed output is re-serialized with
                              schema_version=1 and those two keys dropped, then
                              byte-compared against the published file.

@@ -20,9 +20,10 @@ Selection:
   frozen-seed simple random sample (seed 20260828) with the inclusion
   probability recorded and a sampling_weight column carried into metrics.
 
-Labels are Kepler-derived only — zero circularity with ZTF. Negatives are
-"not a delta Sct", not "constant": campaign FPR from D3 is an upper bound
-(GENERALIZATION_PLAN.md risk 5).
+Labels are obtained independently of the frozen ZTF pipeline. Negatives are
+"not a delta Sct", not "constant": the D3 negative-class result is a TRIGGER
+RATE, never an FPR (GENERALIZATION_PLAN.md risk 5; estimand names in
+METRICS_SPEC.md are binding).
 """
 
 from __future__ import annotations

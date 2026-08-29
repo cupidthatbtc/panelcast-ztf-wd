@@ -1,144 +1,201 @@
-# METRICS_SPEC — frozen before any campaign Lomb-Scargle run
+# METRICS_SPEC — to be frozen at G2 (freeze = git blob SHA recorded in
+# GENERALIZATION_PLAN.md when the G2 panel reaches no-blocker verdicts)
 
 Implemented by `scripts/generalization/metrics_generalization.py`. Any change
 after the first campaign L-S run voids the prespecification and must be
-reported as such. Revised at G1 (2026-08-28) in response to the sol review
-panel — see `generalization/reviews/G1/RESPONSE.md`; frozen at G2.
+reported as such. v3, 2026-08-28: absorbs G2 round-2 findings (referee2,
+stats2, methods2, abstract lenses).
 
 ## Estimand vocabulary (names are binding)
 
-The campaign does NOT produce a single pooled "selection function". It
-produces three separate response assessments with these named estimands:
+Three separate response assessments; never pooled.
 
-- **detection completeness** — P(rule fires | labeled positive), per dataset,
-  class, pass rule. D3 denominator: all 610 dSct=1 (external labels).
-  D2 denominator: injection targets (synthetic positives — reported as
-  *conditional injection-recovery efficiency of the search stage*, never as
-  real-sky completeness).
-- **frequency-recovery completeness** — P(rule fires AND strict frequency
-  match | labeled positive AND frequency-scorable). D3 frequency-scorable:
-  the 456/610 with Mo+2026 rows (reported as "Mo-join-conditioned"; joined
-  vs unjoined covariates compared). D2: targets with >=1 injected mode
-  inside the pass's search bounds after sinc rejection (S_p = 1).
-  The missed-vs-wrong-frequency decomposition uses ONLY matching
-  denominators (both conditional on scorable/S_p = 1).
-- **correct-frequency fraction among detected positives** — what an earlier
-  draft called "purity"; it is not positive predictive value and is never
-  labeled purity. Class-level PPV is reported for D3 only, with sampling
-  weights (negatives carry weight pool/sample = 7292/2314), as a
-  prevalence-weighted estimate with the contaminated-negative caveat.
-- **negative-class trigger rate** — P(rule fires | Murphy dSct=0). NOT called
-  FPR: the class contains non-dSct variables; reported with sampling weights
-  and, after adjudication of triggered negatives (W4), split into
-  "plausible real variable" vs "unexplained".
-- **Gaussian-null false-alarm rate (FPR_Gaussian)** — P(confirmed | arm-A
-  zero-amplitude null), n = 1000 over the 928-window frame (windows repeat,
-  seeds do not). Acceptance criterion (preregistered): one-sided 95% upper
-  bound <= 0.5% at zero events. The FP frequency-distribution/alias audit is
-  descriptive only below 10 events.
-- **native trigger rate of the template pool** — P(confirmed | paired
-  uninjected control window), the 95-prefix arm. Context for D2 recovery,
-  not an FPR.
+- **detection completeness** — P(rule fires | labeled positive), reported for
+  BOTH denominators: `eligible_roster` (missing/unusable light curves count
+  as non-detections) and `usable_lightcurve` (frozen QC passed, both passes
+  complete). D1 denominators: the 13 paper-variable stars of the published
+  19-star master table (the 928-star catalog is NOT a labeled-positive
+  completeness denominator). D3: the 610 dSct=1 survivors. D2: injection
+  targets — always labeled *conditional injection-recovery efficiency of the
+  search stage*; D2 primary detection = post-injection rule firing
+  (detection-only); strict frequency matching is the separate
+  frequency-recovery estimand; paired controls contextualize native triggers.
+- **frequency-recovery completeness** — P(rule fires AND
+  best_candidate_matches_dominant | labeled positive AND freq-scorable AND
+  S_p = 1). Freq-scorable: D3 = Mo-joined with >=1 frequency and a defined
+  dominant amplitude (assert count == 456; "Mo-join-conditioned" label
+  mandatory; joined-vs-unjoined covariate table mandatory); D2 = >=1
+  RETAINED injected mode (from injected_modes.csv, post |sinc|>=0.3
+  rejection — never the original mode table); D1 = diagnostic only
+  (non-contemporaneous literature frequencies; see below).
+  S_p (per pass p): >=1 truth frequency inside pass p's search bounds
+  (low: [2/baseline, 48] / d; high: [24, 1440] / d); S_best = S_low OR
+  S_high. Known consequence stated up front: only ~10/456 D3 dominant
+  frequencies lie >= 24 / d, so D3 high-pass frequency recovery is a
+  near-empty cell and is reported as counts.
+  The missed-vs-wrong-frequency decomposition uses matching denominators
+  only: P(D AND M | Y=1, F=1, S_p=1) vs P(D | Y=1, F=1, S_p=1).
+- **correct-frequency fraction among detected positives** —
+  P(best_candidate_matches_dominant | rule-1 fired, Y=1, F=1, S_p=1).
+  Never called purity.
+- **frame-specific label PPV (D3 only)** — among triggered roster members of
+  the weighted frame {dSct=1 census positives, dSct=0 SRS negatives; dSct=2
+  EXCLUDED, reported separately}: weighted fraction labeled dSct=1.
+  Interval: survey bootstrap (B=2000, frozen seed) resampling the 2,314
+  sampled negatives with replacement, positives held fixed (census).
+  No transfer to other prevalences. Output: ppv.csv.
+- **negative-class trigger rate (D3)** — P(rule fires | dSct=0). Weights are
+  constant within the class and cancel: plain Wilson on the 2,314 sampled
+  negatives (no FPC — conservative). Triggered negatives adjudicated in W4
+  (plausible real variable vs unexplained), reported descriptively.
+- **Gaussian-null false-alarm rate (FPR_Gaussian, D2)** — P(confirmed |
+  arm-A zero-amplitude null), n = 1000; window allocation frozen as
+  deterministic cycling of the sorted 928-window pool (serial i -> window
+  i mod 928), noise seed = serial. Interval: EXACT one-sided
+  Clopper-Pearson upper bound at the OBSERVED event count x
+  (U = Beta_{0.95}(x+1, n-x)); acceptance criterion (confirmatory):
+  U_95(x, 1000) <= 0.005. Windows repeat; inference is conditional on the
+  frozen window set. FP frequency-distribution/alias audit descriptive only
+  below 10 events.
+- **native trigger rate of the template pool (D2)** — P(confirmed | paired
+  uninjected control window, 95-prefix). Context, not an FPR.
 
-## Frequency-match taxonomy (disjoint labels, strict first)
+Exact D3 sampling constants (binding): negatives inclusion probability
+2314/7292 (= 0.31733406...), sampling weight 7292/2314 (= 3.15125324...);
+never derived from rounded values.
 
-Tolerance: 1.5 / baseline_days per star (the pipeline's own convention) plus
-a dataset truth-quantum term for truth-table rounding: D1 +0.0025 / d
-(literature frequencies tabulated to 2 decimals), D2/D3 +0 (exact / 6-decimal
-uHz). D1 truth frequencies are additionally NON-CONTEMPORANEOUS single-epoch
-tabulations of multi-mode pulsators (observed lit-vs-ZTF offsets reach 0.6%),
-so D1 frequency-recovery is reported as a DIAGNOSTIC only; D1's estimand is
-detection completeness. D1 labels come from the published master table
-(19 usable stars; 13 paper-variable, 5 paper-constant) with the frozen
-pipeline's eclipsing sanity control (2833849800205759360) excluded as class
-`transit_control` — it is a known variable and can serve neither class.
-Validation on record (2026-08-28): metrics_generalization on the published
-bundle reproduces all five published D1 numbers (11/13 L-S, 9/13 census,
-13/13 union, 0 confirmed + 1 candidate among 5 constants).
-For each detected candidate, in precedence order against the truth list
-(D3: Mo frequencies for that KIC; D2: injected modes):
+## D1 specifics
 
-1. `direct` — within tolerance of a truth frequency;
-2. `harmonic` — within tolerance of 2f or f/2 of a truth frequency;
-3. `window_alias` — within tolerance of |f_truth ± k f_sid|, k = 1, 2
-   (sidereal-day family, the pipeline's own alias model);
-4. `ambiguous` — matches >1 truth frequency class above;
-5. `unmatched`.
+Labels from the published master table (19 usable stars: 13 paper-variable,
+5 paper-constant, 1 transit control excluded from both classes — it is the
+frozen pipeline's eclipsing sanity object). D1 truth frequencies are
+non-contemporaneous single-epoch literature tabulations of multi-mode
+pulsators (observed lit-vs-ZTF offsets reach 0.6%): frequency-recovery for
+D1 is DIAGNOSTIC only; the D1 estimand is detection completeness.
+Match tolerance adds a truth-quantum term: D1 +0.0025 / d (2-decimal
+tables); D2/D3 +0. Validation on record (2026-08-28): the engine reproduces
+all five published D1 numbers (11/13 L-S, 9/13 census, 13/13 union,
+0 confirmed + 1 candidate among the 5 constants).
 
-Headline frequency recovery counts `direct` only, scored against the
-pipeline's BEST candidate (`matched_primary`). D3's primary truth frequency
-is the DOMINANT Mo mode; any-mode direct matches are a secondary column.
-`matched_any_mode` over the 15 stored top_peaks is diagnostic only.
-Chance-match calibration: truth lists permuted across stars (frozen seed,
-100 permutations) → accidental direct-match rate reported beside every
+## Frequency-match taxonomy (evaluate everything, then classify)
+
+Tolerance: 1.5 / baseline_days + truth-quantum. f_sid = 1.00273790935 / d
+(frozen, the pipeline's constant). For each detected candidate, evaluate ALL
+(truth mode, relation) hits across the star's full truth list:
+  direct       |f_cand - f_t| <= tol
+  harmonic     |f_cand - 2 f_t| <= tol or |f_cand - f_t/2| <= tol
+  window_alias |f_cand - |f_t +/- k f_sid|| <= tol, k = 1, 2
+Classification: no hits -> `unmatched`; hits in exactly one relation class ->
+that class (several DIRECT hits on different modes remain `direct`); hits in
+more than one relation class -> `ambiguous` (excluded from strict recovery).
+Named estimator columns encode both axes:
+`best_candidate_matches_dominant` (headline; D3 dominant Mo mode / D2
+largest-amplitude retained injected mode; D1 diagnostic) and
+`best_candidate_matches_any_mode` (secondary), plus
+`any_top_peak_matches_any_mode` (diagnostic over the 15 stored peaks).
+Chance-match calibration: truth lists permuted across stars (frozen seed
+20260829, 100 permutations) -> accidental direct-match rate beside every
 frequency-recovery table.
 
-## Detection rules (all four always reported; PRIMARY = rule 1)
+## Detection rules and the preregistered primary family
 
-1. `confirmed` (headline), 2. `confirmed|candidate`, 3. `census`
-(any of six frozen ratios >= 2.5), 4. `either` (1 OR 3).
-Primary claim family (preregistered): rule 1, pass = best of {low, high}
-(the frozen `overall_result` ordering), nominal D2 variant (1.7/0.80,
-de-dilution off, arm B), per dataset. Everything else is labeled a
-pointwise descriptive sensitivity analysis; no simultaneous-coverage claim.
+Rules (all four always reported): 1 `confirmed`, 2 `confirmed|candidate`,
+3 `census` (any of six frozen ratios >= 2.5), 4 `either` (1 OR 3).
+PRIMARY endpoints — complete tuples; everything else is pointwise
+descriptive sensitivity:
+  P1 D3 detection completeness: {D3, dSct=1 (610), eligible_roster, rule 1,
+     best pass, unweighted, Wilson 95%}.
+  P2 D3 frequency recovery: {D3, Mo-joined S_best=1 subset, usable, rule 1 +
+     best_candidate_matches_dominant, Wilson 95%, beside chance-match rate}.
+  P3 D3 negative-class trigger rate: {D3, dSct=0 (2314), rule 1, best pass,
+     plain Wilson}.
+  P4 D2 conditional injection-recovery: {D2 arm B nominal (1.7/0.80,
+     de-dilution off), K=3 strata separately + equal-weight
+     scenario-standardized mean over targets, rule 1 detection-only,
+     target-cluster bootstrap 95%}.
+  P5 FPR_Gaussian acceptance: {D2 arm A nulls, rule 1, exact one-sided CP
+     upper at observed x <= 0.5%} — the sole confirmatory decision.
+No claim direction reversal, endpoint swap, or denominator swap after the
+first campaign L-S run.
 
 ## Units of analysis and intervals
 
-- D1/D3: the star is the unit; Wilson 95% intervals on independent per-star
-  proportions; weighted estimates use the effective-sample-size Wilson
-  approximation.
-- D2: the TESS target is the CLUSTER. K=3 template windows and ladder/phase
-  variants are correlated replicates, never pooled as independent trials.
-  Per-stratum (10/50/90th percentile window) proportions are reported
-  separately; aggregates are equal-weight standardized means over targets
-  with cluster bootstrap intervals (resample targets, keep all replicates;
-  B = 2000, frozen seed). Ladder results: nominal is primary; the min-max
-  across the 3x3 grid is a "prespecified finite-grid sensitivity range",
-  never a confidence band; endpoint scenarios identified.
+- D1/D3: the star is the unit. Wilson 95% on unweighted proportions; plain
+  Wilson on the negatives class (weights cancel); survey bootstrap for PPV;
+  ESS-Wilson only for other descriptive weighted proportions, labeled
+  approximate.
+- D2: the TESS target (TIC) is the CLUSTER; inference is CONDITIONAL on the
+  frozen window assignment (report unique window count and reuse table —
+  windows repeat across targets, and a target-only bootstrap does not
+  represent the 928-window frame; stated as a limitation).
+  Estimator: per-target mean over its replicates within a scenario/stratum;
+  aggregate = equal-weight mean over the 103 targets (a scenario mix, NOT
+  the 928-window frame). Bootstrap: resample the 103 TICs with replacement
+  (B = 2000, frozen seed 20260830), carrying ALL of a resampled target's
+  replicates, paired census/L-S outcomes, phases, and scenario results
+  jointly; identical resample draws across scenarios (common random
+  numbers). Percentile 95% intervals; if a statistic is degenerate
+  (all-0/all-1), report the exact one-sided CP bound at the target level
+  instead. Pooled exact McNemar is PROHIBITED for D2; use the target-cluster
+  paired-difference bootstrap.
+- Sensitivity contrasts (D2 ladder, phase draws, amplitude-stationarity):
+  COMMON-SUBSET RULE — every contrast against nominal is computed with
+  nominal re-evaluated on the same median-window (K=1) subset and the same
+  bootstrap draws. Min-max across the 3x3 grid is a "prespecified
+  finite-grid sensitivity range", never a confidence band; endpoint
+  scenarios identified. De-dilution and amplitude-stationarity are separate
+  axes.
 
 ## Complementarity (census vs L-S)
 
-Primary table (per dataset, on labeled positives with both methods
-available): C = census flag; L = rule-1 detection (detection-only, no
-frequency requirement — symmetric margins). Report the full 2x2, both
-discordant fractions, union completeness, and incremental yields
-P(C=1,L=0), P(C=0,L=1) with intervals (Wilson for D3/D1; cluster bootstrap
-for D2). Exact McNemar is SECONDARY (marginal-homogeneity only; it does not
-measure complementarity).
+Per dataset, on labeled positives with both methods available and usable:
+C = census flag; L = rule-1 detection (detection-only, symmetric margins).
+Report the full 2x2, both discordant fractions, union completeness, and
+incremental yields with intervals (Wilson for D1/D3; cluster bootstrap for
+D2). Exact McNemar secondary (D1/D3 only; marginal homogeneity, not
+complementarity).
 
 ## Surfaces
 
-Completeness on (log P, log A) and (median exposures-per-night, log A).
-Amplitude axis is INVARIANT per dataset: D3 = historical Kepler-band
-dominant amplitude (mmag; explicitly non-contemporaneous, not a ZTF-g
-threshold); D2 = published TESS amplitude (ppt) for cross-variant surfaces,
-nominal injected A_g for the nominal-only surface. Bin edges frozen here:
-log P edges at P = {100 s, 200 s, 500 s, 1000 s, 2000 s, 0.05 d, 0.2 d,
-1 d, 10 d, 100 d}; amplitude edges {0.5, 1, 2, 5, 10, 20, 50, 200} mmag
-(D3) / {0.5, 2, 5, 10, 30, 100} ppt (D2); cells below 5 stars reported as
-counts only, no proportion.
+Endpoint: rule-1 detection completeness, and separately frequency recovery
+on the scorable subset. Coordinates per star (frozen): D3 = dominant Mo
+mode (period from dominant frequency; historical Kepler-band dominant
+amplitude, mmag — explicitly non-contemporaneous, not a ZTF-g threshold);
+D2 = largest-amplitude RETAINED injected mode (period; published TESS
+amplitude, ppt). Bins half-open [lo, hi); explicit underflow and overflow
+bins; no smoothing, no monotonic fitting, no interpolation. Edges frozen:
+period {100 s, 200 s, 500 s, 1000 s, 2000 s, 0.05 d, 0.2 d, 1 d, 10 d,
+100 d}; amplitude D3/D1 {0.5, 1, 2, 5, 10, 20, 50} mmag with top bin
+[50, inf); D2 {0.5, 2, 5, 10, 30} ppt with top bin [30, inf);
+median-exposures-per-night {1, 1.5, 2, 3, 5} with top bin [5, inf).
+Cells below 5 stars: counts only. Amplitude axes are invariant across
+scenarios (never the ladder-scaled injected amplitude).
 
 ## Eligibility and attrition
 
-Two denominators, both always reported: P(rule | eligible roster target) and
-P(rule | usable light curve) (frozen QC crossmatch passed, both passes
-available). A full attrition table (roster -> fetched -> crossmatched ->
-QC-passed -> both-passes-complete) by class, amplitude stratum, and
-magnitude accompanies every dataset. Unavailable passes are never silently
-dropped.
+Both denominators always reported (see detection completeness). Attrition
+table (roster -> fetched -> crossmatched -> QC-passed -> both-passes) by
+class, amplitude stratum (including `amp_unknown`), Mo-join status,
+magnitude, dominant period, Teff, and crowding (cone object count,
+nearest-separation). D3 near-saturation strata: g <= 14.0 flagged,
+g > 14.0 safe (boundary in the flagged stratum). Unavailable passes never
+silently dropped; missing light curves enter eligible-roster estimands as
+non-detections.
 
 ## Guards
 
 - Assert no campaign census ratio equals 2.5 exactly.
-- Assert every scored JSON has complete == true; both passes present.
+- Assert every scored JSON has complete == true, both passes present.
+- D2 truth ONLY from injected_modes.csv; assert every scored D2 shard id
+  appears there (or is a null/control).
 - Manifest: SHA-256 of every input file, env versions, frozen + campaign
-  file SHAs (frozen_api.campaign_file_shas), replay attestation reference,
-  spec git blob SHA.
+  file SHAs, replay attestation reference, spec file SHA-256.
 
 ## Outputs
 
 `generalization/results/<date>_<dataset>/metrics/`: per_star.csv,
 completeness_by_class_pass_rule.csv, contingency_complementarity.json,
-trigger_rates.csv, fp_frequency_distribution.csv, chance_match.csv,
-surfaces/*.csv, sensitivity.csv, attrition.csv, manifest.json.
+trigger_rates.csv, ppv.csv (D3), fp_frequency_distribution.csv,
+chance_match.json, surfaces/*.csv, sensitivity.csv, attrition.csv,
+d2_cluster_completeness.csv (D2), manifest.json, inputs_sha256.json.
 Figures via plot_generalization.py from these CSVs only.

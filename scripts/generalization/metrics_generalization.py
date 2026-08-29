@@ -105,6 +105,7 @@ def pass_eligible(truth: list[float], pass_name: str, baseline: float) -> bool:
 
 
 def rule_fired(rule: str, status: str, census_flag) -> bool | None:
+    # status "missing" (no usable light curve) fires no L-S rule
     if rule == "confirmed":
         return status == "confirmed"
     if rule == "confirmed_or_candidate":
@@ -237,33 +238,37 @@ def truth_d3() -> pd.DataFrame:
 
 
 def truth_d2(shards_dir: Path) -> pd.DataFrame:
+    """Truth from injected_modes.csv — the ACTUALLY injected (post-sinc-
+    rejection) mode set per shard, never the original mode table (G2 methods
+    finding 4)."""
     manifest = pd.read_csv(shards_dir / "shard_manifest.csv",
                            dtype={"campaign_id": str, "template_source_id": str})
-    modes = pd.read_csv(REPO_ROOT / "generalization/data/d2/d2_modes.csv")
-    freq_lists = (86400.0 / modes.groupby("tic")["period_s"].apply(list).apply(np.array)
-                  ).apply(list).to_dict() if False else {
-        tic: sorted((86400.0 / np.asarray(group["period_s"])).tolist())
-        for tic, group in modes.groupby("tic")
-    }
-    amp_max = modes.groupby("tic")["amp_ppt"].max().to_dict()
-    dominant = {
-        tic: float(86400.0 / group.loc[group["amp_ppt"].idxmax(), "period_s"])
-        for tic, group in modes.groupby("tic")
-    }
+    injected = pd.read_csv(shards_dir / "injected_modes.csv",
+                           dtype={"campaign_id": str})
+    freq_lists = injected.groupby("campaign_id")["frequency_per_day"].apply(
+        lambda g: sorted(g.tolist())).to_dict()
+    dominant = {}
+    amp_dom = {}
+    for sid, group in injected.groupby("campaign_id"):
+        best = group.loc[group["amp_tess_ppt"].idxmax()]
+        dominant[sid] = float(best["frequency_per_day"])
+        amp_dom[sid] = float(best["amp_tess_ppt"])
     rows = []
     for r in manifest.itertuples(index=False):
         arm = r.arm
         tic = int(r.tic)
-        truth = freq_lists.get(tic, []) if arm in ("A", "B") else []
+        sid = r.campaign_id
+        truth = freq_lists.get(sid, []) if arm in ("A", "B") else []
         rows.append({
-            "sid": r.campaign_id, "external_id": f"TIC {tic}" if tic else r.template_source_id,
+            "sid": sid, "external_id": f"TIC {tic}" if tic else r.template_source_id,
             "class_label": f"arm_{arm}",
             "label_positive": arm in ("A", "B"),
-            "weight": 1.0, "cluster": str(tic) if tic else r.campaign_id,
+            "weight": 1.0, "cluster": str(tic) if tic else sid,
             "truth_freqs": truth,
-            "primary_freq": dominant.get(tic) if arm in ("A", "B") else None,
-            "amp": float(amp_max.get(tic, math.nan)),
-            "truth_period_days": (1.0 / dominant[tic]) if tic in dominant and arm in ("A", "B") else math.nan,
+            "primary_freq": dominant.get(sid) if arm in ("A", "B") else None,
+            "amp": float(amp_dom.get(sid, math.nan)),
+            "truth_period_days": (86400.0 / dominant[sid] / 86400.0)
+            if sid in dominant and arm in ("A", "B") else math.nan,
             "freq_scorable": arm in ("A", "B") and bool(truth),
             "arm": arm, "template_k": r.template_k,
             "ratio_g": float(r.ratio_g), "ratio_rg": float(r.ratio_rg),
@@ -308,18 +313,25 @@ def census_from_shard(shard_path: Path) -> dict:
 # ------------------------------------------------------------------ aggregates
 
 def completeness_tables(per_star: pd.DataFrame, dataset: str) -> pd.DataFrame:
+    # primary frequency-match column: D3 scores the DOMINANT Mo mode (any-mode
+    # is secondary/diagnostic); D2 scores the exact injected list; D1 is
+    # diagnostic-only either way (spec).
+    primary_match = {"d1": "best_match_primary", "d2": "best_match",
+                     "d3": "best_match_primary"}[dataset]
     rows = []
     positives = per_star[per_star["label_positive"] == True]  # noqa: E712
+    usable = positives[positives["best_status"] != "missing"]
     for pass_name in PASSES:
         status_col = "best_status" if pass_name == "best" else f"{pass_name}_status"
-        match_col = "best_match" if pass_name == "best" else f"{pass_name}_match"
+        match_col = primary_match if pass_name == "best" else f"{pass_name}_match"
         for rule in RULES:
             for scope, frame in (
-                ("detection_all_positives", positives),
-                ("freq_recovery_scorable", positives[
-                    positives["freq_scorable"]
-                    & (positives["eligible_any_pass"] if pass_name == "best"
-                       else positives[f"{pass_name}_eligible"])
+                ("detection_eligible_roster", positives),
+                ("detection_usable_lightcurve", usable),
+                ("freq_recovery_scorable", usable[
+                    usable["freq_scorable"]
+                    & (usable["eligible_any_pass"] if pass_name == "best"
+                       else usable[f"{pass_name}_eligible"])
                 ]),
             ):
                 if frame.empty:
@@ -347,7 +359,8 @@ def completeness_tables(per_star: pd.DataFrame, dataset: str) -> pd.DataFrame:
 def contingency(per_star: pd.DataFrame) -> dict:
     from scipy.stats import binomtest
     frame = per_star[(per_star["label_positive"] == True)  # noqa: E712
-                     & per_star["census_variable"].notna()]
+                     & per_star["census_variable"].notna()
+                     & (per_star["best_status"] != "missing")]
     C = frame["census_variable"].astype(bool)
     L = frame["best_status"] == "confirmed"
     a, b = int((C & L).sum()), int((C & ~L).sum())
@@ -496,7 +509,20 @@ def main() -> None:
     for r in truth.itertuples(index=False):
         json_path = args.stars_dir / f"{r.sid}.json"
         if not json_path.exists():
+            # eligible roster target with no usable light curve: counts as a
+            # non-detection in the eligible-roster estimand, excluded from the
+            # usable-light-curve estimand (G2 stats finding 2)
             missing.append(r.sid)
+            record = {**r._asdict(),
+                      "best_status": "missing", "low_status": "missing",
+                      "high_status": "missing", "best_match": "unscored",
+                      "best_match_primary": "unscored", "low_match": "unscored",
+                      "high_match": "unscored", "low_eligible": False,
+                      "high_eligible": False, "eligible_any_pass": False,
+                      "best_frequency_per_day": None, "baseline_days": math.nan,
+                      "matched_any_mode_diagnostic": False,
+                      "census_variable": census.get(r.sid, {}).get("census_variable")}
+            rows.append(record)
             continue
         inputs[str(json_path)] = sha256_file(json_path)
         scored = score_star(json_path, list(r.truth_freqs), r.primary_freq,

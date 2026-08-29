@@ -34,7 +34,14 @@ ladder points on the median template only; 1,000 nulls.
 Campaign id layout (19 digits): AA TTTTTTTTTT K GR 0000
   AA arm prefix (92/93), T zero-padded TIC, K template index (0/1/2),
   G/R ladder indices (1-3) into {1.4,1.7,2.1} x {0.70,0.80,0.90}, 22=nominal.
-  Nulls: 94 + 17-digit serial. Full mapping in shard_manifest.csv.
+  Nulls: 94 + 17-digit serial. Controls: 95 + 17-digit index of the template
+  in the SORTED FIXED 928-window pool — stable across invocations and roster
+  subsets (G2 methods finding 3). Full mapping in shard_manifest.csv.
+
+Truth preservation (G2 methods finding 4): every shard's actually-injected
+modes (post sinc rejection, with signed factors and phases) go to
+injected_modes.csv and the rejected ones to rejected_modes.csv; the metrics
+scorer consumes injected_modes.csv, never the original mode table.
 """
 
 from __future__ import annotations
@@ -161,6 +168,13 @@ def main() -> None:
         targets = targets.head(args.limit)
     stats, frames = load_templates(args.exposures, args.catalog)
 
+    pool_index = {sid: i for i, sid in enumerate(sorted(stats["source_id"]))}
+
+    def control_id(template_id: str) -> str:
+        return "95" + str(pool_index[template_id]).zfill(17)
+
+    injected_rows: list[dict] = []
+    rejected_rows: list[dict] = []
     ladder = [
         (gi + 1, ri + 1, g, r)
         for gi, g in enumerate(BANDPASS_LADDER_G)
@@ -204,12 +218,26 @@ def main() -> None:
                         raise SystemExit(f"bad campaign id {sid}")
                     shard = synthesize(template, model, sid, gaussian, seed=int(sid[2:]))
                     write_shard(args.out_dir / f"{sid}.csv.gz", shard)
+                    for mode in model.modes:
+                        injected_rows.append({
+                            "campaign_id": sid, "period_s": mode.period_s,
+                            "frequency_per_day": mode.frequency_per_day,
+                            "amp_tess_ppt": mode.amp_tess_ppt,
+                            "tess_sinc": mode.tess_sinc,
+                            "ztf_sinc": mode.ztf_sinc,
+                            "amp_g_mag": mode.amp_g_mag,
+                            "amp_r_mag": mode.amp_r_mag,
+                            "phase_rad": mode.phase_rad,
+                        })
+                    for rejected in model.rejected:
+                        rejected_rows.append({"campaign_id": sid, **rejected})
                     manifest.append({
                         "campaign_id": sid, "arm": "A" if gaussian else "B",
                         "tic": int(target.tic), "template_source_id": template_id,
                         "template_status": stats.set_index("source_id")["blind_status"].get(template_id, ""),
                         "template_k": k, "ratio_g": g, "ratio_rg": r,
                         "match": match_label,
+                        "control_campaign_id": control_id(template_id) if not gaussian else "",
                         "n_modes_injected": len(model.modes),
                         "n_modes_rejected": len(model.rejected),
                     })
@@ -220,8 +248,8 @@ def main() -> None:
             row["template_source_id"] for row in manifest if row["arm"] == "B"
         })
         null_model = build_truth_model(0, [], [], 120.0)
-        for serial, template_id in enumerate(used):
-            sid = "95" + str(serial).zfill(17)
+        for template_id in used:
+            sid = control_id(template_id)
             shard = frames[template_id].copy()
             shard["source_id"] = sid
             write_shard(args.out_dir / f"{sid}.csv.gz", shard)
@@ -255,12 +283,28 @@ def main() -> None:
 
     frame = pd.DataFrame(manifest)
     frame.to_csv(args.out_dir / "shard_manifest.csv", index=False)
+    pd.DataFrame(injected_rows).to_csv(args.out_dir / "injected_modes.csv", index=False)
+    pd.DataFrame(rejected_rows).to_csv(args.out_dir / "rejected_modes.csv", index=False)
+    unique_rejected = {
+        (row["campaign_id"].split("0000")[0][2:12], row["period_s"])
+        for row in rejected_rows
+    }
+    import hashlib as _hashlib
+    outputs_sha = {
+        name: _hashlib.sha256((args.out_dir / name).read_bytes()).hexdigest()
+        for name in ("shard_manifest.csv", "injected_modes.csv", "rejected_modes.csv")
+    }
+    ab = frame[frame["arm"].isin(["A", "B"])]
     summary = {
         "shards": len(frame),
         "by_arm": frame["arm"].value_counts().to_dict(),
         "match_labels": frame["match"].value_counts().to_dict(),
-        "targets": int(frame.loc[frame["arm"] != "null", "tic"].nunique()),
-        "total_rejected_modes": int(frame["n_modes_rejected"].sum()),
+        "targets": int(ab["tic"].nunique()),
+        "unique_windows_arm_b": int(
+            frame.loc[frame["arm"] == "B", "template_source_id"].nunique()),
+        "total_rejected_mode_rows": int(frame["n_modes_rejected"].sum()),
+        "unique_target_modes_rejected": len(unique_rejected),
+        "outputs_sha256": outputs_sha,
     }
     (args.out_dir / "shard_summary.json").write_text(
         json.dumps(summary, indent=2) + "\n", encoding="utf-8"

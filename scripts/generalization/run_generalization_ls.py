@@ -30,18 +30,18 @@ from frozen_api import (
     physical_workers,
 )
 
-# environment keys that must match between the replay attestation and this run
-ATTESTATION_KEYS = ("python", "numpy", "scipy", "astropy", "astropy_iers_data",
-                    "pyerfa", "pandas", "machine")
-
-
 def validate_attestation(report_path: Path) -> dict:
     report = json.loads(report_path.read_text(encoding="utf-8"))
-    if not report.get("passed"):
+    if report.get("gate") != "replay_gate":
+        raise SystemExit(f"{report_path} is not a replay_gate report")
+    if report.get("passed") is not True:
         raise SystemExit(f"replay attestation {report_path} is not a PASS")
+    if not report.get("stars"):
+        raise SystemExit(f"replay attestation {report_path} has an empty roster")
     current = env_versions()
+    # the FULL environment fingerprint must match (G2 methods finding 1)
     mismatched = [
-        key for key in ATTESTATION_KEYS
+        key for key in current
         if report["env"].get(key) != current.get(key)
     ]
     if mismatched:
