@@ -474,6 +474,96 @@ def trigger_rates(per_star: pd.DataFrame, dataset: str) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
+def ppv_d3(per_star: pd.DataFrame) -> dict:
+    """Frame-specific label PPV: weighted fraction of triggered (rule-1, best
+    pass) roster members labeled dSct=1; dSct=2 excluded, reported separately.
+    Survey bootstrap: negatives resampled with replacement, positives fixed."""
+    frame = per_star[(per_star["best_status"] != "missing")
+                     & per_star["class_label"].isin(["dsct_flag0", "dsct_flag1"])]
+    triggered = frame[frame["best_status"] == "confirmed"]
+    if triggered.empty:
+        return {"note": "no triggered stars in the PPV frame"}
+    weights = triggered["weight"].to_numpy(dtype=float)
+    is_pos = (triggered["class_label"] == "dsct_flag1").to_numpy()
+    point = float((weights * is_pos).sum() / weights.sum())
+    rng = np.random.Generator(np.random.PCG64(BOOTSTRAP_SEED + 1))
+    positives = frame[frame["class_label"] == "dsct_flag1"]
+    negatives = frame[frame["class_label"] == "dsct_flag0"].reset_index(drop=True)
+    boots = []
+    for _ in range(BOOTSTRAP_B):
+        resampled = negatives.iloc[
+            rng.integers(0, len(negatives), size=len(negatives))
+        ]
+        combined = pd.concat([positives, resampled])
+        hit = combined[combined["best_status"] == "confirmed"]
+        if hit.empty:
+            continue
+        w = hit["weight"].to_numpy(dtype=float)
+        boots.append(float(
+            (w * (hit["class_label"] == "dsct_flag1").to_numpy()).sum() / w.sum()
+        ))
+    triggered_ambiguous = int(
+        (per_star[per_star["class_label"] == "dsct_flag2"]["best_status"]
+         == "confirmed").sum()
+    )
+    return {
+        "estimand": "frame_specific_label_ppv",
+        "p": point,
+        "lo": float(np.quantile(boots, 0.025)) if boots else math.nan,
+        "hi": float(np.quantile(boots, 0.975)) if boots else math.nan,
+        "n_triggered": int(len(triggered)),
+        "bootstrap_B_effective": len(boots),
+        "dsct2_triggered_reported_separately": triggered_ambiguous,
+    }
+
+
+def fp_frequency_distribution(per_star: pd.DataFrame, dataset: str) -> pd.DataFrame:
+    if dataset == "d3":
+        pool = per_star[per_star["class_label"] == "dsct_flag0"]
+    elif dataset == "d2" and "arm" in per_star:
+        pool = per_star[per_star["arm"].isin(["null", "ctrl"])]
+    else:
+        pool = per_star.iloc[0:0]
+    triggered = pool[pool["best_status"].isin(["confirmed", "candidate"])]
+    columns = ["sid", "class_label", "best_status", "best_pass",
+               "best_frequency_per_day", "baseline_days"]
+    return triggered[[c for c in columns if c in triggered.columns]]
+
+
+def sensitivity_table(per_star: pd.DataFrame, dataset: str,
+                      crossmatch_qc: pd.DataFrame | None) -> pd.DataFrame:
+    rows = []
+
+    def rate(frame: pd.DataFrame, label: str, variant: str) -> None:
+        if frame.empty:
+            return
+        success = (frame["best_status"] == "confirmed")
+        rows.append({"variant": variant, "subset": label,
+                     "n": len(frame), "k": int(success.sum()),
+                     **dict(zip(("p", "lo", "hi"), wilson(int(success.sum()), len(frame))))})
+
+    if dataset == "d2" and "arm" in per_star:
+        # common-subset rule: nominal recomputed on the SAME median-window
+        # (k=1) subset used by every non-nominal scenario
+        median_b = per_star[(per_star["arm"] == "B") & (per_star["template_k"] == 1)]
+        for (g, r), scenario in median_b.groupby(["ratio_g", "ratio_rg"]):
+            rate(scenario, "arm_b_median_window", f"ladder_g{g}_rg{r}")
+    if dataset == "d3":
+        positives = per_star[(per_star["label_positive"] == True)  # noqa: E712
+                             & (per_star["best_status"] != "missing")]
+        if "near_saturation" in positives:
+            rate(positives[positives["near_saturation"] == True], "positives", "near_saturation")  # noqa: E712
+            rate(positives[positives["near_saturation"] == False], "positives", "safe_magnitude")  # noqa: E712
+        if crossmatch_qc is not None:
+            qc = crossmatch_qc.set_index("source_id")
+            joined = positives.join(
+                qc[["nearest_separation_arcsec", "ztf_objects_in_cone"]], on="sid")
+            clean = joined[(joined["nearest_separation_arcsec"] < 1.0)
+                           & (joined["ztf_objects_in_cone"] <= 3)]
+            rate(clean, "positives", "crowding_clean")
+    return pd.DataFrame(rows)
+
+
 def sha256_file(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
@@ -487,6 +577,9 @@ def main() -> None:
                         help="d2: shard dir with shard_manifest.csv; census "
                              "computed from shards when --census-csv absent")
     parser.add_argument("--out-dir", type=Path, required=True)
+    parser.add_argument("--crossmatch-qc", type=Path, default=None,
+                        help="d3: crossmatch_qc.csv from build_panels_generic "
+                             "(enables the crowding sensitivity subset)")
     args = parser.parse_args()
 
     assert_frozen()
@@ -556,6 +649,17 @@ def main() -> None:
     if args.dataset == "d2":
         d2_cluster_bootstrap(per_star).to_csv(
             args.out_dir / "d2_cluster_completeness.csv", index=False)
+    if args.dataset == "d3":
+        (args.out_dir / "ppv.csv").write_text(
+            pd.DataFrame([ppv_d3(per_star)]).to_csv(index=False), encoding="utf-8")
+    fp_frequency_distribution(per_star, args.dataset).to_csv(
+        args.out_dir / "fp_frequency_distribution.csv", index=False)
+    qc_frame = (pd.read_csv(args.crossmatch_qc, dtype={"source_id": str})
+                if args.crossmatch_qc else None)
+    if qc_frame is not None:
+        inputs[str(args.crossmatch_qc)] = sha256_file(args.crossmatch_qc)
+    sensitivity_table(per_star, args.dataset, qc_frame).to_csv(
+        args.out_dir / "sensitivity.csv", index=False)
 
     attrition = {
         "roster": len(truth),

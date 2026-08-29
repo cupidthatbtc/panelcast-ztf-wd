@@ -27,7 +27,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from frozen_api import REPO_ROOT, assert_frozen
+from frozen_api import REPO_ROOT, assert_frozen, campaign_file_shas
 
 RAW = REPO_ROOT / "generalization/data/d2/raw"
 NOV_TICS = {261400271, 804835539, 317620456}
@@ -173,7 +173,13 @@ def main() -> None:
 
     provenance = {
         name: hashlib.sha256((RAW / name).read_bytes()).hexdigest()
-        for name in ("romero2022_src.tar.gz", "romero2025_src.tar.gz")
+        for name in (
+            "romero2022_src.tar.gz",
+            "romero2025_src.tar.gz",
+            # the CONSUMED extracted files, not just the archives
+            "romero2022_src/NewTess.tex",
+            "romero2025_src/NewTESS.tex",
+        )
     }
     src2022 = (RAW / "romero2022_src/NewTess.tex").read_text(encoding="utf-8", errors="replace")
     src2025 = (RAW / "romero2025_src/NewTESS.tex").read_text(encoding="utf-8", errors="replace")
@@ -251,6 +257,11 @@ def main() -> None:
         "stars_with_20s_cadence": int((targets["cadence_s"] == 20).sum()),
         "gmag_range": [float(targets["gmag"].min()), float(targets["gmag"].max())],
         "provenance_sha256": provenance,
+        "outputs_sha256": {
+            name: hashlib.sha256((args.out_dir / name).read_bytes()).hexdigest()
+            for name in ("d2_targets.csv", "d2_modes.csv", "d2_modes_all_solutions.csv")
+        },
+        "campaign_sha256": campaign_file_shas(),
     }
     (args.out_dir / "d2_roster_report.json").write_text(
         json.dumps(report, indent=2) + "\n", encoding="utf-8"

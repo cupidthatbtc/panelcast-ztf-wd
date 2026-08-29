@@ -40,7 +40,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from frozen_api import REPO_ROOT, assert_frozen, campaign_id_ok
+from frozen_api import REPO_ROOT, assert_frozen, campaign_file_shas, campaign_id_ok
 
 TAP_SYNC = "https://tapvizier.cds.unistra.fr/TAPVizieR/tap/sync"
 PPT_TO_MMAG = 1.0857  # dm = -2.5 log10(1 + dF/F) ~= 1.0857 (dF/F); 1 ppt -> 1.0857 mmag
@@ -214,6 +214,17 @@ def main() -> None:
         },
         "strata": roster["stratum"].value_counts().to_dict(),
         "provenance": provenance,
+        "roster_sha256": hashlib.sha256(roster_path.read_bytes()).hexdigest(),
+        "campaign_sha256": campaign_file_shas(),
+        "negative_balance_diagnostics": {
+            column: {
+                "pool_quantiles": [round(float(q), 3) for q in
+                                   negatives_pool[column].quantile([0.1, 0.5, 0.9])],
+                "sample_quantiles": [round(float(q), 3) for q in
+                                     negatives[column].quantile([0.1, 0.5, 0.9])],
+            }
+            for column in ("gmag", "Teff", "_RA", "_DE")
+        },
         "conversions": {"ppt_to_mmag": PPT_TO_MMAG, "uhz_to_per_day": UHZ_TO_PER_DAY,
                         "kepler_lc_nyquist_uhz": KEPLER_LC_NYQUIST_UHZ},
     }

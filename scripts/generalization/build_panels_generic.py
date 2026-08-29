@@ -37,6 +37,7 @@ iers.conf.auto_download = False
 
 from frozen_api import (
     BANDS,
+    campaign_file_shas,
     EXPOSURE_COLUMNS,
     MIN_EXPOSURES_PER_BAND,
     MONTHLY_COLUMNS,
@@ -178,6 +179,7 @@ def main() -> None:
         "census_threshold": 2.5,
         "env": env_versions(),
         "frozen_sha256": frozen_file_shas(),
+        "campaign_sha256": campaign_file_shas(),
     }
     (args.out_dir / "panels_manifest.json").write_text(
         json.dumps(manifest, indent=2) + "\n", encoding="utf-8"

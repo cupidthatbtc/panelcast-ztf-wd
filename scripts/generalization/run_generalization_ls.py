@@ -14,6 +14,7 @@ returned untouched, so re-running after a crash or shard split is safe.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import shutil
 import time
@@ -75,8 +76,37 @@ def preflight_workers(requested: int | None, work_root: Path) -> tuple[int, floa
     return workers, free_gb
 
 
+def shard_sha256(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def env_digest() -> str:
+    return hashlib.sha256(
+        json.dumps(env_versions(), sort_keys=True).encode()
+    ).hexdigest()
+
+
+def provenance_path(star_dir: Path, source_id: str) -> Path:
+    return star_dir / f"{source_id}.prov.json"
+
+
+def write_provenance(star_dir: Path, source_id: str, shard: Path) -> None:
+    provenance_path(star_dir, source_id).write_text(
+        json.dumps({
+            "shard_sha256": shard_sha256(shard),
+            "env_digest": env_digest(),
+            "driver": "run_generalization_ls.py",
+        }, indent=2) + "\n",
+        encoding="utf-8",
+    )
+
+
 def scan_pending(shard_dir: Path, star_dir: Path, passes: tuple[str, ...],
                  only: set[str] | None, limit: int | None) -> tuple[list[str], int]:
+    """A completed result is reused ONLY when its provenance sidecar matches
+    the current shard content and environment (G1 methods finding 8); stale
+    results are DELETED so analyze_star's internal early-return cannot
+    resurrect them."""
     source_ids = sorted(path.name.split(".csv")[0] for path in shard_dir.glob("*.csv.gz"))
     if only is not None:
         missing = only - set(source_ids)
@@ -85,16 +115,27 @@ def scan_pending(shard_dir: Path, star_dir: Path, passes: tuple[str, ...],
         source_ids = [sid for sid in source_ids if sid in only]
     if limit is not None:
         source_ids = source_ids[:limit]
+    current_env = env_digest()
     pending = []
     for source_id in source_ids:
         result_path = star_dir / f"{source_id}.json"
-        if result_path.exists():
+        prov_file = provenance_path(star_dir, source_id)
+        if result_path.exists() and prov_file.exists():
             try:
                 result = json.loads(result_path.read_text(encoding="utf-8"))
-                if result.get("complete") and set(result.get("passes", {})) >= set(passes):
+                prov = json.loads(prov_file.read_text(encoding="utf-8"))
+                if (
+                    result.get("complete")
+                    and set(result.get("passes", {})) >= set(passes)
+                    and prov.get("shard_sha256")
+                    == shard_sha256(shard_dir / f"{source_id}.csv.gz")
+                    and prov.get("env_digest") == current_env
+                ):
                     continue
             except json.JSONDecodeError:
                 pass
+        result_path.unlink(missing_ok=True)
+        prov_file.unlink(missing_ok=True)
         pending.append(source_id)
     return pending, len(source_ids)
 
@@ -198,6 +239,8 @@ def main() -> None:
             source_id = futures[future]
             try:
                 future.result()
+                write_provenance(star_dir, source_id,
+                                 args.shard_dir / f"{source_id}.csv.gz")
                 completed_now += 1
             except Exception as exc:
                 failures[source_id] = repr(exc)

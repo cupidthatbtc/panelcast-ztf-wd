@@ -61,7 +61,13 @@ from d2_truth_model import (
     NOMINAL_RG,
     build_truth_model,
 )
-from frozen_api import EXPOSURE_COLUMNS, REPO_ROOT, assert_frozen, campaign_id_ok
+from frozen_api import (
+    EXPOSURE_COLUMNS,
+    REPO_ROOT,
+    assert_frozen,
+    campaign_file_shas,
+    campaign_id_ok,
+)
 
 PUBLISHED = REPO_ROOT / "catalog-rebuild/results/2026-08-01_full"
 MATCH_TOL_MAG = 0.25
@@ -305,6 +311,7 @@ def main() -> None:
         "total_rejected_mode_rows": int(frame["n_modes_rejected"].sum()),
         "unique_target_modes_rejected": len(unique_rejected),
         "outputs_sha256": outputs_sha,
+        "campaign_sha256": campaign_file_shas(),
     }
     (args.out_dir / "shard_summary.json").write_text(
         json.dumps(summary, indent=2) + "\n", encoding="utf-8"
