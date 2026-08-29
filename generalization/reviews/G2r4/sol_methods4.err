@@ -1,0 +1,2131 @@
+Reading additional input from stdin...
+2026-08-29T01:56:42.760018Z ERROR codex_models_manager::cache: failed to load models cache: missing field `base_instructions` at line 97 column 5
+2026-08-29T01:56:44.954066Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest("http/request url is invalid: relative URL without a base")))
+OpenAI Codex v0.145.0
+--------
+workdir: /Users/jackneo/Documents/vonhippel-base9/astro-wd
+model: gpt-5.6-sol
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: xhigh
+reasoning summaries: none
+session id: 01a04b3b-c4cf-7d12-965f-4c77b05fb1b5
+--------
+user
+Round-4 FREEZE CHECK. Your round-3 verdict: generalization/reviews/G2r3/sol_methods3.md; dispositions: generalization/reviews/G2r3/RESPONSE.md. Verify your 4 minimal blockers against CURRENT scripts/generalization/panel_golden_gate.py, replay_gate.py, run_generalization_ls.py, build_d2_shards.py. Check: NaN fail-closed + vacuous-pass guards + bound report in the panel gate; 928-star attestation requirement; stale-shard guards; campaign-drift snapshots. One line per item RESOLVED/UNRESOLVED + evidence. Verdict: freezable? Only execution-blocking residuals.
+2026-08-29T01:56:45.411371Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when AuthRequired(AuthRequiredError { www_authenticate_header: "Bearer realm=\"OAuth\", resource_metadata=\"https://circleback.ai/.well-known/oauth-protected-resource/api/mcp\", scope=\"user\"" })
+2026-08-29T01:56:46.889370Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest("http/request url is invalid: relative URL without a base")))
+2026-08-29T01:56:48.288580Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest("http/request url is invalid: relative URL without a base")))
+warning: Exceeded skills context budget of 2%. All skill descriptions were removed and 33 additional skills were not included in the model-visible skills list.
+2026-08-29T01:57:18.945990Z ERROR codex_api::endpoint::responses_websocket: failed to connect to websocket: HTTP error: 426 Upgrade Required, url: ws://127.0.0.1:17841/v1/responses
+codex
+I’ll re-audit the round-3 blockers against the current review records and all four scripts, then report only residuals that would block execution/freeze. I’m using the engineering code-review skill to keep the evidence threshold consistent.
+exec
+/bin/zsh -lc "sed -n '1,240p' /Users/jackneo/.codex/plugins/cache/claude-cowork/engineering/1.2.0/skills/code-review/SKILL.md" in /Users/jackneo/Documents/vonhippel-base9/astro-wd
+ succeeded in 2640ms:
+---
+name: code-review
+description: Review code changes for security, performance, and correctness. Trigger with a PR URL or diff, "review this before I merge", "is this code safe?", or when checking a change for N+1 queries, injection risks, missing edge cases, or error handling gaps.
+argument-hint: "<PR URL, diff, or file path>"
+---
+
+# /code-review
+
+> If you see unfamiliar placeholders or need to check which tools are connected, see [CONNECTORS.md](../../CONNECTORS.md).
+
+Review code changes with a structured lens on security, performance, correctness, and maintainability.
+
+## Usage
+
+```
+/code-review <PR URL or file path>
+```
+
+Review the provided code changes: @$1
+
+If no specific file or URL is provided, ask what to review.
+
+## How It Works
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                      CODE REVIEW                                   │
+├─────────────────────────────────────────────────────────────────┤
+│  STANDALONE (always works)                                       │
+│  ✓ Paste a diff, PR URL, or point to files                      │
+│  ✓ Security audit (OWASP top 10, injection, auth)               │
+│  ✓ Performance review (N+1, memory leaks, complexity)           │
+│  ✓ Correctness (edge cases, error handling, race conditions)    │
+│  ✓ Style (naming, structure, readability)                        │
+│  ✓ Actionable suggestions with code examples                    │
+├─────────────────────────────────────────────────────────────────┤
+│  SUPERCHARGED (when you connect your tools)                      │
+│  + Source control: Pull PR diff automatically                    │
+│  + Project tracker: Link findings to tickets                     │
+│  + Knowledge base: Check against team coding standards           │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+## Review Dimensions
+
+### Security
+- SQL injection, XSS, CSRF
+- Authentication and authorization flaws
+- Secrets or credentials in code
+- Insecure deserialization
+- Path traversal
+- SSRF
+
+### Performance
+- N+1 queries
+- Unnecessary memory allocations
+- Algorithmic complexity (O(n²) in hot paths)
+- Missing database indexes
+- Unbounded queries or loops
+- Resource leaks
+
+### Correctness
+- Edge cases (empty input, null, overflow)
+- Race conditions and concurrency issues
+- Error handling and propagation
+- Off-by-one errors
+- Type safety
+
+### Maintainability
+- Naming clarity
+- Single responsibility
+- Duplication
+- Test coverage
+- Documentation for non-obvious logic
+
+## Output
+
+```markdown
+## Code Review: [PR title or file]
+
+### Summary
+[1-2 sentence overview of the changes and overall quality]
+
+### Critical Issues
+| # | File | Line | Issue | Severity |
+|---|------|------|-------|----------|
+| 1 | [file] | [line] | [description] | 🔴 Critical |
+
+### Suggestions
+| # | File | Line | Suggestion | Category |
+|---|------|------|------------|----------|
+| 1 | [file] | [line] | [description] | Performance |
+
+### What Looks Good
+- [Positive observations]
+
+### Verdict
+[Approve / Request Changes / Needs Discussion]
+```
+
+## If Connectors Available
+
+If **~~source control** is connected:
+- Pull the PR diff automatically from the URL
+- Check CI status and test results
+
+If **~~project tracker** is connected:
+- Link findings to related tickets
+- Verify the PR addresses the stated requirements
+
+If **~~knowledge base** is connected:
+- Check changes against team coding standards and style guides
+
+## Tips
+
+1. **Provide context** — "This is a hot path" or "This handles PII" helps me focus.
+2. **Specify concerns** — "Focus on security" narrows the review.
+3. **Include tests** — I'll check test coverage and quality too.
+
+exec
+/bin/zsh -lc 'wc -l generalization/reviews/G2r3/sol_methods3.md generalization/reviews/G2r3/RESPONSE.md scripts/generalization/panel_golden_gate.py scripts/generalization/replay_gate.py scripts/generalization/run_generalization_ls.py scripts/generalization/build_d2_shards.py && nl -ba generalization/reviews/G2r3/sol_methods3.md && nl -ba generalization/reviews/G2r3/RESPONSE.md' in /Users/jackneo/Documents/vonhippel-base9/astro-wd
+ exited 1 in 0ms:
+wc: generalization/reviews/G2r3/RESPONSE.md: open: No such file or directory
+      40 generalization/reviews/G2r3/sol_methods3.md
+     180 scripts/generalization/panel_golden_gate.py
+     239 scripts/generalization/replay_gate.py
+     304 scripts/generalization/run_generalization_ls.py
+     352 scripts/generalization/build_d2_shards.py
+    1115 total
+
+codex
+The current tree does not contain `generalization/reviews/G2r3/RESPONSE.md` at that exact path. I’m locating the disposition record before judging implementation, since that missing file could be a path mismatch rather than a freeze blocker.
+exec
+/bin/zsh -lc "rg --files generalization/reviews | rg '("'^|/)(RESPONSE|response)'"\\.md"'$|G2r3'"' | sort" in /Users/jackneo/Documents/vonhippel-base9/astro-wd
+ succeeded in 5633ms:
+generalization/reviews/G1/RESPONSE.md
+generalization/reviews/G2/RESPONSE.md
+generalization/reviews/G2r3/sol_methods3.err
+generalization/reviews/G2r3/sol_methods3.md
+generalization/reviews/G2r3/sol_referee3.err
+generalization/reviews/G2r3/sol_referee3.md
+generalization/reviews/G2r3/sol_stats3.err
+generalization/reviews/G2r3/sol_stats3.md
+
+exec
+/bin/zsh -lc 'nl -ba generalization/reviews/G2r3/sol_methods3.md; nl -ba generalization/reviews/G2/RESPONSE.md; git status --short -- generalization/reviews/G2r3 generalization/reviews/G2/RESPONSE.md scripts/generalization/panel_golden_gate.py scripts/generalization/replay_gate.py scripts/generalization/run_generalization_ls.py scripts/generalization/build_d2_shards.py' in /Users/jackneo/Documents/vonhippel-base9/astro-wd
+ succeeded in 0ms:
+     1	## Verdict: not freezable
+     2	
+     3	Four findings are resolved; three remain partial. No finding is wholly unaddressed, but the remaining attestation and fail-closed gaps are freeze blockers.
+     4	
+     5	| # | Status | Current-code evidence |
+     6	|---|---|---|
+     7	| 1 | **PARTIAL** | The runner now requires the correct gate, literal `passed is True`, a nonempty roster, the full current environment fingerprint, and frozen SHAs: [run_generalization_ls.py:34](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/run_generalization_ls.py:34), [run_generalization_ls.py:42](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/run_generalization_ls.py:42), [run_generalization_ls.py:54](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/run_generalization_ls.py:54). It still accepts any nonempty roster. Replay permits arbitrary `--count` or `--stars` at [replay_gate.py:159](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/replay_gate.py:159), while the pass predicate checks only no mismatches plus one strict-v2 result at [replay_gate.py:214](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/replay_gate.py:214). No 928-count, uniqueness, or roster digest is enforced. |
+     8	| 2 | **PARTIAL** | Final campaign SHAs are now present in the D2 summary, D3 report, runner, panels, and metrics—for example [build_d2_shards.py:314](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/build_d2_shards.py:314), [build_d3_roster.py:218](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/build_d3_roster.py:218), and [metrics_generalization.py:680](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/metrics_generalization.py:680). Replay still omits campaign SHAs from its report at [replay_gate.py:216](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/replay_gate.py:216), and the panel gate records only environment at [panel_golden_gate.py:150](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/panel_golden_gate.py:150). No stage takes initial and final snapshots or fails if campaign code changes mid-stage. |
+     9	| 3 | **PARTIAL** | Control IDs now use the sorted fixed template pool at [build_d2_shards.py:177](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/build_d2_shards.py:177), and every arm-B row carries `control_campaign_id` at [build_d2_shards.py:246](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/build_d2_shards.py:246). Result reuse is additionally bound to shard and environment hashes at [run_generalization_ls.py:104](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/run_generalization_ls.py:104). However, the builder reuses an existing directory without rejecting extras at [build_d2_shards.py:170](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/build_d2_shards.py:170), and the runner executes every `*.csv.gz`, rather than the manifest’s exact set, at [run_generalization_ls.py:110](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/run_generalization_ls.py:110). |
+    10	| 4 | **RESOLVED** | Actual retained modes and rejected modes are captured per campaign at [build_d2_shards.py:227](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/build_d2_shards.py:227) and written at [build_d2_shards.py:292](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/build_d2_shards.py:292). Metrics reads `injected_modes.csv` exclusively at [metrics_generalization.py:240](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/metrics_generalization.py:240). Unique target-mode rejection accounting is separate at [build_d2_shards.py:294](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/build_d2_shards.py:294). |
+    11	| 5 | **RESOLVED** | D2 provenance hashes both archives and the consumed extracted TeX files at [build_d2_roster.py:174](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/build_d2_roster.py:174), and hashes all generated roster/mode outputs at [build_d2_roster.py:260](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/build_d2_roster.py:260). D3 similarly hashes consumed cached responses and its roster output at [build_d3_roster.py:83](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/build_d3_roster.py:83) and [build_d3_roster.py:217](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/build_d3_roster.py:217). |
+    12	| 6 | **RESOLVED** | Target accounting is calculated only from arms A/B at [build_d2_shards.py:303](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/build_d2_shards.py:303), excluding controls and nulls before `nunique()` at [build_d2_shards.py:308](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/build_d2_shards.py:308). |
+    13	| 7 | **RESOLVED** | Replay documentation now qualifies the schema change as sparse-input branches while limiting unchanged numerical-path language to candidate-producing stars at [replay_gate.py:12](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/replay_gate.py:12). D3 explicitly calls the negative result a trigger rate, never FPR, at [build_d3_roster.py:23](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/build_d3_roster.py:23). The plan now specifies all 928 windows and deterministic cycling at [GENERALIZATION_PLAN.md:164](/Users/jackneo/Documents/vonhippel-base9/astro-wd/generalization/GENERALIZATION_PLAN.md:164). |
+    14	
+    15	## Panel golden gate
+    16	
+    17	The central comparison policy is reasonable for finite data:
+    18	
+    19	- The frozen reconstruction sequence matches the production builder at [panel_golden_gate.py:58](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/panel_golden_gate.py:58).
+    20	- Exact canonical-CSV equality for non-BJD science columns is appropriate at [panel_golden_gate.py:71](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/panel_golden_gate.py:71).
+    21	- A one-ULP BJD tolerance and one-ULP carried-metadata tolerance are scientifically negligible and consistent with the documented reserialization issue.
+    22	
+    23	The implementation is not yet fail-closed:
+    24	
+    25	1. **NaNs pass as `identical_1ulp`.** The ULP expressions at [panel_golden_gate.py:81](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/panel_golden_gate.py:81) and [panel_golden_gate.py:95](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/panel_golden_gate.py:95) produce NaN; comparisons such as `NaN > 1` are false. A focused check confirmed that replacing either BJD or RA with NaN was accepted. Require matching finite masks and finite values before ULP comparison.
+    26	
+    27	2. **Vacuous pass is possible.** `--count` is not validated at [panel_golden_gate.py:123](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/panel_golden_gate.py:123), and `all([])` passes at [panel_golden_gate.py:147](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/panel_golden_gate.py:147). Require `count >= 1`, nonempty records, unique IDs, and the expected sample count/digest.
+    28	
+    29	3. **It is not operationally a gate.** Its report lacks frozen, campaign, roster, exposure, and raw-cache hashes, and neither the panel builder nor runner requires a matching panel attestation. The existing five-star PASS therefore remains an unbound smoke test.
+    30	
+    31	Minor documentation cleanup: [metrics_generalization.py:11](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/metrics_generalization.py:11) still says D2 truth uses `d2_modes.csv`, contradicting its corrected implementation.
+    32	
+    33	## Minimal remaining blockers
+    34	
+    35	- Bind production replay acceptance to exactly 928 unique expected stars or a frozen roster digest.
+    36	- Make panel comparison fail on nonfinite or empty inputs, bind its report to inputs/code/environment, and require that report before campaign panel generation.
+    37	- Reject shard files outside `shard_manifest.csv`, or make the runner consume exactly the manifest set.
+    38	- Add initial/final campaign-code snapshots with a drift failure, including replay and panel reports.
+    39	
+    40	Validation: all 18 existing test functions passed when invoked directly in the read-only environment; all six target scripts parsed successfully. The existing tests do not cover replay scope, stale shard sets, or panel comparison failure modes.
+     1	# G2 disposition — sol ×5 round 2, 2026-08-28
+     2	
+     3	Verdicts received: referee2 NOT FREEZABLE (8 resolved / 12 partial + 8 new),
+     4	stats2 NOT FREEZABLE (5 blockers + 3 major), methods2 NOT FREEZABLE
+     5	(1 blocker + 5 major/minor), abstract CONDITIONAL GO (18 contradictions +
+     6	defects table + claims inventory + skeleton), astro re-running (first
+     7	attempt died on a 300k-token compaction failure).
+     8	
+     9	All same-day fixes below are in METRICS_SPEC v3 and the revised plan;
+    10	code fixes are committed. Round-3 re-review targets the three
+    11	not-freezable lenses.
+    12	
+    13	## Same-day FIXED (doc)
+    14	
+    15	- 928-vs-510 null/arm contradictions removed; nulls = deterministic cycling
+    16	  of the sorted 928 pool, seed = serial; "templates ARE the not-detected
+    17	  set" deleted (referee2 1/7, abstract 7/8).
+    18	- Risk-register "FPR upper bound" and "band" wording corrected
+    19	  (referee2 9, abstract 9/10/18).
+    20	- Nyquist-vs-integration-null physics text corrected; cadence precedence
+    21	  algorithmic (referee2 4, abstract defects).
+    22	- Per-mode independent phases stated; amplitude-stationarity sensitivity
+    23	  axis added (×{0.7, 1.3}, median window, +206 runs) (referee2 5).
+    24	- Bandpass nominal re-attributed: blackbody gives (1.43, 0.80) ≈ low rung;
+    25	  1.7 is the adopted grid midpoint (referee2 25, abstract).
+    26	- Template matching fully algorithmic in the plan text — matches the
+    27	  implemented code exactly (referee2 24).
+    28	- Ladder median-window conditioning stated; run totals recomputed
+    29	  (≤ 2,957 core ≈ 1.5 d; stretches listed separately) (referee2 26,
+    30	  abstract 14/17).
+    31	- Self-windows demoted to a separate diagnostic arm (abstract 13).
+    32	- Near-saturation boundary closed (g ≤ 14 flagged) (abstract).
+    33	- Exact sampling fractions (2314/7292, 7292/2314) binding (abstract 3).
+    34	- Crossmatch mapping + adjudication file committed as DATA before any
+    35	  campaign L-S run (referee2 2).
+    36	- Deadline weekday, replay/panel gate status, numpy verdict updated.
+    37	
+    38	## Same-day FIXED (spec v3)
+    39	
+    40	- Estimand formulas explicit; `best_candidate_matches_dominant` /
+    41	  `_any_mode` naming; D3 primary = dominant mode (stats2 1, abstract).
+    42	- S_p defined for D3 and D2; missing light curves count as non-detections
+    43	  in eligible-roster estimands; dual denominators named scopes
+    44	  (stats2 2).
+    45	- Taxonomy: evaluate all (mode, relation) hits, ambiguous iff >1 relation
+    46	  class, multiple directs stay direct, f_sid frozen (referee2 22, stats2 3).
+    47	- D2 cluster bootstrap fully specified: resample 103 TICs, carry all
+    48	  replicates + paired outcomes jointly, common random numbers across
+    49	  scenarios, conditional-on-frozen-windows statement, unique-window
+    50	  reporting, degenerate-cell CP fallback, pooled McNemar prohibited
+    51	  (stats2 4, referee2 8/23).
+    52	- Primary family as 5 complete tuples; FPR_Gaussian acceptance is the sole
+    53	  confirmatory decision (stats2 5).
+    54	- PPV: frame defined (dSct=2 excluded), survey bootstrap (negatives
+    55	  resampled, positives fixed), ppv.csv output (referee2 17/27, stats2 6,
+    56	  abstract 4).
+    57	- Gaussian-null: exact one-sided Clopper-Pearson at observed x; window
+    58	  allocation frozen (stats2 7, referee2 28).
+    59	- Surfaces: star-level coordinates frozen (dominant/largest retained mode),
+    60	  half-open bins + underflow/overflow, D3 top bin [50, inf), exposure
+    61	  edges, no smoothing (referee2 21, stats2 8, abstract).
+    62	- Attrition dimensions extended (join status, period, Teff, crowding,
+    63	  amp_unknown) (referee2 14).
+    64	- Common-subset sensitivity rule (referee2 26).
+    65	- D1 denominators + 928-catalog non-denominator statement (abstract 2).
+    66	
+    67	## Same-day FIXED (code)
+    68	
+    69	- Stable control ids over the sorted 928 pool + control_campaign_id in
+    70	  arm-B manifest rows (methods2 3).
+    71	- injected_modes.csv / rejected_modes.csv per shard; metrics truth reads
+    72	  ONLY injected modes; unique-target-mode rejection counting; targets
+    73	  count excludes controls (methods2 4/6).
+    74	- Attestation: full env fingerprint, gate identity, nonempty roster
+    75	  (methods2 1).
+    76	- Metrics: per-dataset primary match column; missing JSONs scored as
+    77	  non-detections in the eligible scope; usable scope added (stats2
+    78	  conformance note).
+    79	- Docstring contradictions in replay_gate / build_d3_roster (methods2 7).
+    80	
+    81	## ADOPTED-W2 (unchanged from G1 response where noted)
+    82	
+    83	- campaign_file_shas in every stage artifact incl. builders' reports
+    84	  (methods2 2).
+    85	- Hash extracted .tex + generated roster outputs (methods2 5).
+    86	- Full-928 replay baseline (running); result-sidecar provenance.
+    87	- MNAR sensitivity bounds for the Mo join remain a stated limitation
+    88	  (referee2 11 — uniform re-extraction remains DECLINED, out of frozen
+    89	  scope).
+    90	- Negative-sample balance diagnostics table (referee2 15).
+    91	
+    92	## DECLINED (with reason)
+    93	
+    94	- Crossed target/window bootstrap (stats2 4 alt): inference declared
+    95	  conditional on frozen windows instead; window-reuse table reported.
+    96	- Holm/joint simultaneous inference over the descriptive family (stats2 5
+    97	  alt): a single confirmatory decision is designated instead; everything
+    98	  else labeled descriptive.
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-bQM0m3s8' (errno=Operation not permitted)
+git: warning: confstr() failed with code 5: couldn't get path of DARWIN_USER_TEMP_DIR; using /tmp instead
+git: error: couldn't create cache file '/tmp/xcrun_db-6kM6N0Tx' (errno=Operation not permitted)
+
+exec
+/bin/zsh -lc "rg -n \"nan|isfinite|finite|all\\(|count|928|unique|digest|attest|panel|campaign|snapshot|drift|manifest|glob|csv\\.gz|shard|sha|initial|final|bound|ULP|ulp|passed|records|stars\" scripts/generalization/panel_golden_gate.py scripts/generalization/replay_gate.py scripts/generalization/run_generalization_ls.py scripts/generalization/build_d2_shards.py" in /Users/jackneo/Documents/vonhippel-base9/astro-wd
+ succeeded in 0ms:
+scripts/generalization/build_d2_shards.py:2:"""Synthesize D2 exposure shards: DAV truth signals in real ZTF windows.
+scripts/generalization/build_d2_shards.py:4:Template pool: ALL 928 stars of the published 2026-08-01 catalog — NOT the
+scripts/generalization/build_d2_shards.py:7:handled by frequency-matched scoring plus paired controls. Every shard
+scripts/generalization/build_d2_shards.py:13:  ctrl (95…)   paired uninjected copy of every unique arm-B template window —
+scripts/generalization/build_d2_shards.py:20:  nulls (94…)  arm-A construction with amplitude_scale = 0 — 1,000 shards
+scripts/generalization/build_d2_shards.py:21:               cycling the 928 windows with distinct noise seeds (windows
+scripts/generalization/build_d2_shards.py:26:0.5, then nearest-K, when the pool is thin — flagged in the manifest);
+scripts/generalization/build_d2_shards.py:29:pre-registered dominant penalty (plan risk 3).
+scripts/generalization/build_d2_shards.py:40:  in the SORTED FIXED 928-window pool — stable across invocations and roster
+scripts/generalization/build_d2_shards.py:41:  subsets (G2 methods finding 3). Full mapping in shard_manifest.csv.
+scripts/generalization/build_d2_shards.py:43:Truth preservation (G2 methods finding 4): every shard's actually-injected
+scripts/generalization/build_d2_shards.py:70:    campaign_file_shas,
+scripts/generalization/build_d2_shards.py:71:    campaign_id_ok,
+scripts/generalization/build_d2_shards.py:82:    if len(catalog) != 928:
+scripts/generalization/build_d2_shards.py:83:        raise SystemExit(f"published catalog has {len(catalog)} rows, expected 928")
+scripts/generalization/build_d2_shards.py:127:def campaign_id(arm_prefix: str, tic: int, k: int, g_idx: int, r_idx: int,
+scripts/generalization/build_d2_shards.py:133:def write_shard(path: Path, frame: pd.DataFrame) -> None:
+scripts/generalization/build_d2_shards.py:167:                        default=REPO_ROOT / "generalization/data/d2/shards")
+scripts/generalization/build_d2_shards.py:168:    parser.add_argument("--exposures", type=Path, default=PUBLISHED / "data/exposures.csv.gz")
+scripts/generalization/build_d2_shards.py:174:                        help="permit writing into a non-empty shard directory")
+scripts/generalization/build_d2_shards.py:180:    existing = list(args.out_dir.glob("*.csv.gz"))
+scripts/generalization/build_d2_shards.py:183:            f"{args.out_dir} already holds {len(existing)} shards; pass "
+scripts/generalization/build_d2_shards.py:184:            f"--resume to add to it, or use a fresh directory (stale-shard guard)"
+scripts/generalization/build_d2_shards.py:207:    manifest: list[dict] = []
+scripts/generalization/build_d2_shards.py:249:                    sid = campaign_id(prefix, int(target.tic), k, gi, ri,
+scripts/generalization/build_d2_shards.py:251:                    if not campaign_id_ok(sid):
+scripts/generalization/build_d2_shards.py:252:                        raise SystemExit(f"bad campaign id {sid}")
+scripts/generalization/build_d2_shards.py:253:                    shard = synthesize(template, model, sid, gaussian, seed=int(sid[2:]))
+scripts/generalization/build_d2_shards.py:254:                    write_shard(args.out_dir / f"{sid}.csv.gz", shard)
+scripts/generalization/build_d2_shards.py:257:                            "campaign_id": sid, "period_s": mode.period_s,
+scripts/generalization/build_d2_shards.py:267:                        rejected_rows.append({"campaign_id": sid, **rejected})
+scripts/generalization/build_d2_shards.py:268:                    manifest.append({
+scripts/generalization/build_d2_shards.py:269:                        "campaign_id": sid, "arm": "A" if gaussian else "B",
+scripts/generalization/build_d2_shards.py:275:                        "control_campaign_id": control_id(template_id) if not gaussian else "",
+scripts/generalization/build_d2_shards.py:279:        print(f"[d2-shards] TIC {target.tic}: {len(manifest)} shards so far", flush=True)
+scripts/generalization/build_d2_shards.py:283:            row["template_source_id"] for row in manifest if row["arm"] == "B"
+scripts/generalization/build_d2_shards.py:288:            shard = frames[template_id].copy()
+scripts/generalization/build_d2_shards.py:289:            shard["source_id"] = sid
+scripts/generalization/build_d2_shards.py:290:            write_shard(args.out_dir / f"{sid}.csv.gz", shard)
+scripts/generalization/build_d2_shards.py:291:            manifest.append({
+scripts/generalization/build_d2_shards.py:292:                "campaign_id": sid, "arm": "ctrl", "tic": 0,
+scripts/generalization/build_d2_shards.py:298:        print(f"[d2-shards] {len(used)} paired controls", flush=True)
+scripts/generalization/build_d2_shards.py:306:            shard = synthesize(frames[template_id], null_model, sid, True, seed=serial)
+scripts/generalization/build_d2_shards.py:307:            write_shard(args.out_dir / f"{sid}.csv.gz", shard)
+scripts/generalization/build_d2_shards.py:308:            manifest.append({
+scripts/generalization/build_d2_shards.py:309:                "campaign_id": sid, "arm": "null", "tic": 0,
+scripts/generalization/build_d2_shards.py:317:                print(f"[d2-shards] nulls {serial + 1}/{N_NULLS}", flush=True)
+scripts/generalization/build_d2_shards.py:319:    frame = pd.DataFrame(manifest)
+scripts/generalization/build_d2_shards.py:320:    frame.to_csv(args.out_dir / "shard_manifest.csv", index=False)
+scripts/generalization/build_d2_shards.py:323:    unique_rejected = {
+scripts/generalization/build_d2_shards.py:324:        (row["campaign_id"].split("0000")[0][2:12], row["period_s"])
+scripts/generalization/build_d2_shards.py:328:    outputs_sha = {
+scripts/generalization/build_d2_shards.py:329:        name: _hashlib.sha256((args.out_dir / name).read_bytes()).hexdigest()
+scripts/generalization/build_d2_shards.py:330:        for name in ("shard_manifest.csv", "injected_modes.csv", "rejected_modes.csv")
+scripts/generalization/build_d2_shards.py:334:        "shards": len(frame),
+scripts/generalization/build_d2_shards.py:335:        "by_arm": frame["arm"].value_counts().to_dict(),
+scripts/generalization/build_d2_shards.py:336:        "match_labels": frame["match"].value_counts().to_dict(),
+scripts/generalization/build_d2_shards.py:337:        "targets": int(ab["tic"].nunique()),
+scripts/generalization/build_d2_shards.py:338:        "unique_windows_arm_b": int(
+scripts/generalization/build_d2_shards.py:339:            frame.loc[frame["arm"] == "B", "template_source_id"].nunique()),
+scripts/generalization/build_d2_shards.py:341:        "unique_target_modes_rejected": len(unique_rejected),
+scripts/generalization/build_d2_shards.py:342:        "outputs_sha256": outputs_sha,
+scripts/generalization/build_d2_shards.py:343:        "campaign_sha256": campaign_file_shas(),
+scripts/generalization/build_d2_shards.py:345:    (args.out_dir / "shard_summary.json").write_text(
+scripts/generalization/panel_golden_gate.py:3:published exposure panel on THIS machine and environment.
+scripts/generalization/panel_golden_gate.py:6:drift in the panel stage (astropy Time/light_travel_time, IERS tables, ERFA
+scripts/generalization/panel_golden_gate.py:8:exposure rows for sampled stars from the PUBLISHED raw IRSA cache using the
+scripts/generalization/panel_golden_gate.py:9:frozen functions exactly as build_catalog_panels.main() does (IERS
+scripts/generalization/panel_golden_gate.py:11:table) and compares against the published exposures.csv.gz:
+scripts/generalization/panel_golden_gate.py:14:  magerr) must be BYTE-identical; bjd_tdb is compared at <= 1 ulp (~40 us):
+scripts/generalization/panel_golden_gate.py:15:  the barycentric chain sits at double rounding boundaries, so any ns-level
+scripts/generalization/panel_golden_gate.py:17:  the production machine itself (2026-08-28). 1 ulp is 7e-7 cycles at the
+scripts/generalization/panel_golden_gate.py:18:  shortest searched period; the campaign pins IERS via astropy-iers-data
+scripts/generalization/panel_golden_gate.py:19:  with auto_download disabled and records the max ulp deviation. Carried
+scripts/generalization/panel_golden_gate.py:20:  metadata (oid, ra, dec, chi) is compared at <= 1 ulp, because the archived
+scripts/generalization/panel_golden_gate.py:23:  one ulp. chi additionally must not sit within 1e-9 of the QC boundary 4.0.
+scripts/generalization/panel_golden_gate.py:45:    campaign_file_shas,
+scripts/generalization/panel_golden_gate.py:48:    frozen_file_shas,
+scripts/generalization/panel_golden_gate.py:72:        return {"verdict": "MISMATCH", "reason": f"row count {len(rebuilt)} != {len(reference)}"}
+scripts/generalization/panel_golden_gate.py:83:    if not (np.isfinite(bjd_a).all() and np.isfinite(bjd_b).all()):
+scripts/generalization/panel_golden_gate.py:84:        return {"verdict": "MISMATCH", "reason": "nonfinite bjd_tdb"}
+scripts/generalization/panel_golden_gate.py:85:    bjd_ulp = np.abs(bjd_a - bjd_b) / np.spacing(np.abs(bjd_b))
+scripts/generalization/panel_golden_gate.py:86:    if (bjd_ulp > 1.0).any():
+scripts/generalization/panel_golden_gate.py:87:        worst = int(np.argmax(bjd_ulp))
+scripts/generalization/panel_golden_gate.py:88:        return {"verdict": "MISMATCH", "reason": "bjd_tdb beyond 1 ulp",
+scripts/generalization/panel_golden_gate.py:89:                "row": worst, "max_ulp": float(bjd_ulp.max())}
+scripts/generalization/panel_golden_gate.py:90:    if not (rebuilt["oid"].astype(str) == reference["oid"].astype(str)).all():
+scripts/generalization/panel_golden_gate.py:94:        return {"verdict": "MISMATCH", "reason": "chi within 1e-9 of QC boundary 4.0"}
+scripts/generalization/panel_golden_gate.py:98:        if not (np.isfinite(a).all() and np.isfinite(b).all()):
+scripts/generalization/panel_golden_gate.py:99:            return {"verdict": "MISMATCH", "reason": f"nonfinite {col}"}
+scripts/generalization/panel_golden_gate.py:100:        ulp = np.spacing(np.abs(b))
+scripts/generalization/panel_golden_gate.py:101:        if (np.abs(a - b) > ulp).any():
+scripts/generalization/panel_golden_gate.py:102:            worst = int(np.argmax(np.abs(a - b) / np.maximum(ulp, 1e-300)))
+scripts/generalization/panel_golden_gate.py:103:            return {"verdict": "MISMATCH", "reason": f"{col} beyond 1 ulp",
+scripts/generalization/panel_golden_gate.py:105:    all_exact = (bjd_ulp == 0.0).all() and all(
+scripts/generalization/panel_golden_gate.py:106:        (rebuilt[c].to_numpy(dtype=float) == reference[c].to_numpy(dtype=float)).all()
+scripts/generalization/panel_golden_gate.py:109:    return {"verdict": "identical" if all_exact else "identical_1ulp",
+scripts/generalization/panel_golden_gate.py:110:            "bjd_max_ulp": float(bjd_ulp.max()),
+scripts/generalization/panel_golden_gate.py:111:            "bjd_rows_off_by_1ulp": int((bjd_ulp > 0).sum())}
+scripts/generalization/panel_golden_gate.py:116:    parser.add_argument("--count", type=int, default=5,
+scripts/generalization/panel_golden_gate.py:117:                        help="stars to replay (>= 1 enforced)")
+scripts/generalization/panel_golden_gate.py:119:                        default=REPO_ROOT / "outputs/generalization/panel_golden_report.json")
+scripts/generalization/panel_golden_gate.py:121:    if args.count < 1:
+scripts/generalization/panel_golden_gate.py:122:        raise SystemExit("--count must be >= 1 (a vacuous gate cannot pass)")
+scripts/generalization/panel_golden_gate.py:129:    published = pd.read_csv(PUBLISHED / "data/exposures.csv.gz",
+scripts/generalization/panel_golden_gate.py:131:    star_ids = sorted(published["source_id"].unique())
+scripts/generalization/panel_golden_gate.py:132:    stride = max(1, len(star_ids) // args.count)
+scripts/generalization/panel_golden_gate.py:133:    sample = star_ids[::stride][: args.count]
+scripts/generalization/panel_golden_gate.py:135:    records = []
+scripts/generalization/panel_golden_gate.py:140:                records.append({"source_id": source_id, "verdict": "MISSING_CACHE"})
+scripts/generalization/panel_golden_gate.py:153:            records.append(record)
+scripts/generalization/panel_golden_gate.py:154:            print(f"[panel-golden] {source_id}: {record['verdict']}", flush=True)
+scripts/generalization/panel_golden_gate.py:156:    ids = [r["source_id"] for r in records]
+scripts/generalization/panel_golden_gate.py:157:    if not records or len(set(ids)) != len(ids):
+scripts/generalization/panel_golden_gate.py:159:    passed = all(
+scripts/generalization/panel_golden_gate.py:160:        r["verdict"] in ("identical", "identical_1ulp") for r in records
+scripts/generalization/panel_golden_gate.py:161:    ) and len(records) >= args.count
+scripts/generalization/panel_golden_gate.py:163:    report = {"gate": "panel_golden_gate", "passed": passed, "stars": records,
+scripts/generalization/panel_golden_gate.py:165:              "frozen_sha256": frozen_file_shas(),
+scripts/generalization/panel_golden_gate.py:166:              "campaign_sha256": campaign_file_shas(),
+scripts/generalization/panel_golden_gate.py:168:                  "exposures_sha256": hashlib.sha256(
+scripts/generalization/panel_golden_gate.py:169:                      (PUBLISHED / "data/exposures.csv.gz").read_bytes()).hexdigest(),
+scripts/generalization/panel_golden_gate.py:170:                  "raw_cache_sha256": hashlib.sha256(
+scripts/generalization/panel_golden_gate.py:171:                      (PUBLISHED / "data/irsa_raw_cache.tar.gz").read_bytes()).hexdigest(),
+scripts/generalization/panel_golden_gate.py:175:    print(f"[panel-golden] {'PASS' if passed else 'FAIL'} -> {args.out}")
+scripts/generalization/panel_golden_gate.py:176:    raise SystemExit(0 if passed else 1)
+scripts/generalization/replay_gate.py:5:campaign driver will) on a deterministic sample of published stars and compares
+scripts/generalization/replay_gate.py:13:                             the run that produced 921/928 published files
+scripts/generalization/replay_gate.py:28:reproduction of the final script's output). Campaign L-S runs are valid only on
+scripts/generalization/replay_gate.py:29:machine+env combinations where this gate has passed.
+scripts/generalization/replay_gate.py:44:    campaign_file_shas,
+scripts/generalization/replay_gate.py:51:    REPO_ROOT / "catalog-rebuild/results/2026-08-01_full/lomb-scargle/stars"
+scripts/generalization/replay_gate.py:104:def select_stars(published_dir: Path, shard_dir: Path, count: int) -> list[str]:
+scripts/generalization/replay_gate.py:106:        path.name.split(".csv")[0] for path in shard_dir.glob("*.csv.gz")
+scripts/generalization/replay_gate.py:108:    stars = sorted(
+scripts/generalization/replay_gate.py:110:        for path in published_dir.glob("*.json")
+scripts/generalization/replay_gate.py:113:    if not stars:
+scripts/generalization/replay_gate.py:114:        raise SystemExit(f"no published stars have shards in {shard_dir}")
+scripts/generalization/replay_gate.py:115:    v2 = [star for star in stars if published_schema_version(published_dir / f"{star}.json") == 2]
+scripts/generalization/replay_gate.py:116:    v1 = [star for star in stars if star not in set(v2)]
+scripts/generalization/replay_gate.py:117:    selected = list(v2)[:count]
+scripts/generalization/replay_gate.py:118:    remaining = count - len(selected)
+scripts/generalization/replay_gate.py:155:    parser.add_argument("--shard-dir", type=Path, required=True,
+scripts/generalization/replay_gate.py:156:                        help="directory of <source_id>.csv.gz exposure shards")
+scripts/generalization/replay_gate.py:157:    parser.add_argument("--published-stars", type=Path, default=PUBLISHED_STARS)
+scripts/generalization/replay_gate.py:160:    parser.add_argument("--count", type=int, default=25)
+scripts/generalization/replay_gate.py:161:    parser.add_argument("--stars", nargs="*", help="explicit star list (overrides --count)")
+scripts/generalization/replay_gate.py:167:    replay_dir = args.out_dir / "stars"
+scripts/generalization/replay_gate.py:172:    stars = args.stars or select_stars(args.published_stars, args.shard_dir, args.count)
+scripts/generalization/replay_gate.py:173:    missing = [s for s in stars if not (args.shard_dir / f"{s}.csv.gz").exists()]
+scripts/generalization/replay_gate.py:175:        raise SystemExit(f"missing shards for: {missing}")
+scripts/generalization/replay_gate.py:176:    for star in stars:
+scripts/generalization/replay_gate.py:179:    print(f"[replay] {len(stars)} stars, workers={workers}", flush=True)
+scripts/generalization/replay_gate.py:187:                str(args.shard_dir / f"{star}.csv.gz"),
+scripts/generalization/replay_gate.py:192:            for star in stars
+scripts/generalization/replay_gate.py:200:    records = [compare_star(star, args.published_stars, replay_dir) for star in stars]
+scripts/generalization/replay_gate.py:201:    verdicts = {record["source_id"]: record["verdict"] for record in records}
+scripts/generalization/replay_gate.py:202:    counts: dict[str, int] = {}
+scripts/generalization/replay_gate.py:204:        counts[verdict] = counts.get(verdict, 0) + 1
+scripts/generalization/replay_gate.py:205:    if not records:
+scripts/generalization/replay_gate.py:210:        for record in records
+scripts/generalization/replay_gate.py:215:    passed = all(record["verdict"] != "MISMATCH" for record in records) and strict_v2
+scripts/generalization/replay_gate.py:219:        "passed": passed,
+scripts/generalization/replay_gate.py:220:        "verdict_counts": counts,
+scripts/generalization/replay_gate.py:221:        "stars": records,
+scripts/generalization/replay_gate.py:226:        "frozen_sha256": assert_frozen(),
+scripts/generalization/replay_gate.py:227:        "campaign_sha256": campaign_file_shas(),
+scripts/generalization/replay_gate.py:228:        "roster_digest": __import__("hashlib").sha256(
+scripts/generalization/replay_gate.py:229:            ",".join(stars).encode()).hexdigest(),
+scripts/generalization/replay_gate.py:230:        "roster_size": len(stars),
+scripts/generalization/replay_gate.py:234:    print(f"[replay] {'PASS' if passed else 'FAIL'} {counts} -> {report_path}", flush=True)
+scripts/generalization/replay_gate.py:235:    raise SystemExit(0 if passed else 1)
+scripts/generalization/run_generalization_ls.py:2:"""Resumable, shardable campaign driver over the frozen analyze_star.
+scripts/generalization/run_generalization_ls.py:4:This is the ONLY way campaign Lomb-Scargle searches run. It imports
+scripts/generalization/run_generalization_ls.py:8:campaign metrics read the JSONs directly (METRICS_SPEC.md).
+scripts/generalization/run_generalization_ls.py:11:returned untouched, so re-running after a crash or shard split is safe.
+scripts/generalization/run_generalization_ls.py:27:    campaign_file_shas,
+scripts/generalization/run_generalization_ls.py:28:    campaign_id_ok,
+scripts/generalization/run_generalization_ls.py:30:    frozen_file_shas,
+scripts/generalization/run_generalization_ls.py:34:def validate_attestation(report_path: Path) -> dict:
+scripts/generalization/run_generalization_ls.py:38:    if report.get("passed") is not True:
+scripts/generalization/run_generalization_ls.py:39:        raise SystemExit(f"replay attestation {report_path} is not a PASS")
+scripts/generalization/run_generalization_ls.py:40:    if not report.get("stars"):
+scripts/generalization/run_generalization_ls.py:41:        raise SystemExit(f"replay attestation {report_path} has an empty roster")
+scripts/generalization/run_generalization_ls.py:50:            f"replay attestation env differs from this run: {mismatched} "
+scripts/generalization/run_generalization_ls.py:51:            f"(attested {[report['env'].get(k) for k in mismatched]} vs "
+scripts/generalization/run_generalization_ls.py:54:    if report.get("frozen_sha256") != frozen_file_shas():
+scripts/generalization/run_generalization_ls.py:55:        raise SystemExit("replay attestation frozen SHAs differ from this checkout")
+scripts/generalization/run_generalization_ls.py:56:    if len(report["stars"]) != 928:
+scripts/generalization/run_generalization_ls.py:58:            f"production runs require the FULL 928-star baseline attestation; "
+scripts/generalization/run_generalization_ls.py:59:            f"this report covers {len(report['stars'])} stars"
+scripts/generalization/run_generalization_ls.py:66:# for longer campaign baselines. Disk, not wall time, binds worker count.
+scripts/generalization/run_generalization_ls.py:84:def shard_sha256(path: Path) -> str:
+scripts/generalization/run_generalization_ls.py:85:    return hashlib.sha256(path.read_bytes()).hexdigest()
+scripts/generalization/run_generalization_ls.py:88:def env_digest() -> str:
+scripts/generalization/run_generalization_ls.py:89:    return hashlib.sha256(
+scripts/generalization/run_generalization_ls.py:91:    ).hexdigest()
+scripts/generalization/run_generalization_ls.py:94:def provenance_path(star_dir: Path, source_id: str) -> Path:
+scripts/generalization/run_generalization_ls.py:98:def write_provenance(star_dir: Path, source_id: str, shard: Path) -> None:
+scripts/generalization/run_generalization_ls.py:99:    provenance_path(star_dir, source_id).write_text(
+scripts/generalization/run_generalization_ls.py:101:            "shard_sha256": shard_sha256(shard),
+scripts/generalization/run_generalization_ls.py:102:            "env_digest": env_digest(),
+scripts/generalization/run_generalization_ls.py:109:def scan_pending(shard_dir: Path, star_dir: Path, passes: tuple[str, ...],
+scripts/generalization/run_generalization_ls.py:111:    """A completed result is reused ONLY when its provenance sidecar matches
+scripts/generalization/run_generalization_ls.py:112:    the current shard content and environment (G1 methods finding 8); stale
+scripts/generalization/run_generalization_ls.py:115:    source_ids = sorted(path.name.split(".csv")[0] for path in shard_dir.glob("*.csv.gz"))
+scripts/generalization/run_generalization_ls.py:119:            raise SystemExit(f"requested stars absent from shards: {sorted(missing)[:5]}...")
+scripts/generalization/run_generalization_ls.py:123:    current_env = env_digest()
+scripts/generalization/run_generalization_ls.py:127:        prov_file = provenance_path(star_dir, source_id)
+scripts/generalization/run_generalization_ls.py:135:                    and prov.get("shard_sha256")
+scripts/generalization/run_generalization_ls.py:136:                    == shard_sha256(shard_dir / f"{source_id}.csv.gz")
+scripts/generalization/run_generalization_ls.py:137:                    and prov.get("env_digest") == current_env
+scripts/generalization/run_generalization_ls.py:156:    parser.add_argument("--shard-dir", type=Path, required=True)
+scripts/generalization/run_generalization_ls.py:162:                        help="manifest label, e.g. d3-kepler-dsct or d2-tess-dav")
+scripts/generalization/run_generalization_ls.py:165:    parser.add_argument("--stars-file", type=Path, default=None,
+scripts/generalization/run_generalization_ls.py:166:                        help="optional newline-separated campaign_id subset (a shard)")
+scripts/generalization/run_generalization_ls.py:168:                        help="pilot mode: first N stars only")
+scripts/generalization/run_generalization_ls.py:169:    parser.add_argument("--expect-count", type=int, default=None,
+scripts/generalization/run_generalization_ls.py:170:                        help="assert the shard dir holds exactly N shards "
+scripts/generalization/run_generalization_ls.py:173:                        help="permit non-campaign source_ids (replay/debug only)")
+scripts/generalization/run_generalization_ls.py:176:                             "on THIS machine+env; campaign runs refuse to start "
+scripts/generalization/run_generalization_ls.py:181:    campaign_shas_start = campaign_file_shas()
+scripts/generalization/run_generalization_ls.py:182:    attestation = validate_attestation(args.replay_report)
+scripts/generalization/run_generalization_ls.py:187:    star_dir = args.out_dir / "stars"
+scripts/generalization/run_generalization_ls.py:192:    if args.expect_count is not None:
+scripts/generalization/run_generalization_ls.py:193:        found = len(list(args.shard_dir.glob("*.csv.gz")))
+scripts/generalization/run_generalization_ls.py:194:        if found != args.expect_count:
+scripts/generalization/run_generalization_ls.py:196:                f"shard dir holds {found} shards, expected {args.expect_count} "
+scripts/generalization/run_generalization_ls.py:200:    if args.stars_file:
+scripts/generalization/run_generalization_ls.py:201:        only = {line.strip() for line in args.stars_file.read_text().splitlines() if line.strip()}
+scripts/generalization/run_generalization_ls.py:202:    pending, total = scan_pending(args.shard_dir, star_dir, passes, only, args.limit)
+scripts/generalization/run_generalization_ls.py:205:        bad = [sid for sid in pending if not campaign_id_ok(sid)]
+scripts/generalization/run_generalization_ls.py:208:                f"{len(bad)} shard ids violate the campaign 19-digit prefix "
+scripts/generalization/run_generalization_ls.py:234:            "stars_per_hour": round(rate * 3600.0, 2),
+scripts/generalization/run_generalization_ls.py:247:                str(args.shard_dir / f"{source_id}.csv.gz"),
+scripts/generalization/run_generalization_ls.py:258:                write_provenance(star_dir, source_id,
+scripts/generalization/run_generalization_ls.py:259:                                 args.shard_dir / f"{source_id}.csv.gz")
+scripts/generalization/run_generalization_ls.py:268:                    f"({progress_payload()['stars_per_hour']}/h)",
+scripts/generalization/run_generalization_ls.py:272:    manifest = {
+scripts/generalization/run_generalization_ls.py:275:        "source_count": total,
+scripts/generalization/run_generalization_ls.py:282:        "shard_dir": str(args.shard_dir),
+scripts/generalization/run_generalization_ls.py:284:        "frozen_sha256": assert_frozen(),
+scripts/generalization/run_generalization_ls.py:285:        "campaign_sha256": campaign_file_shas(),
+scripts/generalization/run_generalization_ls.py:286:        "replay_attestation": {
+scripts/generalization/run_generalization_ls.py:288:            "wall_seconds": attestation.get("wall_seconds"),
+scripts/generalization/run_generalization_ls.py:289:            "verdict_counts": attestation.get("verdict_counts"),
+scripts/generalization/run_generalization_ls.py:292:    if campaign_file_shas() != campaign_shas_start:
+scripts/generalization/run_generalization_ls.py:293:        raise SystemExit("campaign code changed mid-run — results void")
+scripts/generalization/run_generalization_ls.py:294:    (args.out_dir / "manifest.json").write_text(
+scripts/generalization/run_generalization_ls.py:295:        json.dumps(manifest, indent=2) + "\n", encoding="utf-8"
+
+exec
+/bin/zsh -lc "nl -ba scripts/generalization/panel_golden_gate.py | sed -n '1,220p'" in /Users/jackneo/Documents/vonhippel-base9/astro-wd
+ succeeded in 0ms:
+     1	#!/usr/bin/env python3
+     2	"""Panel-stage golden gate: the frozen crossmatch/QC/BJD chain reproduces the
+     3	published exposure panel on THIS machine and environment.
+     4	
+     5	The L-S replay gate consumes already-generated bjd_tdb, so it cannot detect
+     6	drift in the panel stage (astropy Time/light_travel_time, IERS tables, ERFA
+     7	build — G1 methods finding 6). This gate closes that hole: it re-derives the
+     8	exposure rows for sampled stars from the PUBLISHED raw IRSA cache using the
+     9	frozen functions exactly as build_catalog_panels.main() does (IERS
+    10	auto-download disabled; the pinned astropy-iers-data package supplies the
+    11	table) and compares against the published exposures.csv.gz:
+    12	
+    13	  SCIENCE columns except bjd_tdb (source_id, band, mjd, night_mjd, mag,
+    14	  magerr) must be BYTE-identical; bjd_tdb is compared at <= 1 ulp (~40 us):
+    15	  the barycentric chain sits at double rounding boundaries, so any ns-level
+    16	  IERS-state difference since build time flips the last bit — measured on
+    17	  the production machine itself (2026-08-28). 1 ulp is 7e-7 cycles at the
+    18	  shortest searched period; the campaign pins IERS via astropy-iers-data
+    19	  with auto_download disabled and records the max ulp deviation. Carried
+    20	  metadata (oid, ra, dec, chi) is compared at <= 1 ulp, because the archived
+    21	  cache tarball is a re-serialization of the fetch-time responses (17-digit
+    22	  float strings) whose parse can differ from the original short strings by
+    23	  one ulp. chi additionally must not sit within 1e-9 of the QC boundary 4.0.
+    24	"""
+    25	
+    26	from __future__ import annotations
+    27	
+    28	import argparse
+    29	import gzip
+    30	import io
+    31	import json
+    32	import tarfile
+    33	from pathlib import Path
+    34	
+    35	import pandas as pd
+    36	from astropy.utils import iers
+    37	
+    38	iers.conf.auto_download = False
+    39	
+    40	from frozen_api import (  # noqa: E402
+    41	    EXPOSURE_COLUMNS,
+    42	    REPO_ROOT,
+    43	    add_bjd,
+    44	    assert_frozen,
+    45	    campaign_file_shas,
+    46	    clean_rows,
+    47	    env_versions,
+    48	    frozen_file_shas,
+    49	    read_cache,
+    50	    select_nearest_source,
+    51	)
+    52	
+    53	PUBLISHED = REPO_ROOT / "catalog-rebuild/results/2026-08-01_full"
+    54	
+    55	
+    56	SCIENCE_COLUMNS = ["source_id", "band", "mjd", "night_mjd", "mag", "magerr"]
+    57	META_COLUMNS = ["ra", "dec", "chi"]
+    58	
+    59	
+    60	def rebuild_star(cache_bytes: bytes, ra: float, dec: float, source_id: str) -> pd.DataFrame:
+    61	    raw = read_cache(io.BytesIO(cache_bytes))
+    62	    selected, _, _, _ = select_nearest_source(raw, ra, dec)
+    63	    clean, _ = clean_rows(selected)
+    64	    clean["source_id"] = source_id
+    65	    clean = add_bjd(clean, ra, dec)
+    66	    clean = clean.sort_values(["band", "bjd_tdb"])
+    67	    return clean[EXPOSURE_COLUMNS].reset_index(drop=True)
+    68	
+    69	
+    70	def compare_star(rebuilt: pd.DataFrame, reference: pd.DataFrame) -> dict:
+    71	    if len(rebuilt) != len(reference):
+    72	        return {"verdict": "MISMATCH", "reason": f"row count {len(rebuilt)} != {len(reference)}"}
+    73	    sci_a = rebuilt[SCIENCE_COLUMNS].to_csv(index=False, lineterminator="\n")
+    74	    sci_b = reference[SCIENCE_COLUMNS].to_csv(index=False, lineterminator="\n")
+    75	    if sci_a != sci_b:
+    76	        for line_no, (a, b) in enumerate(zip(sci_a.splitlines(), sci_b.splitlines())):
+    77	            if a != b:
+    78	                return {"verdict": "MISMATCH", "reason": "science columns differ",
+    79	                        "first_diff_line": line_no, "rebuilt": a[:160], "published": b[:160]}
+    80	    import numpy as np
+    81	    bjd_a = rebuilt["bjd_tdb"].to_numpy(dtype=float)
+    82	    bjd_b = reference["bjd_tdb"].to_numpy(dtype=float)
+    83	    if not (np.isfinite(bjd_a).all() and np.isfinite(bjd_b).all()):
+    84	        return {"verdict": "MISMATCH", "reason": "nonfinite bjd_tdb"}
+    85	    bjd_ulp = np.abs(bjd_a - bjd_b) / np.spacing(np.abs(bjd_b))
+    86	    if (bjd_ulp > 1.0).any():
+    87	        worst = int(np.argmax(bjd_ulp))
+    88	        return {"verdict": "MISMATCH", "reason": "bjd_tdb beyond 1 ulp",
+    89	                "row": worst, "max_ulp": float(bjd_ulp.max())}
+    90	    if not (rebuilt["oid"].astype(str) == reference["oid"].astype(str)).all():
+    91	        return {"verdict": "MISMATCH", "reason": "oid differs"}
+    92	    chi = reference["chi"].to_numpy(dtype=float)
+    93	    if (abs(chi - 4.0) < 1e-9).any():
+    94	        return {"verdict": "MISMATCH", "reason": "chi within 1e-9 of QC boundary 4.0"}
+    95	    for col in META_COLUMNS:
+    96	        a = rebuilt[col].to_numpy(dtype=float)
+    97	        b = reference[col].to_numpy(dtype=float)
+    98	        if not (np.isfinite(a).all() and np.isfinite(b).all()):
+    99	            return {"verdict": "MISMATCH", "reason": f"nonfinite {col}"}
+   100	        ulp = np.spacing(np.abs(b))
+   101	        if (np.abs(a - b) > ulp).any():
+   102	            worst = int(np.argmax(np.abs(a - b) / np.maximum(ulp, 1e-300)))
+   103	            return {"verdict": "MISMATCH", "reason": f"{col} beyond 1 ulp",
+   104	                    "row": worst, "rebuilt": float(a[worst]), "published": float(b[worst])}
+   105	    all_exact = (bjd_ulp == 0.0).all() and all(
+   106	        (rebuilt[c].to_numpy(dtype=float) == reference[c].to_numpy(dtype=float)).all()
+   107	        for c in ("ra", "dec", "chi")
+   108	    )
+   109	    return {"verdict": "identical" if all_exact else "identical_1ulp",
+   110	            "bjd_max_ulp": float(bjd_ulp.max()),
+   111	            "bjd_rows_off_by_1ulp": int((bjd_ulp > 0).sum())}
+   112	
+   113	
+   114	def main() -> None:
+   115	    parser = argparse.ArgumentParser(description=__doc__)
+   116	    parser.add_argument("--count", type=int, default=5,
+   117	                        help="stars to replay (>= 1 enforced)")
+   118	    parser.add_argument("--out", type=Path,
+   119	                        default=REPO_ROOT / "outputs/generalization/panel_golden_report.json")
+   120	    args = parser.parse_args()
+   121	    if args.count < 1:
+   122	        raise SystemExit("--count must be >= 1 (a vacuous gate cannot pass)")
+   123	    assert_frozen()
+   124	
+   125	    roster = pd.read_csv(REPO_ROOT / "data/roster/jestin2026_rebuilt_candidates.csv",
+   126	                         dtype={"source_id": str})
+   127	    coords = roster.set_index("source_id")[["ra", "dec"]]
+   128	
+   129	    published = pd.read_csv(PUBLISHED / "data/exposures.csv.gz",
+   130	                            dtype={"source_id": str, "band": str})
+   131	    star_ids = sorted(published["source_id"].unique())
+   132	    stride = max(1, len(star_ids) // args.count)
+   133	    sample = star_ids[::stride][: args.count]
+   134	
+   135	    records = []
+   136	    with tarfile.open(PUBLISHED / "data/irsa_raw_cache.tar.gz") as archive:
+   137	        for source_id in sample:
+   138	            member = archive.extractfile(f"catalog_lc_cache/{source_id}.csv")
+   139	            if member is None:
+   140	                records.append({"source_id": source_id, "verdict": "MISSING_CACHE"})
+   141	                continue
+   142	            rebuilt = rebuild_star(
+   143	                member.read(),
+   144	                float(coords.loc[source_id, "ra"]),
+   145	                float(coords.loc[source_id, "dec"]),
+   146	                source_id,
+   147	            )
+   148	            reference = published[published["source_id"] == source_id][
+   149	                EXPOSURE_COLUMNS
+   150	            ].reset_index(drop=True)
+   151	            record = {"source_id": source_id, "rows": len(reference),
+   152	                      **compare_star(rebuilt, reference)}
+   153	            records.append(record)
+   154	            print(f"[panel-golden] {source_id}: {record['verdict']}", flush=True)
+   155	
+   156	    ids = [r["source_id"] for r in records]
+   157	    if not records or len(set(ids)) != len(ids):
+   158	        raise SystemExit("empty or duplicated star sample — gate invalid")
+   159	    passed = all(
+   160	        r["verdict"] in ("identical", "identical_1ulp") for r in records
+   161	    ) and len(records) >= args.count
+   162	    import hashlib
+   163	    report = {"gate": "panel_golden_gate", "passed": passed, "stars": records,
+   164	              "env": env_versions(),
+   165	              "frozen_sha256": frozen_file_shas(),
+   166	              "campaign_sha256": campaign_file_shas(),
+   167	              "inputs": {
+   168	                  "exposures_sha256": hashlib.sha256(
+   169	                      (PUBLISHED / "data/exposures.csv.gz").read_bytes()).hexdigest(),
+   170	                  "raw_cache_sha256": hashlib.sha256(
+   171	                      (PUBLISHED / "data/irsa_raw_cache.tar.gz").read_bytes()).hexdigest(),
+   172	              }}
+   173	    args.out.parent.mkdir(parents=True, exist_ok=True)
+   174	    args.out.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
+   175	    print(f"[panel-golden] {'PASS' if passed else 'FAIL'} -> {args.out}")
+   176	    raise SystemExit(0 if passed else 1)
+   177	
+   178	
+   179	if __name__ == "__main__":
+   180	    main()
+
+exec
+/bin/zsh -lc "nl -ba scripts/generalization/replay_gate.py | sed -n '1,280p'" in /Users/jackneo/Documents/vonhippel-base9/astro-wd
+ succeeded in 0ms:
+     1	#!/usr/bin/env python3
+     2	"""Replay gate: reproduce published 2026-08-01 per-star results byte-for-byte.
+     3	
+     4	Re-runs the frozen `analyze_star` (imported through frozen_api, exactly as the
+     5	campaign driver will) on a deterministic sample of published stars and compares
+     6	the fresh output against the committed bundle files.
+     7	
+     8	Comparison tiers, strongest first:
+     9	  identical                  raw bytes equal
+    10	  identical_newline          equal after CRLF->LF normalization (git stored the
+    11	                             bundle newline-normalized; Windows writes CRLF)
+    12	  identical_v1_schema        equal after the documented v1->v2 schema transform:
+    13	                             the run that produced 921/928 published files
+    14	                             predates commit fa16d7f, which added sparse-input
+    15	                             early-exit branches plus the `available`/
+    16	                             `unavailable_reason` keys and bumped schema_version
+    17	                             1->2; for any star that yields candidates the
+    18	                             numeric path is unchanged (the new branches fire
+    19	                             only on sparse inputs that previously crashed).
+    20	                             The replayed output is re-serialized with
+    21	                             schema_version=1 and those two keys dropped, then
+    22	                             byte-compared against the published file.
+    23	  MISMATCH                   anything else; the first differing JSON path is
+    24	                             reported. The gate FAILS.
+    25	
+    26	The gate passes only if every sampled star lands in one of the identical tiers
+    27	AND at least one schema-v2 star reproduces with no transform (proving full-byte
+    28	reproduction of the final script's output). Campaign L-S runs are valid only on
+    29	machine+env combinations where this gate has passed.
+    30	"""
+    31	
+    32	from __future__ import annotations
+    33	
+    34	import argparse
+    35	import json
+    36	import time
+    37	from concurrent.futures import ProcessPoolExecutor, as_completed
+    38	from pathlib import Path
+    39	
+    40	from frozen_api import (
+    41	    REPO_ROOT,
+    42	    analyze_star,
+    43	    assert_frozen,
+    44	    campaign_file_shas,
+    45	    env_versions,
+    46	    json_ready,
+    47	    physical_workers,
+    48	)
+    49	
+    50	PUBLISHED_STARS = (
+    51	    REPO_ROOT / "catalog-rebuild/results/2026-08-01_full/lomb-scargle/stars"
+    52	)
+    53	
+    54	
+    55	def normalize(raw: bytes) -> bytes:
+    56	    return raw.replace(b"\r\n", b"\n")
+    57	
+    58	
+    59	def schema_v1_bytes(replayed: dict) -> bytes:
+    60	    downgraded = dict(replayed)
+    61	    downgraded["schema_version"] = 1
+    62	    downgraded["passes"] = {
+    63	        name: {
+    64	            key: value
+    65	            for key, value in pass_result.items()
+    66	            if key not in ("available", "unavailable_reason")
+    67	        }
+    68	        for name, pass_result in replayed["passes"].items()
+    69	    }
+    70	    text = json.dumps(downgraded, indent=2, default=json_ready) + "\n"
+    71	    return text.encode("utf-8")
+    72	
+    73	
+    74	def first_difference(published: object, replayed: object, path: str = "$") -> str:
+    75	    if type(published) is not type(replayed):
+    76	        return f"{path}: type {type(published).__name__} != {type(replayed).__name__}"
+    77	    if isinstance(published, dict):
+    78	        for key in sorted(set(published) | set(replayed)):
+    79	            if key not in published:
+    80	                return f"{path}.{key}: only in replay"
+    81	            if key not in replayed:
+    82	                return f"{path}.{key}: only in published"
+    83	            diff = first_difference(published[key], replayed[key], f"{path}.{key}")
+    84	            if diff:
+    85	                return diff
+    86	        return ""
+    87	    if isinstance(published, list):
+    88	        if len(published) != len(replayed):
+    89	            return f"{path}: length {len(published)} != {len(replayed)}"
+    90	        for index, (left, right) in enumerate(zip(published, replayed)):
+    91	            diff = first_difference(left, right, f"{path}[{index}]")
+    92	            if diff:
+    93	                return diff
+    94	        return ""
+    95	    if published != replayed:
+    96	        return f"{path}: {published!r} != {replayed!r}"
+    97	    return ""
+    98	
+    99	
+   100	def published_schema_version(path: Path) -> int:
+   101	    return int(json.loads(path.read_text(encoding="utf-8"))["schema_version"])
+   102	
+   103	
+   104	def select_stars(published_dir: Path, shard_dir: Path, count: int) -> list[str]:
+   105	    available = {
+   106	        path.name.split(".csv")[0] for path in shard_dir.glob("*.csv.gz")
+   107	    }
+   108	    stars = sorted(
+   109	        path.stem
+   110	        for path in published_dir.glob("*.json")
+   111	        if not path.name.endswith(".error.json") and path.stem in available
+   112	    )
+   113	    if not stars:
+   114	        raise SystemExit(f"no published stars have shards in {shard_dir}")
+   115	    v2 = [star for star in stars if published_schema_version(published_dir / f"{star}.json") == 2]
+   116	    v1 = [star for star in stars if star not in set(v2)]
+   117	    selected = list(v2)[:count]
+   118	    remaining = count - len(selected)
+   119	    if remaining > 0 and v1:
+   120	        stride = max(1, len(v1) // remaining)
+   121	        selected.extend(v1[::stride][:remaining])
+   122	    return sorted(selected)
+   123	
+   124	
+   125	def compare_star(star: str, published_dir: Path, replay_dir: Path) -> dict[str, object]:
+   126	    published_path = published_dir / f"{star}.json"
+   127	    replay_path = replay_dir / f"{star}.json"
+   128	    published_raw = published_path.read_bytes()
+   129	    replay_raw = replay_path.read_bytes()
+   130	    record: dict[str, object] = {
+   131	        "source_id": star,
+   132	        "published_schema_version": published_schema_version(published_path),
+   133	    }
+   134	    if published_raw == replay_raw:
+   135	        record["verdict"] = "identical"
+   136	        return record
+   137	    published_norm = normalize(published_raw)
+   138	    replay_norm = normalize(replay_raw)
+   139	    if published_norm == replay_norm:
+   140	        record["verdict"] = "identical_newline"
+   141	        return record
+   142	    replayed = json.loads(replay_norm.decode("utf-8"))
+   143	    if normalize(schema_v1_bytes(replayed)) == published_norm:
+   144	        record["verdict"] = "identical_v1_schema"
+   145	        return record
+   146	    record["verdict"] = "MISMATCH"
+   147	    record["first_difference"] = first_difference(
+   148	        json.loads(published_norm.decode("utf-8")), replayed
+   149	    )
+   150	    return record
+   151	
+   152	
+   153	def main() -> None:
+   154	    parser = argparse.ArgumentParser(description=__doc__)
+   155	    parser.add_argument("--shard-dir", type=Path, required=True,
+   156	                        help="directory of <source_id>.csv.gz exposure shards")
+   157	    parser.add_argument("--published-stars", type=Path, default=PUBLISHED_STARS)
+   158	    parser.add_argument("--out-dir", type=Path,
+   159	                        default=REPO_ROOT / "outputs/generalization/replay_gate")
+   160	    parser.add_argument("--count", type=int, default=25)
+   161	    parser.add_argument("--stars", nargs="*", help="explicit star list (overrides --count)")
+   162	    parser.add_argument("--workers", type=int, default=None)
+   163	    args = parser.parse_args()
+   164	
+   165	    assert_frozen()
+   166	    workers = args.workers or physical_workers()
+   167	    replay_dir = args.out_dir / "stars"
+   168	    work_dir = args.out_dir / "work"
+   169	    replay_dir.mkdir(parents=True, exist_ok=True)
+   170	    work_dir.mkdir(parents=True, exist_ok=True)
+   171	
+   172	    stars = args.stars or select_stars(args.published_stars, args.shard_dir, args.count)
+   173	    missing = [s for s in stars if not (args.shard_dir / f"{s}.csv.gz").exists()]
+   174	    if missing:
+   175	        raise SystemExit(f"missing shards for: {missing}")
+   176	    for star in stars:
+   177	        (replay_dir / f"{star}.json").unlink(missing_ok=True)
+   178	
+   179	    print(f"[replay] {len(stars)} stars, workers={workers}", flush=True)
+   180	    started = time.time()
+   181	    durations: dict[str, float] = {}
+   182	    with ProcessPoolExecutor(max_workers=workers) as executor:
+   183	        futures = {
+   184	            executor.submit(
+   185	                analyze_star,
+   186	                star,
+   187	                str(args.shard_dir / f"{star}.csv.gz"),
+   188	                str(replay_dir / f"{star}.json"),
+   189	                str(work_dir),
+   190	                ("low", "high"),
+   191	            ): (star, time.time())
+   192	            for star in stars
+   193	        }
+   194	        for future in as_completed(futures):
+   195	            star, _ = futures[future]
+   196	            future.result()
+   197	            durations[star] = round(time.time() - started, 1)
+   198	            print(f"[replay] finished {star} (+{durations[star]}s)", flush=True)
+   199	
+   200	    records = [compare_star(star, args.published_stars, replay_dir) for star in stars]
+   201	    verdicts = {record["source_id"]: record["verdict"] for record in records}
+   202	    counts: dict[str, int] = {}
+   203	    for verdict in verdicts.values():
+   204	        counts[verdict] = counts.get(verdict, 0) + 1
+   205	    if not records:
+   206	        raise SystemExit("empty replay roster — the gate cannot pass vacuously")
+   207	    strict_v2 = any(
+   208	        record["verdict"] in ("identical", "identical_newline")
+   209	        and record["published_schema_version"] == 2
+   210	        for record in records
+   211	    )
+   212	    # strict_v2 is unconditional (G1 methods finding 2): a schema-v2 star that
+   213	    # reproduces with no transform is the proof of full-byte reproduction, and
+   214	    # the published bundle contains 7 of them — a roster without one is invalid.
+   215	    passed = all(record["verdict"] != "MISMATCH" for record in records) and strict_v2
+   216	
+   217	    report = {
+   218	        "gate": "replay_gate",
+   219	        "passed": passed,
+   220	        "verdict_counts": counts,
+   221	        "stars": records,
+   222	        "wall_seconds": round(time.time() - started, 1),
+   223	        "completion_offsets_seconds": durations,
+   224	        "workers": workers,
+   225	        "env": env_versions(),
+   226	        "frozen_sha256": assert_frozen(),
+   227	        "campaign_sha256": campaign_file_shas(),
+   228	        "roster_digest": __import__("hashlib").sha256(
+   229	            ",".join(stars).encode()).hexdigest(),
+   230	        "roster_size": len(stars),
+   231	    }
+   232	    report_path = args.out_dir / "replay_report.json"
+   233	    report_path.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
+   234	    print(f"[replay] {'PASS' if passed else 'FAIL'} {counts} -> {report_path}", flush=True)
+   235	    raise SystemExit(0 if passed else 1)
+   236	
+   237	
+   238	if __name__ == "__main__":
+   239	    main()
+
+exec
+/bin/zsh -lc "nl -ba scripts/generalization/run_generalization_ls.py | sed -n '1,340p'" in /Users/jackneo/Documents/vonhippel-base9/astro-wd
+ succeeded in 0ms:
+     1	#!/usr/bin/env python3
+     2	"""Resumable, shardable campaign driver over the frozen analyze_star.
+     3	
+     4	This is the ONLY way campaign Lomb-Scargle searches run. It imports
+     5	analyze_star through frozen_api (SHA-gated) and never invokes the frozen CLI,
+     6	whose main() would merge against the WD roster and rewrite the published
+     7	catalog table. Per-star JSONs are the product; no roster merge, no CSV — the
+     8	campaign metrics read the JSONs directly (METRICS_SPEC.md).
+     9	
+    10	Resumability is inherited from analyze_star: a complete result file is
+    11	returned untouched, so re-running after a crash or shard split is safe.
+    12	"""
+    13	
+    14	from __future__ import annotations
+    15	
+    16	import argparse
+    17	import hashlib
+    18	import json
+    19	import shutil
+    20	import time
+    21	from concurrent.futures import ProcessPoolExecutor, as_completed
+    22	from pathlib import Path
+    23	
+    24	from frozen_api import (
+    25	    analyze_star,
+    26	    assert_frozen,
+    27	    campaign_file_shas,
+    28	    campaign_id_ok,
+    29	    env_versions,
+    30	    frozen_file_shas,
+    31	    physical_workers,
+    32	)
+    33	
+    34	def validate_attestation(report_path: Path) -> dict:
+    35	    report = json.loads(report_path.read_text(encoding="utf-8"))
+    36	    if report.get("gate") != "replay_gate":
+    37	        raise SystemExit(f"{report_path} is not a replay_gate report")
+    38	    if report.get("passed") is not True:
+    39	        raise SystemExit(f"replay attestation {report_path} is not a PASS")
+    40	    if not report.get("stars"):
+    41	        raise SystemExit(f"replay attestation {report_path} has an empty roster")
+    42	    current = env_versions()
+    43	    # the FULL environment fingerprint must match (G2 methods finding 1)
+    44	    mismatched = [
+    45	        key for key in current
+    46	        if report["env"].get(key) != current.get(key)
+    47	    ]
+    48	    if mismatched:
+    49	        raise SystemExit(
+    50	            f"replay attestation env differs from this run: {mismatched} "
+    51	            f"(attested {[report['env'].get(k) for k in mismatched]} vs "
+    52	            f"current {[current.get(k) for k in mismatched]})"
+    53	        )
+    54	    if report.get("frozen_sha256") != frozen_file_shas():
+    55	        raise SystemExit("replay attestation frozen SHAs differ from this checkout")
+    56	    if len(report["stars"]) != 928:
+    57	        raise SystemExit(
+    58	            f"production runs require the FULL 928-star baseline attestation; "
+    59	            f"this report covers {len(report['stars'])} stars"
+    60	        )
+    61	    return report
+    62	
+    63	# One in-flight star holds two full-resolution float32 periodogram memmaps plus
+    64	# the multiband combination on scratch; the worst published-catalog baseline
+    65	# needs 0.471 GB for the three high-pass memmaps, so 0.52 adds ~10% headroom
+    66	# for longer campaign baselines. Disk, not wall time, binds worker count.
+    67	SCRATCH_GB_PER_WORKER = 0.52
+    68	
+    69	
+    70	def preflight_workers(requested: int | None, work_root: Path) -> tuple[int, float]:
+    71	    if requested is not None and requested < 1:
+    72	        raise SystemExit(f"invalid --workers {requested}")
+    73	    free_gb = shutil.disk_usage(work_root).free / 1e9
+    74	    ceiling = int(free_gb * 0.5 / SCRATCH_GB_PER_WORKER)
+    75	    if ceiling < 1:
+    76	        raise SystemExit(
+    77	            f"scratch {work_root} has {free_gb:.1f} GB free — below one worker's "
+    78	            f"{SCRATCH_GB_PER_WORKER} GB requirement"
+    79	        )
+    80	    workers = min(requested or physical_workers(), physical_workers(), ceiling)
+    81	    return workers, free_gb
+    82	
+    83	
+    84	def shard_sha256(path: Path) -> str:
+    85	    return hashlib.sha256(path.read_bytes()).hexdigest()
+    86	
+    87	
+    88	def env_digest() -> str:
+    89	    return hashlib.sha256(
+    90	        json.dumps(env_versions(), sort_keys=True).encode()
+    91	    ).hexdigest()
+    92	
+    93	
+    94	def provenance_path(star_dir: Path, source_id: str) -> Path:
+    95	    return star_dir / f"{source_id}.prov.json"
+    96	
+    97	
+    98	def write_provenance(star_dir: Path, source_id: str, shard: Path) -> None:
+    99	    provenance_path(star_dir, source_id).write_text(
+   100	        json.dumps({
+   101	            "shard_sha256": shard_sha256(shard),
+   102	            "env_digest": env_digest(),
+   103	            "driver": "run_generalization_ls.py",
+   104	        }, indent=2) + "\n",
+   105	        encoding="utf-8",
+   106	    )
+   107	
+   108	
+   109	def scan_pending(shard_dir: Path, star_dir: Path, passes: tuple[str, ...],
+   110	                 only: set[str] | None, limit: int | None) -> tuple[list[str], int]:
+   111	    """A completed result is reused ONLY when its provenance sidecar matches
+   112	    the current shard content and environment (G1 methods finding 8); stale
+   113	    results are DELETED so analyze_star's internal early-return cannot
+   114	    resurrect them."""
+   115	    source_ids = sorted(path.name.split(".csv")[0] for path in shard_dir.glob("*.csv.gz"))
+   116	    if only is not None:
+   117	        missing = only - set(source_ids)
+   118	        if missing:
+   119	            raise SystemExit(f"requested stars absent from shards: {sorted(missing)[:5]}...")
+   120	        source_ids = [sid for sid in source_ids if sid in only]
+   121	    if limit is not None:
+   122	        source_ids = source_ids[:limit]
+   123	    current_env = env_digest()
+   124	    pending = []
+   125	    for source_id in source_ids:
+   126	        result_path = star_dir / f"{source_id}.json"
+   127	        prov_file = provenance_path(star_dir, source_id)
+   128	        if result_path.exists() and prov_file.exists():
+   129	            try:
+   130	                result = json.loads(result_path.read_text(encoding="utf-8"))
+   131	                prov = json.loads(prov_file.read_text(encoding="utf-8"))
+   132	                if (
+   133	                    result.get("complete")
+   134	                    and set(result.get("passes", {})) >= set(passes)
+   135	                    and prov.get("shard_sha256")
+   136	                    == shard_sha256(shard_dir / f"{source_id}.csv.gz")
+   137	                    and prov.get("env_digest") == current_env
+   138	                ):
+   139	                    continue
+   140	            except json.JSONDecodeError:
+   141	                pass
+   142	        result_path.unlink(missing_ok=True)
+   143	        prov_file.unlink(missing_ok=True)
+   144	        pending.append(source_id)
+   145	    return pending, len(source_ids)
+   146	
+   147	
+   148	def write_progress(path: Path, payload: dict) -> None:
+   149	    temporary = path.with_suffix(".json.part")
+   150	    temporary.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+   151	    temporary.replace(path)
+   152	
+   153	
+   154	def main() -> None:
+   155	    parser = argparse.ArgumentParser(description=__doc__)
+   156	    parser.add_argument("--shard-dir", type=Path, required=True)
+   157	    parser.add_argument("--out-dir", type=Path, required=True)
+   158	    parser.add_argument("--work-root", type=Path, default=None,
+   159	                        help="scratch for periodogram memmaps; put on local NVMe "
+   160	                             "or a RAM disk, NEVER inside a synced folder")
+   161	    parser.add_argument("--dataset", required=True,
+   162	                        help="manifest label, e.g. d3-kepler-dsct or d2-tess-dav")
+   163	    parser.add_argument("--workers", type=int, default=None)
+   164	    parser.add_argument("--passes", default="low,high")
+   165	    parser.add_argument("--stars-file", type=Path, default=None,
+   166	                        help="optional newline-separated campaign_id subset (a shard)")
+   167	    parser.add_argument("--limit", type=int, default=None,
+   168	                        help="pilot mode: first N stars only")
+   169	    parser.add_argument("--expect-count", type=int, default=None,
+   170	                        help="assert the shard dir holds exactly N shards "
+   171	                             "(stale-directory guard)")
+   172	    parser.add_argument("--allow-nonstandard-ids", action="store_true",
+   173	                        help="permit non-campaign source_ids (replay/debug only)")
+   174	    parser.add_argument("--replay-report", type=Path, required=True,
+   175	                        help="replay_report.json from a PASSING replay_gate run "
+   176	                             "on THIS machine+env; campaign runs refuse to start "
+   177	                             "without one (G1 methods finding 1)")
+   178	    args = parser.parse_args()
+   179	
+   180	    assert_frozen()
+   181	    campaign_shas_start = campaign_file_shas()
+   182	    attestation = validate_attestation(args.replay_report)
+   183	    passes = tuple(args.passes.split(","))
+   184	    if passes != ("low", "high") and not args.allow_nonstandard_ids:
+   185	        raise SystemExit("production runs use exactly low,high (the frozen CLI's "
+   186	                         "pass set); pass --allow-nonstandard-ids for debug runs")
+   187	    star_dir = args.out_dir / "stars"
+   188	    work_root = args.work_root or (args.out_dir / "work")
+   189	    star_dir.mkdir(parents=True, exist_ok=True)
+   190	    work_root.mkdir(parents=True, exist_ok=True)
+   191	
+   192	    if args.expect_count is not None:
+   193	        found = len(list(args.shard_dir.glob("*.csv.gz")))
+   194	        if found != args.expect_count:
+   195	            raise SystemExit(
+   196	                f"shard dir holds {found} shards, expected {args.expect_count} "
+   197	                f"— stale or incomplete directory"
+   198	            )
+   199	    only = None
+   200	    if args.stars_file:
+   201	        only = {line.strip() for line in args.stars_file.read_text().splitlines() if line.strip()}
+   202	    pending, total = scan_pending(args.shard_dir, star_dir, passes, only, args.limit)
+   203	
+   204	    if not args.allow_nonstandard_ids:
+   205	        bad = [sid for sid in pending if not campaign_id_ok(sid)]
+   206	        if bad:
+   207	            raise SystemExit(
+   208	                f"{len(bad)} shard ids violate the campaign 19-digit prefix "
+   209	                f"convention (first: {bad[:3]}); refusing to run"
+   210	            )
+   211	
+   212	    workers, free_gb = preflight_workers(args.workers, work_root)
+   213	    print(
+   214	        f"[{args.dataset}] sources={total:,} pending={len(pending):,} "
+   215	        f"workers={workers} (free {free_gb:.0f} GB on scratch)",
+   216	        flush=True,
+   217	    )
+   218	
+   219	    progress_path = args.out_dir / "progress.json"
+   220	    started = time.time()
+   221	    failures: dict[str, str] = {}
+   222	    completed_now = 0
+   223	
+   224	    def progress_payload() -> dict:
+   225	        elapsed = time.time() - started
+   226	        rate = completed_now / elapsed if elapsed > 0 else 0.0
+   227	        return {
+   228	            "dataset": args.dataset,
+   229	            "total": total,
+   230	            "pending_at_start": len(pending),
+   231	            "completed_now": completed_now,
+   232	            "failed": len(failures),
+   233	            "elapsed_seconds": round(elapsed, 1),
+   234	            "stars_per_hour": round(rate * 3600.0, 2),
+   235	            "eta_hours": round((len(pending) - completed_now - len(failures)) / (rate * 3600.0), 2)
+   236	            if rate > 0
+   237	            else None,
+   238	            "workers": workers,
+   239	        }
+   240	
+   241	    write_progress(progress_path, progress_payload())
+   242	    with ProcessPoolExecutor(max_workers=workers) as executor:
+   243	        futures = {
+   244	            executor.submit(
+   245	                analyze_star,
+   246	                source_id,
+   247	                str(args.shard_dir / f"{source_id}.csv.gz"),
+   248	                str(star_dir / f"{source_id}.json"),
+   249	                str(work_root),
+   250	                passes,
+   251	            ): source_id
+   252	            for source_id in pending
+   253	        }
+   254	        for future in as_completed(futures):
+   255	            source_id = futures[future]
+   256	            try:
+   257	                future.result()
+   258	                write_provenance(star_dir, source_id,
+   259	                                 args.shard_dir / f"{source_id}.csv.gz")
+   260	                completed_now += 1
+   261	            except Exception as exc:
+   262	                failures[source_id] = repr(exc)
+   263	                print(f"[{args.dataset}] FAILED {source_id}: {exc}", flush=True)
+   264	            if completed_now % 10 == 0 or completed_now + len(failures) == len(pending):
+   265	                write_progress(progress_path, progress_payload())
+   266	                print(
+   267	                    f"[{args.dataset}] {completed_now:,}/{len(pending):,} "
+   268	                    f"({progress_payload()['stars_per_hour']}/h)",
+   269	                    flush=True,
+   270	                )
+   271	
+   272	    manifest = {
+   273	        "dataset": args.dataset,
+   274	        "driver": "run_generalization_ls.py",
+   275	        "source_count": total,
+   276	        "pending_at_start": len(pending),
+   277	        "completed_now": completed_now,
+   278	        "failures": failures,
+   279	        "passes": list(passes),
+   280	        "workers": workers,
+   281	        "wall_seconds": round(time.time() - started, 1),
+   282	        "shard_dir": str(args.shard_dir),
+   283	        "env": env_versions(),
+   284	        "frozen_sha256": assert_frozen(),
+   285	        "campaign_sha256": campaign_file_shas(),
+   286	        "replay_attestation": {
+   287	            "path": str(args.replay_report),
+   288	            "wall_seconds": attestation.get("wall_seconds"),
+   289	            "verdict_counts": attestation.get("verdict_counts"),
+   290	        },
+   291	    }
+   292	    if campaign_file_shas() != campaign_shas_start:
+   293	        raise SystemExit("campaign code changed mid-run — results void")
+   294	    (args.out_dir / "manifest.json").write_text(
+   295	        json.dumps(manifest, indent=2) + "\n", encoding="utf-8"
+   296	    )
+   297	    write_progress(progress_path, progress_payload())
+   298	    print(f"[{args.dataset}] done: {completed_now:,} completed, {len(failures)} failed", flush=True)
+   299	    if failures:
+   300	        raise SystemExit(1)
+   301	
+   302	
+   303	if __name__ == "__main__":
+   304	    main()
+
+exec
+/bin/zsh -lc "nl -ba scripts/generalization/build_d2_shards.py | sed -n '1,390p'" in /Users/jackneo/Documents/vonhippel-base9/astro-wd
+ succeeded in 0ms:
+     1	#!/usr/bin/env python3
+     2	"""Synthesize D2 exposure shards: DAV truth signals in real ZTF windows.
+     3	
+     4	Template pool: ALL 928 stars of the published 2026-08-01 catalog — NOT the
+     5	510 not-detected subset (G1 referee finding 1: conditioning templates on the
+     6	pipeline's own non-detection is a circularity path). Native variability is
+     7	handled by frequency-matched scoring plus paired controls. Every shard
+     8	preserves the template's real epochs (bjd_tdb), real cadence structure and
+     9	real magerr; arms differ in what carries the noise:
+    10	
+    11	  arm B (92…)  signal added to the REAL ZTF magnitudes — the headline arm
+    12	               ("TESS-truth signals injected into real ZTF photometry").
+    13	  ctrl (95…)   paired uninjected copy of every unique arm-B template window —
+    14	               identifies windows that trigger natively (real variables in
+    15	               the pool), so injected-recovery is scored against its own
+    16	               window's baseline behavior.
+    17	  arm A (93…)  signal added to a synthetic Gaussian floor (median mag +
+    18	               N(0, magerr_i)) — diagnostic; separates window effects from
+    19	               real-noise effects.
+    20	  nulls (94…)  arm-A construction with amplitude_scale = 0 — 1,000 shards
+    21	               cycling the 928 windows with distinct noise seeds (windows
+    22	               repeat, noise does not). This measures the GAUSSIAN-NULL
+    23	               false-alarm rate, not a real-sky FPR (G1 stats finding 11).
+    24	
+    25	Template matching per target: |median zg mag − target G| <= 0.25 (widened to
+    26	0.5, then nearest-K, when the pool is thin — flagged in the manifest);
+    27	K=3 at the 10/50/90th percentiles of median-exposures-per-night, because 75%
+    28	of zg nights are single-exposure and per-night median subtraction is the
+    29	pre-registered dominant penalty (plan risk 3).
+    30	
+    31	Run matrix (plan): nominal (1.7, 0.80) on K=3 for arms A+B; the other 8
+    32	ladder points on the median template only; 1,000 nulls.
+    33	
+    34	Campaign id layout (19 digits): AA TTTTTTTTTT K GR PS 00
+    35	  AA arm prefix (92/93), T zero-padded TIC, K template index (0/1/2),
+    36	  G/R ladder indices (1-3) into {1.4,1.7,2.1} x {0.70,0.80,0.90} (22 =
+    37	  nominal), P phase-draw (0-2), S amplitude-scale code (0 = 1.0, 1 = 0.7,
+    38	  2 = 1.3).
+    39	  Nulls: 94 + 17-digit serial. Controls: 95 + 17-digit index of the template
+    40	  in the SORTED FIXED 928-window pool — stable across invocations and roster
+    41	  subsets (G2 methods finding 3). Full mapping in shard_manifest.csv.
+    42	
+    43	Truth preservation (G2 methods finding 4): every shard's actually-injected
+    44	modes (post sinc rejection, with signed factors and phases) go to
+    45	injected_modes.csv and the rejected ones to rejected_modes.csv; the metrics
+    46	scorer consumes injected_modes.csv, never the original mode table.
+    47	"""
+    48	
+    49	from __future__ import annotations
+    50	
+    51	import argparse
+    52	import gzip
+    53	import json
+    54	from pathlib import Path
+    55	
+    56	import numpy as np
+    57	import pandas as pd
+    58	
+    59	from d2_truth_model import (
+    60	    BANDPASS_LADDER_G,
+    61	    BANDPASS_LADDER_RG,
+    62	    NOMINAL_G,
+    63	    NOMINAL_RG,
+    64	    build_truth_model,
+    65	)
+    66	from frozen_api import (
+    67	    EXPOSURE_COLUMNS,
+    68	    REPO_ROOT,
+    69	    assert_frozen,
+    70	    campaign_file_shas,
+    71	    campaign_id_ok,
+    72	)
+    73	
+    74	PUBLISHED = REPO_ROOT / "catalog-rebuild/results/2026-08-01_full"
+    75	MATCH_TOL_MAG = 0.25
+    76	MATCH_TOL_WIDE = 0.5
+    77	N_NULLS = 1000
+    78	
+    79	
+    80	def load_templates(exposures_path: Path, catalog_path: Path) -> tuple[pd.DataFrame, dict]:
+    81	    catalog = pd.read_csv(catalog_path, dtype={"source_id": str})
+    82	    if len(catalog) != 928:
+    83	        raise SystemExit(f"published catalog has {len(catalog)} rows, expected 928")
+    84	    pool_ids = set(catalog["source_id"])
+    85	    status = catalog.set_index("source_id")["blind_status"].to_dict()
+    86	    exposures = pd.read_csv(
+    87	        exposures_path,
+    88	        dtype={"source_id": str, "band": str},
+    89	        usecols=EXPOSURE_COLUMNS,
+    90	    )
+    91	    exposures = exposures[exposures["source_id"].isin(pool_ids)]
+    92	    zg = exposures[exposures["band"] == "zg"]
+    93	    stats = zg.groupby("source_id").agg(
+    94	        median_zg=("mag", "median"),
+    95	        n_zg=("mag", "size"),
+    96	    )
+    97	    epn = (
+    98	        zg.groupby(["source_id", "night_mjd"]).size().groupby("source_id").median()
+    99	        .rename("exp_per_night")
+   100	    )
+   101	    stats = stats.join(epn)
+   102	    stats["blind_status"] = [status[sid] for sid in stats.index]
+   103	    frames = {sid: frame for sid, frame in exposures.groupby("source_id")}
+   104	    return stats.reset_index(), frames
+   105	
+   106	
+   107	def match_templates(stats: pd.DataFrame, gmag: float) -> tuple[list[str], str]:
+   108	    for tol, label in ((MATCH_TOL_MAG, "tol_0.25"), (MATCH_TOL_WIDE, "tol_0.5")):
+   109	        pool = stats[(stats["median_zg"] - gmag).abs() <= tol]
+   110	        if len(pool) >= 3:
+   111	            break
+   112	    else:
+   113	        label = "nearest"
+   114	    if len(pool) < 3:
+   115	        pool = stats.iloc[(stats["median_zg"] - gmag).abs().argsort()[:9]]
+   116	    ordered = pool.sort_values(["exp_per_night", "source_id"]).reset_index(drop=True)
+   117	    picks = [
+   118	        ordered.iloc[min(len(ordered) - 1, int(round(q * (len(ordered) - 1))))]["source_id"]
+   119	        for q in (0.10, 0.50, 0.90)
+   120	    ]
+   121	    return picks, label
+   122	
+   123	
+   124	AMP_SCALE_CODES = {1.0: 0, 0.7: 1, 1.3: 2}
+   125	
+   126	
+   127	def campaign_id(arm_prefix: str, tic: int, k: int, g_idx: int, r_idx: int,
+   128	                phase_draw: int = 0, amp_scale: float = 1.0) -> str:
+   129	    return (f"{arm_prefix}{tic:010d}{k}{g_idx}{r_idx}"
+   130	            f"{phase_draw}{AMP_SCALE_CODES[amp_scale]}00")
+   131	
+   132	
+   133	def write_shard(path: Path, frame: pd.DataFrame) -> None:
+   134	    with gzip.open(path, "wt", encoding="utf-8", newline="") as handle:
+   135	        frame[EXPOSURE_COLUMNS].to_csv(handle, index=False, lineterminator="\n")
+   136	
+   137	
+   138	def synthesize(
+   139	    template: pd.DataFrame,
+   140	    model,
+   141	    source_id: str,
+   142	    gaussian_floor: bool,
+   143	    seed: int,
+   144	) -> pd.DataFrame:
+   145	    frame = template.copy()
+   146	    frame["source_id"] = source_id
+   147	    t_ref = float(frame["bjd_tdb"].min())
+   148	    if gaussian_floor:
+   149	        rng = np.random.Generator(np.random.PCG64(seed))
+   150	        for band in ("zg", "zr"):
+   151	            mask = frame["band"] == band
+   152	            median = float(frame.loc[mask, "mag"].median())
+   153	            noise = rng.normal(0.0, frame.loc[mask, "magerr"].to_numpy(dtype=float))
+   154	            frame.loc[mask, "mag"] = median + noise
+   155	    for band in ("zg", "zr"):
+   156	        mask = frame["band"] == band
+   157	        frame.loc[mask, "mag"] = frame.loc[mask, "mag"] + model.evaluate(
+   158	            frame.loc[mask, "bjd_tdb"].to_numpy(dtype=float), band, t_ref
+   159	        )
+   160	    return frame
+   161	
+   162	
+   163	def main() -> None:
+   164	    parser = argparse.ArgumentParser(description=__doc__)
+   165	    parser.add_argument("--d2-dir", type=Path, default=REPO_ROOT / "generalization/data/d2")
+   166	    parser.add_argument("--out-dir", type=Path,
+   167	                        default=REPO_ROOT / "generalization/data/d2/shards")
+   168	    parser.add_argument("--exposures", type=Path, default=PUBLISHED / "data/exposures.csv.gz")
+   169	    parser.add_argument("--catalog", type=Path,
+   170	                        default=PUBLISHED / "catalog/ls_full_catalog.csv")
+   171	    parser.add_argument("--arms", default="b,ctrl,a,ladder,phase,ampscale,nulls")
+   172	    parser.add_argument("--limit", type=int, default=None, help="pilot: first N targets")
+   173	    parser.add_argument("--resume", action="store_true",
+   174	                        help="permit writing into a non-empty shard directory")
+   175	    args = parser.parse_args()
+   176	
+   177	    assert_frozen()
+   178	    arms = set(args.arms.split(","))
+   179	    args.out_dir.mkdir(parents=True, exist_ok=True)
+   180	    existing = list(args.out_dir.glob("*.csv.gz"))
+   181	    if existing and not args.resume:
+   182	        raise SystemExit(
+   183	            f"{args.out_dir} already holds {len(existing)} shards; pass "
+   184	            f"--resume to add to it, or use a fresh directory (stale-shard guard)"
+   185	        )
+   186	    targets = pd.read_csv(args.d2_dir / "d2_targets.csv")
+   187	    modes = pd.read_csv(args.d2_dir / "d2_modes.csv")
+   188	    if args.limit:
+   189	        targets = targets.head(args.limit)
+   190	    stats, frames = load_templates(args.exposures, args.catalog)
+   191	
+   192	    pool_index = {sid: i for i, sid in enumerate(sorted(stats["source_id"]))}
+   193	
+   194	    def control_id(template_id: str) -> str:
+   195	        return "95" + str(pool_index[template_id]).zfill(17)
+   196	
+   197	    injected_rows: list[dict] = []
+   198	    rejected_rows: list[dict] = []
+   199	    ladder = [
+   200	        (gi + 1, ri + 1, g, r)
+   201	        for gi, g in enumerate(BANDPASS_LADDER_G)
+   202	        for ri, r in enumerate(BANDPASS_LADDER_RG)
+   203	    ]
+   204	    nominal = next(
+   205	        (gi, ri, g, r) for gi, ri, g, r in ladder if g == NOMINAL_G and r == NOMINAL_RG
+   206	    )
+   207	    manifest: list[dict] = []
+   208	
+   209	    for target in targets.itertuples(index=False):
+   210	        star_modes = modes[modes["tic"] == target.tic]
+   211	        periods = star_modes["period_s"].tolist()
+   212	        amps = star_modes["amp_ppt"].tolist()
+   213	        picks, match_label = match_templates(stats, float(target.gmag))
+   214	        variants = []
+   215	        if "b" in arms or "a" in arms:
+   216	            variants.append((*nominal, (0, 1, 2)))
+   217	        if "ladder" in arms:
+   218	            variants.extend((gi, ri, g, r, (1,)) for gi, ri, g, r in ladder
+   219	                            if not (g == NOMINAL_G and r == NOMINAL_RG))
+   220	        if "phase" in arms:
+   221	            variants.extend((nominal[0], nominal[1], nominal[2], nominal[3], (1,),
+   222	                             d, 1.0) for d in (1, 2))
+   223	        if "ampscale" in arms:
+   224	            variants.extend((nominal[0], nominal[1], nominal[2], nominal[3], (1,),
+   225	                             0, sc) for sc in (0.7, 1.3))
+   226	        for entry in variants:
+   227	            gi, ri, g, r, template_ks = entry[:5]
+   228	            phase_draw = entry[5] if len(entry) > 5 else 0
+   229	            amp_scale = entry[6] if len(entry) > 6 else 1.0
+   230	            model = build_truth_model(
+   231	                int(target.tic), periods, amps, float(target.cadence_s),
+   232	                ratio_g=g, ratio_rg=r, amplitude_scale=amp_scale,
+   233	                phase_draw=phase_draw,
+   234	            )
+   235	            for k in template_ks:
+   236	                template_id = picks[k]
+   237	                template = frames[template_id]
+   238	                arm_list = []
+   239	                nominal_scenario = (g == NOMINAL_G and r == NOMINAL_RG
+   240	                                    and phase_draw == 0 and amp_scale == 1.0)
+   241	                if nominal_scenario:
+   242	                    if "b" in arms:
+   243	                        arm_list.append(("92", False))
+   244	                    if "a" in arms:
+   245	                        arm_list.append(("93", True))
+   246	                else:
+   247	                    arm_list.append(("92", False))
+   248	                for prefix, gaussian in arm_list:
+   249	                    sid = campaign_id(prefix, int(target.tic), k, gi, ri,
+   250	                                      phase_draw, amp_scale)
+   251	                    if not campaign_id_ok(sid):
+   252	                        raise SystemExit(f"bad campaign id {sid}")
+   253	                    shard = synthesize(template, model, sid, gaussian, seed=int(sid[2:]))
+   254	                    write_shard(args.out_dir / f"{sid}.csv.gz", shard)
+   255	                    for mode in model.modes:
+   256	                        injected_rows.append({
+   257	                            "campaign_id": sid, "period_s": mode.period_s,
+   258	                            "frequency_per_day": mode.frequency_per_day,
+   259	                            "amp_tess_ppt": mode.amp_tess_ppt,
+   260	                            "tess_sinc": mode.tess_sinc,
+   261	                            "ztf_sinc": mode.ztf_sinc,
+   262	                            "amp_g_mag": mode.amp_g_mag,
+   263	                            "amp_r_mag": mode.amp_r_mag,
+   264	                            "phase_rad": mode.phase_rad,
+   265	                        })
+   266	                    for rejected in model.rejected:
+   267	                        rejected_rows.append({"campaign_id": sid, **rejected})
+   268	                    manifest.append({
+   269	                        "campaign_id": sid, "arm": "A" if gaussian else "B",
+   270	                        "tic": int(target.tic), "template_source_id": template_id,
+   271	                        "template_status": stats.set_index("source_id")["blind_status"].get(template_id, ""),
+   272	                        "template_k": k, "ratio_g": g, "ratio_rg": r,
+   273	                        "phase_draw": phase_draw, "amp_scale": amp_scale,
+   274	                        "match": match_label,
+   275	                        "control_campaign_id": control_id(template_id) if not gaussian else "",
+   276	                        "n_modes_injected": len(model.modes),
+   277	                        "n_modes_rejected": len(model.rejected),
+   278	                    })
+   279	        print(f"[d2-shards] TIC {target.tic}: {len(manifest)} shards so far", flush=True)
+   280	
+   281	    if "ctrl" in arms:
+   282	        used = sorted({
+   283	            row["template_source_id"] for row in manifest if row["arm"] == "B"
+   284	        })
+   285	        null_model = build_truth_model(0, [], [], 120.0)
+   286	        for template_id in used:
+   287	            sid = control_id(template_id)
+   288	            shard = frames[template_id].copy()
+   289	            shard["source_id"] = sid
+   290	            write_shard(args.out_dir / f"{sid}.csv.gz", shard)
+   291	            manifest.append({
+   292	                "campaign_id": sid, "arm": "ctrl", "tic": 0,
+   293	                "template_source_id": template_id,
+   294	                "template_status": stats.set_index("source_id")["blind_status"].get(template_id, ""),
+   295	                "template_k": -1, "ratio_g": 0.0, "ratio_rg": 0.0, "match": "",
+   296	                "n_modes_injected": 0, "n_modes_rejected": 0,
+   297	            })
+   298	        print(f"[d2-shards] {len(used)} paired controls", flush=True)
+   299	
+   300	    if "nulls" in arms:
+   301	        pool = stats.sort_values("source_id")["source_id"].tolist()
+   302	        null_model = build_truth_model(0, [], [], 120.0)
+   303	        for serial in range(N_NULLS):
+   304	            template_id = pool[serial % len(pool)]
+   305	            sid = "94" + str(serial).zfill(17)
+   306	            shard = synthesize(frames[template_id], null_model, sid, True, seed=serial)
+   307	            write_shard(args.out_dir / f"{sid}.csv.gz", shard)
+   308	            manifest.append({
+   309	                "campaign_id": sid, "arm": "null", "tic": 0,
+   310	                "template_source_id": template_id,
+   311	                "template_status": stats.set_index("source_id")["blind_status"].get(template_id, ""),
+   312	                "template_k": serial % len(pool),
+   313	                "ratio_g": 0.0, "ratio_rg": 0.0, "match": "",
+   314	                "n_modes_injected": 0, "n_modes_rejected": 0,
+   315	            })
+   316	            if (serial + 1) % 200 == 0:
+   317	                print(f"[d2-shards] nulls {serial + 1}/{N_NULLS}", flush=True)
+   318	
+   319	    frame = pd.DataFrame(manifest)
+   320	    frame.to_csv(args.out_dir / "shard_manifest.csv", index=False)
+   321	    pd.DataFrame(injected_rows).to_csv(args.out_dir / "injected_modes.csv", index=False)
+   322	    pd.DataFrame(rejected_rows).to_csv(args.out_dir / "rejected_modes.csv", index=False)
+   323	    unique_rejected = {
+   324	        (row["campaign_id"].split("0000")[0][2:12], row["period_s"])
+   325	        for row in rejected_rows
+   326	    }
+   327	    import hashlib as _hashlib
+   328	    outputs_sha = {
+   329	        name: _hashlib.sha256((args.out_dir / name).read_bytes()).hexdigest()
+   330	        for name in ("shard_manifest.csv", "injected_modes.csv", "rejected_modes.csv")
+   331	    }
+   332	    ab = frame[frame["arm"].isin(["A", "B"])]
+   333	    summary = {
+   334	        "shards": len(frame),
+   335	        "by_arm": frame["arm"].value_counts().to_dict(),
+   336	        "match_labels": frame["match"].value_counts().to_dict(),
+   337	        "targets": int(ab["tic"].nunique()),
+   338	        "unique_windows_arm_b": int(
+   339	            frame.loc[frame["arm"] == "B", "template_source_id"].nunique()),
+   340	        "total_rejected_mode_rows": int(frame["n_modes_rejected"].sum()),
+   341	        "unique_target_modes_rejected": len(unique_rejected),
+   342	        "outputs_sha256": outputs_sha,
+   343	        "campaign_sha256": campaign_file_shas(),
+   344	    }
+   345	    (args.out_dir / "shard_summary.json").write_text(
+   346	        json.dumps(summary, indent=2) + "\n", encoding="utf-8"
+   347	    )
+   348	    print(json.dumps(summary, indent=2))
+   349	
+   350	
+   351	if __name__ == "__main__":
+   352	    main()
+
+codex
+The targeted fixes are only partial in the current code: the panel now rejects nonfinite ULP-compared fields and prevents zero-count/empty/duplicate samples, while the runner now enforces a 928 record count and performs one start/end code check. I’m testing the remaining bypasses—duplicate replay IDs, unbound panel inputs, stale valid shards, and missing drift checks—before the final verdict.
+exec
+/bin/zsh -lc "rg -n \"panel_golden(_report|_gate)|validate_panel|replay_report|campaign_shas_start|campaign_sha256_start|campaign_sha256_final|campaign code changed|shard_manifest\\.csv|expect-count\" scripts/generalization generalization | head -n 300" in /Users/jackneo/Documents/vonhippel-base9/astro-wd
+ succeeded in 0ms:
+scripts/generalization/replay_gate.py:232:    report_path = args.out_dir / "replay_report.json"
+scripts/generalization/run_generalization_ls.py:169:    parser.add_argument("--expect-count", type=int, default=None,
+scripts/generalization/run_generalization_ls.py:175:                        help="replay_report.json from a PASSING replay_gate run "
+scripts/generalization/run_generalization_ls.py:181:    campaign_shas_start = campaign_file_shas()
+scripts/generalization/run_generalization_ls.py:182:    attestation = validate_attestation(args.replay_report)
+scripts/generalization/run_generalization_ls.py:287:            "path": str(args.replay_report),
+scripts/generalization/run_generalization_ls.py:292:    if campaign_file_shas() != campaign_shas_start:
+scripts/generalization/run_generalization_ls.py:293:        raise SystemExit("campaign code changed mid-run — results void")
+scripts/generalization/build_d2_shards.py:41:  subsets (G2 methods finding 3). Full mapping in shard_manifest.csv.
+scripts/generalization/build_d2_shards.py:320:    frame.to_csv(args.out_dir / "shard_manifest.csv", index=False)
+scripts/generalization/build_d2_shards.py:330:        for name in ("shard_manifest.csv", "injected_modes.csv", "rejected_modes.csv")
+scripts/generalization/panel_golden_gate.py:119:                        default=REPO_ROOT / "outputs/generalization/panel_golden_report.json")
+scripts/generalization/panel_golden_gate.py:163:    report = {"gate": "panel_golden_gate", "passed": passed, "stars": records,
+scripts/generalization/metrics_generalization.py:11:  d2  campaign injection run; truth = shard_manifest.csv + injected_modes.csv
+scripts/generalization/metrics_generalization.py:253:    manifest = pd.read_csv(shards_dir / "shard_manifest.csv",
+scripts/generalization/metrics_generalization.py:696:                        help="d2: shard dir with shard_manifest.csv; census "
+scripts/generalization/metrics_generalization.py:705:    campaign_shas_start = campaign_file_shas()
+scripts/generalization/metrics_generalization.py:803:    if campaign_file_shas() != campaign_shas_start:
+scripts/generalization/metrics_generalization.py:804:        raise SystemExit("campaign code changed while metrics were running")
+generalization/RUNBOOK.md:16:2. `python scripts/generalization/panel_golden_gate.py`
+generalization/RUNBOOK.md:38:    --replay-report outputs/generalization/replay_gate_full/replay_report.json`
+generalization/reviews/G2r4/sol_methods4.err:16:Round-4 FREEZE CHECK. Your round-3 verdict: generalization/reviews/G2r3/sol_methods3.md; dispositions: generalization/reviews/G2r3/RESPONSE.md. Verify your 4 minimal blockers against CURRENT scripts/generalization/panel_golden_gate.py, replay_gate.py, run_generalization_ls.py, build_d2_shards.py. Check: NaN fail-closed + vacuous-pass guards + bound report in the panel gate; 928-star attestation requirement; stale-shard guards; campaign-drift snapshots. One line per item RESOLVED/UNRESOLVED + evidence. Verdict: freezable? Only execution-blocking residuals.
+generalization/reviews/G2r4/sol_methods4.err:147:/bin/zsh -lc 'wc -l generalization/reviews/G2r3/sol_methods3.md generalization/reviews/G2r3/RESPONSE.md scripts/generalization/panel_golden_gate.py scripts/generalization/replay_gate.py scripts/generalization/run_generalization_ls.py scripts/generalization/build_d2_shards.py && nl -ba generalization/reviews/G2r3/sol_methods3.md && nl -ba generalization/reviews/G2r3/RESPONSE.md' in /Users/jackneo/Documents/vonhippel-base9/astro-wd
+generalization/reviews/G2r4/sol_methods4.err:151:     180 scripts/generalization/panel_golden_gate.py
+generalization/reviews/G2r4/sol_methods4.err:172:/bin/zsh -lc 'nl -ba generalization/reviews/G2r3/sol_methods3.md; nl -ba generalization/reviews/G2/RESPONSE.md; git status --short -- generalization/reviews/G2r3 generalization/reviews/G2/RESPONSE.md scripts/generalization/panel_golden_gate.py scripts/generalization/replay_gate.py scripts/generalization/run_generalization_ls.py scripts/generalization/build_d2_shards.py' in /Users/jackneo/Documents/vonhippel-base9/astro-wd
+generalization/reviews/G2r4/sol_methods4.err:181:     8	| 2 | **PARTIAL** | Final campaign SHAs are now present in the D2 summary, D3 report, runner, panels, and metrics—for example [build_d2_shards.py:314](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/build_d2_shards.py:314), [build_d3_roster.py:218](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/build_d3_roster.py:218), and [metrics_generalization.py:680](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/metrics_generalization.py:680). Replay still omits campaign SHAs from its report at [replay_gate.py:216](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/replay_gate.py:216), and the panel gate records only environment at [panel_golden_gate.py:150](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/panel_golden_gate.py:150). No stage takes initial and final snapshots or fails if campaign code changes mid-stage. |
+generalization/reviews/G2r4/sol_methods4.err:192:    19	- The frozen reconstruction sequence matches the production builder at [panel_golden_gate.py:58](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/panel_golden_gate.py:58).
+generalization/reviews/G2r4/sol_methods4.err:193:    20	- Exact canonical-CSV equality for non-BJD science columns is appropriate at [panel_golden_gate.py:71](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/panel_golden_gate.py:71).
+generalization/reviews/G2r4/sol_methods4.err:198:    25	1. **NaNs pass as `identical_1ulp`.** The ULP expressions at [panel_golden_gate.py:81](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/panel_golden_gate.py:81) and [panel_golden_gate.py:95](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/panel_golden_gate.py:95) produce NaN; comparisons such as `NaN > 1` are false. A focused check confirmed that replacing either BJD or RA with NaN was accepted. Require matching finite masks and finite values before ULP comparison.
+generalization/reviews/G2r4/sol_methods4.err:200:    27	2. **Vacuous pass is possible.** `--count` is not validated at [panel_golden_gate.py:123](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/panel_golden_gate.py:123), and `all([])` passes at [panel_golden_gate.py:147](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/panel_golden_gate.py:147). Require `count >= 1`, nonempty records, unique IDs, and the expected sample count/digest.
+generalization/reviews/G2r4/sol_methods4.err:210:    37	- Reject shard files outside `shard_manifest.csv`, or make the runner consume exactly the manifest set.
+generalization/reviews/G2r4/sol_methods4.err:318:/bin/zsh -lc "rg -n \"nan|isfinite|finite|all\\(|count|928|unique|digest|attest|panel|campaign|snapshot|drift|manifest|glob|csv\\.gz|shard|sha|initial|final|bound|ULP|ulp|passed|records|stars\" scripts/generalization/panel_golden_gate.py scripts/generalization/replay_gate.py scripts/generalization/run_generalization_ls.py scripts/generalization/build_d2_shards.py" in /Users/jackneo/Documents/vonhippel-base9/astro-wd
+generalization/reviews/G2r4/sol_methods4.err:329:scripts/generalization/build_d2_shards.py:41:  subsets (G2 methods finding 3). Full mapping in shard_manifest.csv.
+generalization/reviews/G2r4/sol_methods4.err:368:scripts/generalization/build_d2_shards.py:320:    frame.to_csv(args.out_dir / "shard_manifest.csv", index=False)
+generalization/reviews/G2r4/sol_methods4.err:373:scripts/generalization/build_d2_shards.py:330:        for name in ("shard_manifest.csv", "injected_modes.csv", "rejected_modes.csv")
+generalization/reviews/G2r4/sol_methods4.err:384:scripts/generalization/panel_golden_gate.py:3:published exposure panel on THIS machine and environment.
+generalization/reviews/G2r4/sol_methods4.err:385:scripts/generalization/panel_golden_gate.py:6:drift in the panel stage (astropy Time/light_travel_time, IERS tables, ERFA
+generalization/reviews/G2r4/sol_methods4.err:386:scripts/generalization/panel_golden_gate.py:8:exposure rows for sampled stars from the PUBLISHED raw IRSA cache using the
+generalization/reviews/G2r4/sol_methods4.err:387:scripts/generalization/panel_golden_gate.py:9:frozen functions exactly as build_catalog_panels.main() does (IERS
+generalization/reviews/G2r4/sol_methods4.err:388:scripts/generalization/panel_golden_gate.py:11:table) and compares against the published exposures.csv.gz:
+generalization/reviews/G2r4/sol_methods4.err:389:scripts/generalization/panel_golden_gate.py:14:  magerr) must be BYTE-identical; bjd_tdb is compared at <= 1 ulp (~40 us):
+generalization/reviews/G2r4/sol_methods4.err:390:scripts/generalization/panel_golden_gate.py:15:  the barycentric chain sits at double rounding boundaries, so any ns-level
+generalization/reviews/G2r4/sol_methods4.err:391:scripts/generalization/panel_golden_gate.py:17:  the production machine itself (2026-08-28). 1 ulp is 7e-7 cycles at the
+generalization/reviews/G2r4/sol_methods4.err:392:scripts/generalization/panel_golden_gate.py:18:  shortest searched period; the campaign pins IERS via astropy-iers-data
+generalization/reviews/G2r4/sol_methods4.err:393:scripts/generalization/panel_golden_gate.py:19:  with auto_download disabled and records the max ulp deviation. Carried
+generalization/reviews/G2r4/sol_methods4.err:394:scripts/generalization/panel_golden_gate.py:20:  metadata (oid, ra, dec, chi) is compared at <= 1 ulp, because the archived
+generalization/reviews/G2r4/sol_methods4.err:395:scripts/generalization/panel_golden_gate.py:23:  one ulp. chi additionally must not sit within 1e-9 of the QC boundary 4.0.
+generalization/reviews/G2r4/sol_methods4.err:396:scripts/generalization/panel_golden_gate.py:45:    campaign_file_shas,
+generalization/reviews/G2r4/sol_methods4.err:397:scripts/generalization/panel_golden_gate.py:48:    frozen_file_shas,
+generalization/reviews/G2r4/sol_methods4.err:398:scripts/generalization/panel_golden_gate.py:72:        return {"verdict": "MISMATCH", "reason": f"row count {len(rebuilt)} != {len(reference)}"}
+generalization/reviews/G2r4/sol_methods4.err:399:scripts/generalization/panel_golden_gate.py:83:    if not (np.isfinite(bjd_a).all() and np.isfinite(bjd_b).all()):
+generalization/reviews/G2r4/sol_methods4.err:400:scripts/generalization/panel_golden_gate.py:84:        return {"verdict": "MISMATCH", "reason": "nonfinite bjd_tdb"}
+generalization/reviews/G2r4/sol_methods4.err:401:scripts/generalization/panel_golden_gate.py:85:    bjd_ulp = np.abs(bjd_a - bjd_b) / np.spacing(np.abs(bjd_b))
+generalization/reviews/G2r4/sol_methods4.err:402:scripts/generalization/panel_golden_gate.py:86:    if (bjd_ulp > 1.0).any():
+generalization/reviews/G2r4/sol_methods4.err:403:scripts/generalization/panel_golden_gate.py:87:        worst = int(np.argmax(bjd_ulp))
+generalization/reviews/G2r4/sol_methods4.err:404:scripts/generalization/panel_golden_gate.py:88:        return {"verdict": "MISMATCH", "reason": "bjd_tdb beyond 1 ulp",
+generalization/reviews/G2r4/sol_methods4.err:405:scripts/generalization/panel_golden_gate.py:89:                "row": worst, "max_ulp": float(bjd_ulp.max())}
+generalization/reviews/G2r4/sol_methods4.err:406:scripts/generalization/panel_golden_gate.py:90:    if not (rebuilt["oid"].astype(str) == reference["oid"].astype(str)).all():
+generalization/reviews/G2r4/sol_methods4.err:407:scripts/generalization/panel_golden_gate.py:94:        return {"verdict": "MISMATCH", "reason": "chi within 1e-9 of QC boundary 4.0"}
+generalization/reviews/G2r4/sol_methods4.err:408:scripts/generalization/panel_golden_gate.py:98:        if not (np.isfinite(a).all() and np.isfinite(b).all()):
+generalization/reviews/G2r4/sol_methods4.err:409:scripts/generalization/panel_golden_gate.py:99:            return {"verdict": "MISMATCH", "reason": f"nonfinite {col}"}
+generalization/reviews/G2r4/sol_methods4.err:410:scripts/generalization/panel_golden_gate.py:100:        ulp = np.spacing(np.abs(b))
+generalization/reviews/G2r4/sol_methods4.err:411:scripts/generalization/panel_golden_gate.py:101:        if (np.abs(a - b) > ulp).any():
+generalization/reviews/G2r4/sol_methods4.err:412:scripts/generalization/panel_golden_gate.py:102:            worst = int(np.argmax(np.abs(a - b) / np.maximum(ulp, 1e-300)))
+generalization/reviews/G2r4/sol_methods4.err:413:scripts/generalization/panel_golden_gate.py:103:            return {"verdict": "MISMATCH", "reason": f"{col} beyond 1 ulp",
+generalization/reviews/G2r4/sol_methods4.err:414:scripts/generalization/panel_golden_gate.py:105:    all_exact = (bjd_ulp == 0.0).all() and all(
+generalization/reviews/G2r4/sol_methods4.err:415:scripts/generalization/panel_golden_gate.py:106:        (rebuilt[c].to_numpy(dtype=float) == reference[c].to_numpy(dtype=float)).all()
+generalization/reviews/G2r4/sol_methods4.err:416:scripts/generalization/panel_golden_gate.py:109:    return {"verdict": "identical" if all_exact else "identical_1ulp",
+generalization/reviews/G2r4/sol_methods4.err:417:scripts/generalization/panel_golden_gate.py:110:            "bjd_max_ulp": float(bjd_ulp.max()),
+generalization/reviews/G2r4/sol_methods4.err:418:scripts/generalization/panel_golden_gate.py:111:            "bjd_rows_off_by_1ulp": int((bjd_ulp > 0).sum())}
+generalization/reviews/G2r4/sol_methods4.err:419:scripts/generalization/panel_golden_gate.py:116:    parser.add_argument("--count", type=int, default=5,
+generalization/reviews/G2r4/sol_methods4.err:420:scripts/generalization/panel_golden_gate.py:117:                        help="stars to replay (>= 1 enforced)")
+generalization/reviews/G2r4/sol_methods4.err:421:scripts/generalization/panel_golden_gate.py:119:                        default=REPO_ROOT / "outputs/generalization/panel_golden_report.json")
+generalization/reviews/G2r4/sol_methods4.err:422:scripts/generalization/panel_golden_gate.py:121:    if args.count < 1:
+generalization/reviews/G2r4/sol_methods4.err:423:scripts/generalization/panel_golden_gate.py:122:        raise SystemExit("--count must be >= 1 (a vacuous gate cannot pass)")
+generalization/reviews/G2r4/sol_methods4.err:424:scripts/generalization/panel_golden_gate.py:129:    published = pd.read_csv(PUBLISHED / "data/exposures.csv.gz",
+generalization/reviews/G2r4/sol_methods4.err:425:scripts/generalization/panel_golden_gate.py:131:    star_ids = sorted(published["source_id"].unique())
+generalization/reviews/G2r4/sol_methods4.err:426:scripts/generalization/panel_golden_gate.py:132:    stride = max(1, len(star_ids) // args.count)
+generalization/reviews/G2r4/sol_methods4.err:427:scripts/generalization/panel_golden_gate.py:133:    sample = star_ids[::stride][: args.count]
+generalization/reviews/G2r4/sol_methods4.err:428:scripts/generalization/panel_golden_gate.py:135:    records = []
+generalization/reviews/G2r4/sol_methods4.err:429:scripts/generalization/panel_golden_gate.py:140:                records.append({"source_id": source_id, "verdict": "MISSING_CACHE"})
+generalization/reviews/G2r4/sol_methods4.err:430:scripts/generalization/panel_golden_gate.py:153:            records.append(record)
+generalization/reviews/G2r4/sol_methods4.err:431:scripts/generalization/panel_golden_gate.py:154:            print(f"[panel-golden] {source_id}: {record['verdict']}", flush=True)
+generalization/reviews/G2r4/sol_methods4.err:432:scripts/generalization/panel_golden_gate.py:156:    ids = [r["source_id"] for r in records]
+generalization/reviews/G2r4/sol_methods4.err:433:scripts/generalization/panel_golden_gate.py:157:    if not records or len(set(ids)) != len(ids):
+generalization/reviews/G2r4/sol_methods4.err:434:scripts/generalization/panel_golden_gate.py:159:    passed = all(
+generalization/reviews/G2r4/sol_methods4.err:435:scripts/generalization/panel_golden_gate.py:160:        r["verdict"] in ("identical", "identical_1ulp") for r in records
+generalization/reviews/G2r4/sol_methods4.err:436:scripts/generalization/panel_golden_gate.py:161:    ) and len(records) >= args.count
+generalization/reviews/G2r4/sol_methods4.err:437:scripts/generalization/panel_golden_gate.py:163:    report = {"gate": "panel_golden_gate", "passed": passed, "stars": records,
+generalization/reviews/G2r4/sol_methods4.err:438:scripts/generalization/panel_golden_gate.py:165:              "frozen_sha256": frozen_file_shas(),
+generalization/reviews/G2r4/sol_methods4.err:439:scripts/generalization/panel_golden_gate.py:166:              "campaign_sha256": campaign_file_shas(),
+generalization/reviews/G2r4/sol_methods4.err:440:scripts/generalization/panel_golden_gate.py:168:                  "exposures_sha256": hashlib.sha256(
+generalization/reviews/G2r4/sol_methods4.err:441:scripts/generalization/panel_golden_gate.py:169:                      (PUBLISHED / "data/exposures.csv.gz").read_bytes()).hexdigest(),
+generalization/reviews/G2r4/sol_methods4.err:442:scripts/generalization/panel_golden_gate.py:170:                  "raw_cache_sha256": hashlib.sha256(
+generalization/reviews/G2r4/sol_methods4.err:443:scripts/generalization/panel_golden_gate.py:171:                      (PUBLISHED / "data/irsa_raw_cache.tar.gz").read_bytes()).hexdigest(),
+generalization/reviews/G2r4/sol_methods4.err:444:scripts/generalization/panel_golden_gate.py:175:    print(f"[panel-golden] {'PASS' if passed else 'FAIL'} -> {args.out}")
+generalization/reviews/G2r4/sol_methods4.err:445:scripts/generalization/panel_golden_gate.py:176:    raise SystemExit(0 if passed else 1)
+generalization/reviews/G2r4/sol_methods4.err:537:scripts/generalization/run_generalization_ls.py:169:    parser.add_argument("--expect-count", type=int, default=None,
+generalization/reviews/G2r4/sol_methods4.err:541:scripts/generalization/run_generalization_ls.py:181:    campaign_shas_start = campaign_file_shas()
+generalization/reviews/G2r4/sol_methods4.err:542:scripts/generalization/run_generalization_ls.py:182:    attestation = validate_attestation(args.replay_report)
+generalization/reviews/G2r4/sol_methods4.err:566:scripts/generalization/run_generalization_ls.py:292:    if campaign_file_shas() != campaign_shas_start:
+generalization/reviews/G2r4/sol_methods4.err:567:scripts/generalization/run_generalization_ls.py:293:        raise SystemExit("campaign code changed mid-run — results void")
+generalization/reviews/G2r4/sol_methods4.err:572:/bin/zsh -lc "nl -ba scripts/generalization/panel_golden_gate.py | sed -n '1,220p'" in /Users/jackneo/Documents/vonhippel-base9/astro-wd
+generalization/reviews/G2r4/sol_methods4.err:692:   119	                        default=REPO_ROOT / "outputs/generalization/panel_golden_report.json")
+generalization/reviews/G2r4/sol_methods4.err:736:   163	    report = {"gate": "panel_golden_gate", "passed": passed, "stars": records,
+generalization/reviews/G2r4/sol_methods4.err:989:   232	    report_path = args.out_dir / "replay_report.json"
+generalization/reviews/G2r4/sol_methods4.err:1169:   169	    parser.add_argument("--expect-count", type=int, default=None,
+generalization/reviews/G2r4/sol_methods4.err:1175:   175	                        help="replay_report.json from a PASSING replay_gate run "
+generalization/reviews/G2r4/sol_methods4.err:1181:   181	    campaign_shas_start = campaign_file_shas()
+generalization/reviews/G2r4/sol_methods4.err:1182:   182	    attestation = validate_attestation(args.replay_report)
+generalization/reviews/G2r4/sol_methods4.err:1287:   287	            "path": str(args.replay_report),
+generalization/reviews/G2r4/sol_methods4.err:1292:   292	    if campaign_file_shas() != campaign_shas_start:
+generalization/reviews/G2r4/sol_methods4.err:1293:   293	        raise SystemExit("campaign code changed mid-run — results void")
+generalization/reviews/G2r4/sol_methods4.err:1349:    41	  subsets (G2 methods finding 3). Full mapping in shard_manifest.csv.
+generalization/reviews/G2r4/sol_methods4.err:1628:   320	    frame.to_csv(args.out_dir / "shard_manifest.csv", index=False)
+generalization/reviews/G2r4/sol_methods4.err:1638:   330	        for name in ("shard_manifest.csv", "injected_modes.csv", "rejected_modes.csv")
+generalization/reviews/G2r4/sol_stats4.err:334:696:                        help="d2: shard dir with shard_manifest.csv; census "
+generalization/reviews/G2r4/sol_stats4.err:963:    11	  d2  campaign injection run; truth = shard_manifest.csv + injected_modes.csv
+generalization/reviews/G2r4/sol_stats4.err:1210:   253	    manifest = pd.read_csv(shards_dir / "shard_manifest.csv",
+generalization/reviews/G2r4/sol_stats4.err:1398:   696	                        help="d2: shard dir with shard_manifest.csv; census "
+generalization/reviews/G2r4/sol_stats4.err:1407:   705	    campaign_shas_start = campaign_file_shas()
+generalization/reviews/G2r4/sol_stats4.err:1505:   803	    if campaign_file_shas() != campaign_shas_start:
+generalization/reviews/G2r4/sol_stats4.err:1506:   804	        raise SystemExit("campaign code changed while metrics were running")
+generalization/reviews/G2r4/sol_stats4.err:1761:   253	    manifest = pd.read_csv(shards_dir / "shard_manifest.csv",
+generalization/reviews/G2r4/sol_stats4.err:1860:scripts/generalization/metrics_generalization.py:696:                        help="d2: shard dir with shard_manifest.csv; census "
+generalization/GENERALIZATION_PLAN.md:79:2026-08-28). Panel-stage golden gate (`panel_golden_gate.py`): PASS on both
+generalization/reviews/G2r4/sol_referee4.err:293:2026-08-28). Panel-stage golden gate (`panel_golden_gate.py`): PASS on both
+generalization/reviews/G2r4/sol_referee4.err:820:    79	2026-08-28). Panel-stage golden gate (`panel_golden_gate.py`): PASS on both
+generalization/reviews/G2r4/sol_referee4.err:1311:generalization/reviews/G2r4/sol_methods4.err:16:Round-4 FREEZE CHECK. Your round-3 verdict: generalization/reviews/G2r3/sol_methods3.md; dispositions: generalization/reviews/G2r3/RESPONSE.md. Verify your 4 minimal blockers against CURRENT scripts/generalization/panel_golden_gate.py, replay_gate.py, run_generalization_ls.py, build_d2_shards.py. Check: NaN fail-closed + vacuous-pass guards + bound report in the panel gate; 928-star attestation requirement; stale-shard guards; campaign-drift snapshots. One line per item RESOLVED/UNRESOLVED + evidence. Verdict: freezable? Only execution-blocking residuals.
+generalization/reviews/G2/sol_methods2.err:556:   126	                        help="replay_report.json from a PASSING replay_gate run "
+generalization/reviews/G2/sol_methods2.err:562:   132	    attestation = validate_attestation(args.replay_report)
+generalization/reviews/G2/sol_methods2.err:658:   228	            "path": str(args.replay_report),
+generalization/reviews/G2/sol_methods2.err:1137:   224	    report_path = args.out_dir / "replay_report.json"
+generalization/reviews/G2/sol_methods2.err:1349:    37	  Nulls: 94 + 17-digit serial. Full mapping in shard_manifest.csv.
+generalization/reviews/G2/sol_methods2.err:1569:   257	    frame.to_csv(args.out_dir / "shard_manifest.csv", index=False)
+generalization/reviews/G2/sol_methods2.err:3120:   455	                        help="d2: shard dir with shard_manifest.csv; census "
+generalization/reviews/G2/sol_methods2.err:3302:    11	  d2  campaign injection run; truth = shard_manifest.csv + d2_modes.csv;
+generalization/reviews/G2/sol_methods2.err:3512:   221	    manifest = pd.read_csv(shards_dir / "shard_manifest.csv",
+generalization/reviews/G2/sol_stats2.err:2704:scripts/generalization/build_d2_shards.py-37-  Nulls: 94 + 17-digit serial. Full mapping in shard_manifest.csv.
+generalization/reviews/G2/sol_stats2.err:3126:generalization/reviews/G2/sol_methods2.err-1349-    37	  Nulls: 94 + 17-digit serial. Full mapping in shard_manifest.csv.
+generalization/reviews/G2/sol_stats2.err:4615:generalization/reviews/G1/sol_methods.err-4683-/bin/zsh -lc "find outputs -maxdepth 5 -type f \\( -name 'replay_report.json' -o -name '*identity_report.json' -o -name 'manifest.json' \\) -print 2>/dev/null | sort | sed -n '1,120p'" in /Users/jackneo/Documents/vonhippel-base9/astro-wd
+generalization/reviews/G2/sol_stats2.err:7613:    37	  Nulls: 94 + 17-digit serial. Full mapping in shard_manifest.csv.
+generalization/reviews/G2/sol_stats2.err:7833:   257	    frame.to_csv(args.out_dir / "shard_manifest.csv", index=False)
+generalization/reviews/G2/sol_stats2.err:8383:    11	  d2  campaign injection run; truth = shard_manifest.csv + d2_modes.csv;
+generalization/reviews/G2/sol_stats2.err:8593:   221	    manifest = pd.read_csv(shards_dir / "shard_manifest.csv",
+generalization/reviews/G2/sol_stats2.err:8905:   455	                        help="d2: shard dir with shard_manifest.csv; census "
+generalization/reviews/G2r3/sol_stats3.err:570:   487	                        help="d2: shard dir with shard_manifest.csv; census "
+generalization/reviews/G2r3/sol_stats3.err:687:    11	  d2  campaign injection run; truth = shard_manifest.csv + d2_modes.csv;
+generalization/reviews/G2r3/sol_stats3.err:924:   244	    manifest = pd.read_csv(shards_dir / "shard_manifest.csv",
+generalization/reviews/G2r3/sol_stats3.err:1440:     manifest = pd.read_csv(shards_dir / "shard_manifest.csv",
+generalization/reviews/G2r3/sol_stats3.err:1610:                         help="d2: shard dir with shard_manifest.csv; census "
+generalization/reviews/G2r3/sol_methods3.err:17:Round-3 reproducibility reviewer. Your round-2 findings: generalization/reviews/G2/sol_methods2.md; dispositions: generalization/reviews/G2/RESPONSE.md. Read the CURRENT scripts/generalization/build_d2_shards.py, run_generalization_ls.py, metrics_generalization.py, replay_gate.py, build_d3_roster.py, panel_golden_gate.py. For each of your 7 round-2 findings: verify the fix is in the code; RESOLVED/PARTIAL/UNRESOLVED with line evidence. Review panel_golden_gate.py (new since your round) for correctness of its comparison criteria. Final verdict: freezable or not, minimal remaining blockers.
+generalization/reviews/G2r3/sol_methods3.err:25:  • Review panel_golden_gate.py comparison criteria and edge cases
+generalization/reviews/G2r3/sol_methods3.err:151:/bin/zsh -lc 'wc -l generalization/reviews/G2/sol_methods2.md generalization/reviews/G2/RESPONSE.md scripts/generalization/build_d2_shards.py scripts/generalization/run_generalization_ls.py scripts/generalization/metrics_generalization.py scripts/generalization/replay_gate.py scripts/generalization/build_d3_roster.py scripts/generalization/panel_golden_gate.py && git status --short -- generalization/reviews/G2 scripts/generalization' in /Users/jackneo/Documents/vonhippel-base9/astro-wd
+generalization/reviews/G2r3/sol_methods3.err:427:   126	                        help="replay_report.json from a PASSING replay_gate run "
+generalization/reviews/G2r3/sol_methods3.err:433:   132	    attestation = validate_attestation(args.replay_report)
+generalization/reviews/G2r3/sol_methods3.err:529:   228	            "path": str(args.replay_report),
+generalization/reviews/G2r3/sol_methods3.err:557:    11	  d2  campaign injection run; truth = shard_manifest.csv + d2_modes.csv;
+generalization/reviews/G2r3/sol_methods3.err:790:   244	    manifest = pd.read_csv(shards_dir / "shard_manifest.csv",
+generalization/reviews/G2r3/sol_methods3.err:1033:   487	                        help="d2: shard dir with shard_manifest.csv; census "
+generalization/reviews/G2r3/sol_methods3.err:1176:    39	  subsets (G2 methods finding 3). Full mapping in shard_manifest.csv.
+generalization/reviews/G2r3/sol_methods3.err:1422:   285	    frame.to_csv(args.out_dir / "shard_manifest.csv", index=False)
+generalization/reviews/G2r3/sol_methods3.err:1432:   295	        for name in ("shard_manifest.csv", "injected_modes.csv", "rejected_modes.csv")
+generalization/reviews/G2r3/sol_methods3.err:1583:   126	                        help="replay_report.json from a PASSING replay_gate run "
+generalization/reviews/G2r3/sol_methods3.err:1589:   132	    attestation = validate_attestation(args.replay_report)
+generalization/reviews/G2r3/sol_methods3.err:1685:   228	            "path": str(args.replay_report),
+generalization/reviews/G2r3/sol_methods3.err:1715:    11	  d2  campaign injection run; truth = shard_manifest.csv + d2_modes.csv;
+generalization/reviews/G2r3/sol_methods3.err:1948:   244	    manifest = pd.read_csv(shards_dir / "shard_manifest.csv",
+generalization/reviews/G2r3/sol_methods3.err:2191:   487	                        help="d2: shard dir with shard_manifest.csv; census "
+generalization/reviews/G2r3/sol_methods3.err:2325:   244	    manifest = pd.read_csv(shards_dir / "shard_manifest.csv",
+generalization/reviews/G2r3/sol_methods3.err:2570:   487	                        help="d2: shard dir with shard_manifest.csv; census "
+generalization/reviews/G2r3/sol_methods3.err:2685:    11	  d2  campaign injection run; truth = shard_manifest.csv + d2_modes.csv;
+generalization/reviews/G2r3/sol_methods3.err:3125:   227	    report_path = args.out_dir / "replay_report.json"
+generalization/reviews/G2r3/sol_methods3.err:3366:/bin/zsh -lc 'nl -ba scripts/generalization/panel_golden_gate.py' in /Users/jackneo/Documents/vonhippel-base9/astro-wd
+generalization/reviews/G2r3/sol_methods3.err:3479:   112	                        default=REPO_ROOT / "outputs/generalization/panel_golden_report.json")
+generalization/reviews/G2r3/sol_methods3.err:3517:   150	    report = {"gate": "panel_golden_gate", "passed": passed, "stars": records,
+generalization/reviews/G2r3/sol_methods3.err:4386:scripts/generalization/panel_golden_gate.py:41:    EXPOSURE_COLUMNS,
+generalization/reviews/G2r3/sol_methods3.err:4387:scripts/generalization/panel_golden_gate.py:64:    clean = clean.sort_values(["band", "bjd_tdb"])
+generalization/reviews/G2r3/sol_methods3.err:4388:scripts/generalization/panel_golden_gate.py:65:    return clean[EXPOSURE_COLUMNS].reset_index(drop=True)
+generalization/reviews/G2r3/sol_methods3.err:4389:scripts/generalization/panel_golden_gate.py:71:    sci_a = rebuilt[SCIENCE_COLUMNS].to_csv(index=False, lineterminator="\n")
+generalization/reviews/G2r3/sol_methods3.err:4390:scripts/generalization/panel_golden_gate.py:72:    sci_b = reference[SCIENCE_COLUMNS].to_csv(index=False, lineterminator="\n")
+generalization/reviews/G2r3/sol_methods3.err:4391:scripts/generalization/panel_golden_gate.py:140:                EXPOSURE_COLUMNS
+generalization/reviews/G2r3/sol_methods3.err:4407:scripts/generalization/build_d2_shards.py:291:    frame.to_csv(args.out_dir / "shard_manifest.csv", index=False)
+generalization/reviews/G2r3/sol_methods3.err:4754:scripts/generalization/panel_golden_gate.py:41:    EXPOSURE_COLUMNS,
+generalization/reviews/G2r3/sol_methods3.err:4755:scripts/generalization/panel_golden_gate.py:64:    clean = clean.sort_values(["band", "bjd_tdb"])
+generalization/reviews/G2r3/sol_methods3.err:4756:scripts/generalization/panel_golden_gate.py:65:    return clean[EXPOSURE_COLUMNS].reset_index(drop=True)
+generalization/reviews/G2r3/sol_methods3.err:4757:scripts/generalization/panel_golden_gate.py:140:                EXPOSURE_COLUMNS
+generalization/reviews/G2r3/sol_methods3.err:5095:outputs/generalization/panel_golden_report.json
+generalization/reviews/G2r3/sol_methods3.err:5098:/bin/zsh -lc "find . -type f \\( -name 'replay_report.json' -o -name 'panel_golden_report.json' -o -name 'shard_summary.json' -o -name 'panels_manifest.json' -o -name 'manifest.json' \\) -not -path './.git/*' -not -path '*/node_modules/*' -print | sort | head -n 300" in /Users/jackneo/Documents/vonhippel-base9/astro-wd
+generalization/reviews/G2r3/sol_methods3.err:5108:./outputs/generalization/panel_golden_report.json
+generalization/reviews/G2r3/sol_methods3.err:5111:/bin/zsh -lc "nl -ba outputs/generalization/panel_golden_report.json; nl -ba generalization/data/d2/d2_roster_report.json | sed -n '1,180p'; nl -ba generalization/data/d3/roster_report.json | sed -n '1,180p'" in /Users/jackneo/Documents/vonhippel-base9/astro-wd
+generalization/reviews/G2r3/sol_methods3.err:5114:     2	  "gate": "panel_golden_gate",
+generalization/reviews/G2r3/sol_methods3.err:5212:    45	    "scripts/generalization/panel_golden_gate.py": "abe29feb28005b09fba3cfbc8b85d3f8f6a1cd531e0ae40eb6de1bc0884ba643",
+generalization/reviews/G2r3/sol_methods3.err:5289:    68	    "scripts/generalization/panel_golden_gate.py": "abe29feb28005b09fba3cfbc8b85d3f8f6a1cd531e0ae40eb6de1bc0884ba643",
+generalization/reviews/G2r3/sol_methods3.err:5356:/bin/zsh -lc 'shasum -a 256 scripts/generalization/build_d3_roster.py scripts/generalization/build_d2_roster.py scripts/generalization/build_d2_shards.py scripts/generalization/panel_golden_gate.py generalization/data/d3/roster_d3.csv' in /Users/jackneo/Documents/vonhippel-base9/astro-wd
+generalization/reviews/G2r3/sol_methods3.err:5361:abe29feb28005b09fba3cfbc8b85d3f8f6a1cd531e0ae40eb6de1bc0884ba643  scripts/generalization/panel_golden_gate.py
+generalization/reviews/G2r3/sol_methods3.err:5563:    79	2026-08-28). Panel-stage golden gate (`panel_golden_gate.py`): PASS on both
+generalization/reviews/G2r3/sol_methods3.err:5629:scripts/generalization/panel_golden_gate.py:112:                        default=REPO_ROOT / "outputs/generalization/panel_golden_report.json")
+generalization/reviews/G2r3/sol_methods3.err:5630:scripts/generalization/panel_golden_gate.py:150:    report = {"gate": "panel_golden_gate", "passed": passed, "stars": records,
+generalization/reviews/G2r3/sol_methods3.err:5640:scripts/generalization/build_d2_shards.py:301:        for name in ("shard_manifest.csv", "injected_modes.csv", "rejected_modes.csv")
+generalization/reviews/G2r3/sol_methods3.err:5663:generalization/reviews/G2r3/sol_referee3.err:1051:    79	2026-08-28). Panel-stage golden gate (`panel_golden_gate.py`): PASS on both
+generalization/reviews/G2r3/sol_methods3.err:5668:generalization/reviews/G2/sol_methods2.err:562:   132	    attestation = validate_attestation(args.replay_report)
+generalization/reviews/G2r3/sol_methods3.err:5694:scripts/generalization/run_generalization_ls.py:173:    attestation = validate_attestation(args.replay_report)
+generalization/reviews/G2r3/sol_methods3.err:5697:generalization/reviews/G2r3/sol_methods3.err:17:Round-3 reproducibility reviewer. Your round-2 findings: generalization/reviews/G2/sol_methods2.md; dispositions: generalization/reviews/G2/RESPONSE.md. Read the CURRENT scripts/generalization/build_d2_shards.py, run_generalization_ls.py, metrics_generalization.py, replay_gate.py, build_d3_roster.py, panel_golden_gate.py. For each of your 7 round-2 findings: verify the fix is in the code; RESOLVED/PARTIAL/UNRESOLVED with line evidence. Review panel_golden_gate.py (new since your round) for correctness of its comparison criteria. Final verdict: freezable or not, minimal remaining blockers.
+generalization/reviews/G2r3/sol_methods3.err:5698:generalization/reviews/G2r3/sol_methods3.err:25:  • Review panel_golden_gate.py comparison criteria and edge cases
+generalization/reviews/G2r3/sol_methods3.err:5699:generalization/reviews/G2r3/sol_methods3.err:151:/bin/zsh -lc 'wc -l generalization/reviews/G2/sol_methods2.md generalization/reviews/G2/RESPONSE.md scripts/generalization/build_d2_shards.py scripts/generalization/run_generalization_ls.py scripts/generalization/metrics_generalization.py scripts/generalization/replay_gate.py scripts/generalization/build_d3_roster.py scripts/generalization/panel_golden_gate.py && git status --short -- generalization/reviews/G2 scripts/generalization' in /Users/jackneo/Documents/vonhippel-base9/astro-wd
+generalization/reviews/G2r3/sol_methods3.err:5707:generalization/reviews/G2r3/sol_methods3.err:433:   132	    attestation = validate_attestation(args.replay_report)
+generalization/reviews/G2r3/sol_methods3.err:5717:generalization/reviews/G2r3/sol_methods3.err:1432:   295	        for name in ("shard_manifest.csv", "injected_modes.csv", "rejected_modes.csv")
+generalization/reviews/G2r3/sol_methods3.err:5721:generalization/reviews/G2r3/sol_methods3.err:1589:   132	    attestation = validate_attestation(args.replay_report)
+generalization/reviews/G2r3/sol_methods3.err:5731:generalization/reviews/G2r3/sol_methods3.err:3366:/bin/zsh -lc 'nl -ba scripts/generalization/panel_golden_gate.py' in /Users/jackneo/Documents/vonhippel-base9/astro-wd
+generalization/reviews/G2r3/sol_methods3.err:5732:generalization/reviews/G2r3/sol_methods3.err:3479:   112	                        default=REPO_ROOT / "outputs/generalization/panel_golden_report.json")
+generalization/reviews/G2r3/sol_methods3.err:5733:generalization/reviews/G2r3/sol_methods3.err:3517:   150	    report = {"gate": "panel_golden_gate", "passed": passed, "stars": records,
+generalization/reviews/G2r3/sol_methods3.err:5747:generalization/reviews/G2r3/sol_methods3.err:4386:scripts/generalization/panel_golden_gate.py:41:    EXPOSURE_COLUMNS,
+generalization/reviews/G2r3/sol_methods3.err:5748:generalization/reviews/G2r3/sol_methods3.err:4387:scripts/generalization/panel_golden_gate.py:64:    clean = clean.sort_values(["band", "bjd_tdb"])
+generalization/reviews/G2r3/sol_methods3.err:5749:generalization/reviews/G2r3/sol_methods3.err:4388:scripts/generalization/panel_golden_gate.py:65:    return clean[EXPOSURE_COLUMNS].reset_index(drop=True)
+generalization/reviews/G2r3/sol_methods3.err:5750:generalization/reviews/G2r3/sol_methods3.err:4389:scripts/generalization/panel_golden_gate.py:71:    sci_a = rebuilt[SCIENCE_COLUMNS].to_csv(index=False, lineterminator="\n")
+generalization/reviews/G2r3/sol_methods3.err:5751:generalization/reviews/G2r3/sol_methods3.err:4390:scripts/generalization/panel_golden_gate.py:72:    sci_b = reference[SCIENCE_COLUMNS].to_csv(index=False, lineterminator="\n")
+generalization/reviews/G2r3/sol_methods3.err:5752:generalization/reviews/G2r3/sol_methods3.err:4391:scripts/generalization/panel_golden_gate.py:140:                EXPOSURE_COLUMNS
+generalization/reviews/G2r3/sol_methods3.err:5757:generalization/reviews/G2r3/sol_methods3.err:4754:scripts/generalization/panel_golden_gate.py:41:    EXPOSURE_COLUMNS,
+generalization/reviews/G2r3/sol_methods3.err:5758:generalization/reviews/G2r3/sol_methods3.err:4755:scripts/generalization/panel_golden_gate.py:64:    clean = clean.sort_values(["band", "bjd_tdb"])
+generalization/reviews/G2r3/sol_methods3.err:5759:generalization/reviews/G2r3/sol_methods3.err:4756:scripts/generalization/panel_golden_gate.py:65:    return clean[EXPOSURE_COLUMNS].reset_index(drop=True)
+generalization/reviews/G2r3/sol_methods3.err:5760:generalization/reviews/G2r3/sol_methods3.err:4757:scripts/generalization/panel_golden_gate.py:140:                EXPOSURE_COLUMNS
+generalization/reviews/G2r3/sol_methods3.err:5761:generalization/reviews/G2r3/sol_methods3.err:5095:outputs/generalization/panel_golden_report.json
+generalization/reviews/G2r3/sol_methods3.err:5762:generalization/reviews/G2r3/sol_methods3.err:5098:/bin/zsh -lc "find . -type f \\( -name 'replay_report.json' -o -name 'panel_golden_report.json' -o -name 'shard_summary.json' -o -name 'panels_manifest.json' -o -name 'manifest.json' \\) -not -path './.git/*' -not -path '*/node_modules/*' -print | sort | head -n 300" in /Users/jackneo/Documents/vonhippel-base9/astro-wd
+generalization/reviews/G2r3/sol_methods3.err:5763:generalization/reviews/G2r3/sol_methods3.err:5108:./outputs/generalization/panel_golden_report.json
+generalization/reviews/G2r3/sol_methods3.err:5764:generalization/reviews/G2r3/sol_methods3.err:5111:/bin/zsh -lc "nl -ba outputs/generalization/panel_golden_report.json; nl -ba generalization/data/d2/d2_roster_report.json | sed -n '1,180p'; nl -ba generalization/data/d3/roster_report.json | sed -n '1,180p'" in /Users/jackneo/Documents/vonhippel-base9/astro-wd
+generalization/reviews/G2r3/sol_methods3.err:5765:generalization/reviews/G2r3/sol_methods3.err:5114:     2	  "gate": "panel_golden_gate",
+generalization/reviews/G2r3/sol_methods3.err:5766:generalization/reviews/G2r3/sol_methods3.err:5212:    45	    "scripts/generalization/panel_golden_gate.py": "abe29feb28005b09fba3cfbc8b85d3f8f6a1cd531e0ae40eb6de1bc0884ba643",
+generalization/reviews/G2r3/sol_methods3.err:5767:generalization/reviews/G2r3/sol_methods3.err:5289:    68	    "scripts/generalization/panel_golden_gate.py": "abe29feb28005b09fba3cfbc8b85d3f8f6a1cd531e0ae40eb6de1bc0884ba643",
+generalization/reviews/G2r3/sol_methods3.err:5768:generalization/reviews/G2r3/sol_methods3.err:5356:/bin/zsh -lc 'shasum -a 256 scripts/generalization/build_d3_roster.py scripts/generalization/build_d2_roster.py scripts/generalization/build_d2_shards.py scripts/generalization/panel_golden_gate.py generalization/data/d3/roster_d3.csv' in /Users/jackneo/Documents/vonhippel-base9/astro-wd
+generalization/reviews/G2r3/sol_methods3.err:5769:generalization/reviews/G2r3/sol_methods3.err:5361:abe29feb28005b09fba3cfbc8b85d3f8f6a1cd531e0ae40eb6de1bc0884ba643  scripts/generalization/panel_golden_gate.py
+generalization/reviews/G2r3/sol_methods3.err:5770:generalization/reviews/G2r3/sol_methods3.err:5563:    79	2026-08-28). Panel-stage golden gate (`panel_golden_gate.py`): PASS on both
+generalization/reviews/G2r3/sol_methods3.err:5779:/bin/zsh -lc "wc -l scripts/generalization/build_d2_shards.py scripts/generalization/run_generalization_ls.py scripts/generalization/metrics_generalization.py scripts/generalization/replay_gate.py scripts/generalization/build_d3_roster.py scripts/generalization/panel_golden_gate.py; stat -f '%Sm %N' -t '%Y-%m-%d %H:%M:%S' scripts/generalization/build_d2_shards.py scripts/generalization/run_generalization_ls.py scripts/generalization/metrics_generalization.py scripts/generalization/replay_gate.py scripts/generalization/build_d3_roster.py scripts/generalization/panel_golden_gate.py; git status --short -- scripts/generalization generalization/GENERALIZATION_PLAN.md" in /Users/jackneo/Documents/vonhippel-base9/astro-wd
+generalization/reviews/G2r3/sol_methods3.err:5786:2026-08-28 21:31:00 scripts/generalization/panel_golden_gate.py
+generalization/reviews/G2r3/sol_methods3.err:5795:/bin/zsh -lc 'shasum -a 256 scripts/generalization/build_d2_shards.py scripts/generalization/run_generalization_ls.py scripts/generalization/metrics_generalization.py scripts/generalization/replay_gate.py scripts/generalization/build_d3_roster.py scripts/generalization/panel_golden_gate.py' in /Users/jackneo/Documents/vonhippel-base9/astro-wd
+generalization/reviews/G2r3/sol_methods3.err:5802:abe29feb28005b09fba3cfbc8b85d3f8f6a1cd531e0ae40eb6de1bc0884ba643  scripts/generalization/panel_golden_gate.py
+generalization/reviews/G2r3/sol_methods3.err:5845:    39	  subsets (G2 methods finding 3). Full mapping in shard_manifest.csv.
+generalization/reviews/G2r3/sol_methods3.err:6097:   291	    frame.to_csv(args.out_dir / "shard_manifest.csv", index=False)
+generalization/reviews/G2r3/sol_methods3.err:6107:   301	        for name in ("shard_manifest.csv", "injected_modes.csv", "rejected_modes.csv")
+generalization/reviews/G2r3/sol_methods3.err:6132:/bin/zsh -lc 'nl -ba scripts/generalization/panel_golden_gate.py' in /Users/jackneo/Documents/vonhippel-base9/astro-wd
+generalization/reviews/G2r3/sol_methods3.err:6247:   112	                        default=REPO_ROOT / "outputs/generalization/panel_golden_report.json")
+generalization/reviews/G2r3/sol_methods3.err:6285:   150	    report = {"gate": "panel_golden_gate", "passed": passed, "stars": records,
+generalization/reviews/G2r3/sol_methods3.err:6463:   167	                        help="replay_report.json from a PASSING replay_gate run "
+generalization/reviews/G2r3/sol_methods3.err:6469:   173	    attestation = validate_attestation(args.replay_report)
+generalization/reviews/G2r3/sol_methods3.err:6567:   271	            "path": str(args.replay_report),
+generalization/reviews/G2r3/sol_methods3.err:6995:   167	                        help="replay_report.json from a PASSING replay_gate run "
+generalization/reviews/G2r3/sol_methods3.err:7001:   173	    attestation = validate_attestation(args.replay_report)
+generalization/reviews/G2r3/sol_methods3.err:7099:   271	            "path": str(args.replay_report),
+generalization/reviews/G2r3/sol_methods3.err:7124:   244	    manifest = pd.read_csv(shards_dir / "shard_manifest.csv",
+generalization/reviews/G2r3/sol_methods3.err:7373:    11	  d2  campaign injection run; truth = shard_manifest.csv + d2_modes.csv;
+generalization/reviews/G2r3/sol_methods3.err:7703:   577	                        help="d2: shard dir with shard_manifest.csv; census "
+generalization/reviews/G2r3/sol_methods3.err:8232:/bin/zsh -lc "PYTHONDONTWRITEBYTECODE=1 .venv-gen/bin/python -c 'import sys; sys.path.insert(0,\"scripts/generalization\"); import pandas as pd; from panel_golden_gate import compare_star; base={\"source_id\":\"1\",\"band\":\"zg\",\"oid\":\"7\",\"mjd\":59000.0,\"bjd_tdb\":2459000.0,\"night_mjd\":59000,\"mag\":17.0,\"magerr\":0.1,\"chi\":1.0,\"ra\":10.0,\"dec\":20.0}; ref=pd.DataFrame([base]); a=pd.DataFrame([{**base,\"bjd_tdb\":float(\"nan\")}]); b=pd.DataFrame([{**base,\"ra\":float(\"nan\")}]); print(\"nan_bjd\",compare_star(a,ref)); print(\"nan_ra\",compare_star(b,ref))'" in /Users/jackneo/Documents/vonhippel-base9/astro-wd
+generalization/reviews/G2r3/sol_methods3.err:8243:/bin/zsh -lc "python3 -c 'import ast,pathlib; files=[pathlib.Path(x) for x in [\"scripts/generalization/build_d2_shards.py\",\"scripts/generalization/run_generalization_ls.py\",\"scripts/generalization/metrics_generalization.py\",\"scripts/generalization/replay_gate.py\",\"scripts/generalization/build_d3_roster.py\",\"scripts/generalization/panel_golden_gate.py\"]]; [ast.parse(p.read_text()) for p in files]; print(\"6/6 target scripts parse\")'" in /Users/jackneo/Documents/vonhippel-base9/astro-wd
+generalization/reviews/G2r3/sol_methods3.err:8248:/bin/zsh -lc "wc -l scripts/generalization/build_d2_shards.py scripts/generalization/run_generalization_ls.py scripts/generalization/metrics_generalization.py scripts/generalization/replay_gate.py scripts/generalization/build_d3_roster.py scripts/generalization/panel_golden_gate.py; stat -f '%Sm %N' -t '%Y-%m-%d %H:%M:%S' scripts/generalization/build_d2_shards.py scripts/generalization/run_generalization_ls.py scripts/generalization/metrics_generalization.py scripts/generalization/replay_gate.py scripts/generalization/build_d3_roster.py scripts/generalization/panel_golden_gate.py scripts/generalization/frozen_api.py" in /Users/jackneo/Documents/vonhippel-base9/astro-wd
+generalization/reviews/G2r3/sol_methods3.err:8255:     159 scripts/generalization/panel_golden_gate.py
+generalization/reviews/G2r3/sol_methods3.err:8262:2026-08-28 21:31:00 scripts/generalization/panel_golden_gate.py
+generalization/reviews/G2r3/sol_methods3.err:8266:/bin/zsh -lc "rg -n \"campaign_file_shas|campaign_sha256|initial|final|panel.*report|replay-report|replay_report|unlink\\(missing_ok|glob\\(\\\"\\*\\.csv\\.gz\\\"\\)\" scripts/generalization/{build_d2_roster.py,build_d2_shards.py,build_d3_roster.py,build_panels_generic.py,run_generalization_ls.py,metrics_generalization.py,replay_gate.py,panel_golden_gate.py}" in /Users/jackneo/Documents/vonhippel-base9/astro-wd
+generalization/reviews/G2r3/sol_methods3.err:8277:scripts/generalization/run_generalization_ls.py:167:                        help="replay_report.json from a PASSING replay_gate run "
+generalization/reviews/G2r3/sol_methods3.err:8278:scripts/generalization/run_generalization_ls.py:173:    attestation = validate_attestation(args.replay_report)
+generalization/reviews/G2r3/sol_methods3.err:8280:scripts/generalization/run_generalization_ls.py:271:            "path": str(args.replay_report),
+generalization/reviews/G2r3/sol_methods3.err:8284:scripts/generalization/replay_gate.py:227:    report_path = args.out_dir / "replay_report.json"
+generalization/reviews/G2r3/sol_methods3.err:8291:scripts/generalization/panel_golden_gate.py:112:                        default=REPO_ROOT / "outputs/generalization/panel_golden_report.json")
+generalization/reviews/G2r3/sol_methods3.err:8298:  ✓ Review panel_golden_gate.py comparison criteria and edge cases
+generalization/reviews/G2r3/sol_methods3.err:8302:/bin/zsh -lc "shasum -a 256 scripts/generalization/build_d2_shards.py scripts/generalization/run_generalization_ls.py scripts/generalization/metrics_generalization.py scripts/generalization/replay_gate.py scripts/generalization/build_d3_roster.py scripts/generalization/panel_golden_gate.py; stat -f '%Sm %N' -t '%Y-%m-%d %H:%M:%S' scripts/generalization/build_d2_shards.py scripts/generalization/run_generalization_ls.py scripts/generalization/metrics_generalization.py scripts/generalization/replay_gate.py scripts/generalization/build_d3_roster.py scripts/generalization/panel_golden_gate.py" in /Users/jackneo/Documents/vonhippel-base9/astro-wd
+generalization/reviews/G2r3/sol_methods3.err:8309:abe29feb28005b09fba3cfbc8b85d3f8f6a1cd531e0ae40eb6de1bc0884ba643  scripts/generalization/panel_golden_gate.py
+generalization/reviews/G2r3/sol_methods3.err:8315:2026-08-28 21:31:00 scripts/generalization/panel_golden_gate.py
+generalization/reviews/G2r3/sol_methods3.err:8319:  ✓ Review panel_golden_gate.py comparison criteria and edge cases
+generalization/reviews/G2r3/sol_methods3.err:8330:| 2 | **PARTIAL** | Final campaign SHAs are now present in the D2 summary, D3 report, runner, panels, and metrics—for example [build_d2_shards.py:314](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/build_d2_shards.py:314), [build_d3_roster.py:218](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/build_d3_roster.py:218), and [metrics_generalization.py:680](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/metrics_generalization.py:680). Replay still omits campaign SHAs from its report at [replay_gate.py:216](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/replay_gate.py:216), and the panel gate records only environment at [panel_golden_gate.py:150](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/panel_golden_gate.py:150). No stage takes initial and final snapshots or fails if campaign code changes mid-stage. |
+generalization/reviews/G2r3/sol_methods3.err:8341:- The frozen reconstruction sequence matches the production builder at [panel_golden_gate.py:58](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/panel_golden_gate.py:58).
+generalization/reviews/G2r3/sol_methods3.err:8342:- Exact canonical-CSV equality for non-BJD science columns is appropriate at [panel_golden_gate.py:71](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/panel_golden_gate.py:71).
+generalization/reviews/G2r3/sol_methods3.err:8347:1. **NaNs pass as `identical_1ulp`.** The ULP expressions at [panel_golden_gate.py:81](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/panel_golden_gate.py:81) and [panel_golden_gate.py:95](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/panel_golden_gate.py:95) produce NaN; comparisons such as `NaN > 1` are false. A focused check confirmed that replacing either BJD or RA with NaN was accepted. Require matching finite masks and finite values before ULP comparison.
+generalization/reviews/G2r3/sol_methods3.err:8349:2. **Vacuous pass is possible.** `--count` is not validated at [panel_golden_gate.py:123](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/panel_golden_gate.py:123), and `all([])` passes at [panel_golden_gate.py:147](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/panel_golden_gate.py:147). Require `count >= 1`, nonempty records, unique IDs, and the expected sample count/digest.
+generalization/reviews/G2r3/sol_methods3.err:8359:- Reject shard files outside `shard_manifest.csv`, or make the runner consume exactly the manifest set.
+generalization/reviews/G1/sol_methods.err:580:   222	    report_path = args.out_dir / "replay_report.json"
+generalization/reviews/G1/sol_methods.err:1335:   222	    report_path = args.out_dir / "replay_report.json"
+generalization/reviews/G1/sol_methods.err:4683:/bin/zsh -lc "find outputs -maxdepth 5 -type f \\( -name 'replay_report.json' -o -name '*identity_report.json' -o -name 'manifest.json' \\) -print 2>/dev/null | sort | sed -n '1,120p'" in /Users/jackneo/Documents/vonhippel-base9/astro-wd
+generalization/reviews/G1/sol_methods.err:6053:scripts/generalization/replay_gate.py:222:    report_path = args.out_dir / "replay_report.json"
+generalization/reviews/G2r3/sol_methods3.md:8:| 2 | **PARTIAL** | Final campaign SHAs are now present in the D2 summary, D3 report, runner, panels, and metrics—for example [build_d2_shards.py:314](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/build_d2_shards.py:314), [build_d3_roster.py:218](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/build_d3_roster.py:218), and [metrics_generalization.py:680](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/metrics_generalization.py:680). Replay still omits campaign SHAs from its report at [replay_gate.py:216](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/replay_gate.py:216), and the panel gate records only environment at [panel_golden_gate.py:150](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/panel_golden_gate.py:150). No stage takes initial and final snapshots or fails if campaign code changes mid-stage. |
+generalization/reviews/G2r3/sol_methods3.md:19:- The frozen reconstruction sequence matches the production builder at [panel_golden_gate.py:58](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/panel_golden_gate.py:58).
+generalization/reviews/G2r3/sol_methods3.md:20:- Exact canonical-CSV equality for non-BJD science columns is appropriate at [panel_golden_gate.py:71](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/panel_golden_gate.py:71).
+generalization/reviews/G2r3/sol_methods3.md:25:1. **NaNs pass as `identical_1ulp`.** The ULP expressions at [panel_golden_gate.py:81](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/panel_golden_gate.py:81) and [panel_golden_gate.py:95](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/panel_golden_gate.py:95) produce NaN; comparisons such as `NaN > 1` are false. A focused check confirmed that replacing either BJD or RA with NaN was accepted. Require matching finite masks and finite values before ULP comparison.
+generalization/reviews/G2r3/sol_methods3.md:27:2. **Vacuous pass is possible.** `--count` is not validated at [panel_golden_gate.py:123](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/panel_golden_gate.py:123), and `all([])` passes at [panel_golden_gate.py:147](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/panel_golden_gate.py:147). Require `count >= 1`, nonempty records, unique IDs, and the expected sample count/digest.
+generalization/reviews/G2r3/sol_methods3.md:37:- Reject shard files outside `shard_manifest.csv`, or make the runner consume exactly the manifest set.
+generalization/reviews/G2r3/sol_referee3.err:1051:    79	2026-08-28). Panel-stage golden gate (`panel_golden_gate.py`): PASS on both
+generalization/data/d2/d2_roster_report.json:45:    "scripts/generalization/panel_golden_gate.py": "abe29feb28005b09fba3cfbc8b85d3f8f6a1cd531e0ae40eb6de1bc0884ba643",
+generalization/data/d3/roster_report.json:68:    "scripts/generalization/panel_golden_gate.py": "abe29feb28005b09fba3cfbc8b85d3f8f6a1cd531e0ae40eb6de1bc0884ba643",
+
+exec
+/bin/zsh -lc "PYTHONDONTWRITEBYTECODE=1 .venv-gen/bin/python -c 'import sys; sys.path.insert(0,\"scripts/generalization\"); import pandas as pd; from panel_golden_gate import compare_star; base={\"source_id\":\"1\",\"band\":\"zg\",\"oid\":\"7\",\"mjd\":59000.0,\"bjd_tdb\":2459000.0,\"night_mjd\":59000,\"mag\":17.0,\"magerr\":0.1,\"chi\":1.0,\"ra\":10.0,\"dec\":20.0}; ref=pd.DataFrame([base]); print(\"nan_bjd\", compare_star(pd.DataFrame([{**base,\"bjd_tdb\":float(\"nan\")}]),ref)); print(\"nan_ra\",compare_star(pd.DataFrame([{**base,\"ra\":float(\"nan\")}]),ref)); both=pd.DataFrame([{**base,\"mag\":float(\"nan\")}]); print(\"matching_nan_mag\",compare_star(both,both.copy()))' " in /Users/jackneo/Documents/vonhippel-base9/astro-wd
+ succeeded in 1517ms:
+nan_bjd {'verdict': 'MISMATCH', 'reason': 'nonfinite bjd_tdb'}
+nan_ra {'verdict': 'MISMATCH', 'reason': 'nonfinite ra'}
+matching_nan_mag {'verdict': 'identical', 'bjd_max_ulp': 0.0, 'bjd_rows_off_by_1ulp': 0}
+
+exec
+/bin/zsh -lc "PYTHONDONTWRITEBYTECODE=1 .venv-gen/bin/python -c 'import sys,json; sys.path.insert(0,\"scripts/generalization\"); import run_generalization_ls as r; from frozen_api import env_versions,frozen_file_shas; payload={\"gate\":\"replay_gate\",\"passed\":True,\"stars\":[{\"source_id\":\"duplicate\"}]*928,\"env\":env_versions(),\"frozen_sha256\":frozen_file_shas()}; Fake=type(\"Fake\",(),{\"read_text\":lambda self,encoding=None:json.dumps(payload),\"__str__\":lambda self:\"fake.json\"}); got=r.validate_attestation(Fake()); print(\"accepted_records\",len(got[\"stars\"]),\"unique_ids\",len({x[\"source_id\"] for x in got[\"stars\"]}))' " in /Users/jackneo/Documents/vonhippel-base9/astro-wd
+ succeeded in 6848ms:
+accepted_records 928 unique_ids 1
+
+exec
+/bin/zsh -lc "rg -n -A35 -B5 \"def campaign_file_shas|CAMPAIGN\" scripts/generalization/frozen_api.py; rg -n \"panel_golden_report|panel_golden_gate\" scripts/generalization --glob '"'!panel_golden_gate.py'"'; rg -n \"shard_manifest\" scripts/generalization/run_generalization_ls.py" in /Users/jackneo/Documents/vonhippel-base9/astro-wd
+ exited 1 in 0ms:
+41-
+42-# Campaign source_id convention: 19-digit numeric strings, dataset-prefixed.
+43-# All prefixes chosen so ids cannot collide with real Gaia DR3 source_ids used
+44-# in the 2026-08-01 run and so int(source_id[-9:]) (the frozen bootstrap's seed
+45-# convention) is always a valid int.
+46:CAMPAIGN_ID_PREFIXES = {
+47-    "90": "D3 ZTF x Kepler delta Scuti (real ZTF light curves)",
+48-    "92": "D2 arm B (TESS-truth signal + real ZTF photometry)",
+49-    "93": "D2 arm A (TESS-truth signal + synthetic Gaussian floor)",
+50-    "94": "D2 Gaussian nulls (zero amplitude, arm-A floor)",
+51-    "95": "D2 paired real-window controls (uninjected template windows)",
+52-    "96": "D2 self-window templates (real ZTF at Romero positions; diagnostic)",
+53-}
+54-
+55-
+56-class FrozenIntegrityError(RuntimeError):
+57-    """A frozen file's content no longer matches tag frozen-2026-08-01."""
+58-
+59-
+60-def frozen_file_shas() -> dict[str, str]:
+61-    shas: dict[str, str] = {}
+62-    for rel in FROZEN_SHA256:
+63-        path = REPO_ROOT / rel
+64-        shas[rel] = hashlib.sha256(path.read_bytes()).hexdigest() if path.exists() else "MISSING"
+65-    return shas
+66-
+67-
+68-def assert_frozen() -> dict[str, str]:
+69-    actual = frozen_file_shas()
+70-    mismatches = [
+71-        f"{rel}: expected {expected[:12]}..., found {actual[rel][:12]}..."
+72-        for rel, expected in FROZEN_SHA256.items()
+73-        if actual[rel] != expected
+74-    ]
+75-    if mismatches:
+76-        raise FrozenIntegrityError(
+77-            "frozen pipeline files modified since tag "
+78-            f"{FROZEN_TAG}:\n" + "\n".join(mismatches)
+79-        )
+80-    return actual
+81-
+--
+108-        "omp_num_threads": os.environ.get("OMP_NUM_THREADS", ""),
+109-        "openblas_num_threads": os.environ.get("OPENBLAS_NUM_THREADS", ""),
+110-    }
+111-
+112-
+113:def campaign_file_shas() -> dict[str, str]:
+114-    """SHA-256 of every campaign script + spec, recorded in every manifest so
+115-    adapter-shell drift is visible (G1 methods finding 9)."""
+116-    shas: dict[str, str] = {}
+117-    for path in sorted((REPO_ROOT / "scripts/generalization").glob("*.py")):
+118-        shas[f"scripts/generalization/{path.name}"] = hashlib.sha256(
+119-            path.read_bytes()
+120-        ).hexdigest()
+121-    for rel in ("generalization/GENERALIZATION_PLAN.md", "generalization/METRICS_SPEC.md"):
+122-        path = REPO_ROOT / rel
+123-        if path.exists():
+124-            shas[rel] = hashlib.sha256(path.read_bytes()).hexdigest()
+125-    return shas
+126-
+127-
+128-def campaign_id_ok(source_id: str) -> bool:
+129-    return (
+130-        isinstance(source_id, str)
+131-        and len(source_id) == 19
+132-        and source_id.isdigit()
+133:        and source_id[:2] in CAMPAIGN_ID_PREFIXES
+134-    )
+135-
+136-
+137-assert_frozen()
+138-_FROZEN_MODULES = (
+139-    "run_catalog_lomb_scargle",
+140-    "run_lomb_scargle",
+141-    "lomb_scargle_common",
+142-    "build_catalog_panels",
+143-)
+144-for _name in _FROZEN_MODULES:
+145-    if _name in sys.modules:
+146-        raise FrozenIntegrityError(
+147-            f"{_name} was imported before frozen_api verified it"
+148-        )
+149-sys.path.insert(0, str(SCRIPTS_DIR))
+150-
+151-from build_catalog_panels import (  # noqa: E402
+152-    BANDS,
+153-    EXPOSURE_COLUMNS,
+154-    MIN_EXPOSURES_PER_BAND,
+155-    MONTHLY_COLUMNS,
+156-    NIGHTLY_COLUMNS,
+157-    OID_CLUSTER_ARCSEC,
+158-    PALOMAR,
+159-    add_bjd,
+160-    angular_separation_arcsec,
+161-    census_row,
+162-    clean_rows,
+163-    monthly_panel,
+164-    nightly_panel,
+165-    read_cache,
+166-    scatter_over_error,
+167-    select_nearest_source,
+168-)
+--
+196-__all__ = [
+197-    "REPO_ROOT",
+198-    "SCRIPTS_DIR",
+199-    "FROZEN_TAG",
+200-    "FROZEN_SHA256",
+201:    "CAMPAIGN_ID_PREFIXES",
+202-    "FrozenIntegrityError",
+203-    "frozen_file_shas",
+204-    "assert_frozen",
+205-    "env_versions",
+206-    "campaign_file_shas",
+207-    "campaign_id_ok",
+208-    "BANDS",
+209-    "EXPOSURE_COLUMNS",
+210-    "MIN_EXPOSURES_PER_BAND",
+211-    "MONTHLY_COLUMNS",
+212-    "NIGHTLY_COLUMNS",
+213-    "OID_CLUSTER_ARCSEC",
+214-    "PALOMAR",
+215-    "add_bjd",
+216-    "angular_separation_arcsec",
+217-    "census_row",
+218-    "clean_rows",
+219-    "monthly_panel",
+220-    "nightly_panel",
+221-    "read_cache",
+222-    "scatter_over_error",
+223-    "select_nearest_source",
+224-    "FrequencyGrid",
+225-    "SAMPLES_PER_PEAK",
+226-    "SIDEREAL_FREQUENCY",
+227-    "WINDOW_POWER_THRESHOLD",
+228-    "prepare_series",
+229-    "analyze_star",
+230-    "load_star",
+231-    "overall_result",
+232-    "physical_workers",
+233-    "unavailable_pass_result",
+234-    "PASS_BOUNDS",
+235-    "grid_for",
+236-    "json_ready",
+
+exec
+/bin/zsh -lc "python3 -c 'import ast,pathlib; files=[pathlib.Path(p) for p in (\"scripts/generalization/panel_golden_gate.py\",\"scripts/generalization/replay_gate.py\",\"scripts/generalization/run_generalization_ls.py\",\"scripts/generalization/build_d2_shards.py\")]; [ast.parse(p.read_text(encoding=\"utf-8\")) for p in files]; print(\"4/4 target scripts parse\")'; shasum -a 256 scripts/generalization/panel_golden_gate.py scripts/generalization/replay_gate.py scripts/generalization/run_generalization_ls.py scripts/generalization/build_d2_shards.py" in /Users/jackneo/Documents/vonhippel-base9/astro-wd
+ succeeded in 204ms:
+dce4f214dc8268d496453d0e603b8adc1844b797c0df220b345d9d03324f449d  scripts/generalization/panel_golden_gate.py
+eb6a230d61ebdbf6d032732260f3b41b07e85ff97657042354d4deacb1fc44a7  scripts/generalization/replay_gate.py
+51e52eaf70bd5806523e19fc1e48f0bb0a64d45edcd19bb584aa22563e610763  scripts/generalization/run_generalization_ls.py
+08cbc057e8f90c069298fecf11385ec4cc484747c13a3e67f3183ebc6ade09ff  scripts/generalization/build_d2_shards.py
+
+codex
+**NOT FREEZABLE.**
+
+- **Panel gate — UNRESOLVED:** BJD/meta NaNs and vacuous samples are guarded ([panel_golden_gate.py:83](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/panel_golden_gate.py:83), [panel_golden_gate.py:121](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/panel_golden_gate.py:121), [panel_golden_gate.py:156](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/panel_golden_gate.py:156)), but matching NaNs in exact-CSV numeric fields still return `identical` ([panel_golden_gate.py:73](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/panel_golden_gate.py:73)); the report also omits the coordinate-roster hash and is not required by the runner ([panel_golden_gate.py:125](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/panel_golden_gate.py:125), [run_generalization_ls.py:174](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/run_generalization_ls.py:174)).
+- **928-star attestation — UNRESOLVED:** validation checks only `len(stars) == 928`, not uniqueness or the expected roster/digest ([run_generalization_ls.py:56](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/run_generalization_ls.py:56)); a focused check accepted 928 duplicate records containing one unique ID.
+- **Stale shards — UNRESOLVED:** `--resume` permits existing shards, `--expect-count` is optional, and execution still globs every `*.csv.gz` without consulting `shard_manifest.csv` ([build_d2_shards.py:173](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/build_d2_shards.py:173), [run_generalization_ls.py:115](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/run_generalization_ls.py:115), [run_generalization_ls.py:192](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/run_generalization_ls.py:192)).
+- **Campaign-drift snapshots — UNRESOLVED:** only the runner compares start/end SHAs ([run_generalization_ls.py:181](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/run_generalization_ls.py:181), [run_generalization_ls.py:292](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/run_generalization_ls.py:292)); replay, panel, and D2 builder record one point-in-time SHA with no drift failure ([replay_gate.py:227](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/replay_gate.py:227), [panel_golden_gate.py:166](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/panel_golden_gate.py:166), [build_d2_shards.py:343](/Users/jackneo/Documents/vonhippel-base9/astro-wd/scripts/generalization/build_d2_shards.py:343)).
+tokens used
+62,919

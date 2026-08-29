@@ -53,10 +53,12 @@ def validate_attestation(report_path: Path) -> dict:
         )
     if report.get("frozen_sha256") != frozen_file_shas():
         raise SystemExit("replay attestation frozen SHAs differ from this checkout")
-    if len(report["stars"]) != 928:
+    unique = {record["source_id"] for record in report["stars"]}
+    if len(unique) != 928 or len(report["stars"]) != 928:
         raise SystemExit(
-            f"production runs require the FULL 928-star baseline attestation; "
-            f"this report covers {len(report['stars'])} stars"
+            f"production runs require the FULL 928-UNIQUE-star baseline "
+            f"attestation; this report covers {len(unique)} unique of "
+            f"{len(report['stars'])} records"
         )
     return report
 
@@ -169,6 +171,10 @@ def main() -> None:
     parser.add_argument("--expect-count", type=int, default=None,
                         help="assert the shard dir holds exactly N shards "
                              "(stale-directory guard)")
+    parser.add_argument("--shard-index", type=Path, default=None,
+                        help="newline-separated campaign_id list the shard dir "
+                             "must match EXACTLY (builders emit shard_index.txt); "
+                             "required for production runs")
     parser.add_argument("--allow-nonstandard-ids", action="store_true",
                         help="permit non-campaign source_ids (replay/debug only)")
     parser.add_argument("--replay-report", type=Path, required=True,
@@ -195,6 +201,22 @@ def main() -> None:
             raise SystemExit(
                 f"shard dir holds {found} shards, expected {args.expect_count} "
                 f"— stale or incomplete directory"
+            )
+    if args.shard_index is None and not args.allow_nonstandard_ids:
+        raise SystemExit("production runs require --shard-index (builders emit "
+                         "shard_index.txt); --allow-nonstandard-ids for debug")
+    if args.shard_index is not None:
+        index_ids = {line.strip() for line in
+                     args.shard_index.read_text().splitlines() if line.strip()}
+        disk_ids = {path.name.split(".csv")[0]
+                    for path in args.shard_dir.glob("*.csv.gz")}
+        if disk_ids != index_ids:
+            extra = sorted(disk_ids - index_ids)[:3]
+            gone = sorted(index_ids - disk_ids)[:3]
+            raise SystemExit(
+                f"shard dir does not match the index: {len(disk_ids - index_ids)} "
+                f"extra (e.g. {extra}), {len(index_ids - disk_ids)} missing "
+                f"(e.g. {gone})"
             )
     only = None
     if args.stars_file:

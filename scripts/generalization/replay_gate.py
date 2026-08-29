@@ -163,6 +163,7 @@ def main() -> None:
     args = parser.parse_args()
 
     assert_frozen()
+    campaign_start = campaign_file_shas()
     workers = args.workers or physical_workers()
     replay_dir = args.out_dir / "stars"
     work_dir = args.out_dir / "work"
@@ -224,11 +225,13 @@ def main() -> None:
         "workers": workers,
         "env": env_versions(),
         "frozen_sha256": assert_frozen(),
-        "campaign_sha256": campaign_file_shas(),
+        "campaign_sha256": campaign_start,
         "roster_digest": __import__("hashlib").sha256(
             ",".join(stars).encode()).hexdigest(),
         "roster_size": len(stars),
     }
+    if campaign_file_shas() != campaign_start:
+        raise SystemExit("campaign code changed while the gate ran — report void")
     report_path = args.out_dir / "replay_report.json"
     report_path.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
     print(f"[replay] {'PASS' if passed else 'FAIL'} {counts} -> {report_path}", flush=True)

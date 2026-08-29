@@ -283,6 +283,8 @@ def truth_d2(shards_dir: Path) -> pd.DataFrame:
             "ratio_g": float(r.ratio_g), "ratio_rg": float(r.ratio_rg),
             "phase_draw": int(getattr(r, "phase_draw", 0)),
             "amp_scale": float(getattr(r, "amp_scale", 1.0)),
+            "median_exp_per_night": float(getattr(r, "template_exp_per_night",
+                                                  math.nan)),
             "template_status": getattr(r, "template_status", ""),
         })
     return pd.DataFrame(rows)
@@ -298,8 +300,12 @@ def census_lookup_csv(path: Path) -> dict[str, dict]:
         if exact.any():
             raise SystemExit(f"census ratio exactly 2.5 in {path}:{col} — spec guard")
     return {
-        r["source_id"]: {"census_variable": bool(r["census_variable"]),
-                         "census_g_nightly": bool(r["census_g_nightly"])}
+        r["source_id"]: {
+            "census_variable": bool(r["census_variable"]),
+            "census_g_nightly": bool(r["census_g_nightly"]),
+            "median_exp_per_night": float(r["zg_median_exp_per_night"])
+            if "zg_median_exp_per_night" in frame.columns else math.nan,
+        }
         for _, r in frame.iterrows()
     }
 
@@ -327,7 +333,7 @@ def completeness_tables(per_star: pd.DataFrame, dataset: str) -> pd.DataFrame:
     # primary frequency-match column: D3 scores the DOMINANT Mo mode (any-mode
     # is secondary/diagnostic); D2 scores the exact injected list; D1 is
     # diagnostic-only either way (spec).
-    use_dominant = dataset in ("d1", "d3")
+    use_dominant = True  # headline = best_candidate_matches_dominant (spec)
     rows = []
     positives = per_star[per_star["label_positive"] == True]  # noqa: E712
     usable = positives[(positives["best_status"] != "missing")
@@ -368,6 +374,21 @@ def completeness_tables(per_star: pd.DataFrame, dataset: str) -> pd.DataFrame:
                     frame.loc[ok, "weight"].to_numpy(dtype=float),
                 )
                 rows.append({"pass": pass_name, "rule": rule, "scope": scope, **stats})
+        # correct-frequency fraction among detected positives (spec):
+        # P(match dominant | rule-1 fired, Y=1, F=1, S_p=1)
+        scorable = usable[usable["freq_scorable"]
+                          & (usable["eligible_any_pass"] if pass_name == "best"
+                             else usable[f"{pass_name}_eligible"])]
+        status_col = "best_status" if pass_name == "best" else f"{pass_name}_status"
+        detected = scorable[scorable[status_col] == "confirmed"]
+        if len(detected):
+            correct = (detected[match_col] == "direct")
+            stats = weighted_wilson(correct.to_numpy(dtype=float),
+                                    detected["weight"].to_numpy(dtype=float))
+        else:
+            stats = {"n": 0, "ess": 0.0, "p": math.nan, "lo": math.nan, "hi": math.nan}
+        rows.append({"pass": pass_name, "rule": "confirmed",
+                     "scope": "correct_frequency_fraction_detected", **stats})
     return pd.DataFrame(rows)
 
 
@@ -454,41 +475,79 @@ def d2_cluster_bootstrap(per_star: pd.DataFrame) -> pd.DataFrame:
     for extra in ("phase_draw", "amp_scale"):
         if extra in frame:
             scenario_cols.append(extra)
+
+    def bootstrap_stats(aligned: pd.Series) -> tuple[float, float, float, str, int]:
+        observed = aligned.dropna()
+        point = float(observed.mean())
+        values = aligned.to_numpy(dtype=float)
+        boots = []
+        for b in range(BOOTSTRAP_B):
+            sample = values[draws[b]]
+            sample = sample[~np.isnan(sample)]
+            if sample.size:
+                boots.append(float(sample.mean()))
+        target_hits = observed.round(6)
+        degenerate = (target_hits == 0).all() or (target_hits == 1).all()
+        if degenerate:
+            k_deg = int((target_hits == 1).sum())
+            lo, hi = cp_one_sided_bounds(k_deg, len(observed))
+            return point, lo, hi, "cp_one_sided", len(observed)
+        return (point, float(np.quantile(boots, 0.025)),
+                float(np.quantile(boots, 0.975)), "cluster_bootstrap", len(observed))
+
     for keys, scenario in frame.groupby(scenario_cols):
         arm, g, r = keys[0], keys[1], keys[2]
+        usable_rows = scenario[scenario["best_status"] != "missing"]
         for endpoint, predicate in endpoints.items():
-            success = predicate(scenario)
-            # per (target, stratum) rates, then equal-weight stratum mean
-            per_ts = success.groupby(
-                [scenario["cluster"], scenario["template_k"]]).mean()
-            per_target = per_ts.groupby(level=0).mean()
-            aligned = per_target.reindex(clusters)
-            observed = aligned.dropna()
-            if observed.empty:
-                continue
-            point = float(observed.mean())
-            values = aligned.to_numpy(dtype=float)
-            boots = []
-            for b in range(BOOTSTRAP_B):
-                sample = values[draws[b]]
-                sample = sample[~np.isnan(sample)]
-                if sample.size:
-                    boots.append(float(sample.mean()))
-            target_hits = observed.round(6)
-            degenerate = (target_hits == 0).all() or (target_hits == 1).all()
-            if degenerate:
-                k_deg = int((target_hits == 1).sum())
-                lo, hi = cp_one_sided_bounds(k_deg, len(observed))
-            else:
-                lo = float(np.quantile(boots, 0.025))
-                hi = float(np.quantile(boots, 0.975))
-            rows.append({
-                "arm": arm, "ratio_g": g, "ratio_rg": r, "endpoint": endpoint,
-                "n_targets": int(len(observed)),
-                "n_strata_mean": float(per_ts.groupby(level=0).size().mean()),
-                "p": point, "lo": lo, "hi": hi,
-                "interval": "cp_one_sided" if degenerate else "cluster_bootstrap",
-            })
+            for denom in ("usable", "eligible"):
+                subset = usable_rows if denom == "usable" else scenario
+                if subset.empty:
+                    continue
+                if denom == "eligible":
+                    # missing replicate = failure, fixed |K_t| = 3 (spec P4)
+                    success = predicate(subset) & (subset["best_status"] != "missing")
+                    per_ts = success.groupby(
+                        [subset["cluster"], subset["template_k"]]).mean()
+                    per_target = per_ts.groupby(level=0).sum() / 3.0
+                else:
+                    # renormalize over usable strata; a target with ZERO usable
+                    # strata drops from the usable estimand (counted below)
+                    success = predicate(subset)
+                    per_ts = success.groupby(
+                        [subset["cluster"], subset["template_k"]]).mean()
+                    per_target = per_ts.groupby(level=0).mean()
+                aligned = per_target.reindex(clusters)
+                if aligned.dropna().empty:
+                    continue
+                point, lo, hi, interval, n_targets = bootstrap_stats(aligned)
+                rows.append({
+                    "arm": arm, "ratio_g": g, "ratio_rg": r,
+                    "endpoint": endpoint, "denominator": denom,
+                    "n_targets": n_targets,
+                    "n_targets_zero_usable_strata": int(aligned.isna().sum()),
+                    "p": point, "lo": lo, "hi": hi, "interval": interval,
+                })
+        # paired census-vs-LS difference, target-clustered (nominal arm B only)
+        if (arm == "B" and float(g) == 1.7 and float(r) == 0.8
+                and "census_variable" in usable_rows
+                and usable_rows["census_variable"].notna().any()):
+            paired = usable_rows[usable_rows["census_variable"].notna()]
+            c_only = paired["census_variable"].astype(bool) & (
+                paired["best_status"] != "confirmed")
+            l_only = (~paired["census_variable"].astype(bool)) & (
+                paired["best_status"] == "confirmed")
+            diff = (c_only.astype(float) - l_only.astype(float)).groupby(
+                paired["cluster"]).mean()
+            aligned = diff.reindex(clusters)
+            if not aligned.dropna().empty:
+                point, lo, hi, interval, n_targets = bootstrap_stats(aligned)
+                rows.append({
+                    "arm": arm, "ratio_g": g, "ratio_rg": r,
+                    "endpoint": "paired_census_minus_ls_discordance",
+                    "denominator": "usable", "n_targets": n_targets,
+                    "n_targets_zero_usable_strata": int(aligned.isna().sum()),
+                    "p": point, "lo": lo, "hi": hi, "interval": interval,
+                })
     return pd.DataFrame(rows)
 
 
@@ -520,11 +579,26 @@ def surfaces(per_star: pd.DataFrame, dataset: str) -> dict[str, pd.DataFrame]:
     detection = positives["best_status"] == "confirmed"
     out["detection_amplitude"] = pd.DataFrame(
         surface_cells(positives, detection, positives["amp"], amp_edges, "amp_bin"))
-    # frequency-recovery endpoint: scorable subset only
-    use_dominant = dataset in ("d1", "d3")
-    scorable = positives[positives["freq_scorable"]]
+    # detection endpoint on (period, amplitude): unknowns fall in bin -1
+    p_bins_all = np.where(np.isfinite(positives["truth_period_days"]),
+                          np.digitize(positives["truth_period_days"],
+                                      PERIOD_EDGES_DAYS), -1)
+    a_bins_all = np.where(np.isfinite(positives["amp"]),
+                          np.digitize(positives["amp"], amp_edges), -1)
+    det_rows = []
+    for (pb, ab), idx in positives.groupby([p_bins_all, a_bins_all]).groups.items():
+        k = int(detection.loc[idx].sum())
+        n = len(idx)
+        entry = {"period_bin": int(pb), "amp_bin": int(ab), "n": n, "k": k}
+        if n >= MIN_CELL:
+            entry.update(dict(zip(("p", "lo", "hi"), wilson(k, n))))
+        det_rows.append(entry)
+    out["detection_period_amplitude"] = pd.DataFrame(det_rows)
+    # frequency-recovery endpoint: scorable AND S_best subset only
+    scorable = positives[positives["freq_scorable"]
+                         & positives["eligible_any_pass"]]
     if not scorable.empty:
-        match_col = "best_match_primary" if use_dominant else "best_match"
+        match_col = "best_match_primary"
         recovery = (scorable["best_status"] == "confirmed") & (
             scorable[match_col] == "direct")
         rows = []
@@ -539,10 +613,11 @@ def surfaces(per_star: pd.DataFrame, dataset: str) -> dict[str, pd.DataFrame]:
                 entry.update(dict(zip(("p", "lo", "hi"), wilson(k, n))))
             rows.append(entry)
         out["freq_recovery_period_amplitude"] = pd.DataFrame(rows)
-        if "n_exp_zg" in scorable and "baseline_days" in scorable:
-            epn = scorable["n_exp_zg"] / scorable["baseline_days"].clip(lower=1)
+        if "median_exp_per_night" in scorable and \
+                scorable["median_exp_per_night"].notna().any():
             out["freq_recovery_exposure_amplitude"] = pd.DataFrame(
-                surface_cells(scorable, recovery, epn,
+                surface_cells(scorable, recovery,
+                              scorable["median_exp_per_night"],
                               EXP_PER_NIGHT_EDGES, "exp_per_night_bin"))
     return out
 
@@ -563,15 +638,18 @@ def trigger_rates(per_star: pd.DataFrame, dataset: str) -> pd.DataFrame:
     if dataset == "d2" and "arm" in per_star:
         nulls = per_star[per_star["arm"] == "null"]
         if not nulls.empty:
-            x = int((nulls["best_status"] == "confirmed").sum())
-            n = len(nulls)
-            _, upper = cp_one_sided_bounds(x, n)
+            completed = nulls[nulls["best_status"] != "missing"]
+            x = int((completed["best_status"] == "confirmed").sum())
+            n = len(completed)
+            _, upper = cp_one_sided_bounds(x, n) if n else (math.nan, math.nan)
             rows.append({
                 "quantity": "fpr_gaussian", "rule": "confirmed",
-                "n": n, "k": x, "p": x / n,
+                "n_scheduled": len(nulls), "n_completed": n, "k": x,
+                "p": x / n if n else math.nan,
                 "cp_one_sided_95_upper": upper,
-                "acceptance_u95_leq_0.005": bool(upper <= 0.005),
-                "n_is_1000": bool(n == 1000),
+                # the confirmatory decision requires ALL 1000 trials completed
+                "acceptance_u95_leq_0.005": bool(n == 1000 and upper <= 0.005),
+                "n_completed_is_1000": bool(n == 1000),
             })
         controls = per_star[per_star["arm"] == "ctrl"]
         if not controls.empty:
@@ -587,8 +665,9 @@ def ppv_d3(per_star: pd.DataFrame) -> dict:
     """Frame-specific label PPV: weighted fraction of triggered (rule-1, best
     pass) roster members labeled dSct=1; dSct=2 excluded, reported separately.
     Survey bootstrap: negatives resampled with replacement, positives fixed."""
-    frame = per_star[(per_star["best_status"] != "missing")
-                     & per_star["class_label"].isin(["dsct_flag0", "dsct_flag1"])]
+    # the frame keeps every sampled member — a missing light curve cannot
+    # trigger but remains part of the SRS (stats4: preserve all 2,314)
+    frame = per_star[per_star["class_label"].isin(["dsct_flag0", "dsct_flag1"])]
     triggered = frame[frame["best_status"] == "confirmed"]
     if triggered.empty:
         return {"note": "no triggered stars in the PPV frame"}

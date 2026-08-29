@@ -68,8 +68,13 @@ def rebuild_star(cache_bytes: bytes, ra: float, dec: float, source_id: str) -> p
 
 
 def compare_star(rebuilt: pd.DataFrame, reference: pd.DataFrame) -> dict:
+    import numpy as _np
     if len(rebuilt) != len(reference):
         return {"verdict": "MISMATCH", "reason": f"row count {len(rebuilt)} != {len(reference)}"}
+    for col in ("mjd", "night_mjd", "mag", "magerr"):
+        for side, frame in (("rebuilt", rebuilt), ("published", reference)):
+            if not _np.isfinite(frame[col].to_numpy(dtype=float)).all():
+                return {"verdict": "MISMATCH", "reason": f"nonfinite {col} ({side})"}
     sci_a = rebuilt[SCIENCE_COLUMNS].to_csv(index=False, lineterminator="\n")
     sci_b = reference[SCIENCE_COLUMNS].to_csv(index=False, lineterminator="\n")
     if sci_a != sci_b:
@@ -121,6 +126,7 @@ def main() -> None:
     if args.count < 1:
         raise SystemExit("--count must be >= 1 (a vacuous gate cannot pass)")
     assert_frozen()
+    campaign_start = campaign_file_shas()
 
     roster = pd.read_csv(REPO_ROOT / "data/roster/jestin2026_rebuilt_candidates.csv",
                          dtype={"source_id": str})
@@ -160,15 +166,20 @@ def main() -> None:
         r["verdict"] in ("identical", "identical_1ulp") for r in records
     ) and len(records) >= args.count
     import hashlib
+    if campaign_file_shas() != campaign_start:
+        raise SystemExit("campaign code changed while the gate ran — report void")
     report = {"gate": "panel_golden_gate", "passed": passed, "stars": records,
               "env": env_versions(),
               "frozen_sha256": frozen_file_shas(),
-              "campaign_sha256": campaign_file_shas(),
+              "campaign_sha256": campaign_start,
               "inputs": {
                   "exposures_sha256": hashlib.sha256(
                       (PUBLISHED / "data/exposures.csv.gz").read_bytes()).hexdigest(),
                   "raw_cache_sha256": hashlib.sha256(
                       (PUBLISHED / "data/irsa_raw_cache.tar.gz").read_bytes()).hexdigest(),
+                  "roster_sha256": hashlib.sha256(
+                      (REPO_ROOT / "data/roster/jestin2026_rebuilt_candidates.csv"
+                       ).read_bytes()).hexdigest(),
               }}
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")

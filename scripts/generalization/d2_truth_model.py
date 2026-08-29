@@ -119,11 +119,18 @@ def build_truth_model(
     dedilution: float | None = None,
     amplitude_scale: float = 1.0,
     phase_draw: int = 0,
+    drop_dominant: bool = False,
 ) -> TruthModel:
     """amplitude_scale=0.0 builds a zero-amplitude null with the same modes;
-    phase_draw in {0, 1, 2} selects the frozen phase assignment (0 = base)."""
+    phase_draw in {0, 1, 2} selects the frozen phase assignment (0 = base);
+    drop_dominant removes the largest-amplitude mode (nonstationarity
+    sensitivity beyond a common multiplier: DAV modes can vanish outright)."""
     if len(periods_s) != len(amps_ppt):
         raise ValueError("periods and amplitudes must align")
+    if drop_dominant and amps_ppt:
+        dominant_index = int(np.argmax(amps_ppt))
+        periods_s = [x for i, x in enumerate(periods_s) if i != dominant_index]
+        amps_ppt = [x for i, x in enumerate(amps_ppt) if i != dominant_index]
     if phase_draw not in (0, 1, 2):
         raise ValueError("phase_draw must be 0, 1, or 2")
     seed = int(tic) if phase_draw == 0 else int(tic) * 10 + phase_draw

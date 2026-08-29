@@ -54,7 +54,9 @@ Three separate response assessments; never pooled.
   and bootstrap deviations are rescaled by sqrt(1 − f) with sampling
   fraction f = 2314/7292 (SRSWOR finite-population correction).
   No transfer to other prevalences. Output: ppv.csv.
-- **negative-class trigger rate (D3)** — P(rule fires | dSct=0). Weights are
+- **negative-class trigger rate (D3)** — P(rule fires | dSct=0, the
+  NON-dSct COMPARISON CLASS — it contains genuine gamma Dor, rotational,
+  binary and other variables, which is why this is a trigger rate). Weights are
   constant within the class and cancel: plain Wilson on the 2,314 sampled
   negatives (no FPC — conservative). Triggered negatives adjudicated in W4
   (plausible real variable vs unexplained), reported descriptively.
@@ -152,7 +154,10 @@ first campaign L-S run.
   (all-0/all-1), report the exact one-sided CP bound at the target level
   instead. Pooled exact McNemar is PROHIBITED for D2; use the target-cluster
   paired-difference bootstrap.
-- Sensitivity contrasts (D2 ladder, phase draws, amplitude-stationarity):
+- Sensitivity contrasts (D2 ladder, phase draws, amplitude-stationarity,
+  dominant-mode dropout — ALL core and binding; the ±30% multiplier is a
+  local sensitivity, never presented as an astrophysical uncertainty
+  envelope):
   COMMON-SUBSET RULE — every contrast against nominal is computed with
   nominal re-evaluated on the same median-window (K=1) subset and the same
   bootstrap draws. Min-max across the 3x3 grid is a "prespecified

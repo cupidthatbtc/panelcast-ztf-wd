@@ -121,7 +121,7 @@ def match_templates(stats: pd.DataFrame, gmag: float) -> tuple[list[str], str]:
     return picks, label
 
 
-AMP_SCALE_CODES = {1.0: 0, 0.7: 1, 1.3: 2}
+AMP_SCALE_CODES = {1.0: 0, 0.7: 1, 1.3: 2, "drop": 3}
 
 
 def campaign_id(arm_prefix: str, tic: int, k: int, g_idx: int, r_idx: int,
@@ -168,13 +168,14 @@ def main() -> None:
     parser.add_argument("--exposures", type=Path, default=PUBLISHED / "data/exposures.csv.gz")
     parser.add_argument("--catalog", type=Path,
                         default=PUBLISHED / "catalog/ls_full_catalog.csv")
-    parser.add_argument("--arms", default="b,ctrl,a,ladder,phase,ampscale,nulls")
+    parser.add_argument("--arms", default="b,ctrl,a,ladder,phase,ampscale,dropout,nulls")
     parser.add_argument("--limit", type=int, default=None, help="pilot: first N targets")
     parser.add_argument("--resume", action="store_true",
                         help="permit writing into a non-empty shard directory")
     args = parser.parse_args()
 
     assert_frozen()
+    campaign_start = campaign_file_shas()
     arms = set(args.arms.split(","))
     args.out_dir.mkdir(parents=True, exist_ok=True)
     existing = list(args.out_dir.glob("*.csv.gz"))
@@ -223,21 +224,27 @@ def main() -> None:
         if "ampscale" in arms:
             variants.extend((nominal[0], nominal[1], nominal[2], nominal[3], (1,),
                              0, sc) for sc in (0.7, 1.3))
+        if "dropout" in arms and len(periods) > 1:
+            variants.append((nominal[0], nominal[1], nominal[2], nominal[3], (1,),
+                             0, "drop"))
         for entry in variants:
             gi, ri, g, r, template_ks = entry[:5]
             phase_draw = entry[5] if len(entry) > 5 else 0
             amp_scale = entry[6] if len(entry) > 6 else 1.0
+            drop = amp_scale == "drop"
             model = build_truth_model(
                 int(target.tic), periods, amps, float(target.cadence_s),
-                ratio_g=g, ratio_rg=r, amplitude_scale=amp_scale,
-                phase_draw=phase_draw,
+                ratio_g=g, ratio_rg=r,
+                amplitude_scale=1.0 if drop else amp_scale,
+                phase_draw=phase_draw, drop_dominant=drop,
             )
             for k in template_ks:
                 template_id = picks[k]
                 template = frames[template_id]
                 arm_list = []
                 nominal_scenario = (g == NOMINAL_G and r == NOMINAL_RG
-                                    and phase_draw == 0 and amp_scale == 1.0)
+                                    and phase_draw == 0 and amp_scale == 1.0
+                                    and not drop)
                 if nominal_scenario:
                     if "b" in arms:
                         arm_list.append(("92", False))
@@ -269,8 +276,13 @@ def main() -> None:
                         "campaign_id": sid, "arm": "A" if gaussian else "B",
                         "tic": int(target.tic), "template_source_id": template_id,
                         "template_status": stats.set_index("source_id")["blind_status"].get(template_id, ""),
+                        "template_exp_per_night": float(
+                            stats.set_index("source_id")["exp_per_night"].get(
+                                template_id, float("nan"))),
                         "template_k": k, "ratio_g": g, "ratio_rg": r,
-                        "phase_draw": phase_draw, "amp_scale": amp_scale,
+                        "phase_draw": phase_draw,
+                        "amp_scale": 1.0 if drop else amp_scale,
+                        "dominant_dropped": drop,
                         "match": match_label,
                         "control_campaign_id": control_id(template_id) if not gaussian else "",
                         "n_modes_injected": len(model.modes),
@@ -318,6 +330,8 @@ def main() -> None:
 
     frame = pd.DataFrame(manifest)
     frame.to_csv(args.out_dir / "shard_manifest.csv", index=False)
+    (args.out_dir / "shard_index.txt").write_text(
+        "\n".join(sorted(frame["campaign_id"])) + "\n", encoding="utf-8")
     pd.DataFrame(injected_rows).to_csv(args.out_dir / "injected_modes.csv", index=False)
     pd.DataFrame(rejected_rows).to_csv(args.out_dir / "rejected_modes.csv", index=False)
     unique_rejected = {
@@ -340,8 +354,10 @@ def main() -> None:
         "total_rejected_mode_rows": int(frame["n_modes_rejected"].sum()),
         "unique_target_modes_rejected": len(unique_rejected),
         "outputs_sha256": outputs_sha,
-        "campaign_sha256": campaign_file_shas(),
+        "campaign_sha256": campaign_start,
     }
+    if campaign_file_shas() != campaign_start:
+        raise SystemExit("campaign code changed while shards were building")
     (args.out_dir / "shard_summary.json").write_text(
         json.dumps(summary, indent=2) + "\n", encoding="utf-8"
     )

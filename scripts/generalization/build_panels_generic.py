@@ -93,9 +93,25 @@ def main() -> None:
                         help="IRSA response cache: <source_id>.csv per target")
     parser.add_argument("--out-dir", type=Path, required=True)
     parser.add_argument("--allow-nonstandard-ids", action="store_true")
+    parser.add_argument("--panel-report", type=Path, default=None,
+                        help="panel_golden_report.json from a PASSING "
+                             "panel_golden_gate run on THIS machine+env; "
+                             "required unless --allow-nonstandard-ids")
     args = parser.parse_args()
 
     assert_frozen()
+    campaign_start = campaign_file_shas()
+    if args.panel_report is None and not args.allow_nonstandard_ids:
+        raise SystemExit("campaign panel builds require --panel-report "
+                         "(panel_golden_gate PASS on this machine)")
+    if args.panel_report is not None:
+        gate = json.loads(args.panel_report.read_text(encoding="utf-8"))
+        if gate.get("gate") != "panel_golden_gate" or gate.get("passed") is not True:
+            raise SystemExit(f"{args.panel_report} is not a panel-gate PASS")
+        current = env_versions()
+        mismatched = [k for k in current if gate["env"].get(k) != current.get(k)]
+        if mismatched:
+            raise SystemExit(f"panel attestation env differs: {mismatched}")
     args.out_dir.mkdir(parents=True, exist_ok=True)
     exposure_star_dir = args.out_dir / "exposure_stars"
     exposure_star_dir.mkdir(parents=True, exist_ok=True)
@@ -161,13 +177,21 @@ def main() -> None:
         )
         nightly = nightly_panel(clean)
         monthly = monthly_panel(nightly)
-        census_rows.append(census_row(meta, clean, nightly, monthly))
+        row = census_row(meta, clean, nightly, monthly)
+        zg_nightly = nightly[nightly["band"] == "zg"]
+        row["zg_median_exp_per_night"] = (
+            float(zg_nightly["n_exp"].median()) if len(zg_nightly) else float("nan"))
+        census_rows.append(row)
         if index % 50 == 0 or index == len(roster):
             print(f"[panels-generic] {index:,}/{len(roster):,}; crossmatched={crossmatched:,}",
                   flush=True)
 
     pd.DataFrame(qc_rows).to_csv(args.out_dir / "crossmatch_qc.csv", index=False)
     pd.DataFrame(census_rows).to_csv(args.out_dir / "census_generic.csv", index=False)
+    shard_ids = sorted(
+        path.name.split(".csv")[0] for path in exposure_star_dir.glob("*.csv.gz"))
+    (args.out_dir / "shard_index.txt").write_text(
+        "\n".join(shard_ids) + "\n", encoding="utf-8")
     manifest = {
         "builder": "build_panels_generic.py",
         "roster": str(args.roster),
@@ -179,8 +203,11 @@ def main() -> None:
         "census_threshold": 2.5,
         "env": env_versions(),
         "frozen_sha256": frozen_file_shas(),
-        "campaign_sha256": campaign_file_shas(),
+        "campaign_sha256": campaign_start,
+        "panel_attestation": str(args.panel_report) if args.panel_report else "",
     }
+    if campaign_file_shas() != campaign_start:
+        raise SystemExit("campaign code changed while panels were building")
     (args.out_dir / "panels_manifest.json").write_text(
         json.dumps(manifest, indent=2) + "\n", encoding="utf-8"
     )

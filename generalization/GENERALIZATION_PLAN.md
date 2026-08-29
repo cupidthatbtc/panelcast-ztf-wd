@@ -123,12 +123,21 @@ No re-run; campaign metrics re-read the published per-star JSONs.
   290 sub-hour; median 1.77 mmag. The 1–10 mmag log ladder and the
   sub-threshold majority make the completeness turn-on curve the headline
   D3 deliverable, not a defect (pre-registered: risk 2).
+  Sub-hour stratum caveat (binding): a confirmed Mo super-Nyquist frequency
+  establishes a sub-hour signal in the KEPLER APERTURE, not automatically
+  in the ZTF-matched source (blends), and the per-star dominant amplitude
+  need not describe the super-Nyquist mode; sub-hour-stratum detections are
+  adjudicated in W4 alongside triggered negatives, and Mo amplitude
+  sinc-correction status gets verified against the paper in W3.
 - Acquisition: frozen `fetch_catalog_lightcurves.py --roster roster_d3.csv`
   verbatim (10″ cone, 1.25 s cadence, resumable); frozen QC chain via
   `build_panels_generic.py` (nearest-cluster crossmatch, catflags/chi cuts,
   ≥20 exp/band, BJD_TDB at Palomar — all frozen functions).
 - Prespecified subsets: crowding (sep < 1.0″, ≤3 objects in cone),
-  near-saturation (g ≤ 14.0 flagged; g > 14.0 safe subset).
+  near-saturation (g ≤ 14.0 flagged; g > 14.0 safe subset — the PRINCIPAL
+  robustness lens: KIC g is only a saturation proxy and bright A/F stars
+  can still saturate in r; per-epoch saturation is additionally handled by
+  the frozen catflags QC).
 - Caveat on record: dSct=0 means "not a delta Scuti", not "constant" — the
   D3 negative-class result is a TRIGGER RATE (never called FPR); triggered
   negatives get adjudicated in W4 (plausible real variable vs unexplained).
@@ -150,13 +159,17 @@ No re-run; campaign metrics re-read the published per-star JSONs.
   (SPOC PDCSAP is crowding-corrected; ON = prespecified variant) →
   de-integrate the TESS boxcar (signed sinc; REJECT modes with
   |sinc| < 0.3, i.e. P < ~160 s at 120-s cadence, P < ~27 s at 20-s);
-  cadence precedence is algorithmic: cadence_s = 20 iff the star's chosen
-  published solution includes any "f" (20-s) sector, else 120 →
+  cadence precedence is algorithmic: cadence_s (an EFFECTIVE integration
+  time; TESS timestamps are exposure midpoints, as the signed-sinc algebra
+  assumes) = 20 iff the star's chosen published solution includes any "f"
+  (20-s) sector, else 120 →
   bandpass ladder A_g/A_TESS ∈ {1.4, 1.7, 2.1} × A_r/A_g ∈
-  {0.70, 0.80, 0.90}; the blackbody T-derivative at 11,500 K gives
-  (1.43, 0.80) ≈ the low rung; the ADOPTED nominal (1.7, 0.80) is the grid
-  midpoint covering atmosphere-model/limb-darkening uncertainty (the ladder
-  is non-optional — zr carries most published confirmations) →
+  {0.70, 0.80, 0.90} — a PHENOMENOLOGICAL SENSITIVITY GRID, not a derived
+  physical range: the blackbody T-derivative at 11,500 K gives (1.43, 0.80)
+  ≈ the low rung (not band-integrated, no limb darkening, l-independent);
+  the ADOPTED nominal (1.7, 0.80) is the grid midpoint; DA-atmosphere
+  band-integrated validation of the endpoints is a stated limitation (the
+  ladder is non-optional — zr carries most published confirmations) →
   re-integrate the ZTF 30-s boxcar analytically → compose with the FROZEN
   phase protocol: one independent phase per mode; base assignment
   (phase_draw = 0) seeds PCG64(TIC) and is shared across bands and across
@@ -194,18 +207,20 @@ No re-run; campaign metrics re-read the published per-star JSONs.
   window i mod 928, noise seed = serial); windows repeat, seeds do not.
   Verification arm: ~20 SPOC light curves prewhitened to confirm published
   solutions; everything else needs metadata only.
-- Run matrix (22 workers ≈ 84 runs/h). Core scheduled total ≤ 2,957 ≈
-  1.5 d: arm B nominal (1.7/0.80) 103×3 = 309; arm A nominal 309; Gaussian
-  nulls 1,000; paired controls ≤ 309 (unique arm-B windows); ladder
-  sensitivity MEDIAN-WINDOW-CONDITIONED: 8 non-nominal (R_g, R_rg) points
-  × 103 × 1 = 824; phase-draw sensitivity 2 × 103 = 206 (median window,
-  arm B nominal). Stretch additions listed separately: amplitude-
-  stationarity axis (scale × {0.7, 1.3}, median window, arm B nominal,
-  +206 — DAV amplitudes are nonstationary between the TESS and ZTF
-  epochs); Romero self-window diagnostic (count set by crossmatch yield);
-  de-dilution variant only for the SPOC verification-arm stars (CROWDSAP
-  comes with the ~20 downloads). Every sensitivity contrast uses the
-  common-subset rule (METRICS_SPEC).
+- Run matrix (22 workers ≈ 84 runs/h). CORE scheduled total ≤ 3,266 ≈
+  1.6 d, all binding: arm B nominal (1.7/0.80) 103×3 = 309; arm A nominal
+  309; Gaussian nulls 1,000; paired controls ≤ 309 (unique arm-B windows);
+  ladder sensitivity MEDIAN-WINDOW-CONDITIONED: 8 non-nominal (R_g, R_rg)
+  points × 103 × 1 = 824; phase-draw sensitivity 2 × 103 = 206;
+  amplitude-stationarity axis (scale × {0.7, 1.3}) 2 × 103 = 206;
+  dominant-mode-dropout variant ≤ 103 (targets with ≥ 2 modes) — the
+  ±30% multiplier is a LOCAL sensitivity, not an astrophysical envelope;
+  DAV modes can vanish outright between epochs, which dropout probes
+  (all sensitivity axes: median window, arm B nominal ratios).
+  Stretch additions listed separately: Romero self-window diagnostic
+  (count set by crossmatch yield); de-dilution variant only for the SPOC
+  verification-arm stars (CROWDSAP comes with the ~20 downloads).
+  Every sensitivity contrast uses the common-subset rule (METRICS_SPEC).
 - Truth-model corrections found at implementation (2026-08-28): |sinc| ≥ 0.3
   rejection corresponds to P < ~160 s at 120-s cadence (the earlier "197 s"
   was the |sinc| = 0.5 point); D2 min published period is 115.9 s and 49/103
