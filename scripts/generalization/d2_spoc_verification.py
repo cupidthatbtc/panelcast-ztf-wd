@@ -77,7 +77,17 @@ def main() -> None:
 
     report = []
     recovered_rows = []
+    import os
+    done_path = "spoc_verification_partial.json"
+    if os.path.exists(done_path):
+        report = json.load(open(done_path))
+        done_tics = {e["tic"] for e in report}
+        print(f"[spoc-verify] resuming: {len(done_tics)} targets already done", flush=True)
+    else:
+        done_tics = set()
     for tic in chosen:
+        if int(tic) in done_tics:
+            continue
         entry = {"tic": int(tic)}
         try:
             search = lk.search_lightcurve(f"TIC {tic}", author="SPOC", exptime=120)
@@ -135,6 +145,8 @@ def main() -> None:
         except Exception as exc:
             entry["error"] = repr(exc)
         report.append(entry)
+        with open(done_path, "w") as handle:
+            json.dump(report, handle, indent=1)
         print(f"[spoc-verify] TIC {tic}: "
               f"{entry.get('directed_confirmed_snr4', 'ERR')}/"
               f"{entry.get('n_published_modes', '?')} directed modes at SNR>=4, "
