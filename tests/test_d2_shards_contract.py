@@ -383,6 +383,15 @@ def test_cluster_bootstrap_keeps_scenarios_apart_and_uses_scheduled_strata(gener
     assert nb.loc[nb["endpoint"] == "detection", "confirmatory"].all()
     assert not nb.loc[nb["endpoint"] == "freq_recovery", "confirmatory"].any()
     assert not table_np.loc[table_np["scenario"] == "dropout", "confirmatory"].any()
+    # pilot semantics: a subset of targets with scheduled_tics=None scores what it ran,
+    # while passing the full schedule against a subset must fail closed
+    subset = per_star[per_star["cluster"] != "22"]
+    sub_table, _ = metrics.d2_cluster_bootstrap(subset, None, pilot=True)
+    nb_sub = sub_table[(sub_table["arm"] == "B") & (sub_table["scenario"] == SCENARIO_NOMINAL)
+                       & (sub_table["endpoint"] == "detection") & (sub_table["denominator"] == "eligible")]
+    assert nb_sub["n_targets_in_scenario"].iloc[0] == 1 and abs(nb_sub["p"].iloc[0] - 2 / 3) < 1e-12
+    with pytest.raises(SystemExit):
+        metrics.d2_cluster_bootstrap(subset, gen["scheduled_tics"], pilot=False)
     dropout = table[(table["scenario"] == "dropout") & (table["endpoint"] == "detection")
                     & (table["denominator"] == "eligible")]
     assert len(dropout) == 1 and dropout["n_strata_scheduled"].iloc[0] == 1

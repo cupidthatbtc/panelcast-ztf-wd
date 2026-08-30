@@ -1291,7 +1291,10 @@ def main() -> None:
     for name, surface in surfaces(primary, args.dataset).items():
         surface.to_csv(args.out_dir / "surfaces" / f"{name}.csv", index=False)
     if args.dataset == "d2":
-        table, contrasts = d2_cluster_bootstrap(per_star, (generation or {}).get("scheduled_tics"), pilot)
+        # a pilot scores the targets it ran; only a full run is bound to the
+        # generation's scheduled target list (the bootstrap asserts identity)
+        scheduled = None if pilot else (generation or {}).get("scheduled_tics")
+        table, contrasts = d2_cluster_bootstrap(per_star, scheduled, pilot)
         table.to_csv(args.out_dir / "d2_cluster_completeness.csv", index=False)
         contrasts.to_csv(args.out_dir / "d2_scenario_contrasts.csv", index=False)
     if args.dataset == "d3":
