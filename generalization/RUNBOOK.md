@@ -15,7 +15,7 @@ Windows detached launches ONLY via WMI:
    `--out-dir outputs/generalization/replay_gate_full --count 928`).
 2. `python scripts/generalization/panel_golden_gate.py`
    (PASS both machines 2026-08-28).
-3. `python -m pytest tests/ -q` (18 tests).
+3. `python -m pytest tests/ -q` (40 tests).
 4. `python scripts/generalization/verify_cli_identity.py --shard
    <one published shard> --out-dir outputs/generalization/cli_identity`
    — PENDING; run on the laptop after the full replay frees the cores.
@@ -34,11 +34,17 @@ Windows detached launches ONLY via WMI:
 3. COMMIT the crossmatch data freeze: crossmatch_qc.csv + an
    adjudication file (any positive with nearest_separation ≥ 1.5″ or
    multiple clusters gets a per-star disposition) BEFORE step 4.
-4. Timing pilot: `run_generalization_ls.py --shard-dir <exposure_stars>
-    --out-dir outputs/generalization/d3_run --dataset d3-kepler-dsct
-    --limit 150 --work-root <local NVMe scratch>
+4. Timing pilot: `python scripts/generalization/run_generalization_ls.py
+    --shard-dir outputs/generalization/d3_panels/exposure_stars
+    --shard-index outputs/generalization/d3_panels/shard_index.txt
+    --out-dir outputs/generalization/d3_pilot --dataset d3-kepler-dsct
+    --limit 150 --work-root C:/ls_scratch/d3_pilot --workers 12
     --replay-report outputs/generalization/replay_gate_full/replay_report.json`
-5. Full run: same command without `--limit` (resume-safe: sidecar-bound).
+   (`--limit` = lexicographic debug subset, marked pilot; D3 has one arm so
+   it is adequate for timing; never confirmatory).
+5. Full run: same command without `--limit`, `--out-dir
+   outputs/generalization/d3_run --work-root C:/ls_scratch/d3_run`
+   (resume-safe: sidecar-bound).
 6. Metrics (Mac): `metrics_generalization.py --dataset d3
     --stars-dir <stars> --run-manifest <d3_run/manifest.json>
     --shards-dir <d3_panels/exposure_stars> --shard-index <d3_panels/shard_index.txt>
@@ -50,17 +56,39 @@ Windows detached launches ONLY via WMI:
 
 ## D2 sequence (laptop, after D3 per slip rule — desktop unreachable)
 
-1. Shards (LAPTOP): `build_d2_shards.py --out-dir <local shards dir>`
-   (arms b,ctrl,a,ladder,nulls; ~2,957 shards; manifest + injected_modes +
-   rejected_modes are the truth files).
-2. Self-window diagnostic (running): frozen fetcher on
+1. Generation (LAPTOP; all-or-nothing, ~90 s; `<gen>` must not exist):
+   `python scripts/generalization/build_d2_shards.py
+    --out-dir outputs/generalization/d2_shards_gen1
+    --exposure-stars outputs/catalog/2026-08-01_full/exposure_stars
+    --arms b,ctrl,a,ladder,phase,ampscale,dropout,cadence_alt,nulls,redilution`
+   Mandatory production matrix (Amendments 2+3): arm B nominal 309, arm A
+   nominal 309, ladder 824, phase 206, ampscale 206, dropout ≤ 103 (76 on
+   the current tables), cadence_alt 33, controls = unique arm-B windows,
+   nulls 1,000; plus the stretch `redilution` arm (20 SPOC-verified targets)
+   ⇒ 3,102 shards on the current inputs (core ≤ 3,299). The builder refuses
+   to publish unless generation_manifest.json says production=true.
+2. Self-window diagnostic (DONE on the laptop): frozen fetcher on
    `selfwindow_roster.csv` (96-prefix); usable crossmatches form a separate
    diagnostic arm only.
-3. Run: `run_generalization_ls.py --shard-dir <shards> --dataset d2-tess-dav
-    --replay-report <attestation> --work-root <scratch>`.
-4. Metrics: `metrics_generalization.py --dataset d2 --shards-dir <generation>
-    --stars-dir <stars> --run-manifest <d2_run/manifest.json> --out-dir <metrics>`
-    (shard index defaults to <generation>/shard_index.txt).
+3. Stratified pilot (LAPTOP; ~150 shards spanning every arm/scenario; never
+   confirmatory):
+   `python scripts/generalization/run_generalization_ls.py
+    --shard-dir outputs/generalization/d2_shards_gen1
+    --shard-index outputs/generalization/d2_shards_gen1/shard_index.txt
+    --stars-file outputs/generalization/d2_shards_gen1/pilot_shard_index.txt
+    --out-dir outputs/generalization/d2_pilot --dataset d2-tess-dav
+    --work-root C:/ls_scratch/d2_pilot --workers 12
+    --replay-report outputs/generalization/replay_gate_full/replay_report.json`
+4. Full run (LAPTOP): the same command WITHOUT `--stars-file` and with
+   `--out-dir outputs/generalization/d2_run --work-root C:/ls_scratch/d2_run`
+   (resume-safe: sidecar-bound; `--workers` sized to free RAM, ~1 GB each).
+5. Metrics (Mac): `python scripts/generalization/metrics_generalization.py
+    --dataset d2 --shards-dir <synced d2_shards_gen1>
+    --stars-dir <synced d2_run/stars> --run-manifest <synced d2_run/manifest.json>
+    --out-dir generalization/results/<date>_d2/metrics`
+   (shard index defaults to `<generation>/shard_index.txt`; completion.csv
+   must sit beside manifest.json; sync the generation dir, stars/,
+   manifest.json, completion.csv).
 
 ## Results bundles
 

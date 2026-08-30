@@ -383,9 +383,12 @@ def _row_problem(r) -> str:
             return "ratios"
         if r.phase_draw not in (0, 1, 2) or r.amp_scale not in AMP_SCALES:
             return "phase_draw/amp_scale"
-        crowd = CROWD_CODE_REDILUTION if math.isfinite(r.crowdsap) else CROWD_CODE_NONE
-        if math.isfinite(r.crowdsap) and not (0.0 < r.crowdsap <= 1.0):
-            return "crowdsap out of (0, 1]"
+        # absence is NaN EXACTLY; any present value must be finite and in range
+        # (G3 methods round-4: inf must not read as "absent")
+        crowd_present = not math.isnan(r.crowdsap)
+        if crowd_present and not (math.isfinite(r.crowdsap) and 0.0 < r.crowdsap <= 1.0):
+            return "crowdsap must be NaN (absent) or finite in (0, 1]"
+        crowd = CROWD_CODE_REDILUTION if crowd_present else CROWD_CODE_NONE
         if r.match not in MATCH_LABELS or r.template_status not in BLIND_STATUSES:
             return "match/template_status vocabulary"
         if r.cadence_code not in (CADENCE_CODE_NOMINAL, CADENCE_CODE_ALT) or r.cadence_s not in CADENCES_S:
@@ -406,7 +409,10 @@ def _row_problem(r) -> str:
         if scenario_code(r.ratio_g, r.ratio_rg, r.phase_draw, r.amp_scale,
                          bool(r.dominant_dropped), crowd, r.cadence_code) != r.scenario:
             return "scenario inconsistent with its fields"
-        if bool(r.dominant_dropped) != math.isfinite(r.dropped_period_s):
+        dropped_present = not math.isnan(r.dropped_period_s)
+        if dropped_present and not (math.isfinite(r.dropped_period_s) and r.dropped_period_s > 0.0):
+            return "dropped_period_s must be NaN (absent) or a finite positive period"
+        if bool(r.dominant_dropped) != dropped_present:
             return "dropped_period_s"
         if r.n_strata_scheduled != (3 if r.scenario == SCENARIO_NOMINAL else 1):
             return "n_strata_scheduled"
@@ -437,8 +443,8 @@ def _row_problem(r) -> str:
         return "ctrl/null defaults"
     if r.n_strata_scheduled != 0 or r.n_modes_injected != 0 or r.n_modes_rejected != 0:
         return "ctrl/null counts"
-    if r.control_campaign_id != "" or math.isfinite(r.crowdsap) or math.isfinite(r.dropped_period_s):
-        return "ctrl/null empties"
+    if r.control_campaign_id != "" or not math.isnan(r.crowdsap) or not math.isnan(r.dropped_period_s):
+        return "ctrl/null empties (absent floats must be NaN exactly)"
     if r.cadence_code != 0 or r.cadence_s != 0.0:
         return "ctrl/null cadence fields"
     if r.arm == "ctrl":

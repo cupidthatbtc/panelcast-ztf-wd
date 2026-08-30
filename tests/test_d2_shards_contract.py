@@ -298,6 +298,26 @@ def test_manifest_semantics_are_enforced(generation):
     bad.loc[idx, "crowdsap"] = 1.5
     with pytest.raises(SystemExit):
         validate_manifest_frame(bad)
+    # non-finite sentinels never read as "absent" (round-4 MAJOR)
+    for column, victim_query in (("crowdsap", (manifest["scenario"] == SCENARIO_NOMINAL) & (manifest["arm"] == "B")),
+                                 ("dropped_period_s", manifest["scenario"] == SCENARIO_NOMINAL),
+                                 ("crowdsap", manifest["arm"] == "ctrl"),
+                                 ("dropped_period_s", manifest["arm"] == "gauss_null")):
+        for sentinel in (float("inf"), float("-inf")):
+            bad = manifest.copy()
+            bad.loc[bad.index[victim_query][0], column] = sentinel
+            with pytest.raises(SystemExit):
+                validate_manifest_frame(bad)
+    bad = manifest.copy()
+    idx = bad.index[bad["scenario"] == "dropout"][0]
+    bad.loc[idx, "dropped_period_s"] = float("nan")          # dropout row claiming absence
+    with pytest.raises(SystemExit):
+        validate_manifest_frame(bad)
+    bad = manifest.copy()
+    idx = bad.index[bad["scenario"] == "redilution"][0]
+    bad.loc[idx, "crowdsap"] = float("nan")                  # redilution row claiming absence
+    with pytest.raises(SystemExit):
+        validate_manifest_frame(bad)
 
 
 def test_cadence_alt_schedule_identity():

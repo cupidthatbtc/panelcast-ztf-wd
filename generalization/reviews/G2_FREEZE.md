@@ -128,5 +128,23 @@ runner records shard_index path + SHA and metrics binds index SHA == run
 manifest, index == on-disk shards, completion ⊆ index (== outside pilots),
 D3 ids ⊆ truth, sidecar shard SHA unconditional (file required).
 Tests: 40 passing (10 frozen-constant + 13 truth-model + 17 contract).
-Status: PENDING G3 round-4 verdicts (numerics + methods); Amendments 2 and 3
-are ratified together when both return APPROVE.
+Round-4 verdicts: numerics APPROVE (no new findings; production-readiness
+reconciled: 103 targets, 76 dropout, 33/33 cadence_alt, 20 redilution,
+3,102 shards); methods REJECT on three mechanical items — non-finite
+sentinels (`inf`) read as "absent" by the isfinite-based checks (now:
+absence is NaN exactly, any present value must be finite and in range, with
+inf/-inf/NaN tests on positive and control/null rows), the RUNBOOK's D2/D3
+commands lacked the now-required arguments (rewritten verbatim: generation
+with --exposure-stars and the mandatory arm list, stratified pilot via
+--stars-file pilot_shard_index.txt, full run, metrics with --run-manifest/
+--shards-dir/--shard-index; D3 runner commands carry --shard-index), and
+stale doc lines (spec output list gains d2_scenario_contrasts.csv; runbook
+test count 40). Frozen document SHA-256 after those doc edits:
+
+- generalization/METRICS_SPEC.md
+  b59ec7e44f310e8bb945d219c07b0c6fd5abf2ad4bbe9d067da38cd83b156cf2
+- generalization/GENERALIZATION_PLAN.md
+  6b28b634f0abb96230c49eeb98463d6ba8c7c406b6dbddae54894d65f1f09ae6
+
+Status: numerics APPROVED; PENDING methods round-5 verdict. Amendments 2
+and 3 are ratified together when methods returns APPROVE.
