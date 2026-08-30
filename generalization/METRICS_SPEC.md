@@ -256,6 +256,6 @@ completeness_by_class_pass_rule.csv, contingency_complementarity.json,
 trigger_rates.csv, ppv.csv (D3), fp_frequency_distribution.csv,
 chance_match.json, surfaces/*.csv, sensitivity.csv, attrition.csv,
 d2_cluster_completeness.csv + d2_scenario_contrasts.csv (D2: P4 table and
-the paired common-draw scenario-vs-nominal-K=1 contrasts),
-d2_cluster_completeness.csv (D2), manifest.json, inputs_sha256.json.
+the paired common-draw scenario-vs-nominal-K=1 contrasts), manifest.json,
+inputs_sha256.json.
 Figures via plot_generalization.py from these CSVs only.

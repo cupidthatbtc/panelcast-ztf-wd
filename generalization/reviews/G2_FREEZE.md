@@ -146,5 +146,25 @@ test count 40). Frozen document SHA-256 after those doc edits:
 - generalization/GENERALIZATION_PLAN.md
   6b28b634f0abb96230c49eeb98463d6ba8c7c406b6dbddae54894d65f1f09ae6
 
-Status: numerics APPROVED; PENDING methods round-5 verdict. Amendments 2
-and 3 are ratified together when methods returns APPROVE.
+Round-5 methods verdict (generalization/reviews/G3/sol_methods_r5.md):
+APPROVE-WITH-CHANGES — no BLOCKING or MAJOR issue remains; two documentation-
+only MINORs (runbook CLI-identity status line; duplicate spec output entry),
+both applied. Numerics: APPROVE (sol_numerics_r4.md). The reviewer states
+that the production D2 generation may be built and the stratified pilot run
+on the attested laptop.
+
+## RATIFIED 2026-08-30: Amendments 2 and 3
+
+Final frozen document SHA-256 (working tree == this ledger):
+
+- generalization/METRICS_SPEC.md
+  c827ed9e7dd4068babff12a5cf26f2ebe480d813e7cf115f015f96d7332b3a3e
+- generalization/GENERALIZATION_PLAN.md
+  6b28b634f0abb96230c49eeb98463d6ba8c7c406b6dbddae54894d65f1f09ae6
+
+Any change to either document after the first campaign L-S run (the D2
+stratified pilot on generation gen1 is a PILOT, never confirmatory; the first
+confirmatory run is the D2 full matrix or the D3 full run) voids the
+prespecification. Review history for G3: rounds 1–5 (numerics: REJECT,
+A-w-C, A-w-C, APPROVE; methods: REJECT ×4, A-w-C), ~30 distinct findings
+dispositioned; verdict files under generalization/reviews/G3/.

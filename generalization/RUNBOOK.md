@@ -18,7 +18,8 @@ Windows detached launches ONLY via WMI:
 3. `python -m pytest tests/ -q` (40 tests).
 4. `python scripts/generalization/verify_cli_identity.py --shard
    <one published shard> --out-dir outputs/generalization/cli_identity`
-   — PENDING; run on the laptop after the full replay frees the cores.
+   — PASS on the laptop 2026-08-30 (api_equals_cli + deterministic; archived at
+   generalization/attestation/laptop_cli_identity_2026-08-30/).
 
 ## D3 sequence
 
