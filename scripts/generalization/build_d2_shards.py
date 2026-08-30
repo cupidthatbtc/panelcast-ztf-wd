@@ -91,8 +91,7 @@ from d2_truth_model import (
     CROWD_CODE_NONE,
     CROWD_CODE_REDILUTION,
     D2_GENERATION_CODE,
-    MIXED_CADENCE_TARGETS_PRODUCTION,
-    INJECTED_MODE_COLUMNS,
+        INJECTED_MODE_COLUMNS,
     MANIFEST_COLUMN_NAMES,
     MANIFEST_COLUMNS,
     N_NULLS_PRODUCTION,
@@ -106,6 +105,7 @@ from d2_truth_model import (
     assert_counts,
     build_truth_model,
     campaign_id,
+    check_cadence_alt_schedule,
     control_id,
     expected_counts,
     null_id,
@@ -576,9 +576,12 @@ def main(argv: list[str] | None = None, expected_pool: int = POOL_SIZE_PRODUCTIO
     counts = expected_counts(frame, scheduled_tics, dropout_eligible, redilution_tics,
                              args.n_nulls if "nulls" in arms else 0, arms, cadence_alt_tics)
     assert_counts(frame, counts)
-    if production and len(mixed_cadence) != MIXED_CADENCE_TARGETS_PRODUCTION:
-        raise SystemExit(f"SPOC v3 lists {len(mixed_cadence)} mixed-cadence targets, "
-                         f"expected {MIXED_CADENCE_TARGETS_PRODUCTION} (Amendment 3)")
+    if "cadence_alt" in arms:
+        check_cadence_alt_schedule(mixed_cadence, cadence_alt_tics, production)
+        alt_rows = frame[frame["scenario"] == "cadence_alt"]
+        if (sorted(alt_rows["tic"].tolist()) != sorted(cadence_alt_tics)
+                or (alt_rows["template_k"] != 1).any() or (alt_rows["arm"] != "B").any()):
+            raise SystemExit("cadence_alt manifest rows != scheduled cadence_alt targets (one K=1 arm-B row each)")
 
     frame.to_csv(staging / "shard_manifest.csv", index=False, lineterminator="\n")
     injected.to_csv(staging / "injected_modes.csv", index=False, lineterminator="\n")

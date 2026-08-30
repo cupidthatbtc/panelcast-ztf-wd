@@ -32,6 +32,8 @@ from d2_truth_model import (  # noqa: E402
     AMP_SCALE_CODE_DROPOUT,
     MANIFEST_COLUMN_NAMES,
     SCENARIO_NOMINAL,
+    campaign_id,
+    check_cadence_alt_schedule,
     production_reasons,
     validate_manifest_frame,
 )
@@ -163,7 +165,7 @@ def test_scenarios_are_explicit_and_dropout_is_separate(generation):
     assert dropout["dropped_period_s"].tolist() == [500.0]      # largest RETAINED mode at 20 s
     assert (dropout["n_strata_scheduled"] == 1).all() and (dropout["template_k"] == 1).all()
     sid = dropout["campaign_id"].iloc[0]
-    # layout AA TTTTTTTTTT K G R P S C 0 -> P=15, S=16, C=17, reserved=18
+    # layout AA TTTTTTTTTT K G R P S C D -> P=15, S=16, C=17, D=18 (cadence code)
     assert sid[15] == "0" and sid[16] == str(AMP_SCALE_CODE_DROPOUT) and sid[17] == "0" and sid[18] == "0"
     expected = {SCENARIO_NOMINAL, "dropout", "phase_1", "phase_2", "ampscale_0.7", "ampscale_1.3",
                 "redilution", "cadence_alt", "control", "gauss_null"} | {
@@ -283,6 +285,43 @@ def test_manifest_semantics_are_enforced(generation):
     bad.loc[idx, "amp_scale"] = 1.0                          # a null with amplitude
     with pytest.raises(SystemExit):
         validate_manifest_frame(bad)
+    # crossed sensitivity axes with a self-consistent id and scenario must still be refused
+    bad = manifest.copy()
+    idx = bad.index[(bad["arm"] == "B") & (bad["scenario"] == "ladder_g3r1")][0]
+    bad.loc[idx, "phase_draw"] = 1
+    bad.loc[idx, "amp_scale"] = 0.7
+    bad.loc[idx, "campaign_id"] = campaign_id("92", int(bad.loc[idx, "tic"]), 1, 3, 1, 1, 1, 0, 0)
+    with pytest.raises(SystemExit):
+        validate_manifest_frame(bad)
+    bad = manifest.copy()
+    idx = bad.index[bad["scenario"] == "redilution"][0]
+    bad.loc[idx, "crowdsap"] = 1.5
+    with pytest.raises(SystemExit):
+        validate_manifest_frame(bad)
+
+
+def test_cadence_alt_schedule_identity():
+    mixed = list(range(1, 34))
+    check_cadence_alt_schedule(mixed, mixed, production=True)
+    with pytest.raises(SystemExit):
+        check_cadence_alt_schedule(mixed, mixed[:-1], production=True)     # 32 realized
+    with pytest.raises(SystemExit):
+        check_cadence_alt_schedule(mixed[:-1], mixed[:-1], production=True)  # report lists 32
+    with pytest.raises(SystemExit):
+        check_cadence_alt_schedule(mixed, mixed + [99], production=False)   # non-mixed target
+    check_cadence_alt_schedule(mixed, mixed[:-1], production=False)         # allowed outside production
+
+
+def test_fp_frequency_audit_uses_null_and_control_arms(generation):
+    truth, _ = metrics.truth_d2(generation["out"], pilot=True)
+    per_star = truth.copy()
+    per_star["best_status"] = "not_detected"
+    per_star.loc[per_star["arm"] == "gauss_null", "best_status"] = "confirmed"
+    per_star["best_pass"] = "low"
+    per_star["best_frequency_per_day"] = 100.0
+    per_star["baseline_days"] = 1000.0
+    fp = metrics.fp_frequency_distribution(per_star, "d2")
+    assert len(fp) == int((per_star["arm"] == "gauss_null").sum()) and set(fp["arm"]) == {"gauss_null"}
 
 
 def test_production_requires_the_full_arm_matrix():
@@ -310,7 +349,7 @@ def test_cluster_bootstrap_keeps_scenarios_apart_and_uses_scheduled_strata(gener
         return "candidate"
     per_star["best_status"] = per_star.apply(status, axis=1)
     per_star["best_candidate_matches_dominant"] = "direct"
-    table = metrics.d2_cluster_bootstrap(per_star, gen["scheduled_tics"], pilot=True)
+    table, contrasts = metrics.d2_cluster_bootstrap(per_star, gen["scheduled_tics"], pilot=True)
     nominal = table[(table["arm"] == "B") & (table["scenario"] == SCENARIO_NOMINAL)
                     & (table["endpoint"] == "detection") & (table["denominator"] == "eligible")]
     assert len(nominal) == 1
@@ -319,7 +358,7 @@ def test_cluster_bootstrap_keeps_scenarios_apart_and_uses_scheduled_strata(gener
     assert not nominal["confirmatory"].iloc[0]                        # pilot
     # non-pilot: membership semantics — nominal-B DETECTION rows are confirmatory
     # (both denominators), frequency-recovery rows never are
-    table_np = metrics.d2_cluster_bootstrap(per_star, gen["scheduled_tics"], pilot=False)
+    table_np, _ = metrics.d2_cluster_bootstrap(per_star, gen["scheduled_tics"], pilot=False)
     nb = table_np[(table_np["arm"] == "B") & (table_np["scenario"] == SCENARIO_NOMINAL)]
     assert nb.loc[nb["endpoint"] == "detection", "confirmatory"].all()
     assert not nb.loc[nb["endpoint"] == "freq_recovery", "confirmatory"].any()
@@ -330,6 +369,24 @@ def test_cluster_bootstrap_keeps_scenarios_apart_and_uses_scheduled_strata(gener
     assert dropout["p"].iloc[0] == 0.0 and dropout["n_targets_in_scenario"].iloc[0] == 1
     alt = table[(table["scenario"] == "cadence_alt") & (table["endpoint"] == "detection")]
     assert len(alt) == 2 and (alt["cadence_code"] == 1).all() and not alt["confirmatory"].any()
+    # paired common-draw contrasts: dropout (TIC 11 only) vs nominal K=1 on the SAME target;
+    # nominal K=1 for TIC 11 is confirmed, dropout is not -> diff = -1 on one matched target
+    c = contrasts[(contrasts["scenario"] == "dropout") & (contrasts["endpoint"] == "detection")
+                  & (contrasts["denominator"] == "eligible")]
+    assert len(c) == 1 and c["n_targets_matched"].iloc[0] == 1
+    assert c["p_scenario"].iloc[0] == 0.0 and c["p_nominal_k1"].iloc[0] == 1.0 and c["diff"].iloc[0] == -1.0
+    assert c["interval"].iloc[0] == "paired_cluster_bootstrap_common_draws" and not c["confirmatory"].any()
+    assert set(contrasts["scenario"]) >= {"dropout", "cadence_alt", "phase_1", "ladder_g1r1", "redilution"}
+    # symmetric missingness: mark the nominal K=1 row of TIC 11 missing -> usable contrast for
+    # dropout has zero matched targets (dropped), eligible keeps it as a failure on both sides
+    per_star2 = per_star.copy()
+    nk1 = per_star2.index[(per_star2["arm"] == "B") & (per_star2["scenario"] == SCENARIO_NOMINAL)
+                          & (per_star2["template_k"] == 1) & (per_star2["cluster"] == "11")][0]
+    per_star2.loc[nk1, "best_status"] = "missing"
+    _, contrasts2 = metrics.d2_cluster_bootstrap(per_star2, gen["scheduled_tics"], pilot=True)
+    c2 = contrasts2[(contrasts2["scenario"] == "dropout") & (contrasts2["endpoint"] == "detection")]
+    assert c2.loc[c2["denominator"] == "usable"].empty or c2.loc[c2["denominator"] == "usable", "n_targets_matched"].iloc[0] == 0
+    assert c2.loc[c2["denominator"] == "eligible", "p_nominal_k1"].iloc[0] == 0.0
     assert {"arm", "scenario", "ratio_g", "ratio_rg", "phase_draw", "amp_scale",
             "dominant_dropped"} <= set(table.columns)
 

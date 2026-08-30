@@ -40,8 +40,12 @@ Windows detached launches ONLY via WMI:
     --replay-report outputs/generalization/replay_gate_full/replay_report.json`
 5. Full run: same command without `--limit` (resume-safe: sidecar-bound).
 6. Metrics (Mac): `metrics_generalization.py --dataset d3
-    --stars-dir <stars> --census-csv <census_generic.csv>
-    --crossmatch-qc <crossmatch_qc.csv> --out-dir <metrics>` then
+    --stars-dir <stars> --run-manifest <d3_run/manifest.json>
+    --shards-dir <d3_panels/exposure_stars> --shard-index <d3_panels/shard_index.txt>
+    --census-csv <census_generic.csv>
+    --crossmatch-qc <crossmatch_qc.csv> --out-dir <metrics>` (completion.csv
+    must sit beside the run manifest; sync stars/, manifest.json,
+    completion.csv, the panels dir) then
    `plot_generalization.py`.
 
 ## D2 sequence (laptop, after D3 per slip rule — desktop unreachable)
@@ -54,8 +58,9 @@ Windows detached launches ONLY via WMI:
    diagnostic arm only.
 3. Run: `run_generalization_ls.py --shard-dir <shards> --dataset d2-tess-dav
     --replay-report <attestation> --work-root <scratch>`.
-4. Metrics: `metrics_generalization.py --dataset d2 --shards-dir <shards>
-    --stars-dir <stars> --out-dir <metrics>`.
+4. Metrics: `metrics_generalization.py --dataset d2 --shards-dir <generation>
+    --stars-dir <stars> --run-manifest <d2_run/manifest.json> --out-dir <metrics>`
+    (shard index defaults to <generation>/shard_index.txt).
 
 ## Results bundles
 

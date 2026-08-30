@@ -70,11 +70,12 @@ LAMBDA_NM = {"zg": 472.0, "zr": 642.0, "tess": 786.0}
 HC_OVER_K_NM_K = 1.43877688e7  # h c / k_B in nm*K
 
 # ----------------------------------------------------------------- contract
-# Campaign id layout (19 digits): AA TTTTTTTTTT K GR PS C0
+# Campaign id layout (19 digits): AA TTTTTTTTTT K GR PS CD
 #   AA arm prefix (92 = arm B, 93 = arm A), T zero-padded TIC, K template index
 #   (0/1/2), G/R ladder indices (1-3; 22 = nominal), P phase-draw (0-2),
 #   S amplitude-scale code (below), C crowding-variant code (0 = PDCSAP as
-#   published, 1 = SAP-equivalent re-dilution), trailing 0 reserved.
+#   published, 1 = SAP-equivalent re-dilution), D cadence code (0 = frozen
+#   rule, 1 = cadence_alt pure-120-s endpoint; Amendment 3).
 #   Nulls: 94 + 17-digit serial. Controls: 95 + 17-digit index of the template
 #   in the sorted fixed 928-window pool. Self-window diagnostic: 96 prefix.
 AMP_SCALE_CODES = {1.0: 0, 0.7: 1, 1.3: 2}
@@ -142,6 +143,8 @@ D2_GENERATION_CODE = ("scripts/generalization/build_d2_shards.py",
                       "scripts/generalization/d2_truth_model.py",
                       "scripts/generalization/frozen_api.py")
 AMP_SCALES = (1.0, 0.7, 1.3)
+MATCH_LABELS = ("tol_0.25", "tol_0.5", "nearest")
+BLIND_STATUSES = ("confirmed", "candidate", "not_detected")   # published catalog vocabulary
 INJECTED_MODE_COLUMNS = ("campaign_id", "period_s", "frequency_per_day", "amp_tess_ppt",
                          "tess_sinc", "ztf_sinc", "amp_g_mag", "amp_r_mag", "phase_rad")
 REJECTED_MODE_COLUMNS = ("campaign_id", "period_s", "amp_ppt", "tess_sinc")
@@ -381,8 +384,20 @@ def _row_problem(r) -> str:
         if r.phase_draw not in (0, 1, 2) or r.amp_scale not in AMP_SCALES:
             return "phase_draw/amp_scale"
         crowd = CROWD_CODE_REDILUTION if math.isfinite(r.crowdsap) else CROWD_CODE_NONE
+        if math.isfinite(r.crowdsap) and not (0.0 < r.crowdsap <= 1.0):
+            return "crowdsap out of (0, 1]"
+        if r.match not in MATCH_LABELS or r.template_status not in BLIND_STATUSES:
+            return "match/template_status vocabulary"
         if r.cadence_code not in (CADENCE_CODE_NOMINAL, CADENCE_CODE_ALT) or r.cadence_s not in CADENCES_S:
             return "cadence_code/cadence_s"
+        # sensitivity axes are MUTUALLY EXCLUSIVE: nominal = no axis, every other
+        # scenario = exactly one axis (G3 methods round-3: precedence must not
+        # hide crossed axes)
+        axes = [not (r.ratio_g == NOMINAL_G and r.ratio_rg == NOMINAL_RG),
+                r.phase_draw != 0, r.amp_scale != 1.0, bool(r.dominant_dropped),
+                crowd == CROWD_CODE_REDILUTION, r.cadence_code == CADENCE_CODE_ALT]
+        if sum(axes) != (0 if r.scenario == SCENARIO_NOMINAL else 1):
+            return "crossed or missing sensitivity axes for this scenario"
         if r.cadence_code == CADENCE_CODE_ALT and (
                 r.cadence_s != CADENCE_ALT_S or r.arm != "B" or crowd != CROWD_CODE_NONE
                 or bool(r.dominant_dropped) or r.phase_draw != 0 or r.amp_scale != 1.0
@@ -416,6 +431,8 @@ def _row_problem(r) -> str:
     # controls and Gaussian nulls
     if r.tic != 0 or r.template_k != -1 or r.pool_index < 0:
         return "ctrl/null tic/template_k/pool_index"
+    if r.match != "" or r.template_status not in BLIND_STATUSES:
+        return "ctrl/null match/template_status"
     if r.ratio_g != 0.0 or r.ratio_rg != 0.0 or r.phase_draw != 0 or bool(r.dominant_dropped):
         return "ctrl/null defaults"
     if r.n_strata_scheduled != 0 or r.n_modes_injected != 0 or r.n_modes_rejected != 0:
@@ -503,3 +520,23 @@ def assert_counts(frame: pd.DataFrame, counts: dict[str, int]) -> None:
         missing = {k: v for k, v in counts.items() if realized.get(k) != v}
         extra = {k: v for k, v in realized.items() if k not in counts}
         raise SystemExit(f"run matrix mismatch: expected-but-different {missing}; unexpected {extra}")
+
+
+def check_cadence_alt_schedule(mixed_from_v3: list[int], scheduled_alt: list[int],
+                               production: bool) -> None:
+    """Amendment 3 cardinality/identity (G3 round-3, both reviewers): in
+    production the realized cadence_alt target set must equal the SPOC v3
+    mixed-cadence set and count exactly MIXED_CADENCE_TARGETS_PRODUCTION;
+    outside production it must still be a subset."""
+    mixed, alt = set(int(t) for t in mixed_from_v3), set(int(t) for t in scheduled_alt)
+    if len(alt) != len(list(scheduled_alt)):
+        raise SystemExit("duplicate cadence_alt targets")
+    if not alt <= mixed:
+        raise SystemExit(f"cadence_alt scheduled for non-mixed targets {sorted(alt - mixed)[:3]}")
+    if production:
+        if len(mixed) != MIXED_CADENCE_TARGETS_PRODUCTION or len(list(mixed_from_v3)) != len(mixed):
+            raise SystemExit(f"SPOC v3 lists {len(mixed)} unique mixed-cadence targets, "
+                             f"expected {MIXED_CADENCE_TARGETS_PRODUCTION}")
+        if alt != mixed:
+            raise SystemExit(f"production requires every mixed-cadence target scheduled in "
+                             f"cadence_alt: missing {sorted(mixed - alt)[:3]}")

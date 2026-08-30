@@ -104,13 +104,29 @@ contrast) is added to the mandatory production matrix (33 shards). Full
 text: GENERALIZATION_PLAN.md, D2 run matrix ("Amendment 3"). No campaign L-S
 run has been executed.
 
-Frozen document SHA-256 after Amendment 3:
+Frozen document SHA-256 after Amendment 3 (round-4 state; the plan gained the
+`CD` id-layout wording and the 3,299 core maximum):
 
 - generalization/METRICS_SPEC.md
   6986e2fce033369d72efac9b08d257894446c2b71522a1f707587fe6cc6c9365
 - generalization/GENERALIZATION_PLAN.md
-  1f7153a7f473e6f1300221fafa4a5b40f97165a45202f4dedab4fb5d5640dc73
+  6b28b634f0abb96230c49eeb98463d6ba8c7c406b6dbddae54894d65f1f09ae6
 
-Tests: 38 passing (10 + 14 + 14). Status: PENDING G3 round-3 verdicts
-(numerics + methods); Amendments 2 and 3 are ratified together when both
-return APPROVE.
+Round-3 verdicts: numerics APPROVE-WITH-CHANGES (production must realize the
+33 cadence_alt shards; paired common-draw contrast vs nominal K=1; layout/
+count wording), methods REJECT (D3 run-universe binding BLOCKING; symmetric
+missingness in matched sensitivity rows; D2 FP-frequency audit received the
+wrong frame; crossed sensitivity axes accepted; cadence_alt cardinality).
+Round-4 commit: `check_cadence_alt_schedule` (set identity + 33, builder AND
+metrics), `d2_scenario_contrasts.csv` (every non-nominal arm-B scenario vs
+nominal K=1 on the identical targets, one common draw matrix, paired
+difference interval; usable = usable on both sides, eligible keeps missing as
+failure on both), sensitivity rows on the symmetric common subset, FP audit on
+the full frame with arm/scenario retained, mutually exclusive sensitivity
+axes + crowdsap range + match/status vocabularies in the shared validator,
+runner records shard_index path + SHA and metrics binds index SHA == run
+manifest, index == on-disk shards, completion ⊆ index (== outside pilots),
+D3 ids ⊆ truth, sidecar shard SHA unconditional (file required).
+Tests: 40 passing (10 frozen-constant + 13 truth-model + 17 contract).
+Status: PENDING G3 round-4 verdicts (numerics + methods); Amendments 2 and 3
+are ratified together when both return APPROVE.

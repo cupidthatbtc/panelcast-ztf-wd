@@ -352,6 +352,9 @@ def main() -> None:
         "workers": workers,
         "wall_seconds": round(time.time() - started, 1),
         "shard_dir": str(args.shard_dir),
+        "shard_index": str(args.shard_index) if args.shard_index else "",
+        "shard_index_sha256": (hashlib.sha256(args.shard_index.read_bytes()).hexdigest()
+                               if args.shard_index else ""),
         "generation_id": binding["generation_id"],
         "pilot": pilot,
         "limit": args.limit,

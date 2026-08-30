@@ -362,6 +362,15 @@ def truth_d2(shards_dir: Path, pilot: bool = False) -> tuple[pd.DataFrame, dict]
             raise SystemExit("nominal arm-B rows are not exactly K={0,1,2} for every scheduled target")
         if len(scheduled) != int(generation.get("n_targets_scheduled", -1)):
             raise SystemExit("scheduled target list disagrees with the generation manifest")
+    from d2_truth_model import check_cadence_alt_schedule
+    if "cadence_alt" in set(args_rec.get("arms", [])):
+        alt_sched = [int(t) for t in generation.get("cadence_alt_tics", [])]
+        check_cadence_alt_schedule([int(t) for t in generation.get("mixed_cadence_tics_from_v3", [])],
+                                   alt_sched, bool(generation.get("production")))
+        alt_rows = manifest[manifest["scenario"] == "cadence_alt"]
+        if (sorted(alt_rows["tic"].tolist()) != sorted(alt_sched)
+                or (alt_rows["template_k"] != 1).any() or (alt_rows["arm"] != "B").any()):
+            raise SystemExit("cadence_alt rows != the generation's scheduled cadence_alt targets")
     nulls = manifest[manifest["arm"] == "gauss_null"]
     if not nulls.empty:
         if sorted(nulls["null_serial"].tolist()) != list(range(int(generation.get("n_nulls", -1)))):
@@ -569,7 +578,7 @@ def cp_one_sided_bounds(k: int, n: int) -> tuple[float, float]:
 
 
 def d2_cluster_bootstrap(per_star: pd.DataFrame, scheduled_tics: list[int] | None = None,
-                         pilot: bool = False) -> pd.DataFrame:
+                         pilot: bool = False) -> tuple[pd.DataFrame, pd.DataFrame]:
     """P4 machinery: per (scenario, endpoint), per-stratum rates and the
     scenario-standardized mean over targets; COMMON RANDOM NUMBERS — one
     resample-index matrix shared by every scenario; degenerate statistics
@@ -579,10 +588,10 @@ def d2_cluster_bootstrap(per_star: pd.DataFrame, scheduled_tics: list[int] | Non
     (3 nominal, 1 single-window sensitivities), never a fixed 3; the nominal
     arm-B scenario is the ONLY confirmatory P4 row, and only outside pilots."""
     if "arm" not in per_star or "scenario" not in per_star:
-        return pd.DataFrame()
+        return pd.DataFrame(), pd.DataFrame()
     frame = per_star[per_star["arm"].isin(["A", "B"])]
     if frame.empty:
-        return pd.DataFrame()
+        return pd.DataFrame(), pd.DataFrame()
     if scheduled_tics:
         clusters = np.array(sorted(str(int(t)) for t in scheduled_tics))
     else:
@@ -692,7 +701,66 @@ def d2_cluster_bootstrap(per_star: pd.DataFrame, scheduled_tics: list[int] | Non
                     "p": point, "lo": lo, "hi": hi, "interval": interval,
                     "confirmatory": False,
                 })
-    return pd.DataFrame(rows)
+
+    # PAIRED contrasts (G3 round-3, both reviewers): every non-nominal arm-B
+    # scenario vs nominal K=1 on the IDENTICAL target set, one row per target
+    # on each side, ONE common draw matrix for both vectors and their
+    # difference; usable denominator = targets usable on BOTH sides;
+    # eligible denominator keeps missing rows as failures on both sides
+    def boot_mean(vec: pd.Series) -> tuple[float, float, float]:
+        values = vec.to_numpy(dtype=float)
+        observed = values[~np.isnan(values)]
+        if observed.size == 0:
+            return math.nan, math.nan, math.nan
+        boots = []
+        for b in range(BOOTSTRAP_B):
+            sample = values[draws[b]]
+            sample = sample[~np.isnan(sample)]
+            if sample.size:
+                boots.append(float(sample.mean()))
+        return (float(observed.mean()), float(np.quantile(boots, 0.025)),
+                float(np.quantile(boots, 0.975)))
+
+    contrasts = []
+    b_rows = frame[frame["arm"] == "B"]
+    nominal_k1 = b_rows[(b_rows["scenario"] == "nominal") & (b_rows["template_k"] == 1)]
+    for keys, scenario in b_rows[b_rows["scenario"] != "nominal"].groupby(scenario_cols):
+        key = dict(zip(scenario_cols, keys))
+        key["dominant_dropped"] = bool(key["dominant_dropped"])
+        if scenario["cluster"].duplicated().any():
+            raise SystemExit(f"scenario {key['scenario']} holds more than one row per target")
+        targets = set(scenario["cluster"])
+        nom = nominal_k1[nominal_k1["cluster"].isin(targets)]
+        if set(nom["cluster"]) != targets or nom["cluster"].duplicated().any():
+            raise SystemExit(f"nominal K=1 rows do not match the {key['scenario']} target set")
+        for endpoint, predicate in endpoints.items():
+            for denom in ("usable", "eligible"):
+                if denom == "usable":
+                    both = (set(scenario.loc[scenario["best_status"] != "missing", "cluster"])
+                            & set(nom.loc[nom["best_status"] != "missing", "cluster"]))
+                    s_, n_ = scenario[scenario["cluster"].isin(both)], nom[nom["cluster"].isin(both)]
+                else:
+                    s_, n_ = scenario, nom
+                if s_.empty:
+                    continue
+                ys = (predicate(s_) & (s_["best_status"] != "missing")).astype(float) \
+                    .groupby(s_["cluster"]).mean().reindex(clusters)
+                yn = (predicate(n_) & (n_["best_status"] != "missing")).astype(float) \
+                    .groupby(n_["cluster"]).mean().reindex(clusters)
+                ps, lo_s, hi_s = boot_mean(ys)
+                pn, lo_n, hi_n = boot_mean(yn)
+                pd_, lo_d, hi_d = boot_mean(ys - yn)
+                contrasts.append({
+                    **key, "endpoint": endpoint, "denominator": denom,
+                    "contrast": "scenario_minus_nominal_k1",
+                    "n_targets_matched": int(ys.notna().sum()),
+                    "p_scenario": ps, "lo_scenario": lo_s, "hi_scenario": hi_s,
+                    "p_nominal_k1": pn, "lo_nominal_k1": lo_n, "hi_nominal_k1": hi_n,
+                    "diff": pd_, "diff_lo": lo_d, "diff_hi": hi_d,
+                    "interval": "paired_cluster_bootstrap_common_draws",
+                    "confirmatory": False,
+                })
+    return pd.DataFrame(rows), pd.DataFrame(contrasts)
 
 
 def surface_cells(frame: pd.DataFrame, success: pd.Series,
@@ -902,7 +970,7 @@ def fp_frequency_distribution(per_star: pd.DataFrame, dataset: str) -> pd.DataFr
     else:
         pool = per_star.iloc[0:0]
     triggered = pool[pool["best_status"].isin(["confirmed", "candidate"])]
-    columns = ["sid", "class_label", "best_status", "best_pass",
+    columns = ["sid", "class_label", "arm", "scenario", "best_status", "best_pass",
                "best_frequency_per_day", "baseline_days"]
     return triggered[[c for c in columns if c in triggered.columns]]
 
@@ -923,17 +991,21 @@ def sensitivity_table(per_star: pd.DataFrame, dataset: str,
         # common-subset rule: every non-nominal scenario is contrasted with the
         # nominal median-window (K=1) rate recomputed on that scenario's EXACT
         # matched target set (G3 methods round-2 finding 2)
-        median_b = per_star[(per_star["arm"] == "B") & (per_star["template_k"] == 1)
-                            & (per_star["best_status"] != "missing")]
+        median_b = per_star[(per_star["arm"] == "B") & (per_star["template_k"] == 1)]
         nominal = median_b[median_b["scenario"] == "nominal"]
         group_cols = ["scenario", "ratio_g", "ratio_rg", "phase_draw", "amp_scale",
                       "dominant_dropped", "cadence_code"]
         for keys, scenario in median_b.groupby(group_cols):
             label = "_".join(f"{c}={v}" for c, v in zip(group_cols, keys))
-            rate(scenario, "arm_b_median_window", label)
-            if keys[0] != "nominal":
-                matched = nominal[nominal["cluster"].isin(set(scenario["cluster"]))]
-                rate(matched, f"nominal_on_{keys[0]}_targets", label)
+            if keys[0] == "nominal":
+                rate(scenario[scenario["best_status"] != "missing"], "arm_b_median_window", label)
+                continue
+            # exact common subset: targets USABLE on both sides (symmetric missingness)
+            usable_s = set(scenario.loc[scenario["best_status"] != "missing", "cluster"])
+            usable_n = set(nominal.loc[nominal["best_status"] != "missing", "cluster"])
+            both = usable_s & usable_n
+            rate(scenario[scenario["cluster"].isin(both)], "arm_b_median_window_common", label)
+            rate(nominal[nominal["cluster"].isin(both)], f"nominal_on_{keys[0]}_targets_common", label)
     if dataset == "d3":
         positives = per_star[(per_star["label_positive"] == True)  # noqa: E712
                              & (per_star["best_status"] != "missing")]
@@ -960,8 +1032,12 @@ def main() -> None:
     parser.add_argument("--stars-dir", type=Path, required=True)
     parser.add_argument("--census-csv", type=Path, default=None)
     parser.add_argument("--shards-dir", type=Path, default=None,
-                        help="d2: shard dir with shard_manifest.csv; census "
-                             "computed from shards when --census-csv absent")
+                        help="the shard directory the run consumed (REQUIRED for d2/d3): "
+                             "d2 = the published generation; d3 = <panels>/exposure_stars")
+    parser.add_argument("--shard-index", type=Path, default=None,
+                        help="shard_index.txt the run was launched with (default: "
+                             "<shards-dir>/shard_index.txt); its SHA must equal the run "
+                             "manifest's shard_index_sha256")
     parser.add_argument("--out-dir", type=Path, required=True)
     parser.add_argument("--crossmatch-qc", type=Path, default=None,
                         help="d3: crossmatch_qc.csv from build_panels_generic "
@@ -1011,6 +1087,8 @@ def main() -> None:
             "boundary_margin_relative": boundary_margin,
             "run_manifest_sha256": sha256_file(args.run_manifest),
         }
+    if args.dataset in ("d2", "d3") and args.shards_dir is None:
+        raise SystemExit("d2/d3 metrics require --shards-dir (the run's shard universe)")
     if args.dataset == "d1":
         truth = truth_d1()
     elif args.dataset == "d3":
@@ -1046,11 +1124,27 @@ def main() -> None:
             raise SystemExit("completion table has duplicate ids")
         selected_ids = set(completion["source_id"])
         subset_run = run_manifest.get("limit") is not None or bool(run_manifest.get("stars_file"))
-        if generation is not None:
-            all_ids = set(generation.get("shard_sha256", {}))
-            if not selected_ids <= all_ids:
-                raise SystemExit("completion table lists ids outside the shard generation")
-            subset_run = subset_run or selected_ids != all_ids
+        # run universe (G3 methods round-3 BLOCKING): the index the run was
+        # launched with is SHA-bound to the run manifest, equals the on-disk
+        # shard set, and bounds the completion table; d3 ids must be truth ids
+        index_path = args.shard_index or (args.shards_dir / "shard_index.txt")
+        if not index_path.exists():
+            raise SystemExit(f"shard index not found: {index_path}")
+        index_sha = sha256_file(index_path)
+        if run_manifest.get("shard_index_sha256") != index_sha:
+            raise SystemExit("shard index SHA differs from the run manifest's shard_index_sha256")
+        inputs[str(index_path)] = index_sha
+        universe = {line.strip() for line in index_path.read_text(encoding="utf-8").splitlines() if line.strip()}
+        disk_universe = {p.name.split(".csv")[0] for p in args.shards_dir.glob("*.csv.gz")}
+        if universe != disk_universe:
+            raise SystemExit(f"shard index ({len(universe)}) != shards on disk ({len(disk_universe)})")
+        if not selected_ids <= universe:
+            raise SystemExit("completion table lists ids outside the shard index")
+        if generation is not None and universe != set(generation.get("shard_sha256", {})):
+            raise SystemExit("shard index != the generation's shard set")
+        if args.dataset == "d3" and not selected_ids <= set(truth["sid"]):
+            raise SystemExit("completion table lists ids that are not D3 truth ids")
+        subset_run = subset_run or selected_ids != universe
         if bool(run_manifest.get("pilot")) != subset_run:
             raise SystemExit("run manifest pilot flag inconsistent with limit/stars_file/completion")
         run_binding = dict(run_manifest.get("binding", {}))
@@ -1118,9 +1212,11 @@ def main() -> None:
                 problems.append("attestation sha256")
             if generation is not None and prov.get("generation_id") != generation["generation_id"]:
                 problems.append("generation id")
-            if args.shards_dir is not None and (args.shards_dir / f"{r.sid}.csv.gz").exists():
-                if prov.get("shard_sha256") != sha256_file(args.shards_dir / f"{r.sid}.csv.gz"):
-                    problems.append("shard sha256")
+            shard_file = args.shards_dir / f"{r.sid}.csv.gz"
+            if not shard_file.exists():
+                problems.append("shard file missing from --shards-dir")
+            elif prov.get("shard_sha256") != sha256_file(shard_file):
+                problems.append("shard sha256")
             if set(prov.get("passes", [])) != set(run_manifest.get("passes", [])):
                 problems.append("pass set")
             if prov.get("env_digest") != run_env_digest:
@@ -1195,12 +1291,14 @@ def main() -> None:
     for name, surface in surfaces(primary, args.dataset).items():
         surface.to_csv(args.out_dir / "surfaces" / f"{name}.csv", index=False)
     if args.dataset == "d2":
-        d2_cluster_bootstrap(per_star, (generation or {}).get("scheduled_tics"), pilot).to_csv(
-            args.out_dir / "d2_cluster_completeness.csv", index=False)
+        table, contrasts = d2_cluster_bootstrap(per_star, (generation or {}).get("scheduled_tics"), pilot)
+        table.to_csv(args.out_dir / "d2_cluster_completeness.csv", index=False)
+        contrasts.to_csv(args.out_dir / "d2_scenario_contrasts.csv", index=False)
     if args.dataset == "d3":
         (args.out_dir / "ppv.csv").write_text(
             pd.DataFrame([ppv_d3(per_star)]).to_csv(index=False), encoding="utf-8")
-    fp_frequency_distribution(primary if args.dataset == "d2" else per_star, args.dataset).to_csv(
+    # the Gaussian-null / control FP audit needs the FULL frame (arms retained)
+    fp_frequency_distribution(per_star, args.dataset).to_csv(
         args.out_dir / "fp_frequency_distribution.csv", index=False)
     qc_frame = (pd.read_csv(args.crossmatch_qc, dtype={"source_id": str})
                 if args.crossmatch_qc else None)

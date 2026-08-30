@@ -54,7 +54,7 @@ METRICS_SPEC.md are binding.
 19-digit numeric strings: `90…` D3 targets, `92…` D2 arm B, `93…` D2 arm A,
 `94…` D2 Gaussian nulls, `95…` D2 paired real-window controls, `96…` D2
 Romero self-window diagnostic. No collision with Gaia DR3 ids; always valid
-for the frozen seed convention. D2 arm layout `AA TTTTTTTTTT K GR PS C0`:
+for the frozen seed convention. D2 arm layout `AA TTTTTTTTTT K GR PS CD`:
 K template index 0–2; G/R ladder indices 1–3 (22 = nominal); P phase draw
 0–2; S amplitude-scale code 0 = 1.0, 1 = 0.7, 2 = 1.3, 3 = dominant-mode
 dropout (scale 1.0); C crowding code 0 = PDCSAP as published, 1 =
@@ -218,8 +218,8 @@ No re-run; campaign metrics re-read the published per-star JSONs.
   window i mod 928, noise seed = serial); windows repeat, seeds do not.
   Verification arm: ~20 SPOC light curves prewhitened to confirm published
   solutions; everything else needs metadata only.
-- Run matrix (22 workers ≈ 84 runs/h). CORE scheduled total ≤ 3,266 ≈
-  1.6 d, all binding: arm B nominal (1.7/0.80) 103×3 = 309; arm A nominal
+- Run matrix (22 workers ≈ 84 runs/h). CORE scheduled total ≤ 3,299 ≈
+  1.6 d (3,266 + the 33 Amendment-3 `cadence_alt` shards), all binding: arm B nominal (1.7/0.80) 103×3 = 309; arm A nominal
   309; Gaussian nulls 1,000; paired controls ≤ 309 (unique arm-B windows);
   ladder sensitivity MEDIAN-WINDOW-CONDITIONED: 8 non-nominal (R_g, R_rg)
   points × 103 × 1 = 824; phase-draw sensitivity 2 × 103 = 206;
