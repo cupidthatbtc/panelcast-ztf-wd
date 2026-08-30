@@ -211,6 +211,22 @@ commit (51 tests; D1 unchanged). The builder docstring's stale
 "exposures-per-night" wording is deliberately left until the next deliberate
 regeneration (editing build_d2_shards.py changes the generation-code SHA and
 would orphan gen2). Plan/spec bytes are unchanged since the SHAs above.
-Status: PENDING G4 round-3 closure; gen2 pilot running (non-confirmatory).
-Amendment 4 is disclosed as pilot-informed; no further estimand-hierarchy
-change is permitted after it.
+G4 round-3 verdicts: stats APPROVE (no findings; runtime probes: chance-
+match denominator 0 under derangement / exactly 1/3 self-match, nested
+intervals null, exact endpoints), methods APPROVE (no findings; builder-
+docstring deferral accepted as non-gating; remaining items operational).
+
+## RATIFIED 2026-08-30: Amendment 4 (G4 closure)
+
+Operational gates before the FULL D2 run (from sol_methods_r3.md): gen2 pilot
+finishes with zero unexplained failures; laptop pulled only after the pilot;
+amended metrics pass every guard (W_g, selection SHA, control resolution,
+completion/sidecar, env/attestation, generation, platform boundary); pilot
+record archived with raw JSONs, sidecars, run manifest, completion table,
+metrics, both-machine 51-test logs and an archive-wide SHA256SUMS; the full
+run launched from the reviewed attested laptop checkout without --stars-file
+after inspecting git_tracked_dirty / git_untracked_count. The builder
+docstring stays untouched until a deliberate regeneration. Amendment 4 is
+disclosed as pilot-informed; no further estimand-hierarchy change is
+permitted after it. Frozen document SHAs: unchanged from the Amendment-4
+entry above.
