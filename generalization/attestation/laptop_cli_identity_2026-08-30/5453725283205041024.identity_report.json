@@ -1,0 +1,21 @@
+{
+  "gate": "verify_cli_identity",
+  "source_id": "5453725283205041024",
+  "api_equals_cli": true,
+  "deterministic": true,
+  "passed": true,
+  "env": {
+    "python": "3.12.12",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "machine": "Jacks_7i_5090",
+    "numpy": "2.3.5",
+    "numpy_blas": "blas 3.9.0",
+    "scipy": "1.16.3",
+    "astropy": "8.0.1",
+    "astropy_iers_data": "0.2026.7.27.0.56.29",
+    "pyerfa": "2.0.1.5",
+    "pandas": "2.3.3",
+    "omp_num_threads": "",
+    "openblas_num_threads": ""
+  }
+}
