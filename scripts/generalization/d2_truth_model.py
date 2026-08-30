@@ -108,6 +108,7 @@ MANIFEST_COLUMNS: tuple[tuple[str, str], ...] = (
     ("template_k", "int"),          # 0/1/2 for A/B; -1 for ctrl/null
     ("pool_index", "int"),          # index of the window in the sorted 928 pool
     ("template_exp_per_night", "float"),
+    ("template_wg_contrasts", "int"),   # W_g = sum_nights max(n_zg,night - 1, 0): zg support surviving the frozen nightly-median subtraction (Amendment 4)
     ("ratio_g", "float"),           # 0.0 for ctrl/null
     ("ratio_rg", "float"),
     ("phase_draw", "int"),          # 0 for ctrl/null
@@ -143,6 +144,13 @@ D2_GENERATION_CODE = ("scripts/generalization/build_d2_shards.py",
                       "scripts/generalization/d2_truth_model.py",
                       "scripts/generalization/frozen_api.py")
 AMP_SCALES = (1.0, 0.7, 1.3)
+# Amendment 4 (G4): the K=0/1/2 matched windows are the round-half-even
+# 10/50/90th-percentile positions of the magnitude-matched pool sorted by
+# (W_g, source_id); the D2 surface's window axis is W_g with these frozen
+# half-open edges = the 20/40/60/80th percentiles of the outcome-independent
+# 928-window pool (computed 2026-08-30 with the frozen loader; the builder
+# recomputes them from the attested pool and refuses production on mismatch)
+WG_SURFACE_EDGES = (15, 41, 84, 217)
 MATCH_LABELS = ("tol_0.25", "tol_0.5", "nearest")
 BLIND_STATUSES = ("confirmed", "candidate", "not_detected")   # published catalog vocabulary
 INJECTED_MODE_COLUMNS = ("campaign_id", "period_s", "frequency_per_day", "amp_tess_ppt",
@@ -416,6 +424,8 @@ def _row_problem(r) -> str:
             return "dropped_period_s"
         if r.n_strata_scheduled != (3 if r.scenario == SCENARIO_NOMINAL else 1):
             return "n_strata_scheduled"
+        if r.template_wg_contrasts < 0:
+            return "template_wg_contrasts"
         if r.scenario != SCENARIO_NOMINAL and r.template_k != 1:
             return "sensitivity scenarios run on the median window only"
         if r.arm == "A" and r.scenario != SCENARIO_NOMINAL:
@@ -437,6 +447,8 @@ def _row_problem(r) -> str:
     # controls and Gaussian nulls
     if r.tic != 0 or r.template_k != -1 or r.pool_index < 0:
         return "ctrl/null tic/template_k/pool_index"
+    if r.template_wg_contrasts < 0:
+        return "ctrl/null template_wg_contrasts"
     if r.match != "" or r.template_status not in BLIND_STATUSES:
         return "ctrl/null match/template_status"
     if r.ratio_g != 0.0 or r.ratio_rg != 0.0 or r.phase_draw != 0 or bool(r.dominant_dropped):
@@ -546,3 +558,18 @@ def check_cadence_alt_schedule(mixed_from_v3: list[int], scheduled_alt: list[int
         if alt != mixed:
             raise SystemExit(f"production requires every mixed-cadence target scheduled in "
                              f"cadence_alt: missing {sorted(mixed - alt)[:3]}")
+
+
+def check_wg_strata(frame: pd.DataFrame, production: bool) -> list[str]:
+    """Amendment 4: the three nominal windows of every target must carry
+    strictly increasing W_g (K0 < K1 < K2). Production refuses violations;
+    otherwise the violating targets are returned for the record."""
+    nominal = frame[(frame["arm"].isin(["A", "B"])) & (frame["scenario"] == SCENARIO_NOMINAL)]
+    violations = []
+    for tic, g in nominal.drop_duplicates(["tic", "template_k"]).groupby("tic"):
+        w = g.sort_values("template_k")["template_wg_contrasts"].tolist()
+        if len(w) != 3 or not (w[0] < w[1] < w[2]):
+            violations.append(f"TIC {tic}: W_g by K = {w}")
+    if production and violations:
+        raise SystemExit(f"W_g strata not strictly increasing for {len(violations)} targets: {violations[:3]}")
+    return violations

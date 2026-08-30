@@ -168,3 +168,38 @@ confirmatory run is the D2 full matrix or the D3 full run) voids the
 prespecification. Review history for G3: rounds 1–5 (numerics: REJECT,
 A-w-C, A-w-C, APPROVE; methods: REJECT ×4, A-w-C), ~30 distinct findings
 dispositioned; verdict files under generalization/reviews/G3/.
+
+## AMENDMENT 4 — 2026-08-30 (post-pilot D2 window stratification, recovery estimand, metric corrections)
+
+Trigger: the gen1 stratified pilot (generalization/results/2026-08-30_d2_pilot/,
+non-confirmatory, enters no estimate). G4 verdicts: stats and methods both
+PROCEED-WITH-AMENDMENT-4 (generalization/reviews/G4/sol_stats.md,
+sol_methods.md). Changes, all prespecified BEFORE any confirmatory-era run:
+(1) window strata K = 0/1/2 on W_g = Σ max(n_zg,night − 1, 0) (pool 10/50/90 =
+6/58/452; strictly distinct for 103/103 targets; production refuses
+violations; frozen surface edges (15, 41, 84, 217)); gen1 → gen2;
+(2) PRIMARY P4 = injected-signal recovery (confirmed AND dominant-mode direct
+match); detection-only = secondary trigger rate; (3) paired controls scored
+against the partner's injected truth (2×2, yields, paired differences,
+P(R_B=1,R_C=0), quiet-control-conditioned secondary, reuse table); (4) target-
+level D2 surfaces, target-level chance-match derangements (10,000), CP
+discordance bound for degenerate paired contrasts, descriptive row-level D2
+tables, `prespecified_primary`/`confirmatory_decision` flags; (5) provenance:
+raw results + sidecars archived with pilots, `stars_file_sha256` + exact
+id-set equality, argv/timestamps/git state in run manifests.
+Code: d2_truth_model.py (W_g column, WG_SURFACE_EDGES, check_wg_strata),
+build_d2_shards.py, metrics_generalization.py (recovery endpoint,
+d2_surfaces, d2_chance_match, d2_paired_controls, verify_stars_file),
+run_generalization_ls.py; tests 46/46; D1 regression unchanged.
+
+Frozen document SHA-256 after Amendment 4:
+
+- generalization/METRICS_SPEC.md
+  66013732a585c4a612376704e3c1e9af2ba81919e30eb9c1967e0ec4bfc02eca
+- generalization/GENERALIZATION_PLAN.md
+  e2cd36af2cbb4bc11537b3f7e90c1b722bb8b0c611d3e887879c7105b10ddc65
+
+Status: PENDING G4 round-2 verification (stats + methods) of the
+implementation; gen2 + its pilot are built/run meanwhile (non-confirmatory).
+Amendment 4 is disclosed as pilot-informed; no further estimand-hierarchy
+change is permitted after it.

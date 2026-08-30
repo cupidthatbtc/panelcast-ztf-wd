@@ -371,40 +371,51 @@ def test_cluster_bootstrap_keeps_scenarios_apart_and_uses_scheduled_strata(gener
     per_star["best_candidate_matches_dominant"] = "direct"
     table, contrasts = metrics.d2_cluster_bootstrap(per_star, gen["scheduled_tics"], pilot=True)
     nominal = table[(table["arm"] == "B") & (table["scenario"] == SCENARIO_NOMINAL)
-                    & (table["endpoint"] == "detection") & (table["denominator"] == "eligible")]
+                    & (table["endpoint"] == "recovery") & (table["denominator"] == "eligible")]
     assert len(nominal) == 1
     assert nominal["n_strata_scheduled"].iloc[0] == 3
     assert abs(nominal["p"].iloc[0] - (2 / 3 + 0) / 2) < 1e-12      # (1/3)*2 for TIC 11, 0 for TIC 22
-    assert not nominal["confirmatory"].iloc[0]                        # pilot
-    # non-pilot: membership semantics — nominal-B DETECTION rows are confirmatory
-    # (both denominators), frequency-recovery rows never are
+    assert not nominal["prespecified_primary"].iloc[0]                # pilot
+    assert not table["confirmatory_decision"].any()                   # P4 never decides
+    # non-pilot: nominal-B RECOVERY rows are the prespecified primary (both
+    # denominators); trigger rows and every other scenario never are
     table_np, _ = metrics.d2_cluster_bootstrap(per_star, gen["scheduled_tics"], pilot=False)
     nb = table_np[(table_np["arm"] == "B") & (table_np["scenario"] == SCENARIO_NOMINAL)]
-    assert nb.loc[nb["endpoint"] == "detection", "confirmatory"].all()
-    assert not nb.loc[nb["endpoint"] == "freq_recovery", "confirmatory"].any()
-    assert not table_np.loc[table_np["scenario"] == "dropout", "confirmatory"].any()
+    assert nb.loc[nb["endpoint"] == "recovery", "prespecified_primary"].all()
+    assert not nb.loc[nb["endpoint"] == "trigger", "prespecified_primary"].any()
+    assert not table_np.loc[table_np["scenario"] == "dropout", "prespecified_primary"].any()
+    assert not table_np["confirmatory_decision"].any()
     # pilot semantics: a subset of targets with scheduled_tics=None scores what it ran,
     # while passing the full schedule against a subset must fail closed
     subset = per_star[per_star["cluster"] != "22"]
     sub_table, _ = metrics.d2_cluster_bootstrap(subset, None, pilot=True)
     nb_sub = sub_table[(sub_table["arm"] == "B") & (sub_table["scenario"] == SCENARIO_NOMINAL)
-                       & (sub_table["endpoint"] == "detection") & (sub_table["denominator"] == "eligible")]
+                       & (sub_table["endpoint"] == "recovery") & (sub_table["denominator"] == "eligible")]
     assert nb_sub["n_targets_in_scenario"].iloc[0] == 1 and abs(nb_sub["p"].iloc[0] - 2 / 3) < 1e-12
     with pytest.raises(SystemExit):
         metrics.d2_cluster_bootstrap(subset, gen["scheduled_tics"], pilot=False)
-    dropout = table[(table["scenario"] == "dropout") & (table["endpoint"] == "detection")
+    dropout = table[(table["scenario"] == "dropout") & (table["endpoint"] == "recovery")
                     & (table["denominator"] == "eligible")]
     assert len(dropout) == 1 and dropout["n_strata_scheduled"].iloc[0] == 1
     assert dropout["p"].iloc[0] == 0.0 and dropout["n_targets_in_scenario"].iloc[0] == 1
-    alt = table[(table["scenario"] == "cadence_alt") & (table["endpoint"] == "detection")]
-    assert len(alt) == 2 and (alt["cadence_code"] == 1).all() and not alt["confirmatory"].any()
+    alt = table[(table["scenario"] == "cadence_alt") & (table["endpoint"] == "recovery")]
+    assert len(alt) == 2 and (alt["cadence_code"] == 1).all() and not alt["prespecified_primary"].any()
     # paired common-draw contrasts: dropout (TIC 11 only) vs nominal K=1 on the SAME target;
     # nominal K=1 for TIC 11 is confirmed, dropout is not -> diff = -1 on one matched target
-    c = contrasts[(contrasts["scenario"] == "dropout") & (contrasts["endpoint"] == "detection")
+    c = contrasts[(contrasts["scenario"] == "dropout") & (contrasts["endpoint"] == "recovery")
                   & (contrasts["denominator"] == "eligible")]
     assert len(c) == 1 and c["n_targets_matched"].iloc[0] == 1
     assert c["p_scenario"].iloc[0] == 0.0 and c["p_nominal_k1"].iloc[0] == 1.0 and c["diff"].iloc[0] == -1.0
-    assert c["interval"].iloc[0] == "paired_cluster_bootstrap_common_draws" and not c["confirmatory"].any()
+    assert c["interval"].iloc[0] == "paired_cluster_bootstrap_common_draws" and not c["prespecified_primary"].any()
+    # zero observed discordance -> CP discordance bound, never [0, 0] (Amendment 4)
+    quiet = per_star.copy()
+    quiet["best_status"] = "not_detected"
+    _, contrasts_q = metrics.d2_cluster_bootstrap(quiet, gen["scheduled_tics"], pilot=True)
+    z = contrasts_q[(contrasts_q["scenario"] == "phase_1") & (contrasts_q["endpoint"] == "recovery")
+                    & (contrasts_q["denominator"] == "eligible")]
+    assert z["interval"].iloc[0] == "cp_discordance_bound" and z["diff"].iloc[0] == 0.0
+    assert z["diff_hi"].iloc[0] > 0.5 and z["discordance_u95"].iloc[0] == z["diff_hi"].iloc[0]
+    assert z["diff_lo"].iloc[0] == -z["diff_hi"].iloc[0]
     assert set(contrasts["scenario"]) >= {"dropout", "cadence_alt", "phase_1", "ladder_g1r1", "redilution"}
     # symmetric missingness: mark the nominal K=1 row of TIC 11 missing -> usable contrast for
     # dropout has zero matched targets (dropped), eligible keeps it as a failure on both sides
@@ -413,7 +424,7 @@ def test_cluster_bootstrap_keeps_scenarios_apart_and_uses_scheduled_strata(gener
                           & (per_star2["template_k"] == 1) & (per_star2["cluster"] == "11")][0]
     per_star2.loc[nk1, "best_status"] = "missing"
     _, contrasts2 = metrics.d2_cluster_bootstrap(per_star2, gen["scheduled_tics"], pilot=True)
-    c2 = contrasts2[(contrasts2["scenario"] == "dropout") & (contrasts2["endpoint"] == "detection")]
+    c2 = contrasts2[(contrasts2["scenario"] == "dropout") & (contrasts2["endpoint"] == "recovery")]
     assert c2.loc[c2["denominator"] == "usable"].empty or c2.loc[c2["denominator"] == "usable", "n_targets_matched"].iloc[0] == 0
     assert c2.loc[c2["denominator"] == "eligible", "p_nominal_k1"].iloc[0] == 0.0
     assert {"arm", "scenario", "ratio_g", "ratio_rg", "phase_draw", "amp_scale",
@@ -444,3 +455,73 @@ def test_refuses_existing_out_dir_and_bad_roster_sha(generation, tmp_path):
                       "--exposure-stars", str(generation["stars"]),
                       "--catalog", str(generation["root"] / "catalog.csv"), "--n-nulls", "5"],
                      expected_pool=4)
+
+
+def test_wg_strata_are_strictly_increasing_and_recorded(generation):
+    manifest = pd.read_csv(generation["out"] / "shard_manifest.csv", dtype={"campaign_id": str})
+    nb = manifest[(manifest["arm"] == "B") & (manifest["scenario"] == SCENARIO_NOMINAL)]
+    for tic, g in nb.groupby("tic"):
+        w = g.sort_values("template_k")["template_wg_contrasts"].tolist()
+        assert w[0] < w[1] < w[2], (tic, w)
+    assert (manifest["template_wg_contrasts"] >= 0).all()
+    gen = json.loads((generation["out"] / "generation_manifest.json").read_text())
+    assert len(gen["wg_surface_edges"]) == 4 and gen["wg_strata_violations"] == []
+    truth, _ = metrics.truth_d2(generation["out"], pilot=True)
+    assert "wg_contrasts" in truth and (truth["wg_contrasts"] >= 0).all()
+
+
+def test_d2_surfaces_are_target_level(generation):
+    truth, _ = metrics.truth_d2(generation["out"], pilot=True)
+    primary = truth[(truth["arm"] == "B") & (truth["scenario"] == SCENARIO_NOMINAL)].copy()
+    primary["best_status"] = "confirmed"
+    primary["best_candidate_matches_dominant"] = "direct"
+    surfaces = metrics.d2_surfaces(primary, [1, 10, 100, 1000])
+    assert {"recovery_wg_amplitude", "trigger_wg_amplitude", "recovery_period_amplitude", "recovery_amplitude"} <= set(surfaces)
+    cells = surfaces["recovery_amplitude"]
+    assert {"n_windows", "n_targets", "k_windows"} <= set(cells.columns)
+    assert cells["n_targets"].max() <= 2 and "p" not in cells.columns or cells["p"].isna().all()   # < MIN_CELL targets: counts only
+
+
+def test_d2_chance_match_is_target_level(generation):
+    truth, _ = metrics.truth_d2(generation["out"], pilot=True)
+    primary = truth[(truth["arm"] == "B") & (truth["scenario"] == SCENARIO_NOMINAL)].copy()
+    # two targets only -> refuses (needs >= 3); add a third synthetic target by relabelling
+    primary["best_status"] = "confirmed"
+    primary["best_frequency_per_day"] = primary["primary_freq"]
+    primary["baseline_days"] = 1000.0
+    three = pd.concat([primary, primary.iloc[:3].assign(cluster="99", primary_freq=123.4,
+                                                        truth_freqs=[[123.4]] * 3)])
+    out = metrics.d2_chance_match(three, n_derangements=50)
+    assert out["derangements"] == 50 and 0.0 <= out["accidental_recovery_rate_mean"] <= 1.0
+    assert out["accidental_any_mode_rate_mean"] >= out["accidental_recovery_rate_mean"]
+
+
+def test_paired_controls_score_the_control_against_the_partner_truth(generation):
+    truth, _ = metrics.truth_d2(generation["out"], pilot=True)
+    per_star = truth.copy()
+    per_star["best_status"] = "not_detected"
+    per_star["best_frequency_per_day"] = np.nan
+    per_star["baseline_days"] = 1000.0
+    per_star["best_candidate_matches_dominant"] = "unmatched"
+    nb = per_star[(per_star["arm"] == "B") & (per_star["scenario"] == SCENARIO_NOMINAL)]
+    # B shard of TIC 11, K=0 detects and recovers; its control triggers at the SAME frequency
+    b0 = nb[(nb["cluster"] == "11") & (nb["template_k"] == 0)].iloc[0]
+    per_star.loc[per_star["sid"] == b0["sid"], ["best_status", "best_candidate_matches_dominant"]] = ["confirmed", "direct"]
+    per_star.loc[per_star["sid"] == b0["control_campaign_id"], ["best_status", "best_frequency_per_day"]] = ["confirmed", b0["primary_freq"]]
+    table, summary = metrics.d2_paired_controls(per_star)
+    row = table[table["b_sid"] == b0["sid"]].iloc[0]
+    assert row["D_B"] and row["D_C"] and row["R_B"] and row["R_C"]          # accidental native match caught
+    d_row = summary[summary["endpoint"] == "D"].iloc[0]
+    assert d_row["both"] == 1 and d_row["n_pairs_scored"] == len(table)
+    assert "quiet_control_conditioned" in set(summary["endpoint"])
+
+
+def test_stars_file_guard(tmp_path):
+    sf = tmp_path / "pilot_shard_index.txt"
+    sf.write_text("a\nb\n")
+    sha = hashlib.sha256(sf.read_bytes()).hexdigest()
+    metrics.verify_stars_file(sf, sha, {"a", "b"})
+    with pytest.raises(SystemExit):
+        metrics.verify_stars_file(sf, sha, {"a"})
+    with pytest.raises(SystemExit):
+        metrics.verify_stars_file(sf, "0" * 64, {"a", "b"})

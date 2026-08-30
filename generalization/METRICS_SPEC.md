@@ -4,7 +4,12 @@
 Implemented by `scripts/generalization/metrics_generalization.py`. Any change
 after the first campaign L-S run voids the prespecification and must be
 reported as such. v3, 2026-08-28: absorbs G2 round-2 findings (referee2,
-stats2, methods2, abstract lenses).
+stats2, methods2, abstract lenses). v4, 2026-08-30 (Amendment 4): a DISCLOSED
+post-pilot, pre-confirmatory amendment — the gen1 timing pilot (non-
+confirmatory, archived, entering no estimate) exposed a degenerate D2 window
+stratification and a construct-validity defect in detection-only P4; both
+are repaired here BEFORE any confirmatory-era run, and no further hierarchy
+change is permitted after Amendment 4.
 
 ## Estimand vocabulary (names are binding)
 
@@ -17,9 +22,13 @@ Three separate response assessments; never pooled.
   19-star master table (the 928-star catalog is NOT a labeled-positive
   completeness denominator). D3: the 610 dSct=1 survivors. D2: injection
   targets — always labeled *conditional injection-recovery efficiency of the
-  search stage*; D2 primary detection = post-injection rule firing
-  (detection-only); strict frequency matching is the separate
-  frequency-recovery estimand; paired controls contextualize native triggers.
+  search stage*. Amendment 4: the D2 PRIMARY endpoint is injected-signal
+  RECOVERY (rule 1 fires AND the best candidate directly matches the
+  largest-amplitude retained injected mode, `endpoint = recovery`);
+  post-injection rule firing (detection-only) is the SECONDARY
+  "post-injection rule-1 trigger rate" (`endpoint = trigger`) and carries no
+  recovery or completeness interpretation; paired uninjected controls
+  contextualize native triggers and never enter the primary denominator.
 - **frequency-recovery completeness** — P(rule fires AND
   best_candidate_matches_dominant | labeled positive AND freq-scorable AND
   S_p = 1). Freq-scorable: D3 = Mo-joined with >=1 frequency and a defined
@@ -121,10 +130,12 @@ descriptive sensitivity:
      best_candidate_matches_dominant, Wilson 95%, beside chance-match rate}.
   P3 D3 negative-class trigger rate: {D3, dSct=0 (2314), rule 1, best pass,
      plain Wilson}.
-  P4 D2 conditional injection-recovery, algebraically:
+  P4 D2 conditional injection-recovery, algebraically (Amendment 4):
      p-hat = (1/103) Σ_t (1/|K_t|) Σ_{k in K_t} y_{t,k}, where y_{t,k} = 1
-     iff rule 1 fires (detection-only) on target t's stratum-k nominal
-     (1.7/0.80, de-dilution off, phase_draw 0) arm-B shard, and K_t ⊆
+     iff rule 1 fires AND best_candidate_matches_dominant == direct (the
+     largest-amplitude RETAINED injected mode from injected_modes.csv) on
+     target t's stratum-k nominal (1.7/0.80, PDCSAP as published,
+     phase_draw 0, cadence rule) arm-B shard, and K_t ⊆
      {0, 1, 2} is the set of strata with a usable result. ELIGIBLE variant:
      denominator all 103 targets; missing stratum counts y = 0 with
      |K_t| = n_strata_scheduled (3 for the nominal scenario; 1 for the
@@ -141,7 +152,18 @@ descriptive sensitivity:
   P5 FPR_Gaussian acceptance: {D2 arm A nulls, rule 1, exact one-sided CP
      upper at observed x <= 0.5%} — the sole confirmatory decision.
 No claim direction reversal, endpoint swap, or denominator swap after the
-first campaign L-S run.
+first campaign L-S run. Flags: `prespecified_primary` marks the P4 recovery
+rows (nominal arm B, non-pilot) and the P5 row; `confirmatory_decision` is
+True only on the P5 row when its acceptance rule passes (P5 is the SOLE
+confirmatory decision). Paired controls (Amendment 4): every nominal arm-B
+shard is scored against its paired uninjected control for detection D and
+strict recovery R (the control's candidate frequency matched against the
+B target's dominant injected mode); report the 2×2 counts, B-only/C-only/
+union yields, target-standardized paired differences and P(R_B=1, R_C=0)
+with the common target-cluster draws, the quiet-control-conditioned
+secondary estimand (pairs whose control is usable and not_detected; report
+|T_Q|, pairs, unique windows), and the control reuse table. No aggregate
+native-rate subtraction; no conditioning of the primary denominator.
 
 ## Units of analysis and intervals
 
@@ -155,7 +177,15 @@ first campaign L-S run.
   represent the 928-window frame; stated as a limitation).
   Estimator: per-target mean over its replicates within a scenario/stratum;
   aggregate = equal-weight mean over the 103 targets (a scenario mix, NOT
-  the 928-window frame). Bootstrap: resample the 103 TICs with replacement
+  the 928-window frame). Window strata (Amendment 4): K = 0/1/2 are the
+  round-half-even 10/50/90th-percentile positions of the magnitude-matched
+  pool sorted by (W_g, source_id), W_g = Σ_nights max(n_zg,night − 1, 0) =
+  the zg support surviving the frozen nightly-median subtraction; the three
+  W_g values are strictly increasing for every target (production refuses
+  otherwise) and are recorded per shard. Paired scenario contrasts with
+  zero observed target-level discordances report the exact one-sided CP
+  upper bound on the discordance probability as the effect bound, never a
+  bootstrap [0, 0]. Bootstrap: resample the 103 TICs with replacement
   (B = 2000, frozen seed 20260830), carrying ALL of a resampled target's
   replicates, paired census/L-S outcomes, phases, and scenario results
   jointly; identical resample draws across scenarios (common random
@@ -181,7 +211,9 @@ C = census flag; L = rule-1 detection (detection-only, symmetric margins).
 Report the full 2x2, both discordant fractions, union completeness, and
 incremental yields with intervals (Wilson for D1/D3; cluster bootstrap for
 D2). Exact McNemar secondary (D1/D3 only; marginal homogeneity, not
-complementarity).
+complementarity). D2 (Amendment 4): the census/L-S tables describe the
+post-injection RESPONSE of nominal arm-B windows; they are descriptive
+(no row-level intervals) and carry no recovery attribution.
 
 ## Surfaces
 
@@ -199,9 +231,19 @@ bins; no smoothing, no monotonic fitting, no interpolation. Edges frozen:
 period {100 s, 200 s, 500 s, 1000 s, 2000 s, 0.05 d, 0.2 d, 1 d, 10 d,
 100 d}; amplitude D3 {0.5, 1, 2, 5, 10, 20, 50} mmag with top bin
 [50, inf); D2 {0.5, 2, 5, 10, 30} ppt with top bin [30, inf);
-median-exposures-per-night {1, 1.5, 2, 3, 5} with top bin [5, inf).
-Cells below 5 stars: counts only. Amplitude axes are invariant across
-scenarios (never the ladder-scaled injected amplitude).
+D3 median-exposures-per-night {1, 1.5, 2, 3, 5} with top bin [5, inf).
+D2 window axis (Amendment 4): W_g with frozen half-open edges
+{15, 41, 84, 217} = the 20/40/60/80th percentiles of the outcome-
+independent 928-window pool (the builder recomputes them from the attested
+pool and refuses production on mismatch); D2 surfaces are nominal arm B,
+endpoints recovery (primary) and trigger, cells at TARGET level (report
+n_windows, n_targets, target-equal point estimate, target-cluster bootstrap
+interval when the cell holds >= 5 targets; counts only otherwise). D3
+cells below 5 stars: counts only. Amplitude axes are invariant across
+scenarios (never the ladder-scaled injected amplitude). Chance-match
+calibration for D2: 10,000 frozen-seed TARGET-level derangements (all K
+replicates of a target move together), numerators aligned with the
+endpoints (dominant-mode recovery; any-mode).
 
 ## Eligibility and attrition
 
@@ -246,8 +288,14 @@ non-detections.
   the full chain (truth tables, index, generation manifest, per-shard
   SHAs, generation inputs, run manifest, completion table).
 - Pilot rule: run manifests with `pilot: true` (any --limit/--stars-file
-  run) yield `confirmatory: false` on every P4/P5 row and
-  `confirmatory_allowed: false` in the metrics manifest.
+  run) yield `prespecified_primary: false` on every P4/P5 row,
+  `confirmatory_decision: false`, and `confirmatory_allowed: false` in the
+  metrics manifest; a subset run's selection file is SHA-bound
+  (`stars_file_sha256`) and must equal the completion-table id set exactly.
+- W_g strata guard (Amendment 4): every nominal target's three windows carry
+  strictly increasing W_g; the generation records the pool W_g quantiles and
+  surface edges; every nominal-B `control_campaign_id` resolves to a control
+  shard in the generation.
 
 ## Outputs
 
@@ -256,6 +304,8 @@ completeness_by_class_pass_rule.csv, contingency_complementarity.json,
 trigger_rates.csv, ppv.csv (D3), fp_frequency_distribution.csv,
 chance_match.json, surfaces/*.csv, sensitivity.csv, attrition.csv,
 d2_cluster_completeness.csv + d2_scenario_contrasts.csv (D2: P4 table and
-the paired common-draw scenario-vs-nominal-K=1 contrasts), manifest.json,
+the paired common-draw scenario-vs-nominal-K=1 contrasts),
+d2_paired_controls.csv + d2_paired_controls_summary.csv +
+d2_control_reuse.csv (Amendment 4), manifest.json,
 inputs_sha256.json.
 Figures via plot_generalization.py from these CSVs only.

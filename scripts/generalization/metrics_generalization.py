@@ -44,6 +44,7 @@ RULES = ("confirmed", "confirmed_or_candidate", "census", "either")
 PASSES = ("low", "high", "best")
 CHANCE_MATCH_PERMUTATIONS = 100
 CHANCE_MATCH_SEED = 20260829
+CHANCE_MATCH_DERANGEMENTS_D2 = 10000   # Amendment 4: target-level derangements, all K together
 BOOTSTRAP_B = 2000
 BOOTSTRAP_SEED = 20260830
 MIN_CELL = 5
@@ -411,6 +412,7 @@ def truth_d2(shards_dir: Path, pilot: bool = False) -> tuple[pd.DataFrame, dict]
             "control_campaign_id": r.control_campaign_id,
             "shard_sha256": r.shard_sha256,
             "median_exp_per_night": float(r.template_exp_per_night),
+            "wg_contrasts": int(r.template_wg_contrasts),
             "template_status": r.template_status,
         })
     return pd.DataFrame(rows), generation
@@ -599,10 +601,14 @@ def d2_cluster_bootstrap(per_star: pd.DataFrame, scheduled_tics: list[int] | Non
     rng = np.random.Generator(np.random.PCG64(BOOTSTRAP_SEED))
     draws = rng.integers(0, len(clusters), size=(BOOTSTRAP_B, len(clusters)))
     rows = []
+    # Amendment 4 (G4): PRIMARY P4 = injected-signal RECOVERY (rule-1 confirmed
+    # AND the best candidate directly matches the largest-amplitude retained
+    # injected mode); detection-only is the secondary "post-injection trigger
+    # rate" and carries no completeness interpretation
     endpoints = {
-        "detection": lambda f: f["best_status"] == "confirmed",
-        "freq_recovery": lambda f: (f["best_status"] == "confirmed")
+        "recovery": lambda f: (f["best_status"] == "confirmed")
         & (f["best_candidate_matches_dominant"] == "direct"),
+        "trigger": lambda f: f["best_status"] == "confirmed",
     }
     scenario_cols = ["arm", "scenario", "ratio_g", "ratio_rg", "phase_draw",
                      "amp_scale", "dominant_dropped", "cadence_code"]
@@ -643,12 +649,13 @@ def d2_cluster_bootstrap(per_star: pd.DataFrame, scheduled_tics: list[int] | Non
                 raise SystemExit("nominal scenario targets != scheduled targets")
         usable_rows = scenario[scenario["best_status"] != "missing"]
         zero_usable = sorted(present - set(usable_rows["cluster"]))
-        # `confirmatory` = the row BELONGS to the prespecified production
-        # analysis (P4 = detection, nominal arm B, non-pilot); it never encodes
-        # whether the row passes anything (G3 methods round-2 new MAJOR)
+        # `prespecified_primary` = the row IS the prespecified primary P4
+        # analysis (recovery endpoint, nominal arm B, non-pilot);
+        # `confirmatory_decision` is False for every P4 row — P5 is the sole
+        # confirmatory decision (spec)
         for endpoint, predicate in endpoints.items():
-            confirmatory = (key["arm"] == "B" and is_nominal and not pilot
-                            and endpoint == "detection")
+            primary = (key["arm"] == "B" and is_nominal and not pilot
+                       and endpoint == "recovery")
             for denom in ("usable", "eligible"):
                 subset = usable_rows if denom == "usable" else scenario
                 if subset.empty:
@@ -677,7 +684,7 @@ def d2_cluster_bootstrap(per_star: pd.DataFrame, scheduled_tics: list[int] | Non
                     "n_targets": n_targets,
                     "n_targets_zero_usable_strata": len(zero_usable),
                     "p": point, "lo": lo, "hi": hi, "interval": interval,
-                    "confirmatory": confirmatory,
+                    "prespecified_primary": primary, "confirmatory_decision": False,
                 })
         # paired census-vs-LS difference, target-clustered (nominal arm B only)
         if (key["arm"] == "B" and is_nominal
@@ -699,7 +706,7 @@ def d2_cluster_bootstrap(per_star: pd.DataFrame, scheduled_tics: list[int] | Non
                     "n_targets_in_scenario": len(present), "n_targets": n_targets,
                     "n_targets_zero_usable_strata": len(zero_usable),
                     "p": point, "lo": lo, "hi": hi, "interval": interval,
-                    "confirmatory": False,
+                    "prespecified_primary": False, "confirmatory_decision": False,
                 })
 
     # PAIRED contrasts (G3 round-3, both reviewers): every non-nominal arm-B
@@ -749,7 +756,18 @@ def d2_cluster_bootstrap(per_star: pd.DataFrame, scheduled_tics: list[int] | Non
                     .groupby(n_["cluster"]).mean().reindex(clusters)
                 ps, lo_s, hi_s = boot_mean(ys)
                 pn, lo_n, hi_n = boot_mean(yn)
-                pd_, lo_d, hi_d = boot_mean(ys - yn)
+                diff_vec = ys - yn
+                pd_, lo_d, hi_d = boot_mean(diff_vec)
+                observed = diff_vec.dropna()
+                interval = "paired_cluster_bootstrap_common_draws"
+                discordance_u95 = math.nan
+                if len(observed) and (observed == 0).all():
+                    # Amendment 4: zero observed discordances is NOT evidence of
+                    # equivalence — report the exact one-sided CP bound on the
+                    # discordance probability and the conservative effect bound
+                    _, discordance_u95 = cp_one_sided_bounds(0, len(observed))
+                    lo_d, hi_d = -discordance_u95, discordance_u95
+                    interval = "cp_discordance_bound"
                 contrasts.append({
                     **key, "endpoint": endpoint, "denominator": denom,
                     "contrast": "scenario_minus_nominal_k1",
@@ -757,8 +775,9 @@ def d2_cluster_bootstrap(per_star: pd.DataFrame, scheduled_tics: list[int] | Non
                     "p_scenario": ps, "lo_scenario": lo_s, "hi_scenario": hi_s,
                     "p_nominal_k1": pn, "lo_nominal_k1": lo_n, "hi_nominal_k1": hi_n,
                     "diff": pd_, "diff_lo": lo_d, "diff_hi": hi_d,
-                    "interval": "paired_cluster_bootstrap_common_draws",
-                    "confirmatory": False,
+                    "discordance_u95": discordance_u95,
+                    "interval": interval,
+                    "prespecified_primary": False, "confirmatory_decision": False,
                 })
     return pd.DataFrame(rows), pd.DataFrame(contrasts)
 
@@ -867,6 +886,184 @@ def surfaces(per_star: pd.DataFrame, dataset: str) -> dict[str, pd.DataFrame]:
     return out
 
 
+def _target_equal_cells(frame: pd.DataFrame, success: pd.Series, keys: list[np.ndarray],
+                        names: list[str]) -> pd.DataFrame:
+    """D2 surface cells at TARGET level (Amendment 4): n_windows, n_targets,
+    target-equal point estimate, target-cluster bootstrap interval when the
+    cell holds >= MIN_CELL targets, counts only otherwise."""
+    rows = []
+    for cell, idx in frame.groupby(keys).groups.items():
+        cell = cell if isinstance(cell, tuple) else (cell,)
+        sub = frame.loc[idx]
+        y = success.loc[idx].astype(float)
+        per_target = y.groupby(sub["cluster"]).mean()
+        entry = {**{n: int(c) for n, c in zip(names, cell)},
+                 "n_windows": int(len(sub)), "k_windows": int(y.sum()),
+                 "n_targets": int(len(per_target))}
+        if len(per_target) >= MIN_CELL:
+            values = per_target.to_numpy(dtype=float)
+            rng = np.random.Generator(np.random.PCG64([BOOTSTRAP_SEED, *[int(c) + 7 for c in cell]]))
+            draws = rng.integers(0, len(values), size=(BOOTSTRAP_B, len(values)))
+            boots = values[draws].mean(axis=1)
+            entry.update({"p": float(values.mean()), "lo": float(np.quantile(boots, 0.025)),
+                          "hi": float(np.quantile(boots, 0.975)), "interval": "target_cluster_bootstrap"})
+        rows.append(entry)
+    return pd.DataFrame(rows)
+
+
+def d2_surfaces(primary: pd.DataFrame, wg_edges: list[int]) -> dict[str, pd.DataFrame]:
+    """Nominal arm-B surfaces on (W_g, amplitude) and (period, amplitude) for
+    the recovery (primary) and trigger (secondary) endpoints; amplitude is the
+    scenario-invariant published dominant amplitude."""
+    out: dict[str, pd.DataFrame] = {}
+    if primary.empty:
+        return out
+    amp_edges = AMP_EDGES["d2"]
+    amp_bins = np.where(np.isfinite(primary["amp"]), np.digitize(primary["amp"], amp_edges), -1)
+    wg_bins = np.digitize(primary["wg_contrasts"].to_numpy(dtype=float), list(wg_edges))
+    period_bins = np.where(np.isfinite(primary["truth_period_days"]),
+                           np.digitize(primary["truth_period_days"], PERIOD_EDGES_DAYS), -1)
+    endpoints = {
+        "recovery": (primary["best_status"] == "confirmed") & (primary["best_candidate_matches_dominant"] == "direct"),
+        "trigger": primary["best_status"] == "confirmed",
+    }
+    for name, success in endpoints.items():
+        out[f"{name}_wg_amplitude"] = _target_equal_cells(primary, success, [wg_bins, amp_bins], ["wg_bin", "amp_bin"])
+        out[f"{name}_period_amplitude"] = _target_equal_cells(primary, success, [period_bins, amp_bins], ["period_bin", "amp_bin"])
+        out[f"{name}_amplitude"] = _target_equal_cells(primary, success, [amp_bins], ["amp_bin"])
+    return out
+
+
+def d2_chance_match(primary: pd.DataFrame, n_derangements: int = CHANCE_MATCH_DERANGEMENTS_D2) -> dict:
+    """Amendment 4: accidental-match calibration by TARGET-level derangements
+    (all K replicates of a target move together), numerators aligned with the
+    endpoints: confirmed AND direct match to the permuted target's dominant
+    mode; confirmed AND direct match to any of its injected modes."""
+    rows = primary[primary["best_frequency_per_day"].notna() & primary["freq_scorable"]]
+    targets = sorted(rows["cluster"].unique())
+    if len(targets) < 3:
+        return {"derangements": 0, "note": "fewer than 3 targets"}
+    index = {t: i for i, t in enumerate(targets)}
+    dominant = np.array([float(rows.loc[rows["cluster"] == t, "primary_freq"].iloc[0]) for t in targets])
+    lists = [list(rows.loc[rows["cluster"] == t, "truth_freqs"].iloc[0]) for t in targets]
+    width = max(len(x) for x in lists)
+    modes = np.full((len(targets), width), np.nan)
+    for i, x in enumerate(lists):
+        modes[i, :len(x)] = x
+    f = rows["best_frequency_per_day"].to_numpy(dtype=float)
+    tol = 1.5 / rows["baseline_days"].to_numpy(dtype=float) + TRUTH_QUANTUM_PER_DAY["d2"]
+    confirmed = (rows["best_status"] == "confirmed").to_numpy()
+    t_idx = np.array([index[t] for t in rows["cluster"]])
+    rng = np.random.Generator(np.random.PCG64(CHANCE_MATCH_SEED))
+    rec_rates, any_rates = [], []
+    n = len(targets)
+    made = 0
+    while made < n_derangements:
+        perm = rng.permutation(n)
+        if (perm == np.arange(n)).any():
+            continue
+        made += 1
+        sigma = perm[t_idx]
+        rec = confirmed & (np.abs(f - dominant[sigma]) <= tol)
+        anyhit = confirmed & (np.nanmin(np.abs(f[:, None] - modes[sigma]), axis=1) <= tol)
+        per_t_rec = pd.Series(rec.astype(float)).groupby(t_idx).mean()
+        per_t_any = pd.Series(anyhit.astype(float)).groupby(t_idx).mean()
+        rec_rates.append(float(per_t_rec.mean()))
+        any_rates.append(float(per_t_any.mean()))
+    return {"derangements": n_derangements, "unit": "target-equal mean over nominal arm-B windows",
+            "accidental_recovery_rate_mean": float(np.mean(rec_rates)),
+            "accidental_recovery_rate_p95": float(np.quantile(rec_rates, 0.95)),
+            "accidental_any_mode_rate_mean": float(np.mean(any_rates)),
+            "accidental_any_mode_rate_p95": float(np.quantile(any_rates, 0.95))}
+
+
+def d2_paired_controls(per_star: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Amendment 4: every nominal arm-B shard is scored against its paired
+    uninjected control — for detection (D) and strict recovery (R), where the
+    control's candidate frequency is matched against the B target's dominant
+    injected mode. Returns (pair table, summary table). Controls are contextual:
+    the primary denominator is never conditioned on control status."""
+    nominal_b = per_star[(per_star["arm"] == "B") & (per_star["scenario"] == "nominal")]
+    controls = per_star[per_star["arm"] == "ctrl"].set_index("sid")
+    pairs = []
+    for r in nominal_b.itertuples(index=False):
+        cid = r.control_campaign_id
+        if not cid or cid not in controls.index:
+            continue
+        c = controls.loc[cid]
+        c_usable = c["best_status"] != "missing"
+        c_freq = c.get("best_frequency_per_day")
+        tol = 1.5 / float(c["baseline_days"]) + TRUTH_QUANTUM_PER_DAY["d2"] if np.isfinite(float(c.get("baseline_days", np.nan))) else np.nan
+        r_c = bool(c["best_status"] == "confirmed" and c_freq is not None and np.isfinite(float(c_freq))
+                   and r.primary_freq is not None and np.isfinite(tol)
+                   and classify_match(float(c_freq), [float(r.primary_freq)], tol) == "direct")
+        pairs.append({
+            "b_sid": r.sid, "control_sid": cid, "cluster": r.cluster, "template_k": int(r.template_k),
+            "b_status": r.best_status, "control_status": c["best_status"], "control_usable": bool(c_usable),
+            "D_B": bool(r.best_status == "confirmed"), "D_C": bool(c["best_status"] == "confirmed"),
+            "R_B": bool(r.best_status == "confirmed" and r.best_candidate_matches_dominant == "direct"),
+            "R_C": r_c,
+        })
+    table = pd.DataFrame(pairs)
+    if table.empty:
+        return table, pd.DataFrame()
+    clusters = np.array(sorted(table["cluster"].unique()))
+    rng = np.random.Generator(np.random.PCG64(BOOTSTRAP_SEED))
+    draws = rng.integers(0, len(clusters), size=(BOOTSTRAP_B, len(clusters)))
+
+    def boot(series: pd.Series) -> tuple[float, float, float]:
+        per_target = series.astype(float).groupby(table.loc[series.index, "cluster"]).mean().reindex(clusters)
+        values = per_target.to_numpy(dtype=float)
+        boots = []
+        for b in range(BOOTSTRAP_B):
+            sample = values[draws[b]]
+            sample = sample[~np.isnan(sample)]
+            if sample.size:
+                boots.append(float(sample.mean()))
+        obs = values[~np.isnan(values)]
+        return (float(obs.mean()) if obs.size else math.nan,
+                float(np.quantile(boots, 0.025)) if boots else math.nan,
+                float(np.quantile(boots, 0.975)) if boots else math.nan)
+
+    summary = []
+    usable = table[table["control_usable"]]
+    for endpoint in ("D", "R"):
+        b, c = usable[f"{endpoint}_B"], usable[f"{endpoint}_C"]
+        row = {"endpoint": endpoint, "n_pairs_scored": int(len(usable)),
+               "n_targets": int(usable["cluster"].nunique()),
+               "n_unique_windows": int(usable["control_sid"].nunique()),
+               "both": int((b & c).sum()), "b_only": int((b & ~c).sum()),
+               "c_only": int((~b & c).sum()), "neither": int((~b & ~c).sum()),
+               "union": int((b | c).sum())}
+        for label, series in (("p_b", b), ("p_c", c), ("paired_diff_b_minus_c", b.astype(float) - c.astype(float)),
+                              ("p_b_and_not_c", b & ~c)):
+            p, lo, hi = boot(series)
+            row.update({label: p, f"{label}_lo": lo, f"{label}_hi": hi})
+        summary.append(row)
+    # quiet-control-conditioned SECONDARY estimand: pairs whose control is usable and not_detected
+    quiet = usable[usable["control_status"] == "not_detected"]
+    row = {"endpoint": "quiet_control_conditioned", "n_pairs_scored": int(len(quiet)),
+           "n_targets": int(quiet["cluster"].nunique()), "n_unique_windows": int(quiet["control_sid"].nunique())}
+    if not quiet.empty:
+        per_t_d = quiet["D_B"].astype(float).groupby(quiet["cluster"]).mean()
+        per_t_r = quiet["R_B"].astype(float).groupby(quiet["cluster"]).mean()
+        row.update({"p_b": float(per_t_d.mean()), "p_b_recovery": float(per_t_r.mean())})
+    summary.append(row)
+    return table, pd.DataFrame(summary)
+
+
+def verify_stars_file(path: Path, recorded_sha: str, selected_ids: set[str]) -> None:
+    """Amendment 4 provenance: a subset run's selection file is SHA-bound to the
+    run manifest and must equal the completion table's id set exactly."""
+    if not path.exists():
+        raise SystemExit(f"stars file not found: {path}")
+    if sha256_file(path) != recorded_sha:
+        raise SystemExit("stars file SHA differs from the run manifest's stars_file_sha256")
+    ids = {line.strip() for line in path.read_text(encoding="utf-8").splitlines() if line.strip()}
+    if ids != selected_ids:
+        raise SystemExit(f"stars file ids ({len(ids)}) != completion table ids ({len(selected_ids)})")
+
+
 def trigger_rates(per_star: pd.DataFrame, dataset: str, pilot: bool = False) -> pd.DataFrame:
     rows = []
     if dataset == "d3":
@@ -900,8 +1097,9 @@ def trigger_rates(per_star: pd.DataFrame, dataset: str, pilot: bool = False) -> 
                 "acceptance_u95_leq_0.005": bool(n == 1000 and upper <= 0.005),
                 "n_completed_is_1000": bool(n == 1000),
                 # membership in the prespecified P5 analysis (non-pilot, all 1000
-                # trials completed) — the OUTCOME is acceptance_u95_leq_0.005
-                "confirmatory": bool((not pilot) and n == 1000),
+                # trials completed); P5 is the SOLE confirmatory decision
+                "prespecified_primary": bool((not pilot) and n == 1000),
+                "confirmatory_decision": bool((not pilot) and n == 1000 and upper <= 0.005),
             })
         controls = per_star[per_star["arm"] == "ctrl"]
         if not controls.empty:
@@ -983,9 +1181,11 @@ def sensitivity_table(per_star: pd.DataFrame, dataset: str,
         if frame.empty:
             return
         success = (frame["best_status"] == "confirmed")
+        p, lo, hi = wilson(int(success.sum()), len(frame))
         rows.append({"variant": variant, "subset": label,
                      "n": len(frame), "k": int(success.sum()),
-                     **dict(zip(("p", "lo", "hi"), wilson(int(success.sum()), len(frame))))})
+                     "p": p, "lo": max(lo, 0.0), "hi": min(hi, 1.0),
+                     "inference": "descriptive (row-level Wilson); inference lives in the cluster tables"})
 
     if dataset == "d2" and "arm" in per_star and "scenario" in per_star:
         # common-subset rule: every non-nominal scenario is contrasted with the
@@ -1034,6 +1234,9 @@ def main() -> None:
     parser.add_argument("--shards-dir", type=Path, default=None,
                         help="the shard directory the run consumed (REQUIRED for d2/d3): "
                              "d2 = the published generation; d3 = <panels>/exposure_stars")
+    parser.add_argument("--stars-file", type=Path, default=None,
+                        help="the --stars-file the run was launched with (default: "
+                             "<shards-dir>/<basename recorded in the run manifest>)")
     parser.add_argument("--shard-index", type=Path, default=None,
                         help="shard_index.txt the run was launched with (default: "
                              "<shards-dir>/shard_index.txt); its SHA must equal the run "
@@ -1144,6 +1347,10 @@ def main() -> None:
             raise SystemExit("shard index != the generation's shard set")
         if args.dataset == "d3" and not selected_ids <= set(truth["sid"]):
             raise SystemExit("completion table lists ids that are not D3 truth ids")
+        if run_manifest.get("stars_file"):
+            sf = args.stars_file or (args.shards_dir / Path(str(run_manifest["stars_file"])).name)
+            verify_stars_file(sf, str(run_manifest.get("stars_file_sha256", "")), selected_ids)
+            inputs[str(sf)] = sha256_file(sf)
         subset_run = subset_run or selected_ids != universe
         if bool(run_manifest.get("pilot")) != subset_run:
             raise SystemExit("run manifest pilot flag inconsistent with limit/stars_file/completion")
@@ -1278,18 +1485,44 @@ def main() -> None:
         primary = per_star[(per_star["arm"] == "B") & (per_star["scenario"] == "nominal")]
     else:
         primary = per_star
-    completeness_tables(primary, args.dataset).to_csv(
-        args.out_dir / "completeness_by_class_pass_rule.csv", index=False)
+    completeness = completeness_tables(primary, args.dataset)
+    contingency_out = contingency(primary, args.dataset)
+    if args.dataset == "d2":
+        # D2's binding unit is the target cluster: row-level intervals are
+        # suppressed here; inference lives in the cluster tables (Amendment 4)
+        for column in ("lo", "hi"):
+            if column in completeness:
+                completeness[column] = math.nan
+        completeness["inference"] = "descriptive (window rows); see d2_cluster_completeness.csv"
+        contingency_out["inference"] = "descriptive counts over nominal arm-B windows; no row-level intervals for D2"
+    completeness.to_csv(args.out_dir / "completeness_by_class_pass_rule.csv", index=False)
     (args.out_dir / "contingency_complementarity.json").write_text(
-        json.dumps(contingency(primary, args.dataset), indent=2) + "\n",
-        encoding="utf-8")
+        json.dumps(contingency_out, indent=2) + "\n", encoding="utf-8")
     trigger_rates(per_star, args.dataset, pilot).to_csv(
         args.out_dir / "trigger_rates.csv", index=False)
-    (args.out_dir / "chance_match.json").write_text(
-        json.dumps(chance_match_rate(primary), indent=2) + "\n", encoding="utf-8")
     (args.out_dir / "surfaces").mkdir(exist_ok=True)
-    for name, surface in surfaces(primary, args.dataset).items():
-        surface.to_csv(args.out_dir / "surfaces" / f"{name}.csv", index=False)
+    if args.dataset == "d2":
+        from d2_truth_model import WG_SURFACE_EDGES
+        wg_edges = list((generation or {}).get("wg_surface_edges") or WG_SURFACE_EDGES)
+        if (generation or {}).get("production") and wg_edges != list(WG_SURFACE_EDGES):
+            raise SystemExit("production generation's W_g surface edges differ from the frozen edges")
+        (args.out_dir / "chance_match.json").write_text(
+            json.dumps(d2_chance_match(primary), indent=2) + "\n", encoding="utf-8")
+        for name, surface in d2_surfaces(primary, wg_edges).items():
+            surface.to_csv(args.out_dir / "surfaces" / f"{name}.csv", index=False)
+        pairs, pair_summary = d2_paired_controls(per_star)
+        pairs.to_csv(args.out_dir / "d2_paired_controls.csv", index=False)
+        pair_summary.to_csv(args.out_dir / "d2_paired_controls_summary.csv", index=False)
+        full_manifest = load_d2_manifest(args.shards_dir)
+        reuse = (full_manifest[(full_manifest["arm"] == "B") & (full_manifest["scenario"] == "nominal")]
+                 .groupby(["control_campaign_id", "template_source_id"])
+                 .agg(n_b_assignments=("campaign_id", "size"), n_targets=("tic", "nunique")).reset_index())
+        reuse.to_csv(args.out_dir / "d2_control_reuse.csv", index=False)
+    else:
+        (args.out_dir / "chance_match.json").write_text(
+            json.dumps(chance_match_rate(primary), indent=2) + "\n", encoding="utf-8")
+        for name, surface in surfaces(primary, args.dataset).items():
+            surface.to_csv(args.out_dir / "surfaces" / f"{name}.csv", index=False)
     if args.dataset == "d2":
         # a pilot scores the targets it ran; only a full run is bound to the
         # generation's scheduled target list (the bootstrap asserts identity)

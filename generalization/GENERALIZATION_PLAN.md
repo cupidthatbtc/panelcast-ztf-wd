@@ -190,8 +190,13 @@ No re-run; campaign metrics re-read the published per-star JSONs.
 - Windows: templates from ALL 928 stars of the published catalog (G1 fix —
   the earlier 510-not-detected pool conditioned on the pipeline's own
   outcome), matched by median zg mag (|Δg| ≤ 0.25, widened when thin;
-  flagged), K=3 per target at 10/50/90th percentile of exposures-per-night
-  (75% of zg nights are single-exposure; per-night median subtraction
+  flagged), K=3 per target at the 10/50/90th-percentile positions of the
+  matched pool sorted by W_g (Amendment 4; W_g = Σ_nights max(n_zg,night − 1,
+  0) = the zg support that survives the frozen nightly-median subtraction —
+  the pre-pilot "median exposures-per-night" covariate is degenerate: pool
+  quantiles 1.0/1.0/2.0, K0 == K1 for 103/103 targets; W_g's pool 10/50/90th
+  percentiles are 6/58/452 and give strictly distinct K0 < K1 < K2 for every
+  target; 75% of zg nights are single-exposure; per-night median subtraction
   annihilates 53% of zg data — pre-registered, stratified: risk 3).
   Template matching is a TOTAL deterministic algorithm (zero analyst
   discretion): candidate pool = stars with |median_zg − target_G| ≤ 0.25;
@@ -199,11 +204,16 @@ No re-run; campaign metrics re-read the published per-star JSONs.
   the pool is the 9 smallest |Δmag| stars, magnitude ties broken by
   ascending source_id (pandas argsort is stable over the source_id-sorted
   stats table); the pool is then sorted lexicographically by
-  (median exposures-per-night, source_id) — a total order, so no residual
-  ties — and picks are indices round-half-even(q·(n−1)) for
-  q ∈ {0.10, 0.50, 0.90} (numpy round). Match label recorded per target.
-  D2 primary detection is post-injection rule firing (detection-only);
-  strict frequency matching is the separate frequency-recovery estimand;
+  (W_g, source_id) — a total order, so no residual ties — and picks are
+  indices round-half-even(q·(n−1)) for q ∈ {0.10, 0.50, 0.90} (numpy
+  round); W_g is recorded per shard and production refuses any target whose
+  three windows are not strictly increasing in W_g. Match label recorded per
+  target. D2 PRIMARY estimand (Amendment 4) is injected-signal RECOVERY:
+  rule 1 fires AND the best candidate directly matches the largest-amplitude
+  retained injected mode; post-injection rule firing (detection-only) is the
+  secondary "post-injection rule-1 trigger rate" — the pilot showed 45% of
+  matched windows are published variables on which detection-only mostly
+  measures native triggers (confirmed 11/13, recovered 2/13);
   native variability in the pool is contextualized by PAIRED UNINJECTED
   CONTROLS (95-prefix; stable ids indexed over the sorted 928 pool): one
   control shard per unique arm-B template window. W2 stretch: fetch real
@@ -255,6 +265,33 @@ No re-run; campaign metrics re-read the published per-star JSONs.
   coordinate, has its own immutable scenario code and final campaign-id
   digit, and adds exactly 33 shards. Dominance is scenario-local; dropout
   stays a nominal-cadence scenario (no dropout × cadence_alt crossing).
+- Amendment 4 (post-pilot D2 window stratification, recovery estimand and
+  metric corrections; G4 stats + methods both PROCEED-WITH-AMENDMENT-4,
+  2026-08-30): the gen1 stratified pilot (144 shards, non-confirmatory,
+  archived under generalization/results/2026-08-30_d2_pilot/, entering no
+  estimate) exposed two design defects before any confirmatory-era run.
+  (1) Window strata: K = 0/1/2 are re-defined on W_g as above; gen1 is
+  superseded by gen2 (regenerated atomically with the amended builder).
+  (2) Primary P4 = recovery (above); detection-only is secondary.
+  (3) Paired controls are scored against their partner's injected truth
+  (detection D and strict recovery R; 2×2 tables, B-only/C-only/union,
+  target-standardized paired differences with common draws, P(R_B=1,
+  R_C=0), quiet-control-conditioned secondary estimand, reuse table); the
+  primary denominator is never conditioned on control status and no
+  aggregate native-rate subtraction is applied. (4) Metric corrections:
+  D2 surfaces at target level on (W_g, published amplitude) with frozen
+  edges {15, 41, 84, 217}; chance-match calibration by 10,000 target-level
+  derangements with endpoint-aligned numerators; paired contrasts with zero
+  observed discordance report the CP discordance bound; D2 row-level
+  intervals suppressed (descriptive); `prespecified_primary` /
+  `confirmatory_decision` replace the ambiguous `confirmatory` flag (P5
+  remains the sole confirmatory decision). (5) Provenance: raw result
+  JSONs and sidecars are archived with every pilot record; subset runs are
+  bound by `stars_file_sha256` and exact id-set equality; run manifests
+  record argv, timestamps and git commit/dirty state. Amendment 4 is
+  disclosed as pilot-informed and is not represented as part of the
+  original v3 preregistration; no further estimand-hierarchy change is
+  permitted after it.
 - Generation discipline (Amendment 2, G3 methods findings 1–8): every
   manifest row of every arm carries the fixed typed schema
   (d2_truth_model.MANIFEST_COLUMNS) including an explicit immutable

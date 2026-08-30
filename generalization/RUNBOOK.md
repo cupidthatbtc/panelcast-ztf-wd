@@ -63,9 +63,10 @@ Windows detached launches ONLY via WMI:
 
 ## D2 sequence (laptop, after D3 per slip rule — desktop unreachable)
 
-1. Generation (LAPTOP; all-or-nothing, ~90 s; `<gen>` must not exist):
+1. Generation (LAPTOP; all-or-nothing, ~90 s; `<gen>` must not exist;
+   gen1 is superseded by gen2 under Amendment 4 — W_g strata):
    `python scripts/generalization/build_d2_shards.py
-    --out-dir outputs/generalization/d2_shards_gen1
+    --out-dir outputs/generalization/d2_shards_gen2
     --exposure-stars outputs/catalog/2026-08-01_full/exposure_stars
     --arms b,ctrl,a,ladder,phase,ampscale,dropout,cadence_alt,nulls,redilution`
    Mandatory production matrix (Amendments 2+3): arm B nominal 309, arm A
@@ -80,22 +81,24 @@ Windows detached launches ONLY via WMI:
 3. Stratified pilot (LAPTOP; ~150 shards spanning every arm/scenario; never
    confirmatory):
    `python scripts/generalization/run_generalization_ls.py
-    --shard-dir outputs/generalization/d2_shards_gen1
-    --shard-index outputs/generalization/d2_shards_gen1/shard_index.txt
-    --stars-file outputs/generalization/d2_shards_gen1/pilot_shard_index.txt
-    --out-dir outputs/generalization/d2_pilot --dataset d2-tess-dav
-    --work-root C:/ls_scratch/d2_pilot --workers 12
+    --shard-dir outputs/generalization/d2_shards_gen2
+    --shard-index outputs/generalization/d2_shards_gen2/shard_index.txt
+    --stars-file outputs/generalization/d2_shards_gen2/pilot_shard_index.txt
+    --out-dir outputs/generalization/d2_pilot_gen2 --dataset d2-tess-dav
+    --work-root C:/ls_scratch/d2_pilot_gen2 --workers 12
     --replay-report outputs/generalization/replay_gate_full/replay_report.json`
+   Archive with every pilot record: metrics/, run/manifest.json,
+   run/completion.csv, run/stars/ (raw result JSONs AND .prov.json sidecars).
 4. Full run (LAPTOP): the same command WITHOUT `--stars-file` and with
    `--out-dir outputs/generalization/d2_run --work-root C:/ls_scratch/d2_run`
-   (resume-safe: sidecar-bound; `--workers` sized to free RAM, ~1 GB each).
-5. Metrics (Mac): `python scripts/generalization/metrics_generalization.py
-    --dataset d2 --shards-dir <synced d2_shards_gen1>
-    --stars-dir <synced d2_run/stars> --run-manifest <synced d2_run/manifest.json>
+   (resume-safe: sidecar-bound; `--workers 12` — the laptop saturates there).
+5. Metrics (laptop or Mac): `python scripts/generalization/metrics_generalization.py
+    --dataset d2 --shards-dir <d2_shards_gen2>
+    --stars-dir <d2_run/stars> --run-manifest <d2_run/manifest.json>
     --out-dir generalization/results/<date>_d2/metrics`
-   (shard index defaults to `<generation>/shard_index.txt`; completion.csv
-   must sit beside manifest.json; sync the generation dir, stars/,
-   manifest.json, completion.csv).
+   (shard index defaults to `<generation>/shard_index.txt`; for a pilot add
+   `--stars-file <generation>/pilot_shard_index.txt`; completion.csv must
+   sit beside manifest.json).
 
 ## Results bundles
 

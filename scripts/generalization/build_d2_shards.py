@@ -103,9 +103,11 @@ from d2_truth_model import (
     SCENARIO_NOMINAL,
     SCENARIO_NULL,
     assert_counts,
+    WG_SURFACE_EDGES,
     build_truth_model,
     campaign_id,
     check_cadence_alt_schedule,
+    check_wg_strata,
     control_id,
     expected_counts,
     null_id,
@@ -179,11 +181,14 @@ def load_pool(exposure_stars: Path, catalog_path: Path, expected_pool: int
             raise SystemExit(f"{sid}: no zg window (pool must be complete)")
         templates[sid] = (tokens, values)
         shas[sid] = sha256_file(path)
+        per_night = zg.groupby("night_mjd").size()
         rows.append({
             "source_id": sid,
             "median_zg": float(zg["mag"].median()),
             "n_zg": int(len(zg)),
-            "exp_per_night": float(zg.groupby("night_mjd").size().median()),
+            "exp_per_night": float(per_night.median()),
+            # Amendment 4: zg support surviving the frozen nightly-median subtraction
+            "wg_contrasts": int((per_night - 1).clip(lower=0).sum()),
             "blind_status": str(status[sid]),
         })
     stats = pd.DataFrame(rows).sort_values("source_id").reset_index(drop=True)
@@ -204,7 +209,7 @@ def match_templates(stats: pd.DataFrame, gmag: float) -> tuple[list[str], str]:
         ranked = stats.assign(abs_delta=delta).sort_values(
             ["abs_delta", "source_id"], kind="stable")
         pool = ranked.head(9)
-    ordered = pool.sort_values(["exp_per_night", "source_id"], kind="stable").reset_index(drop=True)
+    ordered = pool.sort_values(["wg_contrasts", "source_id"], kind="stable").reset_index(drop=True)
     picks = [
         str(ordered.iloc[min(len(ordered) - 1, int(np.round(q * (len(ordered) - 1))))]["source_id"])
         for q in (0.10, 0.50, 0.90)
@@ -264,7 +269,7 @@ def typed_row(**fields) -> dict:
     defaults = {
         "campaign_id": "", "arm": "", "scenario": "", "tic": 0,
         "template_source_id": "", "template_status": "", "template_k": -1,
-        "pool_index": -1, "template_exp_per_night": math.nan,
+        "pool_index": -1, "template_exp_per_night": math.nan, "template_wg_contrasts": -1,
         "ratio_g": 0.0, "ratio_rg": 0.0, "phase_draw": 0, "amp_scale": 1.0,
         "dominant_dropped": False, "dropped_period_s": math.nan,
         "crowdsap": math.nan, "cadence_code": 0, "cadence_s": 0.0,
@@ -395,6 +400,9 @@ def main(argv: list[str] | None = None, expected_pool: int = POOL_SIZE_PRODUCTIO
     stats, templates, template_shas = load_pool(args.exposure_stars, args.catalog, expected_pool)
     status_of = stats.set_index("source_id")["blind_status"].to_dict()
     epn_of = stats.set_index("source_id")["exp_per_night"].to_dict()
+    wg_of = stats.set_index("source_id")["wg_contrasts"].to_dict()
+    wg_pool_edges = [int(round(x)) for x in np.quantile(stats["wg_contrasts"].to_numpy(dtype=float),
+                                                        [0.2, 0.4, 0.6, 0.8])]
     pool_index_of = stats.set_index("source_id")["pool_index"].to_dict()
 
     ladder = [(gi + 1, ri + 1, g, r)
@@ -504,6 +512,7 @@ def main(argv: list[str] | None = None, expected_pool: int = POOL_SIZE_PRODUCTIO
                          template_status=status_of[template_id], template_k=k,
                          pool_index=pool_index_of[template_id],
                          template_exp_per_night=epn_of[template_id],
+                         template_wg_contrasts=wg_of[template_id],
                          ratio_g=g, ratio_rg=r, phase_draw=phase_draw,
                          amp_scale=amp_scale, dominant_dropped=drop,
                          dropped_period_s=model.dropped_period_s if drop else math.nan,
@@ -523,7 +532,8 @@ def main(argv: list[str] | None = None, expected_pool: int = POOL_SIZE_PRODUCTIO
                  arm="ctrl", scenario=SCENARIO_CONTROL, template_source_id=template_id,
                  template_status=status_of[template_id],
                  pool_index=pool_index_of[template_id],
-                 template_exp_per_night=epn_of[template_id])
+                 template_exp_per_night=epn_of[template_id],
+                 template_wg_contrasts=wg_of[template_id])
         print(f"[d2-shards] {len(used)} paired controls", flush=True)
 
     if "nulls" in arms:
@@ -536,7 +546,8 @@ def main(argv: list[str] | None = None, expected_pool: int = POOL_SIZE_PRODUCTIO
                  arm=SCENARIO_NULL, scenario=SCENARIO_NULL, template_source_id=template_id,
                  template_status=status_of[template_id],
                  pool_index=pool_index_of[template_id],
-                 template_exp_per_night=epn_of[template_id], amp_scale=0.0,
+                 template_exp_per_night=epn_of[template_id],
+                 template_wg_contrasts=wg_of[template_id], amp_scale=0.0,
                  null_serial=serial)
             if (serial + 1) % 200 == 0:
                 print(f"[d2-shards] nulls {serial + 1}/{args.n_nulls}", flush=True)
@@ -576,6 +587,9 @@ def main(argv: list[str] | None = None, expected_pool: int = POOL_SIZE_PRODUCTIO
     counts = expected_counts(frame, scheduled_tics, dropout_eligible, redilution_tics,
                              args.n_nulls if "nulls" in arms else 0, arms, cadence_alt_tics)
     assert_counts(frame, counts)
+    wg_violations = check_wg_strata(frame, production)
+    if production and wg_pool_edges != list(WG_SURFACE_EDGES):
+        raise SystemExit(f"pool W_g surface edges {wg_pool_edges} != frozen {list(WG_SURFACE_EDGES)}")
     if "cadence_alt" in arms:
         check_cadence_alt_schedule(mixed_cadence, cadence_alt_tics, production)
         alt_rows = frame[frame["scenario"] == "cadence_alt"]
@@ -633,6 +647,11 @@ def main(argv: list[str] | None = None, expected_pool: int = POOL_SIZE_PRODUCTIO
         "redilution_tics": redilution_tics,
         "cadence_alt_tics": cadence_alt_tics,
         "mixed_cadence_tics_from_v3": mixed_cadence,
+        "wg_pool_quantiles": {str(q): float(v) for q, v in zip(
+            (0.1, 0.2, 0.4, 0.5, 0.6, 0.8, 0.9),
+            np.quantile(stats["wg_contrasts"].to_numpy(dtype=float), [0.1, 0.2, 0.4, 0.5, 0.6, 0.8, 0.9]))},
+        "wg_surface_edges": wg_pool_edges,
+        "wg_strata_violations": wg_violations,
         "expected_counts": counts,
         "campaign_sha256_snapshot": campaign_start,
         "excluded_targets": excluded,

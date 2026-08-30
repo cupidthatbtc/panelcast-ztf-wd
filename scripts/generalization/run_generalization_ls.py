@@ -14,9 +14,12 @@ returned untouched, so re-running after a crash or shard split is safe.
 from __future__ import annotations
 
 import argparse
+import datetime
 import hashlib
 import json
 import shutil
+import subprocess
+import sys
 import time
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from pathlib import Path
@@ -290,6 +293,17 @@ def main() -> None:
 
     progress_path = args.out_dir / "progress.json"
     started = time.time()
+    started_utc = datetime.datetime.now(datetime.timezone.utc).isoformat()
+
+    def git_state() -> dict:
+        try:
+            head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=REPO_ROOT, capture_output=True,
+                                  text=True, timeout=30).stdout.strip()
+            dirty = subprocess.run(["git", "status", "--porcelain", "--untracked-files=no"], cwd=REPO_ROOT,
+                                   capture_output=True, text=True, timeout=30).stdout.strip()
+            return {"git_commit": head, "git_dirty": bool(dirty)}
+        except Exception as exc:  # noqa: BLE001
+            return {"git_commit": "", "git_dirty": None, "git_error": repr(exc)}
     failures: dict[str, str] = {}
     completed_now = 0
 
@@ -355,6 +369,12 @@ def main() -> None:
         "shard_index": str(args.shard_index) if args.shard_index else "",
         "shard_index_sha256": (hashlib.sha256(args.shard_index.read_bytes()).hexdigest()
                                if args.shard_index else ""),
+        "stars_file_sha256": (hashlib.sha256(args.stars_file.read_bytes()).hexdigest()
+                              if args.stars_file else ""),
+        "argv": sys.argv,
+        "started_utc": started_utc,
+        "finished_utc": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+        **git_state(),
         "generation_id": binding["generation_id"],
         "pilot": pilot,
         "limit": args.limit,
