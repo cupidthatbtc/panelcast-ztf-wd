@@ -22,7 +22,9 @@ Windows detached launches ONLY via WMI:
 
 ## D3 sequence
 
-1. Fetch (Mac, running): frozen fetcher on `roster_d3.csv` →
+1. Fetch (LAPTOP since 2026-08-30 02:20 EDT — moved off the Mac after a reboot
+   killed the Mac run at 1,473/3,000; cache tar-piped over Tailscale, launcher
+   `d3_fetch_laptop.ps1`, log `d3_fetch.log`): frozen fetcher on `roster_d3.csv` →
    `generalization/data/d3/raw/irsa_cache` (resumable; rerun the same
    command to retry failures until fetch_events shows every target terminal).
 2. Panels (LAPTOP — panel gate machine): 
@@ -60,3 +62,18 @@ Windows detached launches ONLY via WMI:
 `generalization/results/<date>_<dataset>/` mirroring the published
 convention: README, DATA_PROVENANCE, SHA256SUMS, acceptance.json, metrics/,
 figures/. G5 re-derives every headline number from per_star.csv + JSONs.
+
+## Attested production machine (2026-08-29)
+
+Laptop `Jacks_7i_5090` full-928 replay gate **PASS** (15 workers, 13 h;
+921 `identical_v1_schema` + 7 `identical_newline`; python 3.12.12, numpy 2.3.5,
+scipy 1.16.3, astropy 8.0.1, pandas 2.3.3, Windows 11). Report on the laptop:
+`outputs\generalization\replay_gate_full\replay_report.json` (= the
+`--replay-report` argument for every production `run_generalization_ls.py`
+invocation); archived copy in
+`generalization/attestation/laptop_replay_full_2026-08-29/`.
+Mac (M5, macOS arm64) is NOT an attested machine: strict tier fails on bytes
+(BLAS/FMA/CSV-parse last-bit), the 928-star decision-equivalence evidence run was
+stopped at 311/928 (battery) — partial record in
+`outputs/generalization/replay_gate_mac_full/PARTIAL_RUN_ATTESTATION.json`.
+Rule: multi-hour compute on the Mac only on mains power; default to the laptop.
