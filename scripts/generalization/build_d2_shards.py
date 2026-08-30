@@ -85,20 +85,34 @@ from d2_truth_model import (
     AMP_SCALE_CODES,
     BANDPASS_LADDER_G,
     BANDPASS_LADDER_RG,
+    CADENCE_ALT_S,
+    CADENCE_CODE_ALT,
+    CADENCE_CODE_NOMINAL,
     CROWD_CODE_NONE,
     CROWD_CODE_REDILUTION,
+    D2_GENERATION_CODE,
+    MIXED_CADENCE_TARGETS_PRODUCTION,
     INJECTED_MODE_COLUMNS,
     MANIFEST_COLUMN_NAMES,
     MANIFEST_COLUMNS,
+    N_NULLS_PRODUCTION,
     NOMINAL_G,
     NOMINAL_RG,
+    POOL_SIZE_PRODUCTION,
     REJECTED_MODE_COLUMNS,
     SCENARIO_CONTROL,
     SCENARIO_NOMINAL,
     SCENARIO_NULL,
+    assert_counts,
     build_truth_model,
+    campaign_id,
+    control_id,
+    expected_counts,
+    null_id,
+    production_reasons,
     retained_modes,
     scenario_code,
+    validate_manifest_frame,
 )
 from frozen_api import (
     EXPOSURE_COLUMNS,
@@ -113,8 +127,6 @@ from frozen_api import (
 PUBLISHED = REPO_ROOT / "catalog-rebuild/results/2026-08-01_full"
 MATCH_TOL_MAG = 0.25
 MATCH_TOL_WIDE = 0.5
-N_NULLS_PRODUCTION = 1000
-POOL_SIZE_PRODUCTION = 928
 PILOT_TARGETS = 10
 PILOT_NULLS = 30
 SENTINEL = "IN_PROGRESS"
@@ -123,6 +135,7 @@ PANDAS_NA_TOKENS = {"#N/A", "#N/A N/A", "#NA", "-1.#IND", "-1.#QNAN", "-NaN", "-
                     "n/a", "nan", "null"}
 SPOC_REPORT = "spoc_verification/v2_publishedsectors_report.json"
 SPOC_MODES = "spoc_verification/v2_publishedsectors_recovered_modes.csv"
+SPOC_V3_REPORT = "spoc_verification/v3_all103_verification_report.json"   # cadence_alt targets
 
 
 def sha256_file(path: Path) -> str:
@@ -201,24 +214,6 @@ def match_templates(stats: pd.DataFrame, gmag: float) -> tuple[list[str], str]:
 
 # ----------------------------------------------------------------- ids/shards
 
-def campaign_id(arm_prefix: str, tic: int, k: int, g_idx: int, r_idx: int,
-                phase_draw: int = 0, amp_code: int = 0,
-                crowd_code: int = CROWD_CODE_NONE) -> str:
-    sid = (f"{arm_prefix}{tic:010d}{k}{g_idx}{r_idx}"
-           f"{phase_draw}{amp_code}{crowd_code}0")
-    if len(sid) != 19 or not sid.isdigit():
-        raise ValueError(f"malformed campaign id {sid}")
-    return sid
-
-
-def control_id(pool_index: int) -> str:
-    return "95" + str(pool_index).zfill(17)
-
-
-def null_id(serial: int) -> str:
-    return "94" + str(serial).zfill(17)
-
-
 def write_shard(path: Path, frame: pd.DataFrame) -> None:
     with gzip.open(path, "wt", encoding="utf-8", newline="") as handle:
         frame[list(EXPOSURE_COLUMNS)].to_csv(handle, index=False, lineterminator="\n")
@@ -272,7 +267,8 @@ def typed_row(**fields) -> dict:
         "pool_index": -1, "template_exp_per_night": math.nan,
         "ratio_g": 0.0, "ratio_rg": 0.0, "phase_draw": 0, "amp_scale": 1.0,
         "dominant_dropped": False, "dropped_period_s": math.nan,
-        "crowdsap": math.nan, "n_strata_scheduled": 0, "match": "",
+        "crowdsap": math.nan, "cadence_code": 0, "cadence_s": 0.0,
+        "n_strata_scheduled": 0, "match": "",
         "control_campaign_id": "", "null_serial": -1,
         "n_modes_injected": 0, "n_modes_rejected": 0, "shard_sha256": "",
     }
@@ -285,14 +281,7 @@ def typed_row(**fields) -> dict:
 
 
 def validate_manifest(frame: pd.DataFrame) -> None:
-    if list(frame.columns) != list(MANIFEST_COLUMN_NAMES):
-        raise SystemExit("manifest columns deviate from MANIFEST_COLUMNS")
-    if frame["campaign_id"].duplicated().any():
-        dup = frame.loc[frame["campaign_id"].duplicated(), "campaign_id"].head(3).tolist()
-        raise SystemExit(f"duplicate campaign ids {dup}")
-    for name, kind in MANIFEST_COLUMNS:
-        if kind in ("int", "bool") and frame[name].isna().any():
-            raise SystemExit(f"manifest column {name} has NaN")
+    validate_manifest_frame(frame)   # schema, uniqueness, typed, per-row semantics
     bad = [sid for sid in frame["campaign_id"] if not campaign_id_ok(sid)]
     if bad:
         raise SystemExit(f"{len(bad)} ids violate the campaign convention: {bad[:3]}")
@@ -344,11 +333,14 @@ def main(argv: list[str] | None = None, expected_pool: int = POOL_SIZE_PRODUCTIO
                         help="attested per-star exposure shards of the published 928 catalog")
     parser.add_argument("--catalog", type=Path,
                         default=PUBLISHED / "catalog/ls_full_catalog.csv")
-    parser.add_argument("--arms", default="b,ctrl,a,ladder,phase,ampscale,dropout,nulls",
+    parser.add_argument("--arms", default="b,ctrl,a,ladder,phase,ampscale,dropout,cadence_alt,nulls",
                         help="add 'redilution' to schedule the SAP-equivalent re-dilution "
-                             "variant for SPOC-verified targets (crowdsap from the SPOC report)")
+                             "variant for SPOC-verified targets (crowdsap from the SPOC report); "
+                             "'cadence_alt' = Amendment-3 pure-120-s endpoint for the mixed-"
+                             "cadence targets identified by the SPOC v3 report")
     parser.add_argument("--limit", type=int, default=None,
-                        help="TEST/PILOT ONLY: first N targets; marks the generation non-production")
+                        help="TEST ONLY: first N targets (non-production; NOT the stratified "
+                             "pilot — that is pilot_shard_index.txt of a production generation)")
     parser.add_argument("--n-nulls", type=int, default=N_NULLS_PRODUCTION,
                         help="TEST ONLY: production requires 1000")
     args = parser.parse_args(argv)
@@ -356,8 +348,6 @@ def main(argv: list[str] | None = None, expected_pool: int = POOL_SIZE_PRODUCTIO
     assert_frozen()
     campaign_start = campaign_file_shas()
     arms = set(args.arms.split(","))
-    production = args.limit is None and args.n_nulls == N_NULLS_PRODUCTION \
-        and expected_pool == POOL_SIZE_PRODUCTION
     out_dir: Path = args.out_dir
     if out_dir.exists():
         raise SystemExit(f"{out_dir} exists — a generation is all-or-nothing; use a fresh directory")
@@ -378,6 +368,9 @@ def main(argv: list[str] | None = None, expected_pool: int = POOL_SIZE_PRODUCTIO
             raise SystemExit(f"{name} SHA {actual[:12]} != roster report's {str(recorded)[:12]}")
     targets = pd.read_csv(targets_path)
     modes = pd.read_csv(modes_path)
+    n_targets_input = int(len(targets))
+    non_production = production_reasons(arms, args.limit, args.n_nulls, expected_pool, n_targets_input)
+    production = not non_production
     if args.limit:
         targets = targets.head(args.limit)
     spoc_report_path = args.d2_dir / SPOC_REPORT
@@ -390,6 +383,14 @@ def main(argv: list[str] | None = None, expected_pool: int = POOL_SIZE_PRODUCTIO
                 crowdsap[int(entry["tic"])] = float(entry["crowdsap_median"])
     elif "redilution" in arms:
         raise SystemExit("redilution arm needs the SPOC verification report")
+    spoc_v3_path = args.d2_dir / SPOC_V3_REPORT
+    mixed_cadence: list[int] = []
+    if spoc_v3_path.exists():
+        v3 = json.loads(spoc_v3_path.read_text(encoding="utf-8"))
+        mixed_cadence = sorted(int(e["tic"]) for e in v3.get("targets", [])
+                               if e.get("cadence_switched_from_roster") and "error" not in e)
+    elif "cadence_alt" in arms:
+        raise SystemExit("cadence_alt arm needs the SPOC v3 verification report")
 
     stats, templates, template_shas = load_pool(args.exposure_stars, args.catalog, expected_pool)
     status_of = stats.set_index("source_id")["blind_status"].to_dict()
@@ -408,6 +409,9 @@ def main(argv: list[str] | None = None, expected_pool: int = POOL_SIZE_PRODUCTIO
     excluded: list[dict] = []
     dominant_amp: dict[int, float] = {}
     scheduled_tics: list[int] = []
+    dropout_eligible: list[int] = []
+    redilution_tics: list[int] = []
+    cadence_alt_tics: list[int] = []
 
     def emit(sid: str, tokens, values, model, gaussian: bool, seed: int, **fields) -> None:
         if not campaign_id_ok(sid):
@@ -447,24 +451,37 @@ def main(argv: list[str] | None = None, expected_pool: int = POOL_SIZE_PRODUCTIO
         scheduled_tics.append(tic)
         dominant_amp[tic] = float(max(amps[i] for i in keep))
         picks, match_label = match_templates(stats, float(target.gmag))
-        variants: list[tuple] = []   # (gi, ri, g, r, ks, phase_draw, amp_scale, drop, crowd)
+        N = CADENCE_CODE_NOMINAL
+        variants: list[tuple] = []   # (gi, ri, g, r, ks, phase_draw, amp_scale, drop, crowd, cadence_code)
         if "b" in arms or "a" in arms:
-            variants.append((*nominal, (0, 1, 2), 0, 1.0, False, CROWD_CODE_NONE))
+            variants.append((*nominal, (0, 1, 2), 0, 1.0, False, CROWD_CODE_NONE, N))
         if "ladder" in arms:
-            variants.extend((gi, ri, g, r, (1,), 0, 1.0, False, CROWD_CODE_NONE)
+            variants.extend((gi, ri, g, r, (1,), 0, 1.0, False, CROWD_CODE_NONE, N)
                             for gi, ri, g, r in ladder if not (g == NOMINAL_G and r == NOMINAL_RG))
         if "phase" in arms:
-            variants.extend((*nominal, (1,), d, 1.0, False, CROWD_CODE_NONE) for d in (1, 2))
+            variants.extend((*nominal, (1,), d, 1.0, False, CROWD_CODE_NONE, N) for d in (1, 2))
         if "ampscale" in arms:
-            variants.extend((*nominal, (1,), 0, sc, False, CROWD_CODE_NONE) for sc in (0.7, 1.3))
+            variants.extend((*nominal, (1,), 0, sc, False, CROWD_CODE_NONE, N) for sc in (0.7, 1.3))
         if "dropout" in arms and len(keep) >= 2:
-            variants.append((*nominal, (1,), 0, 1.0, True, CROWD_CODE_NONE))
+            variants.append((*nominal, (1,), 0, 1.0, True, CROWD_CODE_NONE, N))
+            dropout_eligible.append(tic)
         if "redilution" in arms and tic in crowdsap:
-            variants.append((*nominal, (1,), 0, 1.0, False, CROWD_CODE_REDILUTION))
-        for gi, ri, g, r, ks, phase_draw, amp_scale, drop, crowd in variants:
-            scenario = scenario_code(g, r, phase_draw, amp_scale, drop, crowd)
+            variants.append((*nominal, (1,), 0, 1.0, False, CROWD_CODE_REDILUTION, N))
+            redilution_tics.append(tic)
+        if "cadence_alt" in arms and tic in mixed_cadence:
+            # Amendment 3: pure-120-s endpoint; retention re-applied at 120 s inside
+            # build_truth_model; every mixed target keeps >= 1 retained mode (v3 check)
+            if retained_modes(periods, amps, CADENCE_ALT_S):
+                variants.append((*nominal, (1,), 0, 1.0, False, CROWD_CODE_NONE, CADENCE_CODE_ALT))
+                cadence_alt_tics.append(tic)
+            else:
+                excluded.append({"tic": tic, "reason": "cadence_alt: zero retained modes at 120 s",
+                                 "n_published_modes": len(periods)})
+        for gi, ri, g, r, ks, phase_draw, amp_scale, drop, crowd, cadence_code in variants:
+            scenario = scenario_code(g, r, phase_draw, amp_scale, drop, crowd, cadence_code)
+            model_cadence = CADENCE_ALT_S if cadence_code == CADENCE_CODE_ALT else cadence
             model = build_truth_model(
-                tic, periods, amps, cadence, ratio_g=g, ratio_rg=r,
+                tic, periods, amps, model_cadence, ratio_g=g, ratio_rg=r,
                 crowdsap=crowdsap[tic] if crowd == CROWD_CODE_REDILUTION else None,
                 amplitude_scale=amp_scale, phase_draw=phase_draw, drop_dominant=drop)
             amp_code = AMP_SCALE_CODE_DROPOUT if drop else AMP_SCALE_CODES[amp_scale]
@@ -480,7 +497,7 @@ def main(argv: list[str] | None = None, expected_pool: int = POOL_SIZE_PRODUCTIO
                 else:
                     arm_list.append(("92", False))
                 for prefix, gaussian in arm_list:
-                    sid = campaign_id(prefix, tic, k, gi, ri, phase_draw, amp_code, crowd)
+                    sid = campaign_id(prefix, tic, k, gi, ri, phase_draw, amp_code, crowd, cadence_code)
                     emit(sid, tokens, values, model, gaussian, int(sid[2:]),
                          arm="A" if gaussian else "B", scenario=scenario, tic=tic,
                          template_source_id=template_id,
@@ -491,6 +508,7 @@ def main(argv: list[str] | None = None, expected_pool: int = POOL_SIZE_PRODUCTIO
                          amp_scale=amp_scale, dominant_dropped=drop,
                          dropped_period_s=model.dropped_period_s if drop else math.nan,
                          crowdsap=crowdsap[tic] if crowd == CROWD_CODE_REDILUTION else math.nan,
+                         cadence_code=cadence_code, cadence_s=model_cadence,
                          n_strata_scheduled=len(ks), match=match_label,
                          control_campaign_id=control_id(pool_index_of[template_id]) if not gaussian else "")
         print(f"[d2-shards] TIC {tic}: {len(manifest)} shards so far", flush=True)
@@ -535,6 +553,8 @@ def main(argv: list[str] | None = None, expected_pool: int = POOL_SIZE_PRODUCTIO
             raise SystemExit(f"{row.campaign_id}: injected rows != n_modes_injected or zero modes")
     if set(injected["campaign_id"]) - set(ab["campaign_id"]):
         raise SystemExit("injected_modes carries non-A/B ids")
+    if set(rejected["campaign_id"]) - set(ab["campaign_id"]):
+        raise SystemExit("rejected_modes carries non-A/B ids")
     per_sid_rejected = rejected.groupby("campaign_id").size()
     for row in ab.itertuples(index=False):
         if int(per_sid_rejected.get(row.campaign_id, 0)) != row.n_modes_rejected:
@@ -552,6 +572,13 @@ def main(argv: list[str] | None = None, expected_pool: int = POOL_SIZE_PRODUCTIO
     nulls = frame[frame["arm"] == SCENARIO_NULL]
     if "nulls" in arms and sorted(nulls["null_serial"].tolist()) != list(range(args.n_nulls)):
         raise SystemExit("null serials are not exactly 0..N-1")
+    # the realized run matrix must equal the SCHEDULED matrix (never outcome-based)
+    counts = expected_counts(frame, scheduled_tics, dropout_eligible, redilution_tics,
+                             args.n_nulls if "nulls" in arms else 0, arms, cadence_alt_tics)
+    assert_counts(frame, counts)
+    if production and len(mixed_cadence) != MIXED_CADENCE_TARGETS_PRODUCTION:
+        raise SystemExit(f"SPOC v3 lists {len(mixed_cadence)} mixed-cadence targets, "
+                         f"expected {MIXED_CADENCE_TARGETS_PRODUCTION} (Amendment 3)")
 
     frame.to_csv(staging / "shard_manifest.csv", index=False, lineterminator="\n")
     injected.to_csv(staging / "injected_modes.csv", index=False, lineterminator="\n")
@@ -575,13 +602,17 @@ def main(argv: list[str] | None = None, expected_pool: int = POOL_SIZE_PRODUCTIO
         inputs_sha["spoc_report"] = sha256_file(spoc_report_path)
     if spoc_modes_path.exists():
         inputs_sha["spoc_recovered_modes"] = sha256_file(spoc_modes_path)
+    if spoc_v3_path.exists():
+        inputs_sha["spoc_v3_report"] = sha256_file(spoc_v3_path)
     outputs_sha = {name: sha256_file(staging / name) for name in (
         "shard_manifest.csv", "injected_modes.csv", "rejected_modes.csv",
         "excluded_targets.csv", "shard_index.txt", "pilot_shard_index.txt")}
     shard_shas = dict(zip(frame["campaign_id"], frame["shard_sha256"]))
     generation_basis = {
         "inputs_sha256": inputs_sha, "template_shas": template_shas,
-        "frozen_sha256": frozen_file_shas(), "campaign_sha256": campaign_start,
+        "frozen_sha256": frozen_file_shas(),
+        # only the shard-determining code enters the generation id
+        "generation_code_sha256": {name: campaign_start[name] for name in D2_GENERATION_CODE},
         "args": {"arms": sorted(arms), "limit": args.limit, "n_nulls": args.n_nulls,
                  "expected_pool": expected_pool},
     }
@@ -590,13 +621,17 @@ def main(argv: list[str] | None = None, expected_pool: int = POOL_SIZE_PRODUCTIO
     generation = {
         "generation_id": generation_id,
         "production": production,
-        "non_production_reasons": [] if production else [
-            r for r, flag in (("limit", args.limit is not None),
-                              ("n_nulls", args.n_nulls != N_NULLS_PRODUCTION),
-                              ("pool", expected_pool != POOL_SIZE_PRODUCTION)) if flag],
-        "n_targets_input": int(len(targets)),
+        "non_production_reasons": non_production,
+        "arms": sorted(arms),
+        "n_targets_input": n_targets_input,
         "n_targets_scheduled": len(scheduled_tics),
         "scheduled_tics": scheduled_tics,
+        "dropout_eligible_tics": dropout_eligible,
+        "redilution_tics": redilution_tics,
+        "cadence_alt_tics": cadence_alt_tics,
+        "mixed_cadence_tics_from_v3": mixed_cadence,
+        "expected_counts": counts,
+        "campaign_sha256_snapshot": campaign_start,
         "excluded_targets": excluded,
         "n_nulls": args.n_nulls,
         "n_shards": int(len(frame)),

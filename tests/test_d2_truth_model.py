@@ -142,6 +142,7 @@ def test_scenario_codes_are_explicit_and_disjoint():
     assert scenario_code(1.7, 0.80, 0, 0.7, False) == "ampscale_0.7"
     assert scenario_code(2.1, 0.70, 0, 1.0, False) == "ladder_g3r1"
     assert scenario_code(1.7, 0.80, 0, 1.0, False, crowd_code=1) == "redilution"
+    assert scenario_code(1.7, 0.80, 0, 1.0, False, cadence_code=1) == "cadence_alt"
 
 
 def test_super_nyquist_sign_flip_carried_into_amplitude():

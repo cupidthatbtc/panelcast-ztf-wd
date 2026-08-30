@@ -229,7 +229,8 @@ non-detections.
   d2_truth_model.MANIFEST_COLUMNS with every field populated for every arm
   (no NaN in int/bool columns; empty strings for absent ids); scenario
   identity is the manifest `scenario` code AND every grouping key (arm,
-  ratio_g, ratio_rg, phase_draw, amp_scale, dominant_dropped) — the
+  ratio_g, ratio_rg, phase_draw, amp_scale, dominant_dropped, cadence_code
+  — Amendment 3) — the
   dominant-mode-dropout variant is its own scenario and never enters the
   nominal P4 estimator; the P4 eligible denominator is the scenario's
   `n_strata_scheduled` (3 nominal; 1 for single-window sensitivities), and

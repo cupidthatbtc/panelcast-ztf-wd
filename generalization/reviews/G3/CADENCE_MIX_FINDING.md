@@ -4,15 +4,20 @@ Source: SPOC verification v3 (all 103 targets, `v3_all103_verification_report.js
 The frozen plan rule sets `cadence_s = 20 iff any 'f' sector` (an effective
 integration time for the sinc de-integration). v3 chose, per target, the SPOC
 product cadence covering the most PUBLISHED sectors; it switched 33 targets
-from roster 20 s to 120 s products — every switch in that direction — because
+from roster 20 s to 120 s products — every switch in that direction (33 targets,
+141 published modes) — because
 those solutions combine 20-s ('f') AND 120-s sectors (a stitched multi-sector
 fit; the published amplitude is therefore a sector-mixed integration).
 
 Roster composition (sector kind x roster cadence): mixed 33 (incl. two whose 'f' sits inside a range token, e.g. `29-f30`, `01,27-f28`), pure 120-s 54, pure 20-s 16 — the 33 mixed targets are exactly the 33 v3 cadence switches.
 
 Mixed-sector targets: 31 (128 modes). Modes with P < 300 s,
-where sinc(120 s)/sinc(20 s) < 0.76 and the assumed cadence changes the
-de-integrated amplitude by > 30%: 22 modes on 11 targets
+where the pure-endpoint contrast sinc(20 s)/sinc(120 s) exceeds 1.3 (it is
+1.95 at 200 s — the MAXIMUM 120-s-vs-20-s contrast, NOT the bias of the
+stitched amplitude: for a joint mixed-cadence fit A_pub ≈ A_int·S_mix with
+S_120 < S_mix < S_20, so the frozen 20-s rule under-corrects by
+U = S_20/S_mix, ≈ 1.08–1.36 under equal-sector weighting and ≈ 1.01–1.19
+under point weighting across these modes — round-3 reviewer arithmetic): 22 modes on 11 targets
 (3 of them would be REJECTED under the 120-s rule).
 
 | tic | roster cad | published sectors | coverage by cadence {20:n,120:n} | P [s] | A [ppt] | sinc120/sinc20 |
@@ -54,3 +59,13 @@ C. Exclude P < 300 s modes of mixed-sector targets from the amplitude-axis
 
 Recommendation: A (cheap, orthogonal to the ladder, keeps the frozen nominal
 intact, and the contrast measures exactly the systematic in question).
+
+## Resolution (2026-08-30 ~05:30): ADOPT-A → Amendment 3
+
+Round-3 verdict `sol_numerics_r3_cadence.md`: ADOPT-A. Implemented as the
+`cadence_alt` scenario (contract: `SCENARIO_CADENCE_ALT`, manifest fields
+`cadence_code`/`cadence_s`, final id digit D, `MANDATORY_PRODUCTION_ARMS`
+includes it, builder asserts 33 mixed targets from the pinned SPOC v3 report,
+metrics group by `cadence_code`; contract tests cover re-rejection at 120 s,
+unchanged dominance, shared phases, id digit, non-pooling). Amendment text in
+GENERALIZATION_PLAN.md (D2 run matrix); ledger entry in G2_FREEZE.md.

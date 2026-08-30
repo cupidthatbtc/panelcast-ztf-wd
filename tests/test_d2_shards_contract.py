@@ -32,6 +32,8 @@ from d2_truth_model import (  # noqa: E402
     AMP_SCALE_CODE_DROPOUT,
     MANIFEST_COLUMN_NAMES,
     SCENARIO_NOMINAL,
+    production_reasons,
+    validate_manifest_frame,
 )
 from frozen_api import EXPOSURE_COLUMNS, campaign_id_ok, load_star  # noqa: E402
 import metrics_generalization as metrics  # noqa: E402
@@ -84,6 +86,7 @@ def generation(tmp_path_factory) -> dict:
          "nov": False, "n_modes": 2, "ra": 1.0, "dec": 2.0, "gmag": 18.0},
     ])
     modes = pd.DataFrame([
+        {"tic": 11, "paper": "romero2025", "period_s": 150.0, "amp_ppt": 1.0},   # retained at 20 s, rejected at 120 s
         {"tic": 11, "paper": "romero2025", "period_s": 300.0, "amp_ppt": 5.0},
         {"tic": 11, "paper": "romero2025", "period_s": 500.0, "amp_ppt": 9.0},
         {"tic": 11, "paper": "romero2025", "period_s": 700.0, "amp_ppt": 2.0},
@@ -96,9 +99,18 @@ def generation(tmp_path_factory) -> dict:
     (d2 / "d2_roster_report.json").write_text(json.dumps({
         "outputs_sha256": {"d2_targets.csv": sha(d2 / "d2_targets.csv"),
                            "d2_modes.csv": sha(d2 / "d2_modes.csv")}}))
+    (d2 / "spoc_verification").mkdir()
+    (d2 / "spoc_verification" / "v2_publishedsectors_report.json").write_text(json.dumps({
+        "summary": {}, "targets": [{"tic": 11, "crowdsap_median": 0.19}]}))
+    (d2 / "spoc_verification" / "v3_all103_verification_report.json").write_text(json.dumps({
+        "summary": {}, "targets": [
+            {"tic": 11, "roster_cadence_s": 20, "cadence_s": 120, "cadence_switched_from_roster": True},
+            {"tic": 22, "roster_cadence_s": 120, "cadence_s": 120, "cadence_switched_from_roster": False}]}))
     out = root / "shards"
     builder.main(["--d2-dir", str(d2), "--out-dir", str(out), "--exposure-stars", str(stars),
-                  "--catalog", str(catalog), "--n-nulls", "5"], expected_pool=4)
+                  "--catalog", str(catalog), "--n-nulls", "5",
+                  "--arms", "b,ctrl,a,ladder,phase,ampscale,dropout,cadence_alt,nulls,redilution"],
+                 expected_pool=4)
     return {"root": root, "out": out, "stars": stars, "d2": d2}
 
 
@@ -107,7 +119,12 @@ def test_publish_is_atomic_and_described(generation):
     assert out.exists() and not (out / "IN_PROGRESS").exists()
     assert not (out.parent / (out.name + ".staging")).exists()
     gen = json.loads((out / "generation_manifest.json").read_text())
-    assert gen["production"] is False and set(gen["non_production_reasons"]) == {"n_nulls", "pool"}
+    assert gen["production"] is False
+    assert {"n_nulls", "pool"} <= set(gen["non_production_reasons"])
+    assert any(r.startswith("targets") for r in gen["non_production_reasons"])
+    assert gen["expected_counts"]["B:nominal"] == 6 and gen["expected_counts"]["B:dropout"] == 1
+    assert gen["expected_counts"]["B:redilution"] == 1 and gen["redilution_tics"] == [11]
+    assert gen["expected_counts"]["B:cadence_alt"] == 1 and gen["cadence_alt_tics"] == [11]
     assert gen["n_targets_scheduled"] == 2 and gen["scheduled_tics"] == [11, 22]
     assert [e["tic"] for e in gen["excluded_targets"]] == [33]
     disk = {p.name.split(".csv")[0] for p in out.glob("*.csv.gz")}
@@ -143,17 +160,45 @@ def test_scenarios_are_explicit_and_dropout_is_separate(generation):
     dropout = manifest[manifest["scenario"] == "dropout"]
     assert dropout["tic"].tolist() == [11]            # TIC 22 has one retained mode
     assert dropout["dominant_dropped"].all() and (dropout["amp_scale"] == 1.0).all()
-    assert dropout["dropped_period_s"].tolist() == [500.0]
+    assert dropout["dropped_period_s"].tolist() == [500.0]      # largest RETAINED mode at 20 s
     assert (dropout["n_strata_scheduled"] == 1).all() and (dropout["template_k"] == 1).all()
     sid = dropout["campaign_id"].iloc[0]
     # layout AA TTTTTTTTTT K G R P S C 0 -> P=15, S=16, C=17, reserved=18
     assert sid[15] == "0" and sid[16] == str(AMP_SCALE_CODE_DROPOUT) and sid[17] == "0" and sid[18] == "0"
     expected = {SCENARIO_NOMINAL, "dropout", "phase_1", "phase_2", "ampscale_0.7", "ampscale_1.3",
-                "control", "gauss_null"} | {f"ladder_g{g}r{r}" for g in (1, 2, 3) for r in (1, 2, 3)
-                                      if (g, r) != (2, 2)}
+                "redilution", "cadence_alt", "control", "gauss_null"} | {
+                    f"ladder_g{g}r{r}" for g in (1, 2, 3) for r in (1, 2, 3) if (g, r) != (2, 2)}
     assert set(manifest["scenario"]) == expected
     injected = pd.read_csv(generation["out"] / "injected_modes.csv", dtype={"campaign_id": str})
-    assert set(injected.loc[injected["campaign_id"] == sid, "period_s"]) == {300.0, 700.0}
+    assert set(injected.loc[injected["campaign_id"] == sid, "period_s"]) == {150.0, 300.0, 700.0}
+    # cadence_alt (Amendment 3): TIC 11 only, K=1, 120 s, id differs from nominal K=1 at the
+    # LAST digit only, the 150-s mode is re-rejected at 120 s, dominance unchanged (500 s)
+    alt = manifest[manifest["scenario"] == "cadence_alt"]
+    assert alt["tic"].tolist() == [11] and (alt["template_k"] == 1).all()
+    assert (alt["cadence_code"] == 1).all() and (alt["cadence_s"] == 120.0).all() and (alt["arm"] == "B").all()
+    alt_id = alt["campaign_id"].iloc[0]
+    nominal_k1_id = manifest[(manifest["arm"] == "B") & (manifest["scenario"] == SCENARIO_NOMINAL)
+                             & (manifest["tic"] == 11) & (manifest["template_k"] == 1)]["campaign_id"].iloc[0]
+    assert [i for i in range(19) if alt_id[i] != nominal_k1_id[i]] == [18] and alt_id[18] == "1"
+    assert set(injected.loc[injected["campaign_id"] == alt_id, "period_s"]) == {300.0, 500.0, 700.0}
+    rejected = pd.read_csv(generation["out"] / "rejected_modes.csv", dtype={"campaign_id": str})
+    assert rejected.loc[rejected["campaign_id"] == alt_id, "period_s"].tolist() == [150.0]
+    assert int(alt["n_modes_injected"].iloc[0]) == 3 and int(alt["n_modes_rejected"].iloc[0]) == 1
+    nominal_k1 = manifest[manifest["campaign_id"] == nominal_k1_id].iloc[0]
+    assert int(nominal_k1["n_modes_injected"]) == 4 and (manifest.loc[manifest["campaign_id"] == nominal_k1_id, "cadence_s"] == 20.0).all()
+    # phases are shared between nominal and cadence_alt for the surviving modes
+    ph_nom = injected[injected["campaign_id"] == nominal_k1_id].set_index("period_s")["phase_rad"]
+    ph_alt = injected[injected["campaign_id"] == alt_id].set_index("period_s")["phase_rad"]
+    assert all(ph_alt[p] == ph_nom[p] for p in ph_alt.index)
+    # redilution: same id as nominal K=1 except the crowding digit; amplitudes x CROWDSAP
+    redil = manifest[manifest["scenario"] == "redilution"].iloc[0]
+    nominal_k1 = manifest[(manifest["arm"] == "B") & (manifest["scenario"] == SCENARIO_NOMINAL)
+                          & (manifest["tic"] == 11) & (manifest["template_k"] == 1)].iloc[0]
+    diff = [i for i in range(19) if redil.campaign_id[i] != nominal_k1.campaign_id[i]]
+    assert diff == [17] and redil.campaign_id[17] == "1" and redil.crowdsap == 0.19
+    amp_nom = injected[injected["campaign_id"] == nominal_k1.campaign_id].set_index("period_s")["amp_g_mag"]
+    amp_red = injected[injected["campaign_id"] == redil.campaign_id].set_index("period_s")["amp_g_mag"]
+    assert np.allclose(amp_red.sort_index().to_numpy(), 0.19 * amp_nom.sort_index().to_numpy(), rtol=1e-12)
 
 
 def test_epochs_round_trip_bitwise_through_frozen_loader(generation):
@@ -199,6 +244,59 @@ def test_truth_d2_consumes_default_manifest_and_refuses_tampering(generation, tm
         metrics.truth_d2(sentinel, pilot=True)
 
 
+@pytest.mark.parametrize("victim,edit", [
+    ("shard_manifest.csv", lambda t: t.replace(",dropout,", ",nominal,", 1)),
+    ("injected_modes.csv", lambda t: t.replace("\n", "\n", 1)[:-1] + "1\n"),   # perturb the last frequency digit
+    ("rejected_modes.csv", lambda t: t + "9200000000110220000,999.0,1.0,0.5\n"),
+    ("shard_index.txt", lambda t: t + "9200000000990220000\n"),
+    ("excluded_targets.csv", lambda t: t + "44,made up,1\n"),
+])
+def test_truth_tables_are_sha_bound(generation, tmp_path, victim, edit):
+    import shutil
+    copy = tmp_path / ("tamper_" + victim.replace(".", "_"))
+    shutil.copytree(generation["out"], copy)
+    text = (copy / victim).read_text()
+    (copy / victim).write_text(edit(text))
+    with pytest.raises(SystemExit):
+        metrics.truth_d2(copy, pilot=True)
+
+
+def test_manifest_semantics_are_enforced(generation):
+    manifest = metrics.load_d2_manifest(generation["out"])
+    validate_manifest_frame(manifest)                       # the real one passes
+    bad = manifest.copy()
+    bad.loc[bad.index[0], "scenario"] = "garbage"
+    with pytest.raises(SystemExit):
+        validate_manifest_frame(bad)
+    bad = manifest.copy()
+    idx = bad.index[(bad["arm"] == "B") & (bad["scenario"] == "dropout")][0]
+    bad.loc[idx, "dominant_dropped"] = False                 # dropout row claiming not dropped
+    with pytest.raises(SystemExit):
+        validate_manifest_frame(bad)
+    bad = manifest.copy()
+    idx = bad.index[(bad["arm"] == "B") & (bad["scenario"] == SCENARIO_NOMINAL)][0]
+    bad.loc[idx, "n_strata_scheduled"] = 99
+    with pytest.raises(SystemExit):
+        validate_manifest_frame(bad)
+    bad = manifest.copy()
+    idx = bad.index[bad["arm"] == "gauss_null"][0]
+    bad.loc[idx, "amp_scale"] = 1.0                          # a null with amplitude
+    with pytest.raises(SystemExit):
+        validate_manifest_frame(bad)
+
+
+def test_production_requires_the_full_arm_matrix():
+    full = set("b,ctrl,a,ladder,phase,ampscale,dropout,cadence_alt,nulls".split(","))
+    assert production_reasons(full, None, 1000, 928, 103) == []
+    assert production_reasons(full | {"redilution"}, None, 1000, 928, 103) == []
+    assert any("arms" in r for r in production_reasons({"nulls"}, None, 1000, 928, 103))
+    assert any("arms" in r for r in production_reasons(full - {"ctrl"}, None, 1000, 928, 103))
+    assert "limit" in production_reasons(full, 150, 1000, 928, 103)
+    assert "n_nulls" in production_reasons(full, None, 999, 928, 103)
+    assert "pool" in production_reasons(full, None, 1000, 927, 103)
+    assert any(r.startswith("targets") for r in production_reasons(full, None, 1000, 928, 102))
+
+
 def test_cluster_bootstrap_keeps_scenarios_apart_and_uses_scheduled_strata(generation):
     truth, gen = metrics.truth_d2(generation["out"], pilot=True)
     per_star = truth.copy()
@@ -219,10 +317,19 @@ def test_cluster_bootstrap_keeps_scenarios_apart_and_uses_scheduled_strata(gener
     assert nominal["n_strata_scheduled"].iloc[0] == 3
     assert abs(nominal["p"].iloc[0] - (2 / 3 + 0) / 2) < 1e-12      # (1/3)*2 for TIC 11, 0 for TIC 22
     assert not nominal["confirmatory"].iloc[0]                        # pilot
+    # non-pilot: membership semantics — nominal-B DETECTION rows are confirmatory
+    # (both denominators), frequency-recovery rows never are
+    table_np = metrics.d2_cluster_bootstrap(per_star, gen["scheduled_tics"], pilot=False)
+    nb = table_np[(table_np["arm"] == "B") & (table_np["scenario"] == SCENARIO_NOMINAL)]
+    assert nb.loc[nb["endpoint"] == "detection", "confirmatory"].all()
+    assert not nb.loc[nb["endpoint"] == "freq_recovery", "confirmatory"].any()
+    assert not table_np.loc[table_np["scenario"] == "dropout", "confirmatory"].any()
     dropout = table[(table["scenario"] == "dropout") & (table["endpoint"] == "detection")
                     & (table["denominator"] == "eligible")]
     assert len(dropout) == 1 and dropout["n_strata_scheduled"].iloc[0] == 1
     assert dropout["p"].iloc[0] == 0.0 and dropout["n_targets_in_scenario"].iloc[0] == 1
+    alt = table[(table["scenario"] == "cadence_alt") & (table["endpoint"] == "detection")]
+    assert len(alt) == 2 and (alt["cadence_code"] == 1).all() and not alt["confirmatory"].any()
     assert {"arm", "scenario", "ratio_g", "ratio_rg", "phase_draw", "amp_scale",
             "dominant_dropped"} <= set(table.columns)
 

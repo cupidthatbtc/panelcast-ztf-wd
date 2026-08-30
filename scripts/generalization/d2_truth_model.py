@@ -54,6 +54,7 @@ import math
 from dataclasses import dataclass, field
 
 import numpy as np
+import pandas as pd
 
 PPT_TO_FRAC = 1.0e-3
 FRAC_TO_MAG = 1.0857
@@ -80,8 +81,16 @@ AMP_SCALE_CODES = {1.0: 0, 0.7: 1, 1.3: 2}
 AMP_SCALE_CODE_DROPOUT = 3          # amp_scale 1.0 with the dominant mode dropped
 CROWD_CODE_NONE = 0
 CROWD_CODE_REDILUTION = 1
+# Amendment 3 (G3 round-3 ADOPT-A): trailing id digit D = cadence code;
+# cadence_alt = the conservative pure-120-s endpoint for targets whose
+# published solution mixes 20-s and 120-s sectors (never pooled with nominal)
+CADENCE_CODE_NOMINAL = 0
+CADENCE_CODE_ALT = 1
+CADENCE_ALT_S = 120.0
+CADENCES_S = (20.0, 120.0)
 
 SCENARIO_NOMINAL = "nominal"
+SCENARIO_CADENCE_ALT = "cadence_alt"
 SCENARIO_CONTROL = "control"
 SCENARIO_NULL = "gauss_null"   # never the token "null": pandas parses it as NaN
 SCENARIO_DROPOUT = "dropout"
@@ -105,6 +114,8 @@ MANIFEST_COLUMNS: tuple[tuple[str, str], ...] = (
     ("dominant_dropped", "bool"),
     ("dropped_period_s", "float"),  # nan unless dominant_dropped
     ("crowdsap", "float"),          # nan unless redilution scenario
+    ("cadence_code", "int"),        # 0 nominal rule (20 iff any f sector) | 1 cadence_alt (120 s)
+    ("cadence_s", "float"),         # integration time used by the truth model; 0.0 ctrl/null
     ("n_strata_scheduled", "int"),  # 3 nominal A/B, 1 sensitivity scenarios, 0 ctrl/null
     ("match", "str"),               # tol_0.25 | tol_0.5 | nearest | ""
     ("control_campaign_id", "str"), # paired control for arm B; "" otherwise
@@ -114,15 +125,35 @@ MANIFEST_COLUMNS: tuple[tuple[str, str], ...] = (
     ("shard_sha256", "str"),
 )
 MANIFEST_COLUMN_NAMES = tuple(name for name, _ in MANIFEST_COLUMNS)
+ARMS = ("A", "B", "ctrl", "gauss_null")
+# the production run matrix (plan, D2 "Run matrix"): every arm below must be
+# scheduled for a generation to be marked production (G3 methods round-2 new
+# BLOCKING finding); 'redilution' is the prespecified stretch variant
+MANDATORY_PRODUCTION_ARMS = ("b", "ctrl", "a", "ladder", "phase", "ampscale", "dropout",
+                             "cadence_alt", "nulls")
+MIXED_CADENCE_TARGETS_PRODUCTION = 33   # SPOC v3: targets whose solution mixes 20-s and 120-s sectors
+TARGETS_PRODUCTION = 103
+POOL_SIZE_PRODUCTION = 928
+N_NULLS_PRODUCTION = 1000
+# the code that determines shard BYTES; the generation id is derived from
+# these files' SHAs (not the whole campaign snapshot) so later metrics/runner
+# fixes do not orphan an already-run generation
+D2_GENERATION_CODE = ("scripts/generalization/build_d2_shards.py",
+                      "scripts/generalization/d2_truth_model.py",
+                      "scripts/generalization/frozen_api.py")
+AMP_SCALES = (1.0, 0.7, 1.3)
 INJECTED_MODE_COLUMNS = ("campaign_id", "period_s", "frequency_per_day", "amp_tess_ppt",
                          "tess_sinc", "ztf_sinc", "amp_g_mag", "amp_r_mag", "phase_rad")
 REJECTED_MODE_COLUMNS = ("campaign_id", "period_s", "amp_ppt", "tess_sinc")
 
 
 def scenario_code(ratio_g: float, ratio_rg: float, phase_draw: int, amp_scale: float,
-                  dominant_dropped: bool, crowd_code: int = CROWD_CODE_NONE) -> str:
+                  dominant_dropped: bool, crowd_code: int = CROWD_CODE_NONE,
+                  cadence_code: int = CADENCE_CODE_NOMINAL) -> str:
     """Immutable scenario identity (G3 methods finding 2)."""
     nominal_ratios = ratio_g == NOMINAL_G and ratio_rg == NOMINAL_RG
+    if cadence_code == CADENCE_CODE_ALT:
+        return SCENARIO_CADENCE_ALT
     if crowd_code == CROWD_CODE_REDILUTION:
         return "redilution"
     if dominant_dropped:
@@ -282,3 +313,193 @@ def build_truth_model(
         modes=tuple(modes),
         rejected=tuple(rejected),
     )
+
+
+# ------------------------------------------------------- ids + row semantics
+
+def all_scenarios() -> set[str]:
+    ladder = {f"ladder_g{gi}r{ri}" for gi in (1, 2, 3) for ri in (1, 2, 3)} - {"ladder_g2r2"}
+    return ({SCENARIO_NOMINAL, SCENARIO_DROPOUT, "redilution", SCENARIO_CADENCE_ALT,
+             "phase_1", "phase_2", "ampscale_0.7", "ampscale_1.3",
+             SCENARIO_CONTROL, SCENARIO_NULL} | ladder)
+
+
+def campaign_id(arm_prefix: str, tic: int, k: int, g_idx: int, r_idx: int,
+                phase_draw: int = 0, amp_code: int = 0,
+                crowd_code: int = CROWD_CODE_NONE,
+                cadence_code: int = CADENCE_CODE_NOMINAL) -> str:
+    """Layout AA TTTTTTTTTT K G R P S C D (D = cadence code, Amendment 3)."""
+    sid = (f"{arm_prefix}{tic:010d}{k}{g_idx}{r_idx}"
+           f"{phase_draw}{amp_code}{crowd_code}{cadence_code}")
+    if len(sid) != 19 or not sid.isdigit():
+        raise ValueError(f"malformed campaign id {sid}")
+    return sid
+
+
+def control_id(pool_index: int) -> str:
+    return "95" + str(int(pool_index)).zfill(17)
+
+
+def null_id(serial: int) -> str:
+    return "94" + str(int(serial)).zfill(17)
+
+
+def production_reasons(arms: set[str], limit, n_nulls: int, expected_pool: int,
+                       n_targets_input: int) -> list[str]:
+    """Empty list == production generation. Every reason is a hard fact about
+    the arguments, never about the outcome."""
+    reasons = []
+    missing = sorted(set(MANDATORY_PRODUCTION_ARMS) - set(arms))
+    if missing:
+        reasons.append(f"arms missing {missing}")
+    if limit is not None:
+        reasons.append("limit")
+    if n_nulls != N_NULLS_PRODUCTION:
+        reasons.append("n_nulls")
+    if expected_pool != POOL_SIZE_PRODUCTION:
+        reasons.append("pool")
+    if n_targets_input != TARGETS_PRODUCTION:
+        reasons.append(f"targets {n_targets_input} != {TARGETS_PRODUCTION}")
+    return reasons
+
+
+def _row_problem(r) -> str:
+    """Semantic invariants of ONE manifest row (G3 methods round-2 new MAJOR):
+    enumerations, per-arm defaults, scenario recomputed from its fields, and
+    the campaign id recomputed from its fields."""
+    if r.arm not in ARMS:
+        return f"arm {r.arm!r}"
+    if r.scenario not in all_scenarios():
+        return f"scenario {r.scenario!r}"
+    if not (isinstance(r.shard_sha256, str) and len(r.shard_sha256) == 64):
+        return "shard_sha256"
+    if r.arm in ("A", "B"):
+        if r.tic <= 0 or r.template_k not in (0, 1, 2) or r.pool_index < 0:
+            return "tic/template_k/pool_index"
+        if r.ratio_g not in BANDPASS_LADDER_G or r.ratio_rg not in BANDPASS_LADDER_RG:
+            return "ratios"
+        if r.phase_draw not in (0, 1, 2) or r.amp_scale not in AMP_SCALES:
+            return "phase_draw/amp_scale"
+        crowd = CROWD_CODE_REDILUTION if math.isfinite(r.crowdsap) else CROWD_CODE_NONE
+        if r.cadence_code not in (CADENCE_CODE_NOMINAL, CADENCE_CODE_ALT) or r.cadence_s not in CADENCES_S:
+            return "cadence_code/cadence_s"
+        if r.cadence_code == CADENCE_CODE_ALT and (
+                r.cadence_s != CADENCE_ALT_S or r.arm != "B" or crowd != CROWD_CODE_NONE
+                or bool(r.dominant_dropped) or r.phase_draw != 0 or r.amp_scale != 1.0
+                or r.ratio_g != NOMINAL_G or r.ratio_rg != NOMINAL_RG):
+            return "cadence_alt must be arm B, nominal ratios/phase/scale, no dropout/crowding, 120 s"
+        if scenario_code(r.ratio_g, r.ratio_rg, r.phase_draw, r.amp_scale,
+                         bool(r.dominant_dropped), crowd, r.cadence_code) != r.scenario:
+            return "scenario inconsistent with its fields"
+        if bool(r.dominant_dropped) != math.isfinite(r.dropped_period_s):
+            return "dropped_period_s"
+        if r.n_strata_scheduled != (3 if r.scenario == SCENARIO_NOMINAL else 1):
+            return "n_strata_scheduled"
+        if r.scenario != SCENARIO_NOMINAL and r.template_k != 1:
+            return "sensitivity scenarios run on the median window only"
+        if r.arm == "A" and r.scenario != SCENARIO_NOMINAL:
+            return "arm A is nominal-only"
+        if (r.arm == "B") != bool(r.control_campaign_id):
+            return "control_campaign_id"
+        if r.arm == "B" and r.control_campaign_id != control_id(r.pool_index):
+            return "control_campaign_id value"
+        if r.null_serial != -1 or r.n_modes_injected < 1:
+            return "null_serial/n_modes_injected"
+        amp_code = AMP_SCALE_CODE_DROPOUT if r.dominant_dropped else AMP_SCALE_CODES[r.amp_scale]
+        expected = campaign_id("92" if r.arm == "B" else "93", int(r.tic), int(r.template_k),
+                               BANDPASS_LADDER_G.index(r.ratio_g) + 1,
+                               BANDPASS_LADDER_RG.index(r.ratio_rg) + 1,
+                               int(r.phase_draw), amp_code, crowd, int(r.cadence_code))
+        if r.campaign_id != expected:
+            return f"campaign_id {r.campaign_id} != {expected}"
+        return ""
+    # controls and Gaussian nulls
+    if r.tic != 0 or r.template_k != -1 or r.pool_index < 0:
+        return "ctrl/null tic/template_k/pool_index"
+    if r.ratio_g != 0.0 or r.ratio_rg != 0.0 or r.phase_draw != 0 or bool(r.dominant_dropped):
+        return "ctrl/null defaults"
+    if r.n_strata_scheduled != 0 or r.n_modes_injected != 0 or r.n_modes_rejected != 0:
+        return "ctrl/null counts"
+    if r.control_campaign_id != "" or math.isfinite(r.crowdsap) or math.isfinite(r.dropped_period_s):
+        return "ctrl/null empties"
+    if r.cadence_code != 0 or r.cadence_s != 0.0:
+        return "ctrl/null cadence fields"
+    if r.arm == "ctrl":
+        if r.scenario != SCENARIO_CONTROL or r.amp_scale != 1.0 or r.null_serial != -1:
+            return "control fields"
+        if r.campaign_id != control_id(r.pool_index):
+            return "control id"
+    else:
+        if r.scenario != SCENARIO_NULL or r.amp_scale != 0.0 or r.null_serial < 0:
+            return "null fields"
+        if r.campaign_id != null_id(r.null_serial):
+            return "null id"
+    return ""
+
+
+def validate_manifest_frame(frame: pd.DataFrame) -> None:
+    """Shared by the builder (before publishing) and the metrics reader
+    (before consuming): schema, uniqueness, typed columns, and every row's
+    semantic invariants. Raises SystemExit with the first offending row."""
+    if list(frame.columns) != list(MANIFEST_COLUMN_NAMES):
+        raise SystemExit("manifest columns deviate from MANIFEST_COLUMNS")
+    if frame.empty:
+        raise SystemExit("empty manifest")
+    if frame["campaign_id"].duplicated().any():
+        dup = frame.loc[frame["campaign_id"].duplicated(), "campaign_id"].head(3).tolist()
+        raise SystemExit(f"duplicate campaign ids {dup}")
+    for name, kind in MANIFEST_COLUMNS:
+        if kind in ("int", "bool") and frame[name].isna().any():
+            raise SystemExit(f"manifest column {name} has NaN")
+    for r in frame.itertuples(index=False):
+        problem = _row_problem(r)
+        if problem:
+            raise SystemExit(f"manifest row {r.campaign_id}: {problem}")
+    nulls = frame[frame["arm"] == SCENARIO_NULL]
+    if not nulls.empty and sorted(nulls["null_serial"].tolist()) != list(range(len(nulls))):
+        raise SystemExit("null serials are not exactly 0..N-1")
+
+
+def expected_counts(frame: pd.DataFrame, scheduled_tics: list[int],
+                    dropout_eligible: list[int], redilution_tics: list[int],
+                    n_nulls: int, arms: set[str],
+                    cadence_alt_tics: list[int] | None = None) -> dict[str, int]:
+    """The run-matrix counts a generation MUST realize, from the schedule
+    alone (never from the outcome); asserted by builder and metrics."""
+    n = len(scheduled_tics)
+    counts: dict[str, int] = {}
+    if "b" in arms:
+        counts["B:nominal"] = 3 * n
+    if "a" in arms:
+        counts["A:nominal"] = 3 * n
+    if "ladder" in arms:
+        for gi in (1, 2, 3):
+            for ri in (1, 2, 3):
+                if (gi, ri) != (2, 2):
+                    counts[f"B:ladder_g{gi}r{ri}"] = n
+    if "phase" in arms:
+        counts["B:phase_1"] = n
+        counts["B:phase_2"] = n
+    if "ampscale" in arms:
+        counts["B:ampscale_0.7"] = n
+        counts["B:ampscale_1.3"] = n
+    if "dropout" in arms:
+        counts["B:dropout"] = len(dropout_eligible)
+    if "redilution" in arms:
+        counts["B:redilution"] = len(redilution_tics)
+    if "cadence_alt" in arms:
+        counts["B:cadence_alt"] = len(cadence_alt_tics or [])
+    if "ctrl" in arms:
+        counts["ctrl:control"] = int(frame.loc[frame["arm"] == "B", "template_source_id"].nunique())
+    if "nulls" in arms:
+        counts["gauss_null:gauss_null"] = n_nulls
+    return counts
+
+
+def assert_counts(frame: pd.DataFrame, counts: dict[str, int]) -> None:
+    realized = frame.groupby(["arm", "scenario"]).size()
+    realized = {f"{a}:{sc}": int(v) for (a, sc), v in realized.items()}
+    if realized != counts:
+        missing = {k: v for k, v in counts.items() if realized.get(k) != v}
+        extra = {k: v for k, v in realized.items() if k not in counts}
+        raise SystemExit(f"run matrix mismatch: expected-but-different {missing}; unexpected {extra}")

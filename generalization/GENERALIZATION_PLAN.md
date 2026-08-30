@@ -58,7 +58,8 @@ for the frozen seed convention. D2 arm layout `AA TTTTTTTTTT K GR PS C0`:
 K template index 0–2; G/R ladder indices 1–3 (22 = nominal); P phase draw
 0–2; S amplitude-scale code 0 = 1.0, 1 = 0.7, 2 = 1.3, 3 = dominant-mode
 dropout (scale 1.0); C crowding code 0 = PDCSAP as published, 1 =
-SAP-equivalent re-dilution; trailing digit reserved (Amendment 2).
+SAP-equivalent re-dilution (Amendment 2); D cadence code 0 = frozen rule,
+1 = `cadence_alt` pure-120-s endpoint (Amendment 3).
 
 ### Replay gate (blocks everything)
 
@@ -236,6 +237,24 @@ No re-run; campaign metrics re-read the published per-star JSONs.
   (count set by crossmatch yield); SAP-equivalent re-dilution variant only
   for the SPOC verification-arm stars (CROWDSAP comes with the downloads).
   Every sensitivity contrast uses the common-subset rule (METRICS_SPEC).
+- Amendment 3 (mixed-cadence endpoint sensitivity, G3 round-3 ADOPT-A): the
+  frozen nominal cadence precedence remains `cadence_s = 20` whenever the
+  chosen published solution contains any `f` sector; because the completed
+  SPOC v3 verification identifies 33 such mixed 20-s/120-s targets, schedule
+  for each exactly one additional arm-B, median-window (K=1) `cadence_alt`
+  sensitivity shard at the nominal bandpass ratios (1.7/0.80), base phase
+  draw, amplitude scale 1.0, PDCSAP crowding, and no dominant-mode dropout,
+  evaluating the complete truth model with `cadence_s = 120` and reapplying
+  the signed-sinc |sinc| ≥ 0.3 rule (three modes on TIC 55650407 are thereby
+  rejected); `cadence_alt` is a conservative pure-120-s endpoint, not an
+  estimate of the stitched solution's effective cadence (the stitched bias is
+  S_20/S_mix, ~1.1–1.4 under plausible fit weightings, not the ~1.9 endpoint
+  contrast at 200 s), is compared with nominal on the same 33-target K=1
+  subset using common bootstrap draws, never enters nominal P4 or is pooled
+  with nominal surfaces, retains the scenario-invariant published-amplitude
+  coordinate, has its own immutable scenario code and final campaign-id
+  digit, and adds exactly 33 shards. Dominance is scenario-local; dropout
+  stays a nominal-cadence scenario (no dropout × cadence_alt crossing).
 - Generation discipline (Amendment 2, G3 methods findings 1–8): every
   manifest row of every arm carries the fixed typed schema
   (d2_truth_model.MANIFEST_COLUMNS) including an explicit immutable

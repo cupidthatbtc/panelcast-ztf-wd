@@ -68,9 +68,49 @@ Frozen document SHA-256 after Amendment 2:
   c1909fa231c790d5f01f42772d6afec6544d8a001ab1b5a1e2de3bf032c9ee95
 
 Code: scripts/generalization/{d2_truth_model,build_d2_shards,
-metrics_generalization,run_generalization_ls}.py; tests: 31 passing
-(tests/test_d2_truth_model.py, tests/test_d2_shards_contract.py — the latter
-runs the real builder and the real metrics readers on a miniature pool).
-D1 regression of the patched metrics program: 11/13, 9/13, 13/13 unchanged.
-Status: PENDING G3 round-2 verdicts (sol numerics + methods); the entry is
-ratified only when both return APPROVE.
+metrics_generalization,run_generalization_ls}.py; tests: 31 passing across
+the suite at that commit (10 frozen-constant + 13 truth-model + 8 contract;
+the contract tests run the real builder and the real metrics readers on a
+miniature pool). D1 regression of the patched metrics program: 11/13, 9/13,
+13/13 unchanged.
+Round-2 verdicts: numerics APPROVE-WITH-CHANGES, methods REJECT (residuals:
+production must require the full arm matrix; manifest row semantics; truth-
+table SHA enforcement; completion-table + full sidecar binding; primary D2
+aggregates must not pool scenarios; `confirmatory` = membership semantics;
+sensitivity common-subset rows). All addressed in the round-3 commit
+together with Amendment 3 (below): shared `validate_manifest_frame` (per-row
+invariants incl. scenario and campaign-id recomputed from fields),
+`production_reasons` + `expected_counts`/`assert_counts` (run matrix asserted
+from the schedule in builder AND metrics), generation id over the shard-
+determining code only, generation output SHAs + basis reproduction + frozen/
+code identity enforced before any truth file is read, completion.csv
+required and cross-checked (pilot flag re-derived), sidecars checked on pass
+set/env/frozen/campaign/generation, D2 primary aggregates = nominal arm B,
+`confirmatory` = prespecified-analysis membership (P4 detection rows, P5 with
+1000 completed), sensitivity rows carry the nominal K=1 rate on each
+scenario's exact target subset. Status: PENDING G3 round-3 verdicts.
+
+## AMENDMENT 3 — 2026-08-30 (mixed-cadence endpoint sensitivity; G3 round-3 ADOPT-A)
+
+Trigger: the completed SPOC verification arm (v3, all 103 targets) shows that
+33 targets' published solutions combine 20-s ('f') and 120-s sectors, so the
+frozen rule `cadence_s = 20 iff any f sector` under-corrects their short-
+period modes (U = S_20/S_mix; endpoint contrast 1.95 at 200 s, stitched bias
+~1.1–1.4). Adjudication: generalization/reviews/G3/sol_numerics_r3_cadence.md
+(ADOPT-A). Change: the frozen nominal rule is UNCHANGED; a `cadence_alt`
+sensitivity scenario (one K=1 arm-B shard per mixed target at 120 s, own
+scenario code and final id digit, never pooled with nominal, common-subset
+contrast) is added to the mandatory production matrix (33 shards). Full
+text: GENERALIZATION_PLAN.md, D2 run matrix ("Amendment 3"). No campaign L-S
+run has been executed.
+
+Frozen document SHA-256 after Amendment 3:
+
+- generalization/METRICS_SPEC.md
+  6986e2fce033369d72efac9b08d257894446c2b71522a1f707587fe6cc6c9365
+- generalization/GENERALIZATION_PLAN.md
+  1f7153a7f473e6f1300221fafa4a5b40f97165a45202f4dedab4fb5d5640dc73
+
+Tests: 38 passing (10 + 14 + 14). Status: PENDING G3 round-3 verdicts
+(numerics + methods); Amendments 2 and 3 are ratified together when both
+return APPROVE.

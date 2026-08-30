@@ -196,7 +196,9 @@ def main() -> None:
     parser.add_argument("--stars-file", type=Path, default=None,
                         help="optional newline-separated campaign_id subset (a shard)")
     parser.add_argument("--limit", type=int, default=None,
-                        help="pilot mode: first N stars only")
+                        help="DEBUG subset: first N shard ids in lexicographic order — NOT a "
+                             "representative pilot (use --stars-file with the builder's "
+                             "pilot_shard_index.txt); marks the run pilot=true")
     parser.add_argument("--expect-count", type=int, default=None,
                         help="assert the shard dir holds exactly N shards "
                              "(stale-directory guard)")
