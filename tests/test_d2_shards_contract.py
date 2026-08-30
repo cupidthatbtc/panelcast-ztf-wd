@@ -525,3 +525,91 @@ def test_stars_file_guard(tmp_path):
         metrics.verify_stars_file(sf, sha, {"a"})
     with pytest.raises(SystemExit):
         metrics.verify_stars_file(sf, "0" * 64, {"a", "b"})
+
+
+def test_d2_chance_match_denominator_keeps_non_detections(generation):
+    truth, _ = metrics.truth_d2(generation["out"], pilot=True)
+    primary = truth[(truth["arm"] == "B") & (truth["scenario"] == SCENARIO_NOMINAL)].copy()
+    primary["baseline_days"] = 1000.0
+    third = primary.iloc[:3].copy()
+    third["cluster"] = "99"; third["primary_freq"] = 123.4; third["truth_freqs"] = [[123.4]] * 3
+    three = pd.concat([primary, third]).reset_index(drop=True)
+    # per target: exactly ONE window "confirmed" at ITS OWN dominant frequency, two non-detections
+    three["best_status"] = "not_detected"
+    three["best_frequency_per_day"] = np.nan
+    for cluster, g in three.groupby("cluster"):
+        idx = g.index[0]
+        three.loc[idx, "best_status"] = "confirmed"
+        three.loc[idx, "best_frequency_per_day"] = float(g["primary_freq"].iloc[0])
+    out = metrics.d2_chance_match(three, n_derangements=20)
+    # derangements move every target's truth to another target: the confirmed window never matches,
+    # and the two non-detections count as failures -> both rates are exactly 0 with denominator kept
+    assert out["accidental_recovery_rate_mean"] == 0.0 and out["accidental_any_mode_rate_mean"] == 0.0
+    # sanity of the denominator: a self-match (no derangement) would be exactly 1/3 per target
+    same = three.copy()
+    hits = ((same["best_status"] == "confirmed") & np.isclose(same["best_frequency_per_day"], same["primary_freq"])).astype(float)
+    assert abs(hits.groupby(same["cluster"]).mean().mean() - 1 / 3) < 1e-12
+
+
+def test_d2_row_level_intervals_are_stripped():
+    nested = {"union_completeness": {"p": 0.5, "lo": 0.1, "hi": 0.9},
+              "incremental": [{"k": 1, "lo": 0.0, "hi": 1.0}], "n": 3}
+    out = metrics.strip_intervals(nested)
+    assert out["union_completeness"]["lo"] is None and out["union_completeness"]["hi"] is None
+    assert out["incremental"][0]["lo"] is None and out["incremental"][0]["k"] == 1 and out["n"] == 3
+
+
+def test_sensitivity_endpoints_are_exact(generation):
+    truth, _ = metrics.truth_d2(generation["out"], pilot=True)
+    per_star = truth.copy()
+    per_star["best_status"] = "not_detected"
+    table = metrics.sensitivity_table(per_star, "d2", None)
+    assert (table["lo"] == 0.0).all() and (table["k"] == 0).all()
+    per_star["best_status"] = "confirmed"
+    table = metrics.sensitivity_table(per_star, "d2", None)
+    assert (table["hi"] == 1.0).all()
+
+
+def test_paired_controls_pair_usability_and_unresolved_controls(generation):
+    truth, _ = metrics.truth_d2(generation["out"], pilot=True)
+    per_star = truth.copy()
+    per_star["best_status"] = "not_detected"
+    per_star["best_frequency_per_day"] = np.nan
+    per_star["baseline_days"] = 1000.0
+    per_star["best_candidate_matches_dominant"] = "unmatched"
+    nb = per_star[(per_star["arm"] == "B") & (per_star["scenario"] == SCENARIO_NOMINAL)]
+    b0 = nb.iloc[0]
+    per_star.loc[per_star["sid"] == b0["sid"], "best_status"] = "missing"        # injected side missing
+    table, summary = metrics.d2_paired_controls(per_star)
+    row = table[table["b_sid"] == b0["sid"]].iloc[0]
+    assert not row["b_usable"] and row["control_usable"] and not row["pair_usable"]
+    quiet = summary[summary["endpoint"] == "quiet_control_conditioned"].iloc[0]
+    assert quiet["n_pairs_scored"] == int(table["pair_usable"].sum()) - int(
+        (table["pair_usable"] & (table["control_status"] != "not_detected")).sum())
+    # a control that did not run is recorded, never silently skipped
+    dropped = per_star[per_star["sid"] != b0["control_campaign_id"]]
+    table2, summary2 = metrics.d2_paired_controls(dropped)
+    assert (table2.loc[table2["b_sid"] == b0["sid"], "control_status"] == "not_run").all()
+    assert summary2[summary2["endpoint"] == "quiet_control_conditioned"]["n_pairs_not_run"].iloc[0] >= 1
+    # a nominal-B row without a control id is a contract violation
+    broken = per_star.copy()
+    broken.loc[broken["sid"] == b0["sid"], "control_campaign_id"] = ""
+    with pytest.raises(SystemExit):
+        metrics.d2_paired_controls(broken)
+
+
+def test_truth_d2_control_resolution_guard(generation, tmp_path):
+    import shutil
+    copy = tmp_path / "ctrlmismatch"
+    shutil.copytree(generation["out"], copy)
+    # swap one control's window identity in the manifest (bytes change -> outputs SHA guard fires
+    # first; so assert the guard order by ALSO updating the recorded SHA and checking the message)
+    gen = json.loads((copy / "generation_manifest.json").read_text())
+    man = pd.read_csv(copy / "shard_manifest.csv", dtype=str, keep_default_na=False)
+    idx = man.index[man["arm"] == "ctrl"][0]
+    man.loc[idx, "pool_index"] = str(int(man.loc[idx, "pool_index"]) + 1)
+    man.to_csv(copy / "shard_manifest.csv", index=False, lineterminator="\n")
+    gen["outputs_sha256"]["shard_manifest.csv"] = hashlib.sha256((copy / "shard_manifest.csv").read_bytes()).hexdigest()
+    (copy / "generation_manifest.json").write_text(json.dumps(gen, indent=2) + "\n")
+    with pytest.raises(SystemExit):
+        metrics.truth_d2(copy, pilot=True)

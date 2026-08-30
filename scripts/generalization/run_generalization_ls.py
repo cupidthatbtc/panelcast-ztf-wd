@@ -299,11 +299,15 @@ def main() -> None:
         try:
             head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=REPO_ROOT, capture_output=True,
                                   text=True, timeout=30).stdout.strip()
-            dirty = subprocess.run(["git", "status", "--porcelain", "--untracked-files=no"], cwd=REPO_ROOT,
-                                   capture_output=True, text=True, timeout=30).stdout.strip()
-            return {"git_commit": head, "git_dirty": bool(dirty)}
+            tracked = subprocess.run(["git", "status", "--porcelain", "--untracked-files=no"], cwd=REPO_ROOT,
+                                     capture_output=True, text=True, timeout=30).stdout.strip()
+            untracked = subprocess.run(["git", "status", "--porcelain", "--untracked-files=all"], cwd=REPO_ROOT,
+                                       capture_output=True, text=True, timeout=60).stdout.splitlines()
+            return {"git_commit": head, "git_tracked_dirty": bool(tracked),
+                    "git_untracked_count": sum(1 for line in untracked if line.startswith("??"))}
         except Exception as exc:  # noqa: BLE001
-            return {"git_commit": "", "git_dirty": None, "git_error": repr(exc)}
+            return {"git_commit": "", "git_tracked_dirty": None, "git_untracked_count": None,
+                    "git_error": repr(exc)}
     failures: dict[str, str] = {}
     completed_now = 0
 
@@ -404,8 +408,9 @@ def main() -> None:
         completion_rows.append({
             "source_id": source_id, "status": status,
             "result_sha256": shard_sha256(result_path) if result_path.exists() else "",
+            "provenance_sha256": shard_sha256(prov_file) if prov_file.exists() else "",
         })
-    pd.DataFrame(completion_rows, columns=["source_id", "status", "result_sha256"]).to_csv(
+    pd.DataFrame(completion_rows, columns=["source_id", "status", "result_sha256", "provenance_sha256"]).to_csv(
         args.out_dir / "completion.csv", index=False, lineterminator="\n")
     if campaign_file_shas() != campaign_shas_start:
         raise SystemExit("campaign code changed mid-run — results void")

@@ -363,7 +363,25 @@ def truth_d2(shards_dir: Path, pilot: bool = False) -> tuple[pd.DataFrame, dict]
             raise SystemExit("nominal arm-B rows are not exactly K={0,1,2} for every scheduled target")
         if len(scheduled) != int(generation.get("n_targets_scheduled", -1)):
             raise SystemExit("scheduled target list disagrees with the generation manifest")
-    from d2_truth_model import check_cadence_alt_schedule
+    from d2_truth_model import check_cadence_alt_schedule, check_wg_strata
+    # Amendment 4 guards re-run by the scorer: strict W_g strata (production
+    # refuses; otherwise the recorded violation list must be reproduced) and
+    # every nominal-B control id resolving to exactly one control row of the
+    # same window (template id, pool index, W_g)
+    violations = check_wg_strata(manifest, bool(generation.get("production")))
+    if violations != list(generation.get("wg_strata_violations", [])):
+        raise SystemExit("W_g strata violations differ from the generation record")
+    ctrl_rows = manifest[manifest["arm"] == "ctrl"].set_index("campaign_id")
+    if ctrl_rows.index.duplicated().any():
+        raise SystemExit("duplicate control ids")
+    nominal_b_rows = manifest[(manifest["arm"] == "B") & (manifest["scenario"] == SCENARIO_NOMINAL)]
+    for row in nominal_b_rows.itertuples(index=False):
+        if row.control_campaign_id not in ctrl_rows.index:
+            raise SystemExit(f"{row.campaign_id}: control {row.control_campaign_id} absent from the generation")
+        c = ctrl_rows.loc[row.control_campaign_id]
+        if (c["template_source_id"] != row.template_source_id or int(c["pool_index"]) != int(row.pool_index)
+                or int(c["template_wg_contrasts"]) != int(row.template_wg_contrasts)):
+            raise SystemExit(f"{row.campaign_id}: paired control is not the same window")
     if "cadence_alt" in set(args_rec.get("arms", [])):
         alt_sched = [int(t) for t in generation.get("cadence_alt_tics", [])]
         check_cadence_alt_schedule([int(t) for t in generation.get("mixed_cadence_tics_from_v3", [])],
@@ -588,7 +606,8 @@ def d2_cluster_bootstrap(per_star: pd.DataFrame, scheduled_tics: list[int] | Non
     manifest `scenario` code plus every grouping key (G3 methods finding 2);
     the eligible denominator is the scenario's SCHEDULED strata count
     (3 nominal, 1 single-window sensitivities), never a fixed 3; the nominal
-    arm-B scenario is the ONLY confirmatory P4 row, and only outside pilots."""
+    arm-B recovery rows are the prespecified primary P4 (outside pilots); no
+    P4 row is a confirmatory decision (P5 is)."""
     if "arm" not in per_star or "scenario" not in per_star:
         return pd.DataFrame(), pd.DataFrame()
     frame = per_star[per_star["arm"].isin(["A", "B"])]
@@ -939,7 +958,9 @@ def d2_chance_match(primary: pd.DataFrame, n_derangements: int = CHANCE_MATCH_DE
     (all K replicates of a target move together), numerators aligned with the
     endpoints: confirmed AND direct match to the permuted target's dominant
     mode; confirmed AND direct match to any of its injected modes."""
-    rows = primary[primary["best_frequency_per_day"].notna() & primary["freq_scorable"]]
+    # every nominal arm-B row and every target stays in the denominator; a
+    # missing/non-finite candidate frequency is a failure (G4 r2 stats MAJOR)
+    rows = primary[primary["freq_scorable"]]
     targets = sorted(rows["cluster"].unique())
     if len(targets) < 3:
         return {"derangements": 0, "note": "fewer than 3 targets"}
@@ -950,9 +971,12 @@ def d2_chance_match(primary: pd.DataFrame, n_derangements: int = CHANCE_MATCH_DE
     modes = np.full((len(targets), width), np.nan)
     for i, x in enumerate(lists):
         modes[i, :len(x)] = x
-    f = rows["best_frequency_per_day"].to_numpy(dtype=float)
-    tol = 1.5 / rows["baseline_days"].to_numpy(dtype=float) + TRUTH_QUANTUM_PER_DAY["d2"]
-    confirmed = (rows["best_status"] == "confirmed").to_numpy()
+    f = pd.to_numeric(rows["best_frequency_per_day"], errors="coerce").to_numpy(dtype=float)
+    baseline = pd.to_numeric(rows["baseline_days"], errors="coerce").to_numpy(dtype=float)
+    tol = 1.5 / baseline + TRUTH_QUANTUM_PER_DAY["d2"]
+    finite = np.isfinite(f) & np.isfinite(tol)
+    f = np.where(finite, f, np.nan)
+    confirmed = (rows["best_status"] == "confirmed").to_numpy() & finite
     t_idx = np.array([index[t] for t in rows["cluster"]])
     rng = np.random.Generator(np.random.PCG64(CHANCE_MATCH_SEED))
     rec_rates, any_rates = [], []
@@ -964,8 +988,11 @@ def d2_chance_match(primary: pd.DataFrame, n_derangements: int = CHANCE_MATCH_DE
             continue
         made += 1
         sigma = perm[t_idx]
-        rec = confirmed & (np.abs(f - dominant[sigma]) <= tol)
-        anyhit = confirmed & (np.nanmin(np.abs(f[:, None] - modes[sigma]), axis=1) <= tol)
+        with np.errstate(invalid="ignore"):
+            rec = confirmed & (np.abs(f - dominant[sigma]) <= tol)
+            dist = np.abs(f[:, None] - modes[sigma])
+            dist = np.where(np.isnan(dist), np.inf, dist)
+            anyhit = confirmed & (dist.min(axis=1) <= tol)
         per_t_rec = pd.Series(rec.astype(float)).groupby(t_idx).mean()
         per_t_any = pd.Series(anyhit.astype(float)).groupby(t_idx).mean()
         rec_rates.append(float(per_t_rec.mean()))
@@ -988,10 +1015,23 @@ def d2_paired_controls(per_star: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFra
     pairs = []
     for r in nominal_b.itertuples(index=False):
         cid = r.control_campaign_id
-        if not cid or cid not in controls.index:
+        if not cid:
+            raise SystemExit(f"{r.sid}: nominal arm-B row without a paired control id")
+        if cid not in controls.index:
+            # a pilot may not have run this control; a full run must have (truth_d2
+            # guarantees the control EXISTS in the generation; the run universe
+            # guarantees it ran unless the run is a subset)
+            pairs.append({"b_sid": r.sid, "control_sid": cid, "cluster": r.cluster,
+                          "template_k": int(r.template_k), "b_status": r.best_status,
+                          "control_status": "not_run", "b_usable": bool(r.best_status != "missing"),
+                          "control_usable": False, "pair_usable": False,
+                          "D_B": bool(r.best_status == "confirmed"), "D_C": False,
+                          "R_B": bool(r.best_status == "confirmed" and r.best_candidate_matches_dominant == "direct"),
+                          "R_C": False})
             continue
         c = controls.loc[cid]
-        c_usable = c["best_status"] != "missing"
+        c_usable = bool(c["best_status"] != "missing")
+        b_usable = bool(r.best_status != "missing")
         c_freq = c.get("best_frequency_per_day")
         tol = 1.5 / float(c["baseline_days"]) + TRUTH_QUANTUM_PER_DAY["d2"] if np.isfinite(float(c.get("baseline_days", np.nan))) else np.nan
         r_c = bool(c["best_status"] == "confirmed" and c_freq is not None and np.isfinite(float(c_freq))
@@ -999,7 +1039,8 @@ def d2_paired_controls(per_star: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFra
                    and classify_match(float(c_freq), [float(r.primary_freq)], tol) == "direct")
         pairs.append({
             "b_sid": r.sid, "control_sid": cid, "cluster": r.cluster, "template_k": int(r.template_k),
-            "b_status": r.best_status, "control_status": c["best_status"], "control_usable": bool(c_usable),
+            "b_status": r.best_status, "control_status": c["best_status"],
+            "b_usable": b_usable, "control_usable": c_usable, "pair_usable": bool(b_usable and c_usable),
             "D_B": bool(r.best_status == "confirmed"), "D_C": bool(c["best_status"] == "confirmed"),
             "R_B": bool(r.best_status == "confirmed" and r.best_candidate_matches_dominant == "direct"),
             "R_C": r_c,
@@ -1026,7 +1067,7 @@ def d2_paired_controls(per_star: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFra
                 float(np.quantile(boots, 0.975)) if boots else math.nan)
 
     summary = []
-    usable = table[table["control_usable"]]
+    usable = table[table["pair_usable"]]
     for endpoint in ("D", "R"):
         b, c = usable[f"{endpoint}_B"], usable[f"{endpoint}_C"]
         row = {"endpoint": endpoint, "n_pairs_scored": int(len(usable)),
@@ -1040,9 +1081,10 @@ def d2_paired_controls(per_star: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFra
             p, lo, hi = boot(series)
             row.update({label: p, f"{label}_lo": lo, f"{label}_hi": hi})
         summary.append(row)
-    # quiet-control-conditioned SECONDARY estimand: pairs whose control is usable and not_detected
+    # quiet-control-conditioned SECONDARY estimand: pairs USABLE ON BOTH SIDES whose control is not_detected
     quiet = usable[usable["control_status"] == "not_detected"]
     row = {"endpoint": "quiet_control_conditioned", "n_pairs_scored": int(len(quiet)),
+           "n_pairs_not_run": int((table["control_status"] == "not_run").sum()),
            "n_targets": int(quiet["cluster"].nunique()), "n_unique_windows": int(quiet["control_sid"].nunique())}
     if not quiet.empty:
         per_t_d = quiet["D_B"].astype(float).groupby(quiet["cluster"]).mean()
@@ -1050,6 +1092,16 @@ def d2_paired_controls(per_star: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFra
         row.update({"p_b": float(per_t_d.mean()), "p_b_recovery": float(per_t_r.mean())})
     summary.append(row)
     return table, pd.DataFrame(summary)
+
+
+def strip_intervals(obj):
+    """Recursively null every `lo`/`hi` (interval) key — D2 row-level outputs
+    carry no intervals (Amendment 4)."""
+    if isinstance(obj, dict):
+        return {k: (None if k in ("lo", "hi") else strip_intervals(v)) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [strip_intervals(v) for v in obj]
+    return obj
 
 
 def verify_stars_file(path: Path, recorded_sha: str, selected_ids: set[str]) -> None:
@@ -1181,10 +1233,12 @@ def sensitivity_table(per_star: pd.DataFrame, dataset: str,
         if frame.empty:
             return
         success = (frame["best_status"] == "confirmed")
-        p, lo, hi = wilson(int(success.sum()), len(frame))
-        rows.append({"variant": variant, "subset": label,
-                     "n": len(frame), "k": int(success.sum()),
-                     "p": p, "lo": max(lo, 0.0), "hi": min(hi, 1.0),
+        k, n = int(success.sum()), len(frame)
+        p, lo, hi = wilson(k, n)
+        lo = 0.0 if k == 0 else max(lo, 0.0)
+        hi = 1.0 if k == n else min(hi, 1.0)
+        rows.append({"variant": variant, "subset": label, "n": n, "k": k,
+                     "p": p, "lo": lo, "hi": hi,
                      "inference": "descriptive (row-level Wilson); inference lives in the cluster tables"})
 
     if dataset == "d2" and "arm" in per_star and "scenario" in per_star:
@@ -1406,6 +1460,7 @@ def main() -> None:
             prov_path = args.stars_dir / f"{r.sid}.prov.json"
             if not prov_path.exists():
                 raise SystemExit(f"{r.sid}: result has no provenance sidecar")
+            inputs[str(prov_path)] = sha256_file(prov_path)
             prov = json.loads(prov_path.read_text(encoding="utf-8"))
             result_obj = json.loads(json_path.read_text(encoding="utf-8"))
             problems = []
@@ -1436,6 +1491,9 @@ def main() -> None:
                 if len(row_) != 1 or row_["status"].iloc[0] != "complete" \
                         or row_["result_sha256"].iloc[0] != inputs[str(json_path)]:
                     problems.append("completion table")
+                elif "provenance_sha256" in row_ and row_["provenance_sha256"].iloc[0] \
+                        and row_["provenance_sha256"].iloc[0] != inputs[str(prov_path)]:
+                    problems.append("completion table sidecar sha")
             if problems:
                 raise SystemExit(f"{r.sid}: provenance sidecar mismatch: {problems}")
         scored = score_star(json_path, list(r.truth_freqs), r.primary_freq,
@@ -1489,11 +1547,13 @@ def main() -> None:
     contingency_out = contingency(primary, args.dataset)
     if args.dataset == "d2":
         # D2's binding unit is the target cluster: row-level intervals are
-        # suppressed here; inference lives in the cluster tables (Amendment 4)
+        # suppressed EVERYWHERE (nested JSON included); inference lives in the
+        # cluster/paired tables (Amendment 4; G4 r2 MAJOR)
         for column in ("lo", "hi"):
             if column in completeness:
                 completeness[column] = math.nan
         completeness["inference"] = "descriptive (window rows); see d2_cluster_completeness.csv"
+        contingency_out = strip_intervals(contingency_out)
         contingency_out["inference"] = "descriptive counts over nominal arm-B windows; no row-level intervals for D2"
     completeness.to_csv(args.out_dir / "completeness_by_class_pass_rule.csv", index=False)
     (args.out_dir / "contingency_complementarity.json").write_text(
@@ -1540,8 +1600,12 @@ def main() -> None:
                 if args.crossmatch_qc else None)
     if qc_frame is not None:
         inputs[str(args.crossmatch_qc)] = sha256_file(args.crossmatch_qc)
-    sensitivity_table(per_star, args.dataset, qc_frame).to_csv(
-        args.out_dir / "sensitivity.csv", index=False)
+    sensitivity = sensitivity_table(per_star, args.dataset, qc_frame)
+    if args.dataset == "d2" and not sensitivity.empty:
+        sensitivity["lo"] = math.nan
+        sensitivity["hi"] = math.nan
+        sensitivity["inference"] = "descriptive counts; inference lives in d2_scenario_contrasts.csv"
+    sensitivity.to_csv(args.out_dir / "sensitivity.csv", index=False)
 
     attrition = {
         "roster": len(truth),

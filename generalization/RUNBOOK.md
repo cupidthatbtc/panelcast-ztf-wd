@@ -15,7 +15,7 @@ Windows detached launches ONLY via WMI:
    `--out-dir outputs/generalization/replay_gate_full --count 928`).
 2. `python scripts/generalization/panel_golden_gate.py`
    (PASS both machines 2026-08-28).
-3. `python -m pytest tests/ -q` (40 tests).
+3. `python -m pytest tests/ -q` (51 tests).
 4. `python scripts/generalization/verify_cli_identity.py --shard
    <one published shard> --out-dir outputs/generalization/cli_identity`
    — PASS on the laptop 2026-08-30 (api_equals_cli + deterministic; archived at
@@ -88,7 +88,9 @@ Windows detached launches ONLY via WMI:
     --work-root C:/ls_scratch/d2_pilot_gen2 --workers 12
     --replay-report outputs/generalization/replay_gate_full/replay_report.json`
    Archive with every pilot record: metrics/, run/manifest.json,
-   run/completion.csv, run/stars/ (raw result JSONs AND .prov.json sidecars).
+   run/completion.csv, run/stars/ (raw result JSONs AND .prov.json sidecars),
+   tests/ (pytest logs from BOTH machines), and a SHA256SUMS covering every
+   archived file (`shasum -a 256` over the record; committed).
 4. Full run (LAPTOP): the same command WITHOUT `--stars-file` and with
    `--out-dir outputs/generalization/d2_run --work-root C:/ls_scratch/d2_run`
    (resume-safe: sidecar-bound; `--workers 12` — the laptop saturates there).

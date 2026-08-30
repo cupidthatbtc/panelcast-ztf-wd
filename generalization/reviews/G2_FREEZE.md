@@ -199,7 +199,18 @@ Frozen document SHA-256 after Amendment 4:
 - generalization/GENERALIZATION_PLAN.md
   e2cd36af2cbb4bc11537b3f7e90c1b722bb8b0c611d3e887879c7105b10ddc65
 
-Status: PENDING G4 round-2 verification (stats + methods) of the
-implementation; gen2 + its pilot are built/run meanwhile (non-confirmatory).
+G4 round-2 verdicts: stats APPROVE-WITH-CHANGES (chance-match denominator
+must keep non-detections; nested D2 contingency intervals; exact sensitivity
+endpoints), methods APPROVE-WITH-CHANGES (same interval suppression incl.
+sensitivity; pair usability on BOTH sides + quiet subset on pair_usable;
+unresolved controls recorded not skipped; scorer re-runs the W_g strata guard
+and the control-resolution guard; sidecar SHAs bound into inputs_sha256 and a
+`provenance_sha256` column in completion.csv; both-machine test logs archived;
+git_tracked_dirty + untracked count; wording). All applied in the round-3
+commit (51 tests; D1 unchanged). The builder docstring's stale
+"exposures-per-night" wording is deliberately left until the next deliberate
+regeneration (editing build_d2_shards.py changes the generation-code SHA and
+would orphan gen2). Plan/spec bytes are unchanged since the SHAs above.
+Status: PENDING G4 round-3 closure; gen2 pilot running (non-confirmatory).
 Amendment 4 is disclosed as pilot-informed; no further estimand-hierarchy
 change is permitted after it.
