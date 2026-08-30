@@ -32,7 +32,10 @@ def test_dispositions_are_deterministic_and_never_override_the_frozen_chain():
                                            "not_crossmatched", "cache_missing", "read_error"]
     assert set(out["disposition"]) <= set(DISPOSITIONS)
     assert out["headline_eligible"].tolist() == out["crossmatched"].tolist()
-    assert out["crowding_clean"].tolist() == [True, False, False, False, False, False, False]
+    # crowding-clean (plan lens: sep < 1", <= 3 objects) and ambiguous (> 1 object) are
+    # independent flags: the 2-object cone at 0.4" is clean AND ambiguous
+    assert out["crowding_clean"].tolist() == [True, False, True, False, False, False, False]
+    assert out["ambiguous"].tolist() == [False, True, True, False, False, False, False]
     # idempotent + label-blind: shuffling rows or adding a class column changes nothing
     again = adjudicate(qc.assign(class_label="dsct_flag1").sample(frac=1, random_state=3)).sort_values("source_id")
     assert again["disposition"].tolist() == out.sort_values("source_id")["disposition"].tolist()
