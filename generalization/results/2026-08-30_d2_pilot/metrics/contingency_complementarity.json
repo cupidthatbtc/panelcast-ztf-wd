@@ -1,0 +1,25 @@
+{
+  "n_positives_scored": 30,
+  "table": {
+    "census_and_ls": 8,
+    "census_only": 6,
+    "ls_only": 8,
+    "neither": 8
+  },
+  "union_completeness": {
+    "p": 0.7333333333333333,
+    "lo": 0.555520383048111,
+    "hi": 0.8581733668040368
+  },
+  "incremental_census_only": {
+    "p": 0.2,
+    "lo": 0.0950510717728987,
+    "hi": 0.3730569641314825
+  },
+  "incremental_ls_only": {
+    "p": 0.26666666666666666,
+    "lo": 0.14182663319596317,
+    "hi": 0.4444796169518888
+  },
+  "mcnemar": "prohibited for d2 (cluster structure); use the target-cluster paired-difference bootstrap"
+}

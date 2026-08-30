@@ -1,0 +1,76 @@
+{
+  "dataset": "d2-tess-dav",
+  "driver": "run_generalization_ls.py",
+  "source_count": 144,
+  "pending_at_start": 144,
+  "completed_now": 144,
+  "failures": {},
+  "passes": [
+    "low",
+    "high"
+  ],
+  "workers": 22,
+  "wall_seconds": 7634.1,
+  "shard_dir": "outputs\\generalization\\d2_shards_gen1",
+  "shard_index": "outputs\\generalization\\d2_shards_gen1\\shard_index.txt",
+  "shard_index_sha256": "ac4fc48c8294feacbad3deac332e7be9441c7b9e027649429832205436673794",
+  "generation_id": "ca793ad7ec0afbe0c8cc1bc3f6c09102239a3c1e5d7fb5382e982b00cdd74274",
+  "pilot": true,
+  "limit": null,
+  "stars_file": "outputs\\generalization\\d2_shards_gen1\\pilot_shard_index.txt",
+  "env": {
+    "python": "3.12.12",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "machine": "Jacks_7i_5090",
+    "numpy": "2.3.5",
+    "numpy_blas": "blas 3.9.0",
+    "scipy": "1.16.3",
+    "astropy": "8.0.1",
+    "astropy_iers_data": "0.2026.7.27.0.56.29",
+    "pyerfa": "2.0.1.5",
+    "pandas": "2.3.3",
+    "omp_num_threads": "",
+    "openblas_num_threads": ""
+  },
+  "frozen_sha256": {
+    "scripts/run_catalog_lomb_scargle.py": "34a4de5d234cab07dc3231e5671f4220f5c4ab1bdd4b3d92183bb7e443da6c46",
+    "scripts/run_lomb_scargle.py": "ce9211254949969b5d2e7a93f350eb387014aaf0a15f939753c599c1261a4e78",
+    "scripts/lomb_scargle_common.py": "5ed3983e6a9b91f86b4ba2afc37025ba97fee4ef8a0086259140618927bfef7d",
+    "scripts/build_catalog_panels.py": "1fb659cfdf6997751bc7589b70bdd26fa0d210f49e0e9da5da82bcbb1a5d9794",
+    "scripts/fetch_catalog_lightcurves.py": "e28f4ade76fedf78e056b26b62549a4c5dfc1e0c76d5d127876cce7b3cb3ed82"
+  },
+  "campaign_sha256": {
+    "scripts/generalization/build_d2_roster.py": "901c95c64825c42125a066c2678c195b520d99e64c0a9a528eef41872361acbe",
+    "scripts/generalization/build_d2_shards.py": "908aef8380a8193993144626dd202de88b187e2d3d523a1ae06f28e6986fc4f4",
+    "scripts/generalization/build_d3_roster.py": "3d7b2d23ffa6a21acf20fde3b998f5d69a0637ade643048c5d457f022b75c056",
+    "scripts/generalization/build_panels_generic.py": "759bff3db9f28513ac914c869424140392d3c5244b80fca8c67c0bc8271d875a",
+    "scripts/generalization/d2_spoc_verification.py": "62d21dce2a70d233495cabc7b6f963510812dc2f387396c6e7789bfaca6b5503",
+    "scripts/generalization/d2_truth_model.py": "eedad291da4d4c52e95e6c9bf3abb119a62b681b11f9614236ace646c740cd22",
+    "scripts/generalization/d3_crossmatch_adjudicate.py": "be87d75c59abc7c62115c66565ee78220a267888919d7ee429f2d7155c243c0f",
+    "scripts/generalization/frozen_api.py": "127eb86ad19c0b08aac6f832087f1b8c430d8f15e80b334d30892f94df78de16",
+    "scripts/generalization/metrics_generalization.py": "213aecb3a5e9efc667fede5ae3692b7f1a17a9e2934aa050a761d43e7fd51d34",
+    "scripts/generalization/panel_golden_gate.py": "e5a6d5df176e92b02eecf0f5235a059d8782c565f5b84b3c9a3d0fc3c6849655",
+    "scripts/generalization/plot_generalization.py": "699f1041bcaf85c3f514af812761d4858bbd3573dd74716486d687b0b13dcc05",
+    "scripts/generalization/replay_gate.py": "0b2f8b834e8ff3c97e6689f7485b3eb02a5d01399a21da018dd32e69a258139e",
+    "scripts/generalization/run_generalization_ls.py": "9cfb6de639d5c37d8d458ea5b27cdd3f1ab06bacc2401923cd769bbecfb9738d",
+    "scripts/generalization/verify_cli_identity.py": "840d233f78ff8fc289f2b77661479d02bcfbab26b4f3fa6bdc413b7959905728",
+    "scripts/generalization/watch_run.py": "6e74a6bb66e3bb6aff4c4941a75e02e14745c576e2e435e676dd17e965dc3a8e",
+    "generalization/GENERALIZATION_PLAN.md": "6b28b634f0abb96230c49eeb98463d6ba8c7c406b6dbddae54894d65f1f09ae6",
+    "generalization/METRICS_SPEC.md": "c827ed9e7dd4068babff12a5cf26f2ebe480d813e7cf115f015f96d7332b3a3e"
+  },
+  "binding": {
+    "generation_id": "ca793ad7ec0afbe0c8cc1bc3f6c09102239a3c1e5d7fb5382e982b00cdd74274",
+    "attestation_sha256": "64e1937a8d453cdbe41ffb53a14c0fdaff70a8dcd8580bbb6487661dd334c5ef",
+    "frozen_digest": "5c1c4982fc5b847f2f0e36cf34d472c28c1e59ea7300e4aedab718e222469059",
+    "campaign_digest": "a48c48f02ba60b3e38d10a15a9b30e13bcba6b48fa73b2d2f1cf93ba566c37fe"
+  },
+  "replay_attestation": {
+    "path": "outputs\\generalization\\replay_gate_full\\replay_report.json",
+    "sha256": "64e1937a8d453cdbe41ffb53a14c0fdaff70a8dcd8580bbb6487661dd334c5ef",
+    "wall_seconds": 46780.4,
+    "verdict_counts": {
+      "identical_v1_schema": 921,
+      "identical_newline": 7
+    }
+  }
+}
