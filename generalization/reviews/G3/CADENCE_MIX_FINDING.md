@@ -8,7 +8,7 @@ from roster 20 s to 120 s products — every switch in that direction — becaus
 those solutions combine 20-s ('f') AND 120-s sectors (a stitched multi-sector
 fit; the published amplitude is therefore a sector-mixed integration).
 
-Roster composition (sector kind x roster cadence): {('mixed', 20): 31, ('pure_120s', 20): 2, ('pure_120s', 120): 54, ('pure_20s', 20): 16}
+Roster composition (sector kind x roster cadence): mixed 33 (incl. two whose 'f' sits inside a range token, e.g. `29-f30`, `01,27-f28`), pure 120-s 54, pure 20-s 16 — the 33 mixed targets are exactly the 33 v3 cadence switches.
 
 Mixed-sector targets: 31 (128 modes). Modes with P < 300 s,
 where sinc(120 s)/sinc(20 s) < 0.76 and the assumed cadence changes the
