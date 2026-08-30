@@ -127,7 +127,9 @@ descriptive sensitivity:
      (1.7/0.80, de-dilution off, phase_draw 0) arm-B shard, and K_t ⊆
      {0, 1, 2} is the set of strata with a usable result. ELIGIBLE variant:
      denominator all 103 targets; missing stratum counts y = 0 with
-     |K_t| = 3; a K_t = ∅ target contributes 0. USABLE variant:
+     |K_t| = n_strata_scheduled (3 for the nominal scenario; 1 for the
+     single-window sensitivity scenarios — Amendment 2); a K_t = ∅ target
+     contributes 0. USABLE variant:
      p-hat_u = (1/(103 − n_∅)) Σ_{t: K_t ≠ ∅} (1/|K_t|) Σ_k y_{t,k} —
      K_t = ∅ targets are excluded from numerator AND denominator, with
      n_∅ reported as n_targets_zero_usable_strata. The bootstrap resamples
@@ -223,6 +225,28 @@ non-detections.
   appears there (or is a null/control).
 - Manifest: SHA-256 of every input file, env versions, frozen + campaign
   file SHAs, replay attestation reference, spec file SHA-256.
+- D2 contract (Amendment 2): shard_manifest.csv has the fixed typed schema
+  d2_truth_model.MANIFEST_COLUMNS with every field populated for every arm
+  (no NaN in int/bool columns; empty strings for absent ids); scenario
+  identity is the manifest `scenario` code AND every grouping key (arm,
+  ratio_g, ratio_rg, phase_draw, amp_scale, dominant_dropped) — the
+  dominant-mode-dropout variant is its own scenario and never enters the
+  nominal P4 estimator; the P4 eligible denominator is the scenario's
+  `n_strata_scheduled` (3 nominal; 1 for single-window sensitivities), and
+  the nominal arm-B scenario must hold exactly one replicate per
+  (scheduled target, K ∈ {0,1,2}); truth_d2 refuses an unpublished
+  (IN_PROGRESS) or undescribed (no generation_manifest.json) generation,
+  requires index == manifest == disk id sets, per-shard SHA identity with
+  the generation record, A/B ↔ injected_modes bijection with n_modes
+  counts, exact null serials 0..999 (production), and a non-production
+  generation only under a pilot run manifest; every scored result needs a
+  provenance sidecar whose source_id, result SHA, shard SHA, attestation
+  SHA and generation id match, else metrics stop; inputs_sha256 carries
+  the full chain (truth tables, index, generation manifest, per-shard
+  SHAs, generation inputs, run manifest, completion table).
+- Pilot rule: run manifests with `pilot: true` (any --limit/--stars-file
+  run) yield `confirmatory: false` on every P4/P5 row and
+  `confirmatory_allowed: false` in the metrics manifest.
 
 ## Outputs
 

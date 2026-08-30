@@ -22,46 +22,83 @@ real magerr; arms differ in what carries the noise:
                repeat, noise does not). This measures the GAUSSIAN-NULL
                false-alarm rate, not a real-sky FPR (G1 stats finding 11).
 
+Templates are the ATTESTED per-star exposure shards the frozen pipeline
+consumed (`--exposure-stars`), not a re-derivation: every non-modified column
+is copied as its ORIGINAL TEXT TOKEN, the model is evaluated on the epochs as
+the frozen loader parses them, and each written shard is re-loaded through the
+frozen loader and checked bitwise (epochs) before it counts (G3 methods
+finding 7 — a 17-significant-digit BJD can re-parse one ulp off on the
+production machine, so tokens, not floats, are what is preserved).
+
 Template matching per target: |median zg mag − target G| <= 0.25 (widened to
-0.5, then nearest-K, when the pool is thin — flagged in the manifest);
+0.5, then nearest-9, when the pool is thin — flagged in the manifest);
 K=3 at the 10/50/90th percentiles of median-exposures-per-night, because 75%
 of zg nights are single-exposure and per-night median subtraction is the
-pre-registered dominant penalty (plan risk 3).
+pre-registered dominant penalty (plan risk 3). Ties: stable sort on
+(|Δmag|, source_id), then (exp_per_night, source_id) — a total order.
 
-Run matrix (plan): nominal (1.7, 0.80) on K=3 for arms A+B; the other 8
-ladder points on the median template only; 1,000 nulls.
+Run matrix (plan): nominal (1.7, 0.80) on K=3 for arms A+B; every other
+scenario on the median template (K=1) only; 1,000 nulls; one control per
+unique arm-B window. Targets with ZERO retained modes at nominal cannot be
+positives and are excluded from the matrix (recorded in
+excluded_targets.csv); dropout is scheduled only for targets with >= 2
+retained modes.
 
-Campaign id layout (19 digits): AA TTTTTTTTTT K GR PS 00
-  AA arm prefix (92/93), T zero-padded TIC, K template index (0/1/2),
-  G/R ladder indices (1-3) into {1.4,1.7,2.1} x {0.70,0.80,0.90} (22 =
-  nominal), P phase-draw (0-2), S amplitude-scale code (0 = 1.0, 1 = 0.7,
-  2 = 1.3).
-  Nulls: 94 + 17-digit serial. Controls: 95 + 17-digit index of the template
-  in the SORTED FIXED 928-window pool — stable across invocations and roster
-  subsets (G2 methods finding 3). Full mapping in shard_manifest.csv.
+Scenario identity is an explicit immutable code (d2_truth_model.scenario_code)
+carried on every manifest row; the manifest schema is fixed
+(d2_truth_model.MANIFEST_COLUMNS) and every row of every arm is fully typed.
+
+Generation discipline (G3 methods finding 3): shards are built into a staging
+directory carrying an IN_PROGRESS sentinel, validated (index == manifest ==
+disk, bijections, SHAs), described by generation_manifest.json (a generation
+id derived from every input SHA + code SHAs + arguments), and only then
+published atomically by renaming the staging directory into place. There is
+no resume: a generation is all-or-nothing.
 
 Truth preservation (G2 methods finding 4): every shard's actually-injected
 modes (post sinc rejection, with signed factors and phases) go to
 injected_modes.csv and the rejected ones to rejected_modes.csv; the metrics
 scorer consumes injected_modes.csv, never the original mode table.
+
+A stratified pilot_shard_index.txt (~150 shards spanning every arm and
+scenario, window strata and target amplitudes) is always emitted for the
+timing pilot (run it with --stars-file); pilot outputs are never
+confirmatory (G3 methods finding 8).
 """
 
 from __future__ import annotations
 
 import argparse
 import gzip
+import hashlib
 import json
+import math
+import os
+import shutil
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 
 from d2_truth_model import (
+    AMP_SCALE_CODE_DROPOUT,
+    AMP_SCALE_CODES,
     BANDPASS_LADDER_G,
     BANDPASS_LADDER_RG,
+    CROWD_CODE_NONE,
+    CROWD_CODE_REDILUTION,
+    INJECTED_MODE_COLUMNS,
+    MANIFEST_COLUMN_NAMES,
+    MANIFEST_COLUMNS,
     NOMINAL_G,
     NOMINAL_RG,
+    REJECTED_MODE_COLUMNS,
+    SCENARIO_CONTROL,
+    SCENARIO_NOMINAL,
+    SCENARIO_NULL,
     build_truth_model,
+    retained_modes,
+    scenario_code,
 )
 from frozen_api import (
     EXPOSURE_COLUMNS,
@@ -69,183 +106,373 @@ from frozen_api import (
     assert_frozen,
     campaign_file_shas,
     campaign_id_ok,
+    frozen_file_shas,
+    load_star,
 )
 
 PUBLISHED = REPO_ROOT / "catalog-rebuild/results/2026-08-01_full"
 MATCH_TOL_MAG = 0.25
 MATCH_TOL_WIDE = 0.5
-N_NULLS = 1000
+N_NULLS_PRODUCTION = 1000
+POOL_SIZE_PRODUCTION = 928
+PILOT_TARGETS = 10
+PILOT_NULLS = 30
+SENTINEL = "IN_PROGRESS"
+PANDAS_NA_TOKENS = {"#N/A", "#N/A N/A", "#NA", "-1.#IND", "-1.#QNAN", "-NaN", "-nan",
+                    "1.#IND", "1.#QNAN", "<NA>", "N/A", "NA", "NULL", "NaN", "None",
+                    "n/a", "nan", "null"}
+SPOC_REPORT = "spoc_verification/v2_publishedsectors_report.json"
+SPOC_MODES = "spoc_verification/v2_publishedsectors_recovered_modes.csv"
 
 
-def load_templates(exposures_path: Path, catalog_path: Path) -> tuple[pd.DataFrame, dict]:
+def sha256_file(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+# ------------------------------------------------------------------ templates
+
+def read_template(path: Path) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """(tokens, values): the shard's original text tokens for every column and
+    the numeric values exactly as the frozen loader parses them."""
+    with gzip.open(path, "rt", encoding="utf-8") as handle:
+        tokens = pd.read_csv(handle, dtype=str, keep_default_na=False)
+    values = load_star(path)
+    if len(tokens) != len(values) or list(tokens["band"]) != list(values["band"]):
+        raise SystemExit(f"{path}: token/value row mismatch")
+    missing = [c for c in EXPOSURE_COLUMNS if c not in tokens.columns]
+    if missing:
+        raise SystemExit(f"{path}: template lacks columns {missing}")
+    return tokens, values
+
+
+def load_pool(exposure_stars: Path, catalog_path: Path, expected_pool: int
+              ) -> tuple[pd.DataFrame, dict[str, tuple[pd.DataFrame, pd.DataFrame]], dict[str, str]]:
     catalog = pd.read_csv(catalog_path, dtype={"source_id": str})
-    if len(catalog) != 928:
-        raise SystemExit(f"published catalog has {len(catalog)} rows, expected 928")
-    pool_ids = set(catalog["source_id"])
+    ids = sorted(catalog["source_id"])
+    if len(ids) != expected_pool or len(set(ids)) != expected_pool:
+        raise SystemExit(f"catalog has {len(ids)} rows ({len(set(ids))} unique), "
+                         f"expected {expected_pool} unique")
     status = catalog.set_index("source_id")["blind_status"].to_dict()
-    exposures = pd.read_csv(
-        exposures_path,
-        dtype={"source_id": str, "band": str},
-        usecols=EXPOSURE_COLUMNS,
-    )
-    exposures = exposures[exposures["source_id"].isin(pool_ids)]
-    zg = exposures[exposures["band"] == "zg"]
-    stats = zg.groupby("source_id").agg(
-        median_zg=("mag", "median"),
-        n_zg=("mag", "size"),
-    )
-    epn = (
-        zg.groupby(["source_id", "night_mjd"]).size().groupby("source_id").median()
-        .rename("exp_per_night")
-    )
-    stats = stats.join(epn)
-    stats["blind_status"] = [status[sid] for sid in stats.index]
-    frames = {sid: frame for sid, frame in exposures.groupby("source_id")}
-    return stats.reset_index(), frames
+    templates: dict[str, tuple[pd.DataFrame, pd.DataFrame]] = {}
+    shas: dict[str, str] = {}
+    rows = []
+    for sid in ids:
+        path = exposure_stars / f"{sid}.csv.gz"
+        if not path.exists():
+            raise SystemExit(f"pool window missing for {sid}: {path}")
+        tokens, values = read_template(path)
+        zg = values[values["band"] == "zg"]
+        if zg.empty:
+            raise SystemExit(f"{sid}: no zg window (pool must be complete)")
+        templates[sid] = (tokens, values)
+        shas[sid] = sha256_file(path)
+        rows.append({
+            "source_id": sid,
+            "median_zg": float(zg["mag"].median()),
+            "n_zg": int(len(zg)),
+            "exp_per_night": float(zg.groupby("night_mjd").size().median()),
+            "blind_status": str(status[sid]),
+        })
+    stats = pd.DataFrame(rows).sort_values("source_id").reset_index(drop=True)
+    stats["pool_index"] = np.arange(len(stats))
+    return stats, templates, shas
 
 
 def match_templates(stats: pd.DataFrame, gmag: float) -> tuple[list[str], str]:
-    for tol, label in ((MATCH_TOL_MAG, "tol_0.25"), (MATCH_TOL_WIDE, "tol_0.5")):
-        pool = stats[(stats["median_zg"] - gmag).abs() <= tol]
-        if len(pool) >= 3:
+    delta = (stats["median_zg"] - gmag).abs()
+    label = "nearest"
+    pool = stats.iloc[0:0]
+    for tol, tol_label in ((MATCH_TOL_MAG, "tol_0.25"), (MATCH_TOL_WIDE, "tol_0.5")):
+        candidate = stats[delta <= tol]
+        if len(candidate) >= 3:
+            pool, label = candidate, tol_label
             break
-    else:
-        label = "nearest"
     if len(pool) < 3:
-        pool = stats.iloc[(stats["median_zg"] - gmag).abs().argsort()[:9]]
-    ordered = pool.sort_values(["exp_per_night", "source_id"]).reset_index(drop=True)
+        ranked = stats.assign(abs_delta=delta).sort_values(
+            ["abs_delta", "source_id"], kind="stable")
+        pool = ranked.head(9)
+    ordered = pool.sort_values(["exp_per_night", "source_id"], kind="stable").reset_index(drop=True)
     picks = [
-        ordered.iloc[min(len(ordered) - 1, int(round(q * (len(ordered) - 1))))]["source_id"]
+        str(ordered.iloc[min(len(ordered) - 1, int(np.round(q * (len(ordered) - 1))))]["source_id"])
         for q in (0.10, 0.50, 0.90)
     ]
     return picks, label
 
 
-AMP_SCALE_CODES = {1.0: 0, 0.7: 1, 1.3: 2, "drop": 3}
-
+# ----------------------------------------------------------------- ids/shards
 
 def campaign_id(arm_prefix: str, tic: int, k: int, g_idx: int, r_idx: int,
-                phase_draw: int = 0, amp_scale: float = 1.0) -> str:
-    return (f"{arm_prefix}{tic:010d}{k}{g_idx}{r_idx}"
-            f"{phase_draw}{AMP_SCALE_CODES[amp_scale]}00")
+                phase_draw: int = 0, amp_code: int = 0,
+                crowd_code: int = CROWD_CODE_NONE) -> str:
+    sid = (f"{arm_prefix}{tic:010d}{k}{g_idx}{r_idx}"
+           f"{phase_draw}{amp_code}{crowd_code}0")
+    if len(sid) != 19 or not sid.isdigit():
+        raise ValueError(f"malformed campaign id {sid}")
+    return sid
+
+
+def control_id(pool_index: int) -> str:
+    return "95" + str(pool_index).zfill(17)
+
+
+def null_id(serial: int) -> str:
+    return "94" + str(serial).zfill(17)
 
 
 def write_shard(path: Path, frame: pd.DataFrame) -> None:
     with gzip.open(path, "wt", encoding="utf-8", newline="") as handle:
-        frame[EXPOSURE_COLUMNS].to_csv(handle, index=False, lineterminator="\n")
+        frame[list(EXPOSURE_COLUMNS)].to_csv(handle, index=False, lineterminator="\n")
 
 
-def synthesize(
-    template: pd.DataFrame,
-    model,
-    source_id: str,
-    gaussian_floor: bool,
-    seed: int,
-) -> pd.DataFrame:
-    frame = template.copy()
+def synthesize(tokens: pd.DataFrame, values: pd.DataFrame, model, source_id: str,
+               gaussian_floor: bool, seed: int) -> tuple[pd.DataFrame, np.ndarray]:
+    """Returns (frame to write, computed mag array). Every column except
+    source_id and mag is the template's original text token."""
+    frame = tokens.copy()
     frame["source_id"] = source_id
-    t_ref = float(frame["bjd_tdb"].min())
+    bjd = values["bjd_tdb"].to_numpy(dtype=float)
+    band = values["band"].to_numpy()
+    mag = values["mag"].to_numpy(dtype=float).copy()
+    t_ref = float(bjd.min())
     if gaussian_floor:
         rng = np.random.Generator(np.random.PCG64(seed))
-        for band in ("zg", "zr"):
-            mask = frame["band"] == band
-            median = float(frame.loc[mask, "mag"].median())
-            noise = rng.normal(0.0, frame.loc[mask, "magerr"].to_numpy(dtype=float))
-            frame.loc[mask, "mag"] = median + noise
-    for band in ("zg", "zr"):
-        mask = frame["band"] == band
-        frame.loc[mask, "mag"] = frame.loc[mask, "mag"] + model.evaluate(
-            frame.loc[mask, "bjd_tdb"].to_numpy(dtype=float), band, t_ref
-        )
-    return frame
+        for name in ("zg", "zr"):
+            mask = band == name
+            median = float(np.median(mag[mask]))
+            noise = rng.normal(0.0, values.loc[mask, "magerr"].to_numpy(dtype=float))
+            mag[mask] = median + noise
+    for name in ("zg", "zr"):
+        mask = band == name
+        mag[mask] = mag[mask] + model.evaluate(bjd[mask], name, t_ref)
+    frame["mag"] = mag
+    return frame, mag
 
 
-def main() -> None:
+def verify_written(path: Path, values: pd.DataFrame, mag: np.ndarray, source_id: str) -> None:
+    """Frozen-loader round trip: epochs bitwise identical to the injection
+    epochs, mags within a few ulp, both bands, one id, all finite."""
+    loaded = load_star(path)
+    for column in ("mjd", "bjd_tdb", "night_mjd", "magerr"):
+        if not np.array_equal(loaded[column].to_numpy(dtype=float),
+                              values[column].to_numpy(dtype=float)):
+            raise SystemExit(f"{path}: {column} does not round-trip bitwise through the frozen loader")
+    got = loaded["mag"].to_numpy(dtype=float)
+    scale = float(np.max(np.abs(mag))) or 1.0
+    if not np.all(np.isfinite(got)) or float(np.max(np.abs(got - mag))) > 8.0 * np.finfo(float).eps * scale:
+        raise SystemExit(f"{path}: mag does not round-trip within 8 ulp")
+    if set(loaded["source_id"]) != {source_id} or set(loaded["band"]) != {"zg", "zr"}:
+        raise SystemExit(f"{path}: source_id/band contract violated")
+
+
+def typed_row(**fields) -> dict:
+    """A manifest row with EVERY schema column present and typed."""
+    defaults = {
+        "campaign_id": "", "arm": "", "scenario": "", "tic": 0,
+        "template_source_id": "", "template_status": "", "template_k": -1,
+        "pool_index": -1, "template_exp_per_night": math.nan,
+        "ratio_g": 0.0, "ratio_rg": 0.0, "phase_draw": 0, "amp_scale": 1.0,
+        "dominant_dropped": False, "dropped_period_s": math.nan,
+        "crowdsap": math.nan, "n_strata_scheduled": 0, "match": "",
+        "control_campaign_id": "", "null_serial": -1,
+        "n_modes_injected": 0, "n_modes_rejected": 0, "shard_sha256": "",
+    }
+    unknown = set(fields) - set(defaults)
+    if unknown:
+        raise ValueError(f"unknown manifest fields {unknown}")
+    row = {**defaults, **fields}
+    casts = {"str": str, "int": int, "float": float, "bool": bool}
+    return {name: casts[kind](row[name]) for name, kind in MANIFEST_COLUMNS}
+
+
+def validate_manifest(frame: pd.DataFrame) -> None:
+    if list(frame.columns) != list(MANIFEST_COLUMN_NAMES):
+        raise SystemExit("manifest columns deviate from MANIFEST_COLUMNS")
+    if frame["campaign_id"].duplicated().any():
+        dup = frame.loc[frame["campaign_id"].duplicated(), "campaign_id"].head(3).tolist()
+        raise SystemExit(f"duplicate campaign ids {dup}")
+    for name, kind in MANIFEST_COLUMNS:
+        if kind in ("int", "bool") and frame[name].isna().any():
+            raise SystemExit(f"manifest column {name} has NaN")
+    bad = [sid for sid in frame["campaign_id"] if not campaign_id_ok(sid)]
+    if bad:
+        raise SystemExit(f"{len(bad)} ids violate the campaign convention: {bad[:3]}")
+    # no string cell may be a token pandas' default reader turns into NaN
+    for name, kind in MANIFEST_COLUMNS:
+        if kind == "str":
+            hits = frame[name].isin(PANDAS_NA_TOKENS)
+            if hits.any():
+                raise SystemExit(f"manifest column {name} holds a pandas NA token: "
+                                 f"{frame.loc[hits, name].unique()[:3]}")
+
+
+def pilot_index(frame: pd.DataFrame, dominant_amp: dict[int, float], n_nulls: int) -> list[str]:
+    """Deterministic stratified pilot spanning every arm/scenario."""
+    chosen: list[str] = []
+    nominal_b = frame[(frame["arm"] == "B") & (frame["scenario"] == SCENARIO_NOMINAL)]
+    tics = sorted(nominal_b["tic"].unique(), key=lambda t: (dominant_amp.get(int(t), 0.0), t))
+    if tics:
+        idx = np.unique(np.round(np.linspace(0, len(tics) - 1, min(PILOT_TARGETS, len(tics)))).astype(int))
+        pilot_tics = [tics[i] for i in idx]
+        for arm in ("B", "A"):
+            sub = frame[(frame["arm"] == arm) & (frame["scenario"] == SCENARIO_NOMINAL)
+                        & frame["tic"].isin(pilot_tics)]
+            chosen.extend(sub["campaign_id"].tolist())
+        for scenario, per in frame[frame["arm"] == "B"].groupby("scenario"):
+            if scenario == SCENARIO_NOMINAL:
+                continue
+            take = per[per["tic"].isin(pilot_tics)].sort_values("campaign_id").head(3)
+            if take.empty:
+                take = per.sort_values("campaign_id").head(3)
+            chosen.extend(take["campaign_id"].tolist())
+        controls = nominal_b[nominal_b["tic"].isin(pilot_tics)]["control_campaign_id"]
+        chosen.extend(sorted({c for c in controls if c})[:10])
+    nulls = frame[frame["arm"] == SCENARIO_NULL].sort_values("null_serial")
+    if not nulls.empty:
+        idx = np.unique(np.round(np.linspace(0, len(nulls) - 1, min(PILOT_NULLS, len(nulls)))).astype(int))
+        chosen.extend(nulls.iloc[idx]["campaign_id"].tolist())
+    return sorted(set(chosen))
+
+
+# ----------------------------------------------------------------------- main
+
+def main(argv: list[str] | None = None, expected_pool: int = POOL_SIZE_PRODUCTION) -> Path:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--d2-dir", type=Path, default=REPO_ROOT / "generalization/data/d2")
-    parser.add_argument("--out-dir", type=Path,
-                        default=REPO_ROOT / "generalization/data/d2/shards")
-    parser.add_argument("--exposures", type=Path, default=PUBLISHED / "data/exposures.csv.gz")
+    parser.add_argument("--out-dir", type=Path, required=True,
+                        help="generation directory; must not exist (all-or-nothing build)")
+    parser.add_argument("--exposure-stars", type=Path, required=True,
+                        help="attested per-star exposure shards of the published 928 catalog")
     parser.add_argument("--catalog", type=Path,
                         default=PUBLISHED / "catalog/ls_full_catalog.csv")
-    parser.add_argument("--arms", default="b,ctrl,a,ladder,phase,ampscale,dropout,nulls")
-    parser.add_argument("--limit", type=int, default=None, help="pilot: first N targets")
-    parser.add_argument("--resume", action="store_true",
-                        help="permit writing into a non-empty shard directory")
-    args = parser.parse_args()
+    parser.add_argument("--arms", default="b,ctrl,a,ladder,phase,ampscale,dropout,nulls",
+                        help="add 'redilution' to schedule the SAP-equivalent re-dilution "
+                             "variant for SPOC-verified targets (crowdsap from the SPOC report)")
+    parser.add_argument("--limit", type=int, default=None,
+                        help="TEST/PILOT ONLY: first N targets; marks the generation non-production")
+    parser.add_argument("--n-nulls", type=int, default=N_NULLS_PRODUCTION,
+                        help="TEST ONLY: production requires 1000")
+    args = parser.parse_args(argv)
 
     assert_frozen()
     campaign_start = campaign_file_shas()
     arms = set(args.arms.split(","))
-    args.out_dir.mkdir(parents=True, exist_ok=True)
-    existing = list(args.out_dir.glob("*.csv.gz"))
-    if existing and not args.resume:
-        raise SystemExit(
-            f"{args.out_dir} already holds {len(existing)} shards; pass "
-            f"--resume to add to it, or use a fresh directory (stale-shard guard)"
-        )
-    targets = pd.read_csv(args.d2_dir / "d2_targets.csv")
-    modes = pd.read_csv(args.d2_dir / "d2_modes.csv")
+    production = args.limit is None and args.n_nulls == N_NULLS_PRODUCTION \
+        and expected_pool == POOL_SIZE_PRODUCTION
+    out_dir: Path = args.out_dir
+    if out_dir.exists():
+        raise SystemExit(f"{out_dir} exists — a generation is all-or-nothing; use a fresh directory")
+    staging = out_dir.parent / (out_dir.name + ".staging")
+    if staging.exists():
+        shutil.rmtree(staging)
+    staging.mkdir(parents=True)
+    (staging / SENTINEL).write_text("building\n", encoding="utf-8")
+
+    targets_path = args.d2_dir / "d2_targets.csv"
+    modes_path = args.d2_dir / "d2_modes.csv"
+    roster_report_path = args.d2_dir / "d2_roster_report.json"
+    roster_report = json.loads(roster_report_path.read_text(encoding="utf-8"))
+    for name in ("d2_targets.csv", "d2_modes.csv"):
+        recorded = roster_report.get("outputs_sha256", {}).get(name)
+        actual = sha256_file(args.d2_dir / name)
+        if recorded != actual:
+            raise SystemExit(f"{name} SHA {actual[:12]} != roster report's {str(recorded)[:12]}")
+    targets = pd.read_csv(targets_path)
+    modes = pd.read_csv(modes_path)
     if args.limit:
         targets = targets.head(args.limit)
-    stats, frames = load_templates(args.exposures, args.catalog)
+    spoc_report_path = args.d2_dir / SPOC_REPORT
+    spoc_modes_path = args.d2_dir / SPOC_MODES
+    crowdsap: dict[int, float] = {}
+    if spoc_report_path.exists():
+        spoc = json.loads(spoc_report_path.read_text(encoding="utf-8"))
+        for entry in spoc.get("targets", []):
+            if entry.get("crowdsap_median") is not None and "error" not in entry:
+                crowdsap[int(entry["tic"])] = float(entry["crowdsap_median"])
+    elif "redilution" in arms:
+        raise SystemExit("redilution arm needs the SPOC verification report")
 
-    pool_index = {sid: i for i, sid in enumerate(sorted(stats["source_id"]))}
+    stats, templates, template_shas = load_pool(args.exposure_stars, args.catalog, expected_pool)
+    status_of = stats.set_index("source_id")["blind_status"].to_dict()
+    epn_of = stats.set_index("source_id")["exp_per_night"].to_dict()
+    pool_index_of = stats.set_index("source_id")["pool_index"].to_dict()
 
-    def control_id(template_id: str) -> str:
-        return "95" + str(pool_index[template_id]).zfill(17)
+    ladder = [(gi + 1, ri + 1, g, r)
+              for gi, g in enumerate(BANDPASS_LADDER_G)
+              for ri, r in enumerate(BANDPASS_LADDER_RG)]
+    nominal = next((gi, ri, g, r) for gi, ri, g, r in ladder
+                   if g == NOMINAL_G and r == NOMINAL_RG)
 
+    manifest: list[dict] = []
     injected_rows: list[dict] = []
     rejected_rows: list[dict] = []
-    ladder = [
-        (gi + 1, ri + 1, g, r)
-        for gi, g in enumerate(BANDPASS_LADDER_G)
-        for ri, r in enumerate(BANDPASS_LADDER_RG)
-    ]
-    nominal = next(
-        (gi, ri, g, r) for gi, ri, g, r in ladder if g == NOMINAL_G and r == NOMINAL_RG
-    )
-    manifest: list[dict] = []
+    excluded: list[dict] = []
+    dominant_amp: dict[int, float] = {}
+    scheduled_tics: list[int] = []
+
+    def emit(sid: str, tokens, values, model, gaussian: bool, seed: int, **fields) -> None:
+        if not campaign_id_ok(sid):
+            raise SystemExit(f"bad campaign id {sid}")
+        path = staging / f"{sid}.csv.gz"
+        if path.exists():
+            raise SystemExit(f"duplicate shard {sid}")
+        frame, mag = synthesize(tokens, values, model, sid, gaussian, seed)
+        write_shard(path, frame)
+        verify_written(path, values, mag, sid)
+        for mode in model.modes:
+            injected_rows.append({
+                "campaign_id": sid, "period_s": mode.period_s,
+                "frequency_per_day": mode.frequency_per_day,
+                "amp_tess_ppt": mode.amp_tess_ppt, "tess_sinc": mode.tess_sinc,
+                "ztf_sinc": mode.ztf_sinc, "amp_g_mag": mode.amp_g_mag,
+                "amp_r_mag": mode.amp_r_mag, "phase_rad": mode.phase_rad,
+            })
+        for rejected in model.rejected:
+            rejected_rows.append({"campaign_id": sid, **rejected})
+        manifest.append(typed_row(
+            campaign_id=sid, n_modes_injected=len(model.modes),
+            n_modes_rejected=len(model.rejected), shard_sha256=sha256_file(path),
+            **fields))
 
     for target in targets.itertuples(index=False):
-        star_modes = modes[modes["tic"] == target.tic]
+        tic = int(target.tic)
+        star_modes = modes[modes["tic"] == tic]
         periods = star_modes["period_s"].tolist()
         amps = star_modes["amp_ppt"].tolist()
+        cadence = float(target.cadence_s)
+        keep = retained_modes(periods, amps, cadence)
+        if not keep:
+            excluded.append({"tic": tic, "reason": "zero retained modes at this cadence",
+                             "n_published_modes": len(periods)})
+            continue
+        scheduled_tics.append(tic)
+        dominant_amp[tic] = float(max(amps[i] for i in keep))
         picks, match_label = match_templates(stats, float(target.gmag))
-        variants = []
+        variants: list[tuple] = []   # (gi, ri, g, r, ks, phase_draw, amp_scale, drop, crowd)
         if "b" in arms or "a" in arms:
-            variants.append((*nominal, (0, 1, 2)))
+            variants.append((*nominal, (0, 1, 2), 0, 1.0, False, CROWD_CODE_NONE))
         if "ladder" in arms:
-            variants.extend((gi, ri, g, r, (1,)) for gi, ri, g, r in ladder
-                            if not (g == NOMINAL_G and r == NOMINAL_RG))
+            variants.extend((gi, ri, g, r, (1,), 0, 1.0, False, CROWD_CODE_NONE)
+                            for gi, ri, g, r in ladder if not (g == NOMINAL_G and r == NOMINAL_RG))
         if "phase" in arms:
-            variants.extend((nominal[0], nominal[1], nominal[2], nominal[3], (1,),
-                             d, 1.0) for d in (1, 2))
+            variants.extend((*nominal, (1,), d, 1.0, False, CROWD_CODE_NONE) for d in (1, 2))
         if "ampscale" in arms:
-            variants.extend((nominal[0], nominal[1], nominal[2], nominal[3], (1,),
-                             0, sc) for sc in (0.7, 1.3))
-        if "dropout" in arms and len(periods) > 1:
-            variants.append((nominal[0], nominal[1], nominal[2], nominal[3], (1,),
-                             0, "drop"))
-        for entry in variants:
-            gi, ri, g, r, template_ks = entry[:5]
-            phase_draw = entry[5] if len(entry) > 5 else 0
-            amp_scale = entry[6] if len(entry) > 6 else 1.0
-            drop = amp_scale == "drop"
+            variants.extend((*nominal, (1,), 0, sc, False, CROWD_CODE_NONE) for sc in (0.7, 1.3))
+        if "dropout" in arms and len(keep) >= 2:
+            variants.append((*nominal, (1,), 0, 1.0, True, CROWD_CODE_NONE))
+        if "redilution" in arms and tic in crowdsap:
+            variants.append((*nominal, (1,), 0, 1.0, False, CROWD_CODE_REDILUTION))
+        for gi, ri, g, r, ks, phase_draw, amp_scale, drop, crowd in variants:
+            scenario = scenario_code(g, r, phase_draw, amp_scale, drop, crowd)
             model = build_truth_model(
-                int(target.tic), periods, amps, float(target.cadence_s),
-                ratio_g=g, ratio_rg=r,
-                amplitude_scale=1.0 if drop else amp_scale,
-                phase_draw=phase_draw, drop_dominant=drop,
-            )
-            for k in template_ks:
+                tic, periods, amps, cadence, ratio_g=g, ratio_rg=r,
+                crowdsap=crowdsap[tic] if crowd == CROWD_CODE_REDILUTION else None,
+                amplitude_scale=amp_scale, phase_draw=phase_draw, drop_dominant=drop)
+            amp_code = AMP_SCALE_CODE_DROPOUT if drop else AMP_SCALE_CODES[amp_scale]
+            for k in ks:
                 template_id = picks[k]
-                template = frames[template_id]
+                tokens, values = templates[template_id]
                 arm_list = []
-                nominal_scenario = (g == NOMINAL_G and r == NOMINAL_RG
-                                    and phase_draw == 0 and amp_scale == 1.0
-                                    and not drop)
-                if nominal_scenario:
+                if scenario == SCENARIO_NOMINAL:
                     if "b" in arms:
                         arm_list.append(("92", False))
                     if "a" in arms:
@@ -253,115 +480,146 @@ def main() -> None:
                 else:
                     arm_list.append(("92", False))
                 for prefix, gaussian in arm_list:
-                    sid = campaign_id(prefix, int(target.tic), k, gi, ri,
-                                      phase_draw, amp_scale)
-                    if not campaign_id_ok(sid):
-                        raise SystemExit(f"bad campaign id {sid}")
-                    shard = synthesize(template, model, sid, gaussian, seed=int(sid[2:]))
-                    write_shard(args.out_dir / f"{sid}.csv.gz", shard)
-                    for mode in model.modes:
-                        injected_rows.append({
-                            "campaign_id": sid, "period_s": mode.period_s,
-                            "frequency_per_day": mode.frequency_per_day,
-                            "amp_tess_ppt": mode.amp_tess_ppt,
-                            "tess_sinc": mode.tess_sinc,
-                            "ztf_sinc": mode.ztf_sinc,
-                            "amp_g_mag": mode.amp_g_mag,
-                            "amp_r_mag": mode.amp_r_mag,
-                            "phase_rad": mode.phase_rad,
-                        })
-                    for rejected in model.rejected:
-                        rejected_rows.append({"campaign_id": sid, **rejected})
-                    manifest.append({
-                        "campaign_id": sid, "arm": "A" if gaussian else "B",
-                        "tic": int(target.tic), "template_source_id": template_id,
-                        "template_status": stats.set_index("source_id")["blind_status"].get(template_id, ""),
-                        "template_exp_per_night": float(
-                            stats.set_index("source_id")["exp_per_night"].get(
-                                template_id, float("nan"))),
-                        "template_k": k, "ratio_g": g, "ratio_rg": r,
-                        "phase_draw": phase_draw,
-                        "amp_scale": 1.0 if drop else amp_scale,
-                        "dominant_dropped": drop,
-                        "match": match_label,
-                        "control_campaign_id": control_id(template_id) if not gaussian else "",
-                        "n_modes_injected": len(model.modes),
-                        "n_modes_rejected": len(model.rejected),
-                    })
-        print(f"[d2-shards] TIC {target.tic}: {len(manifest)} shards so far", flush=True)
+                    sid = campaign_id(prefix, tic, k, gi, ri, phase_draw, amp_code, crowd)
+                    emit(sid, tokens, values, model, gaussian, int(sid[2:]),
+                         arm="A" if gaussian else "B", scenario=scenario, tic=tic,
+                         template_source_id=template_id,
+                         template_status=status_of[template_id], template_k=k,
+                         pool_index=pool_index_of[template_id],
+                         template_exp_per_night=epn_of[template_id],
+                         ratio_g=g, ratio_rg=r, phase_draw=phase_draw,
+                         amp_scale=amp_scale, dominant_dropped=drop,
+                         dropped_period_s=model.dropped_period_s if drop else math.nan,
+                         crowdsap=crowdsap[tic] if crowd == CROWD_CODE_REDILUTION else math.nan,
+                         n_strata_scheduled=len(ks), match=match_label,
+                         control_campaign_id=control_id(pool_index_of[template_id]) if not gaussian else "")
+        print(f"[d2-shards] TIC {tic}: {len(manifest)} shards so far", flush=True)
 
     if "ctrl" in arms:
-        used = sorted({
-            row["template_source_id"] for row in manifest if row["arm"] == "B"
-        })
-        null_model = build_truth_model(0, [], [], 120.0)
+        used = sorted({row["template_source_id"] for row in manifest if row["arm"] == "B"})
         for template_id in used:
-            sid = control_id(template_id)
-            shard = frames[template_id].copy()
-            shard["source_id"] = sid
-            write_shard(args.out_dir / f"{sid}.csv.gz", shard)
-            manifest.append({
-                "campaign_id": sid, "arm": "ctrl", "tic": 0,
-                "template_source_id": template_id,
-                "template_status": stats.set_index("source_id")["blind_status"].get(template_id, ""),
-                "template_k": -1, "ratio_g": 0.0, "ratio_rg": 0.0, "match": "",
-                "n_modes_injected": 0, "n_modes_rejected": 0,
-            })
+            sid = control_id(pool_index_of[template_id])
+            tokens, values = templates[template_id]
+            null_model = build_truth_model(0, [], [], 120.0)
+            emit(sid, tokens, values, null_model, False, 0,
+                 arm="ctrl", scenario=SCENARIO_CONTROL, template_source_id=template_id,
+                 template_status=status_of[template_id],
+                 pool_index=pool_index_of[template_id],
+                 template_exp_per_night=epn_of[template_id])
         print(f"[d2-shards] {len(used)} paired controls", flush=True)
 
     if "nulls" in arms:
-        pool = stats.sort_values("source_id")["source_id"].tolist()
+        pool = stats["source_id"].tolist()   # already sorted by source_id
         null_model = build_truth_model(0, [], [], 120.0)
-        for serial in range(N_NULLS):
+        for serial in range(args.n_nulls):
             template_id = pool[serial % len(pool)]
-            sid = "94" + str(serial).zfill(17)
-            shard = synthesize(frames[template_id], null_model, sid, True, seed=serial)
-            write_shard(args.out_dir / f"{sid}.csv.gz", shard)
-            manifest.append({
-                "campaign_id": sid, "arm": "null", "tic": 0,
-                "template_source_id": template_id,
-                "template_status": stats.set_index("source_id")["blind_status"].get(template_id, ""),
-                "template_k": serial % len(pool),
-                "ratio_g": 0.0, "ratio_rg": 0.0, "match": "",
-                "n_modes_injected": 0, "n_modes_rejected": 0,
-            })
+            tokens, values = templates[template_id]
+            emit(null_id(serial), tokens, values, null_model, True, serial,
+                 arm=SCENARIO_NULL, scenario=SCENARIO_NULL, template_source_id=template_id,
+                 template_status=status_of[template_id],
+                 pool_index=pool_index_of[template_id],
+                 template_exp_per_night=epn_of[template_id], amp_scale=0.0,
+                 null_serial=serial)
             if (serial + 1) % 200 == 0:
-                print(f"[d2-shards] nulls {serial + 1}/{N_NULLS}", flush=True)
+                print(f"[d2-shards] nulls {serial + 1}/{args.n_nulls}", flush=True)
 
-    frame = pd.DataFrame(manifest)
-    frame.to_csv(args.out_dir / "shard_manifest.csv", index=False)
-    (args.out_dir / "shard_index.txt").write_text(
-        "\n".join(sorted(frame["campaign_id"])) + "\n", encoding="utf-8")
-    pd.DataFrame(injected_rows).to_csv(args.out_dir / "injected_modes.csv", index=False)
-    pd.DataFrame(rejected_rows).to_csv(args.out_dir / "rejected_modes.csv", index=False)
-    unique_rejected = {
-        (row["campaign_id"].split("0000")[0][2:12], row["period_s"])
-        for row in rejected_rows
-    }
-    import hashlib as _hashlib
-    outputs_sha = {
-        name: _hashlib.sha256((args.out_dir / name).read_bytes()).hexdigest()
-        for name in ("shard_manifest.csv", "injected_modes.csv", "rejected_modes.csv")
-    }
+    frame = pd.DataFrame(manifest, columns=list(MANIFEST_COLUMN_NAMES))
+    validate_manifest(frame)
+    injected = pd.DataFrame(injected_rows, columns=list(INJECTED_MODE_COLUMNS))
+    rejected = pd.DataFrame(rejected_rows, columns=list(REJECTED_MODE_COLUMNS))
+    # bijections: A/B shards <-> injected rows; every shard on disk <-> manifest
+    per_sid_injected = injected.groupby("campaign_id").size()
     ab = frame[frame["arm"].isin(["A", "B"])]
-    summary = {
-        "shards": len(frame),
-        "by_arm": frame["arm"].value_counts().to_dict(),
-        "match_labels": frame["match"].value_counts().to_dict(),
-        "targets": int(ab["tic"].nunique()),
-        "unique_windows_arm_b": int(
-            frame.loc[frame["arm"] == "B", "template_source_id"].nunique()),
+    for row in ab.itertuples(index=False):
+        if int(per_sid_injected.get(row.campaign_id, 0)) != row.n_modes_injected or row.n_modes_injected < 1:
+            raise SystemExit(f"{row.campaign_id}: injected rows != n_modes_injected or zero modes")
+    if set(injected["campaign_id"]) - set(ab["campaign_id"]):
+        raise SystemExit("injected_modes carries non-A/B ids")
+    per_sid_rejected = rejected.groupby("campaign_id").size()
+    for row in ab.itertuples(index=False):
+        if int(per_sid_rejected.get(row.campaign_id, 0)) != row.n_modes_rejected:
+            raise SystemExit(f"{row.campaign_id}: rejected rows != n_modes_rejected")
+    disk = {p.name.split(".csv")[0] for p in staging.glob("*.csv.gz")}
+    if disk != set(frame["campaign_id"]):
+        raise SystemExit("disk shards != manifest ids")
+    nominal_b = frame[(frame["arm"] == "B") & (frame["scenario"] == SCENARIO_NOMINAL)]
+    per_target_k = nominal_b.groupby("tic")["template_k"].apply(lambda s: sorted(s.tolist()))
+    if "b" in arms:
+        if sorted(per_target_k.index.tolist()) != sorted(scheduled_tics):
+            raise SystemExit("nominal arm-B targets != scheduled targets")
+        if any(ks != [0, 1, 2] for ks in per_target_k):
+            raise SystemExit("nominal arm-B strata are not exactly K={0,1,2} per target")
+    nulls = frame[frame["arm"] == SCENARIO_NULL]
+    if "nulls" in arms and sorted(nulls["null_serial"].tolist()) != list(range(args.n_nulls)):
+        raise SystemExit("null serials are not exactly 0..N-1")
+
+    frame.to_csv(staging / "shard_manifest.csv", index=False, lineterminator="\n")
+    injected.to_csv(staging / "injected_modes.csv", index=False, lineterminator="\n")
+    rejected.to_csv(staging / "rejected_modes.csv", index=False, lineterminator="\n")
+    pd.DataFrame(excluded, columns=["tic", "reason", "n_published_modes"]).to_csv(
+        staging / "excluded_targets.csv", index=False, lineterminator="\n")
+    (staging / "shard_index.txt").write_text(
+        "\n".join(sorted(frame["campaign_id"])) + "\n", encoding="utf-8")
+    (staging / "pilot_shard_index.txt").write_text(
+        "\n".join(pilot_index(frame, dominant_amp, args.n_nulls)) + "\n", encoding="utf-8")
+
+    inputs_sha = {
+        "d2_targets.csv": sha256_file(targets_path),
+        "d2_modes.csv": sha256_file(modes_path),
+        "d2_roster_report.json": sha256_file(roster_report_path),
+        "catalog": sha256_file(args.catalog),
+        "GENERALIZATION_PLAN.md": sha256_file(REPO_ROOT / "generalization/GENERALIZATION_PLAN.md"),
+        "METRICS_SPEC.md": sha256_file(REPO_ROOT / "generalization/METRICS_SPEC.md"),
+    }
+    if spoc_report_path.exists():
+        inputs_sha["spoc_report"] = sha256_file(spoc_report_path)
+    if spoc_modes_path.exists():
+        inputs_sha["spoc_recovered_modes"] = sha256_file(spoc_modes_path)
+    outputs_sha = {name: sha256_file(staging / name) for name in (
+        "shard_manifest.csv", "injected_modes.csv", "rejected_modes.csv",
+        "excluded_targets.csv", "shard_index.txt", "pilot_shard_index.txt")}
+    shard_shas = dict(zip(frame["campaign_id"], frame["shard_sha256"]))
+    generation_basis = {
+        "inputs_sha256": inputs_sha, "template_shas": template_shas,
+        "frozen_sha256": frozen_file_shas(), "campaign_sha256": campaign_start,
+        "args": {"arms": sorted(arms), "limit": args.limit, "n_nulls": args.n_nulls,
+                 "expected_pool": expected_pool},
+    }
+    generation_id = hashlib.sha256(
+        json.dumps(generation_basis, sort_keys=True).encode()).hexdigest()
+    generation = {
+        "generation_id": generation_id,
+        "production": production,
+        "non_production_reasons": [] if production else [
+            r for r, flag in (("limit", args.limit is not None),
+                              ("n_nulls", args.n_nulls != N_NULLS_PRODUCTION),
+                              ("pool", expected_pool != POOL_SIZE_PRODUCTION)) if flag],
+        "n_targets_input": int(len(targets)),
+        "n_targets_scheduled": len(scheduled_tics),
+        "scheduled_tics": scheduled_tics,
+        "excluded_targets": excluded,
+        "n_nulls": args.n_nulls,
+        "n_shards": int(len(frame)),
+        "by_arm": {k: int(v) for k, v in frame["arm"].value_counts().items()},
+        "by_scenario": {k: int(v) for k, v in frame["scenario"].value_counts().items()},
+        "match_labels": {k: int(v) for k, v in frame["match"].value_counts().items()},
+        "unique_windows_arm_b": int(frame.loc[frame["arm"] == "B", "template_source_id"].nunique()),
         "total_rejected_mode_rows": int(frame["n_modes_rejected"].sum()),
-        "unique_target_modes_rejected": len(unique_rejected),
+        "crowdsap_available": sorted(crowdsap),
+        **generation_basis,
         "outputs_sha256": outputs_sha,
-        "campaign_sha256": campaign_start,
+        "shard_sha256": shard_shas,
     }
     if campaign_file_shas() != campaign_start:
         raise SystemExit("campaign code changed while shards were building")
-    (args.out_dir / "shard_summary.json").write_text(
-        json.dumps(summary, indent=2) + "\n", encoding="utf-8"
-    )
+    (staging / "generation_manifest.json").write_text(
+        json.dumps(generation, indent=2) + "\n", encoding="utf-8")
+    (staging / SENTINEL).unlink()
+    os.replace(staging, out_dir)
+    summary = {k: generation[k] for k in ("generation_id", "production", "n_targets_scheduled",
+                                          "n_shards", "by_arm", "by_scenario", "match_labels")}
     print(json.dumps(summary, indent=2))
+    return out_dir
 
 
 if __name__ == "__main__":

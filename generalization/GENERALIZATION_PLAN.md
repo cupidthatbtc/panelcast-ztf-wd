@@ -52,8 +52,13 @@ METRICS_SPEC.md are binding.
 ### Campaign source_id convention
 
 19-digit numeric strings: `90…` D3 targets, `92…` D2 arm B, `93…` D2 arm A,
-`94…` D2 Gaussian nulls, `95…` D2 paired real-window controls. No collision
-with Gaia DR3 ids; always valid for the frozen seed convention.
+`94…` D2 Gaussian nulls, `95…` D2 paired real-window controls, `96…` D2
+Romero self-window diagnostic. No collision with Gaia DR3 ids; always valid
+for the frozen seed convention. D2 arm layout `AA TTTTTTTTTT K GR PS C0`:
+K template index 0–2; G/R ladder indices 1–3 (22 = nominal); P phase draw
+0–2; S amplitude-scale code 0 = 1.0, 1 = 0.7, 2 = 1.3, 3 = dominant-mode
+dropout (scale 1.0); C crowding code 0 = PDCSAP as published, 1 =
+SAP-equivalent re-dilution; trailing digit reserved (Amendment 2).
 
 ### Replay gate (blocks everything)
 
@@ -155,8 +160,13 @@ No re-run; campaign metrics re-read the published per-star JSONs.
   integration response has its first null at P = 120 s — two distinct
   boundaries, both making interpolated TESS photometry undefined in the DAV
   range; the mode table is evaluated analytically at the template's real
-  `bjd_tdb`. Chain: ppt → mag (×1.0857e-3) → de-dilution OFF by default
-  (SPOC PDCSAP is crowding-corrected; ON = prespecified variant) →
+  `bjd_tdb`. Chain: ppt → mag (×1.0857e-3) → crowding: the published
+  amplitudes are PDCSAP, already dilution-corrected (Romero+2022 §2,
+  Romero+2025 §2), so no de-dilution is applied; the prespecified crowding
+  SENSITIVITY is the SAP-equivalent RE-dilution A × CROWDSAP (multiplication;
+  Amendment 2 — the pre-G3 text's "divide by CROWDSAP" would have inflated
+  amplitudes ~5× at the median CROWDSAP 0.19), scheduled only for
+  SPOC-verified targets whose CROWDSAP is on file →
   de-integrate the TESS boxcar (signed sinc; REJECT modes with
   |sinc| < 0.3, i.e. P < ~160 s at 120-s cadence, P < ~27 s at 20-s);
   cadence precedence is algorithmic: cadence_s (an EFFECTIVE integration
@@ -213,14 +223,39 @@ No re-run; campaign metrics re-read the published per-star JSONs.
   ladder sensitivity MEDIAN-WINDOW-CONDITIONED: 8 non-nominal (R_g, R_rg)
   points × 103 × 1 = 824; phase-draw sensitivity 2 × 103 = 206;
   amplitude-stationarity axis (scale × {0.7, 1.3}) 2 × 103 = 206;
-  dominant-mode-dropout variant ≤ 103 (targets with ≥ 2 modes) — the
-  ±30% multiplier is a LOCAL sensitivity, not an astrophysical envelope;
-  DAV modes can vanish outright between epochs, which dropout probes
-  (all sensitivity axes: median window, arm B nominal ratios).
+  dominant-mode-dropout variant ≤ 103 (targets with ≥ 2 RETAINED modes;
+  the dropped mode is the largest-amplitude retained mode; every survivor
+  keeps its nominal phase — Amendment 2) — the ±30% multiplier is a LOCAL
+  sensitivity, not an astrophysical envelope; DAV modes can vanish outright
+  between epochs, which dropout probes (all sensitivity axes: median window,
+  arm B nominal ratios). Targets with ZERO retained modes at their cadence
+  cannot be positives and are excluded from the matrix (recorded in
+  excluded_targets.csv; the scheduled-target list is frozen in the
+  generation manifest and is the P4 denominator).
   Stretch additions listed separately: Romero self-window diagnostic
-  (count set by crossmatch yield); de-dilution variant only for the SPOC
-  verification-arm stars (CROWDSAP comes with the ~20 downloads).
+  (count set by crossmatch yield); SAP-equivalent re-dilution variant only
+  for the SPOC verification-arm stars (CROWDSAP comes with the downloads).
   Every sensitivity contrast uses the common-subset rule (METRICS_SPEC).
+- Generation discipline (Amendment 2, G3 methods findings 1–8): every
+  manifest row of every arm carries the fixed typed schema
+  (d2_truth_model.MANIFEST_COLUMNS) including an explicit immutable
+  `scenario` code and `n_strata_scheduled` (3 nominal, 1 single-window
+  sensitivity); shards are built into a staging directory under an
+  IN_PROGRESS sentinel from the ATTESTED per-star exposure shards (original
+  text tokens preserved; model evaluated on the frozen loader's parse; each
+  written shard re-loaded through the frozen loader and checked bitwise on
+  epochs), validated (index == manifest == disk, SHA identity, A/B ↔
+  injected-mode bijection, exactly K = {0,1,2} nominal-B replicates per
+  scheduled target, exact null serials), described by a generation manifest
+  (generation id over every input SHA + code SHAs + arguments; per-shard
+  SHAs; roster-report and SPOC-report SHAs) and published atomically —
+  there is no resume. The runner refuses unpublished generations, binds
+  each result's sidecar to shard SHA, result SHA, pass set, env, frozen and
+  campaign digests, attestation SHA and generation id, and writes a per-id
+  completion table; metrics verify all of it before counting a result.
+  Timing pilot = the builder's stratified `pilot_shard_index.txt` (~150
+  shards spanning every arm/scenario, window strata and amplitudes) run via
+  `--stars-file`; pilot outputs are never confirmatory for P4/P5.
 - Truth-model corrections found at implementation (2026-08-28): |sinc| ≥ 0.3
   rejection corresponds to P < ~160 s at 120-s cadence (the earlier "197 s"
   was the |sinc| = 0.5 point); D2 min published period is 115.9 s and 49/103

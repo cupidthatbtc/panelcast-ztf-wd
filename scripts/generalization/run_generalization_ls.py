@@ -110,23 +110,34 @@ def provenance_path(star_dir: Path, source_id: str) -> Path:
     return star_dir / f"{source_id}.prov.json"
 
 
-def write_provenance(star_dir: Path, source_id: str, shard: Path) -> None:
+def write_provenance(star_dir: Path, source_id: str, shard: Path,
+                     passes: tuple[str, ...], binding: dict) -> None:
+    """Sidecar binding a result to its shard bytes, environment, pass set,
+    frozen/campaign code snapshot, replay attestation and shard generation
+    (G3 methods finding 6); the result file's own SHA closes the loop."""
+    result_path = star_dir / f"{source_id}.json"
     provenance_path(star_dir, source_id).write_text(
         json.dumps({
+            "source_id": source_id,
+            "passes": list(passes),
             "shard_sha256": shard_sha256(shard),
+            "result_sha256": shard_sha256(result_path),
             "env_digest": env_digest(),
             "driver": "run_generalization_ls.py",
+            **binding,
         }, indent=2) + "\n",
         encoding="utf-8",
     )
 
 
 def scan_pending(shard_dir: Path, star_dir: Path, passes: tuple[str, ...],
-                 only: set[str] | None, limit: int | None) -> tuple[list[str], int]:
+                 only: set[str] | None, limit: int | None,
+                 binding: dict) -> tuple[list[str], list[str]]:
     """A completed result is reused ONLY when its provenance sidecar matches
-    the current shard content and environment (G1 methods finding 8); stale
-    results are DELETED so analyze_star's internal early-return cannot
-    resurrect them."""
+    the current shard content, environment, pass set, result bytes, and the
+    frozen/campaign/attestation/generation binding (G1 methods finding 8, G3
+    methods finding 6); stale results are DELETED so analyze_star's internal
+    early-return cannot resurrect them. Returns (pending, all source ids)."""
     source_ids = sorted(path.name.split(".csv")[0] for path in shard_dir.glob("*.csv.gz"))
     if only is not None:
         missing = only - set(source_ids)
@@ -146,10 +157,15 @@ def scan_pending(shard_dir: Path, star_dir: Path, passes: tuple[str, ...],
                 prov = json.loads(prov_file.read_text(encoding="utf-8"))
                 if (
                     result.get("complete")
+                    and result.get("source_id") == source_id
                     and set(result.get("passes", {})) >= set(passes)
+                    and prov.get("source_id") == source_id
+                    and set(prov.get("passes", [])) == set(passes)
                     and prov.get("shard_sha256")
                     == shard_sha256(shard_dir / f"{source_id}.csv.gz")
+                    and prov.get("result_sha256") == shard_sha256(result_path)
                     and prov.get("env_digest") == current_env
+                    and all(prov.get(key) == value for key, value in binding.items())
                 ):
                     continue
             except json.JSONDecodeError:
@@ -157,7 +173,7 @@ def scan_pending(shard_dir: Path, star_dir: Path, passes: tuple[str, ...],
         result_path.unlink(missing_ok=True)
         prov_file.unlink(missing_ok=True)
         pending.append(source_id)
-    return pending, len(source_ids)
+    return pending, source_ids
 
 
 def write_progress(path: Path, payload: dict) -> None:
@@ -203,6 +219,24 @@ def main() -> None:
     if passes != ("low", "high") and not args.allow_nonstandard_ids:
         raise SystemExit("production runs use exactly low,high (the frozen CLI's "
                          "pass set); pass --allow-nonstandard-ids for debug runs")
+    if (args.shard_dir / "IN_PROGRESS").exists():
+        raise SystemExit(f"{args.shard_dir} is an unpublished shard generation (IN_PROGRESS sentinel)")
+    generation_path = args.shard_dir / "generation_manifest.json"
+    generation = (json.loads(generation_path.read_text(encoding="utf-8"))
+                  if generation_path.exists() else {})
+    if args.dataset.startswith("d2") and not generation and not args.allow_nonstandard_ids:
+        raise SystemExit("d2 runs require a published shard generation (generation_manifest.json)")
+    pilot = args.limit is not None or args.stars_file is not None
+    if generation and not generation.get("production", False) and not pilot:
+        raise SystemExit("non-production shard generation: only --limit/--stars-file pilot runs allowed")
+    binding = {
+        "generation_id": generation.get("generation_id", ""),
+        "attestation_sha256": hashlib.sha256(args.replay_report.read_bytes()).hexdigest(),
+        "frozen_digest": hashlib.sha256(
+            json.dumps(frozen_file_shas(), sort_keys=True).encode()).hexdigest(),
+        "campaign_digest": hashlib.sha256(
+            json.dumps(campaign_shas_start, sort_keys=True).encode()).hexdigest(),
+    }
     star_dir = args.out_dir / "stars"
     work_root = args.work_root or (args.out_dir / "work")
     star_dir.mkdir(parents=True, exist_ok=True)
@@ -234,7 +268,8 @@ def main() -> None:
     only = None
     if args.stars_file:
         only = {line.strip() for line in args.stars_file.read_text().splitlines() if line.strip()}
-    pending, total = scan_pending(args.shard_dir, star_dir, passes, only, args.limit)
+    pending, source_ids = scan_pending(args.shard_dir, star_dir, passes, only, args.limit, binding)
+    total = len(source_ids)
 
     if not args.allow_nonstandard_ids:
         bad = [sid for sid in pending if not campaign_id_ok(sid)]
@@ -291,7 +326,7 @@ def main() -> None:
             try:
                 future.result()
                 write_provenance(star_dir, source_id,
-                                 args.shard_dir / f"{source_id}.csv.gz")
+                                 args.shard_dir / f"{source_id}.csv.gz", passes, binding)
                 completed_now += 1
             except Exception as exc:
                 failures[source_id] = repr(exc)
@@ -315,15 +350,38 @@ def main() -> None:
         "workers": workers,
         "wall_seconds": round(time.time() - started, 1),
         "shard_dir": str(args.shard_dir),
+        "generation_id": binding["generation_id"],
+        "pilot": pilot,
+        "limit": args.limit,
+        "stars_file": str(args.stars_file) if args.stars_file else "",
         "env": env_versions(),
         "frozen_sha256": assert_frozen(),
         "campaign_sha256": campaign_file_shas(),
+        "binding": binding,
         "replay_attestation": {
             "path": str(args.replay_report),
+            "sha256": binding["attestation_sha256"],
             "wall_seconds": attestation.get("wall_seconds"),
             "verdict_counts": attestation.get("verdict_counts"),
         },
     }
+    # per-id completion table (G3 methods finding 6): metrics verifies it
+    completion_rows = []
+    for source_id in source_ids:
+        result_path = star_dir / f"{source_id}.json"
+        prov_file = provenance_path(star_dir, source_id)
+        if source_id in failures:
+            status = "failed"
+        elif result_path.exists() and prov_file.exists():
+            status = "complete"
+        else:
+            status = "pending"
+        completion_rows.append({
+            "source_id": source_id, "status": status,
+            "result_sha256": shard_sha256(result_path) if result_path.exists() else "",
+        })
+    pd.DataFrame(completion_rows, columns=["source_id", "status", "result_sha256"]).to_csv(
+        args.out_dir / "completion.csv", index=False, lineterminator="\n")
     if campaign_file_shas() != campaign_shas_start:
         raise SystemExit("campaign code changed mid-run — results void")
     (args.out_dir / "manifest.json").write_text(

@@ -15,6 +15,8 @@ from d2_truth_model import (  # noqa: E402
     blackbody_amplitude_ratios,
     build_truth_model,
     integration_sinc,
+    retained_modes,
+    scenario_code,
 )
 
 
@@ -88,10 +90,58 @@ def test_zero_amplitude_null():
     assert np.all(null.evaluate(time, "zr", t_ref=0.0) == 0.0)
 
 
-def test_dedilution_variant():
-    on = build_truth_model(5, [400.0], [8.0], cadence_s=120.0, dedilution=0.8)
+def test_redilution_variant_multiplies_by_crowdsap():
+    # PDCSAP is already crowding-corrected: the prespecified sensitivity is the
+    # SAP-equivalent RE-dilution A x CROWDSAP (G3 numerics finding 4), never A / CROWDSAP
+    on = build_truth_model(5, [400.0], [8.0], cadence_s=120.0, crowdsap=0.19)
     off = build_truth_model(5, [400.0], [8.0], cadence_s=120.0)
-    assert abs(on.modes[0].amp_g_mag - off.modes[0].amp_g_mag / 0.8) < 1e-15
+    assert abs(on.modes[0].amp_g_mag - off.modes[0].amp_g_mag * 0.19) < 1e-15
+    assert on.modes[0].phase_rad == off.modes[0].phase_rad
+    import pytest
+    with pytest.raises(ValueError):
+        build_truth_model(5, [400.0], [8.0], cadence_s=120.0, crowdsap=1.5)
+
+
+def test_dropout_removes_largest_retained_mode_and_preserves_survivor_phases():
+    # table order: 150 s (rejected at 120-s cadence), 300 s (5 ppt), 500 s (9 ppt), 700 s (2 ppt)
+    periods, amps = [150.0, 300.0, 500.0, 700.0], [20.0, 5.0, 9.0, 2.0]
+    assert retained_modes(periods, amps, 120.0) == [1, 2, 3]
+    nominal = build_truth_model(11, periods, amps, cadence_s=120.0)
+    dropped = build_truth_model(11, periods, amps, cadence_s=120.0, drop_dominant=True)
+    # the 20-ppt mode is REJECTED, so the dominant RETAINED mode (500 s) is dropped
+    assert dropped.dominant_dropped and dropped.dropped_period_s == 500.0
+    assert [m.period_s for m in dropped.modes] == [300.0, 700.0]
+    phase_nominal = {m.period_s: m.phase_rad for m in nominal.modes}
+    for mode in dropped.modes:
+        assert mode.phase_rad == phase_nominal[mode.period_s]
+        assert mode.amp_g_mag == {m.period_s: m.amp_g_mag for m in nominal.modes}[mode.period_s]
+    assert len(dropped.rejected) == 1 and dropped.rejected[0]["period_s"] == 150.0
+
+
+def test_dropout_requires_two_retained_modes():
+    import pytest
+    with pytest.raises(ValueError):
+        build_truth_model(12, [150.0, 300.0], [9.0, 5.0], cadence_s=120.0, drop_dominant=True)
+
+
+def test_phase_is_a_function_of_table_position_only():
+    # sinc rejection of an earlier mode must not shift later modes' phases
+    with_short = build_truth_model(13, [150.0, 300.0, 500.0], [9.0, 5.0, 3.0], cadence_s=120.0)
+    phases_by_period = {m.period_s: m.phase_rad for m in with_short.modes}
+    # the same TIC with the identical table evaluated at 20-s cadence retains the 150-s mode
+    at_20s = build_truth_model(13, [150.0, 300.0, 500.0], [9.0, 5.0, 3.0], cadence_s=20.0)
+    for mode in at_20s.modes:
+        if mode.period_s in phases_by_period:
+            assert mode.phase_rad == phases_by_period[mode.period_s]
+
+
+def test_scenario_codes_are_explicit_and_disjoint():
+    assert scenario_code(1.7, 0.80, 0, 1.0, False) == "nominal"
+    assert scenario_code(1.7, 0.80, 0, 1.0, True) == "dropout"
+    assert scenario_code(1.7, 0.80, 1, 1.0, False) == "phase_1"
+    assert scenario_code(1.7, 0.80, 0, 0.7, False) == "ampscale_0.7"
+    assert scenario_code(2.1, 0.70, 0, 1.0, False) == "ladder_g3r1"
+    assert scenario_code(1.7, 0.80, 0, 1.0, False, crowd_code=1) == "redilution"
 
 
 def test_super_nyquist_sign_flip_carried_into_amplitude():

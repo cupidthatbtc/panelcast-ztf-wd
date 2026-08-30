@@ -246,48 +246,128 @@ def truth_d3() -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
-def truth_d2(shards_dir: Path) -> pd.DataFrame:
+D2_DTYPES = {"str": str, "int": "int64", "float": float, "bool": bool}
+
+
+def load_d2_manifest(shards_dir: Path) -> pd.DataFrame:
+    """Fixed typed manifest schema (d2_truth_model.MANIFEST_COLUMNS); any
+    deviation, NaN in an int/bool column, or duplicate id is fatal."""
+    from d2_truth_model import MANIFEST_COLUMN_NAMES, MANIFEST_COLUMNS
+    path = shards_dir / "shard_manifest.csv"
+    header = pd.read_csv(path, nrows=0).columns.tolist()
+    if header != list(MANIFEST_COLUMN_NAMES):
+        raise SystemExit(f"{path}: columns deviate from the frozen manifest schema")
+    dtype = {name: D2_DTYPES[kind] for name, kind in MANIFEST_COLUMNS}
+    try:
+        manifest = pd.read_csv(path, dtype=dtype)
+    except (ValueError, TypeError) as exc:
+        raise SystemExit(f"{path}: manifest violates its typed schema: {exc}")
+    for name, kind in MANIFEST_COLUMNS:
+        if kind == "str":
+            manifest[name] = manifest[name].fillna("")
+        elif kind in ("int", "bool") and manifest[name].isna().any():
+            raise SystemExit(f"{path}: NaN in typed column {name}")
+    if manifest["campaign_id"].duplicated().any():
+        raise SystemExit(f"{path}: duplicate campaign ids")
+    return manifest
+
+
+def truth_d2(shards_dir: Path, pilot: bool = False) -> tuple[pd.DataFrame, dict]:
     """Truth from injected_modes.csv — the ACTUALLY injected (post-sinc-
     rejection) mode set per shard, never the original mode table (G2 methods
-    finding 4)."""
-    manifest = pd.read_csv(shards_dir / "shard_manifest.csv",
-                           dtype={"campaign_id": str, "template_source_id": str})
-    injected = pd.read_csv(shards_dir / "injected_modes.csv",
-                           dtype={"campaign_id": str})
+    finding 4). Fail-closed contract checks (G3 methods findings 1, 4):
+    published generation only, fixed typed schema, index == manifest == disk,
+    per-shard SHA identity against the generation record, A/B <-> injected-row
+    bijection, exactly one nominal-B replicate per (scheduled target, K in
+    {0,1,2}), exact null serials 0..n-1 (n = 1000 in production)."""
+    from d2_truth_model import SCENARIO_NOMINAL
+    if (shards_dir / "IN_PROGRESS").exists():
+        raise SystemExit(f"{shards_dir} is an unpublished (in-progress) generation")
+    generation_path = shards_dir / "generation_manifest.json"
+    if not generation_path.exists():
+        raise SystemExit(f"{shards_dir} lacks generation_manifest.json (not a published generation)")
+    generation = json.loads(generation_path.read_text(encoding="utf-8"))
+    if not generation.get("production") and not pilot:
+        raise SystemExit(f"non-production generation {generation.get('non_production_reasons')} "
+                         f"can only feed a pilot (run manifest pilot=true)")
+    manifest = load_d2_manifest(shards_dir)
+    index_ids = {line.strip() for line in
+                 (shards_dir / "shard_index.txt").read_text(encoding="utf-8").splitlines() if line.strip()}
+    disk_ids = {p.name.split(".csv")[0] for p in shards_dir.glob("*.csv.gz")}
+    manifest_ids = set(manifest["campaign_id"])
+    if not (index_ids == disk_ids == manifest_ids):
+        raise SystemExit(f"{shards_dir}: index/disk/manifest id sets differ "
+                         f"({len(index_ids)}/{len(disk_ids)}/{len(manifest_ids)})")
+    recorded = generation.get("shard_sha256", {})
+    if generation.get("n_shards") != len(manifest) or set(recorded) != manifest_ids:
+        raise SystemExit("generation manifest does not describe this shard set")
+    for row in manifest.itertuples(index=False):
+        actual = sha256_file(shards_dir / f"{row.campaign_id}.csv.gz")
+        if actual != row.shard_sha256 or actual != recorded[row.campaign_id]:
+            raise SystemExit(f"{row.campaign_id}: shard bytes differ from the generation record")
+    injected = pd.read_csv(shards_dir / "injected_modes.csv", dtype={"campaign_id": str})
+    rejected = pd.read_csv(shards_dir / "rejected_modes.csv", dtype={"campaign_id": str})
+    ab = manifest[manifest["arm"].isin(["A", "B"])]
+    n_inj = injected.groupby("campaign_id").size()
+    n_rej = rejected.groupby("campaign_id").size()
+    for row in ab.itertuples(index=False):
+        if int(n_inj.get(row.campaign_id, 0)) != row.n_modes_injected or row.n_modes_injected < 1:
+            raise SystemExit(f"{row.campaign_id}: injected_modes rows != n_modes_injected (or zero)")
+        if int(n_rej.get(row.campaign_id, 0)) != row.n_modes_rejected:
+            raise SystemExit(f"{row.campaign_id}: rejected_modes rows != n_modes_rejected")
+    if set(injected["campaign_id"]) - set(ab["campaign_id"]):
+        raise SystemExit("injected_modes.csv carries control/null ids")
+    scheduled = [int(t) for t in generation.get("scheduled_tics", [])]
+    nominal_b = manifest[(manifest["arm"] == "B") & (manifest["scenario"] == SCENARIO_NOMINAL)]
+    if not nominal_b.empty:
+        per_target = nominal_b.groupby("tic")["template_k"].apply(lambda s: sorted(s.tolist()))
+        if (sorted(per_target.index.tolist()) != sorted(scheduled)
+                or any(ks != [0, 1, 2] for ks in per_target)):
+            raise SystemExit("nominal arm-B rows are not exactly K={0,1,2} for every scheduled target")
+        if len(scheduled) != int(generation.get("n_targets_scheduled", -1)):
+            raise SystemExit("scheduled target list disagrees with the generation manifest")
+    nulls = manifest[manifest["arm"] == "gauss_null"]
+    if not nulls.empty:
+        if sorted(nulls["null_serial"].tolist()) != list(range(int(generation.get("n_nulls", -1)))):
+            raise SystemExit("null serials are not exactly 0..n_nulls-1")
+        if generation.get("production") and int(generation["n_nulls"]) != 1000:
+            raise SystemExit("production generation must schedule exactly 1000 nulls")
     freq_lists = injected.groupby("campaign_id")["frequency_per_day"].apply(
         lambda g: sorted(g.tolist())).to_dict()
-    dominant = {}
-    amp_dom = {}
+    dominant, amp_dom = {}, {}
     for sid, group in injected.groupby("campaign_id"):
         best = group.loc[group["amp_tess_ppt"].idxmax()]
         dominant[sid] = float(best["frequency_per_day"])
         amp_dom[sid] = float(best["amp_tess_ppt"])
     rows = []
     for r in manifest.itertuples(index=False):
-        arm = r.arm
-        tic = int(r.tic)
-        sid = r.campaign_id
-        truth = freq_lists.get(sid, []) if arm in ("A", "B") else []
+        arm, tic, sid = r.arm, int(r.tic), r.campaign_id
+        positive = arm in ("A", "B")
+        truth = freq_lists.get(sid, []) if positive else []
         rows.append({
             "sid": sid, "external_id": f"TIC {tic}" if tic else r.template_source_id,
-            "class_label": f"arm_{arm}",
-            "label_positive": arm in ("A", "B"),
+            "class_label": f"arm_{arm}", "label_positive": positive,
             "weight": 1.0, "cluster": str(tic) if tic else sid,
             "truth_freqs": truth,
-            "primary_freq": dominant.get(sid) if arm in ("A", "B") else None,
+            "primary_freq": dominant.get(sid) if positive else None,
             "amp": float(amp_dom.get(sid, math.nan)),
-            "truth_period_days": (86400.0 / dominant[sid] / 86400.0)
-            if sid in dominant and arm in ("A", "B") else math.nan,
-            "freq_scorable": arm in ("A", "B") and bool(truth),
-            "arm": arm, "template_k": r.template_k,
+            "truth_period_days": (1.0 / dominant[sid]) if sid in dominant and positive else math.nan,
+            "freq_scorable": positive and bool(truth),
+            "arm": arm, "scenario": r.scenario, "template_k": int(r.template_k),
+            "pool_index": int(r.pool_index),
             "ratio_g": float(r.ratio_g), "ratio_rg": float(r.ratio_rg),
-            "phase_draw": int(getattr(r, "phase_draw", 0)),
-            "amp_scale": float(getattr(r, "amp_scale", 1.0)),
-            "median_exp_per_night": float(getattr(r, "template_exp_per_night",
-                                                  math.nan)),
-            "template_status": getattr(r, "template_status", ""),
+            "phase_draw": int(r.phase_draw), "amp_scale": float(r.amp_scale),
+            "dominant_dropped": bool(r.dominant_dropped),
+            "dropped_period_s": float(r.dropped_period_s),
+            "crowdsap": float(r.crowdsap),
+            "n_strata_scheduled": int(r.n_strata_scheduled),
+            "null_serial": int(r.null_serial),
+            "control_campaign_id": r.control_campaign_id,
+            "shard_sha256": r.shard_sha256,
+            "median_exp_per_night": float(r.template_exp_per_night),
+            "template_status": r.template_status,
         })
-    return pd.DataFrame(rows)
+    return pd.DataFrame(rows), generation
 
 
 # ---------------------------------------------------------- census providers
@@ -451,17 +531,25 @@ def cp_one_sided_bounds(k: int, n: int) -> tuple[float, float]:
     return lower, upper
 
 
-def d2_cluster_bootstrap(per_star: pd.DataFrame) -> pd.DataFrame:
+def d2_cluster_bootstrap(per_star: pd.DataFrame, scheduled_tics: list[int] | None = None,
+                         pilot: bool = False) -> pd.DataFrame:
     """P4 machinery: per (scenario, endpoint), per-stratum rates and the
-    equal-weight (1/3 per K stratum) scenario-standardized mean over targets;
-    COMMON RANDOM NUMBERS — one resample-index matrix shared by every
-    scenario; degenerate statistics fall back to target-level exact CP."""
-    if "arm" not in per_star:
+    scenario-standardized mean over targets; COMMON RANDOM NUMBERS — one
+    resample-index matrix shared by every scenario; degenerate statistics
+    fall back to target-level exact CP. Scenario identity is the explicit
+    manifest `scenario` code plus every grouping key (G3 methods finding 2);
+    the eligible denominator is the scenario's SCHEDULED strata count
+    (3 nominal, 1 single-window sensitivities), never a fixed 3; the nominal
+    arm-B scenario is the ONLY confirmatory P4 row, and only outside pilots."""
+    if "arm" not in per_star or "scenario" not in per_star:
         return pd.DataFrame()
     frame = per_star[per_star["arm"].isin(["A", "B"])]
     if frame.empty:
         return pd.DataFrame()
-    clusters = np.array(sorted(frame["cluster"].unique()))
+    if scheduled_tics:
+        clusters = np.array(sorted(str(int(t)) for t in scheduled_tics))
+    else:
+        clusters = np.array(sorted(frame["cluster"].unique()))
     rng = np.random.Generator(np.random.PCG64(BOOTSTRAP_SEED))
     draws = rng.integers(0, len(clusters), size=(BOOTSTRAP_B, len(clusters)))
     rows = []
@@ -470,10 +558,8 @@ def d2_cluster_bootstrap(per_star: pd.DataFrame) -> pd.DataFrame:
         "freq_recovery": lambda f: (f["best_status"] == "confirmed")
         & (f["best_candidate_matches_dominant"] == "direct"),
     }
-    scenario_cols = ["arm", "ratio_g", "ratio_rg"]
-    for extra in ("phase_draw", "amp_scale"):
-        if extra in frame:
-            scenario_cols.append(extra)
+    scenario_cols = ["arm", "scenario", "ratio_g", "ratio_rg", "phase_draw",
+                     "amp_scale", "dominant_dropped"]
 
     def bootstrap_stats(aligned: pd.Series) -> tuple[float, float, float, str, int]:
         observed = aligned.dropna()
@@ -495,22 +581,37 @@ def d2_cluster_bootstrap(per_star: pd.DataFrame) -> pd.DataFrame:
                 float(np.quantile(boots, 0.975)), "cluster_bootstrap", len(observed))
 
     for keys, scenario in frame.groupby(scenario_cols):
-        arm, g, r = keys[0], keys[1], keys[2]
+        key = dict(zip(scenario_cols, keys))
+        key["dominant_dropped"] = bool(key["dominant_dropped"])
+        strata = scenario["n_strata_scheduled"].unique()
+        if len(strata) != 1 or int(strata[0]) < 1:
+            raise SystemExit(f"scenario {key} has inconsistent n_strata_scheduled {strata}")
+        n_strata = int(strata[0])
+        present = set(scenario["cluster"])
+        is_nominal = key["scenario"] == "nominal"
+        if is_nominal:
+            counts = scenario.groupby(["cluster", "template_k"]).size()
+            if (counts != 1).any() or set(scenario["template_k"]) != set(range(n_strata)):
+                raise SystemExit("nominal scenario must hold exactly one replicate per (target, K)")
+            if scheduled_tics and present != set(clusters):
+                raise SystemExit("nominal scenario targets != scheduled targets")
         usable_rows = scenario[scenario["best_status"] != "missing"]
+        zero_usable = sorted(present - set(usable_rows["cluster"]))
+        confirmatory = key["arm"] == "B" and is_nominal and not pilot
         for endpoint, predicate in endpoints.items():
             for denom in ("usable", "eligible"):
                 subset = usable_rows if denom == "usable" else scenario
                 if subset.empty:
                     continue
                 if denom == "eligible":
-                    # missing replicate = failure, fixed |K_t| = 3 (spec P4)
+                    # missing replicate = failure; fixed |K_t| = scheduled strata (spec P4)
                     success = predicate(subset) & (subset["best_status"] != "missing")
                     per_ts = success.groupby(
                         [subset["cluster"], subset["template_k"]]).mean()
-                    per_target = per_ts.groupby(level=0).sum() / 3.0
+                    per_target = per_ts.groupby(level=0).sum() / float(n_strata)
                 else:
                     # renormalize over usable strata; a target with ZERO usable
-                    # strata drops from the usable estimand (counted below)
+                    # strata drops from the usable estimand (counted once, below)
                     success = predicate(subset)
                     per_ts = success.groupby(
                         [subset["cluster"], subset["template_k"]]).mean()
@@ -520,14 +621,16 @@ def d2_cluster_bootstrap(per_star: pd.DataFrame) -> pd.DataFrame:
                     continue
                 point, lo, hi, interval, n_targets = bootstrap_stats(aligned)
                 rows.append({
-                    "arm": arm, "ratio_g": g, "ratio_rg": r,
-                    "endpoint": endpoint, "denominator": denom,
+                    **key, "endpoint": endpoint, "denominator": denom,
+                    "n_strata_scheduled": n_strata,
+                    "n_targets_in_scenario": len(present),
                     "n_targets": n_targets,
-                    "n_targets_zero_usable_strata": int(aligned.isna().sum()),
+                    "n_targets_zero_usable_strata": len(zero_usable),
                     "p": point, "lo": lo, "hi": hi, "interval": interval,
+                    "confirmatory": confirmatory,
                 })
         # paired census-vs-LS difference, target-clustered (nominal arm B only)
-        if (arm == "B" and float(g) == 1.7 and float(r) == 0.8
+        if (key["arm"] == "B" and is_nominal
                 and "census_variable" in usable_rows
                 and usable_rows["census_variable"].notna().any()):
             paired = usable_rows[usable_rows["census_variable"].notna()]
@@ -541,11 +644,12 @@ def d2_cluster_bootstrap(per_star: pd.DataFrame) -> pd.DataFrame:
             if not aligned.dropna().empty:
                 point, lo, hi, interval, n_targets = bootstrap_stats(aligned)
                 rows.append({
-                    "arm": arm, "ratio_g": g, "ratio_rg": r,
-                    "endpoint": "paired_census_minus_ls_discordance",
-                    "denominator": "usable", "n_targets": n_targets,
-                    "n_targets_zero_usable_strata": int(aligned.isna().sum()),
+                    **key, "endpoint": "paired_census_minus_ls_discordance",
+                    "denominator": "usable", "n_strata_scheduled": n_strata,
+                    "n_targets_in_scenario": len(present), "n_targets": n_targets,
+                    "n_targets_zero_usable_strata": len(zero_usable),
                     "p": point, "lo": lo, "hi": hi, "interval": interval,
+                    "confirmatory": False,
                 })
     return pd.DataFrame(rows)
 
@@ -654,7 +758,7 @@ def surfaces(per_star: pd.DataFrame, dataset: str) -> dict[str, pd.DataFrame]:
     return out
 
 
-def trigger_rates(per_star: pd.DataFrame, dataset: str) -> pd.DataFrame:
+def trigger_rates(per_star: pd.DataFrame, dataset: str, pilot: bool = False) -> pd.DataFrame:
     rows = []
     if dataset == "d3":
         negatives = per_star[per_star["class_label"] == "dsct_flag0"]
@@ -668,9 +772,13 @@ def trigger_rates(per_star: pd.DataFrame, dataset: str) -> pd.DataFrame:
                                     negatives.loc[ok, "weight"].to_numpy(dtype=float))
             rows.append({"quantity": "negative_class_trigger_rate", "rule": rule, **stats})
     if dataset == "d2" and "arm" in per_star:
-        nulls = per_star[per_star["arm"] == "null"]
+        nulls = per_star[per_star["arm"] == "gauss_null"]
         if not nulls.empty:
-            completed = nulls[nulls["best_status"] != "missing"]
+            valid = (nulls["prov_valid"].astype(bool) if "prov_valid" in nulls
+                     else pd.Series(True, index=nulls.index))
+            completed = nulls[(nulls["best_status"] != "missing") & valid]
+            if "null_serial" in completed and completed["null_serial"].duplicated().any():
+                raise SystemExit("duplicate null serials among completed nulls")
             x = int((completed["best_status"] == "confirmed").sum())
             n = len(completed)
             _, upper = cp_one_sided_bounds(x, n) if n else (math.nan, math.nan)
@@ -682,6 +790,8 @@ def trigger_rates(per_star: pd.DataFrame, dataset: str) -> pd.DataFrame:
                 # the confirmatory decision requires ALL 1000 trials completed
                 "acceptance_u95_leq_0.005": bool(n == 1000 and upper <= 0.005),
                 "n_completed_is_1000": bool(n == 1000),
+                # pilot runs can never be confirmatory (G3 methods finding 8)
+                "confirmatory": bool((not pilot) and n == 1000 and upper <= 0.005),
             })
         controls = per_star[per_star["arm"] == "ctrl"]
         if not controls.empty:
@@ -746,7 +856,7 @@ def fp_frequency_distribution(per_star: pd.DataFrame, dataset: str) -> pd.DataFr
     if dataset == "d3":
         pool = per_star[per_star["class_label"] == "dsct_flag0"]
     elif dataset == "d2" and "arm" in per_star:
-        pool = per_star[per_star["arm"].isin(["null", "ctrl"])]
+        pool = per_star[per_star["arm"].isin(["gauss_null", "ctrl"])]
     else:
         pool = per_star.iloc[0:0]
     triggered = pool[pool["best_status"].isin(["confirmed", "candidate"])]
@@ -820,10 +930,16 @@ def main() -> None:
     campaign_shas_start = campaign_file_shas()
     attestation_record: dict = {"tier": "published_bundle"}
     boundary_margin = 1e-9
+    run_manifest: dict = {}
+    generation: dict | None = None
+    pilot = False
     if args.dataset in ("d2", "d3"):
         if args.run_manifest is None:
             raise SystemExit("d2/d3 metrics require --run-manifest (attestation binding)")
         run_manifest = json.loads(args.run_manifest.read_text(encoding="utf-8"))
+        if not str(run_manifest.get("dataset", "")).startswith(args.dataset):
+            raise SystemExit(f"run manifest dataset {run_manifest.get('dataset')!r} is not {args.dataset}")
+        pilot = bool(run_manifest.get("pilot", False))
         att_path = Path(run_manifest.get("replay_attestation", {}).get("path", ""))
         if not att_path.exists():
             raise SystemExit(f"run manifest's replay attestation not found: {att_path}")
@@ -856,12 +972,32 @@ def main() -> None:
     else:
         if args.shards_dir is None:
             raise SystemExit("d2 needs --shards-dir")
-        truth = truth_d2(args.shards_dir)
+        truth, generation = truth_d2(args.shards_dir, pilot=pilot)
+        if run_manifest.get("generation_id") != generation["generation_id"]:
+            raise SystemExit("run manifest generation_id != shards-dir generation (stale or mixed results)")
 
     census = census_lookup_csv(args.census_csv) if args.census_csv else {}
     inputs: dict[str, str] = {}
     if args.census_csv:
         inputs[str(args.census_csv)] = sha256_file(args.census_csv)
+    if args.run_manifest is not None:
+        inputs[str(args.run_manifest)] = sha256_file(args.run_manifest)
+        completion_path = args.run_manifest.parent / "completion.csv"
+        if completion_path.exists():
+            inputs[str(completion_path)] = sha256_file(completion_path)
+    if generation is not None:
+        # the full D2 provenance chain (G3 methods finding 5): truth tables,
+        # index, generation record and every shard's recorded SHA (verified
+        # against disk in truth_d2)
+        for name in ("shard_manifest.csv", "injected_modes.csv", "rejected_modes.csv",
+                     "excluded_targets.csv", "shard_index.txt", "pilot_shard_index.txt",
+                     "generation_manifest.json"):
+            if (args.shards_dir / name).exists():
+                inputs[str(args.shards_dir / name)] = sha256_file(args.shards_dir / name)
+        for sid, sha in generation.get("shard_sha256", {}).items():
+            inputs[str(args.shards_dir / f"{sid}.csv.gz")] = sha
+        for label, sha in generation.get("inputs_sha256", {}).items():
+            inputs[f"generation_input:{label}"] = sha
 
     rows = []
     missing = []
@@ -880,10 +1016,35 @@ def main() -> None:
                       "high_eligible": False, "eligible_any_pass": False,
                       "best_frequency_per_day": None, "baseline_days": math.nan,
                       "any_top_peak_matches_any_mode": False,
+                      "prov_valid": False,
                       "census_variable": census.get(r.sid, {}).get("census_variable")}
             rows.append(record)
             continue
         inputs[str(json_path)] = sha256_file(json_path)
+        if args.dataset in ("d2", "d3"):
+            # provenance sidecar binding (G3 methods finding 6): a result counts
+            # only if its sidecar ties it to THIS shard, attestation, generation
+            prov_path = args.stars_dir / f"{r.sid}.prov.json"
+            if not prov_path.exists():
+                raise SystemExit(f"{r.sid}: result has no provenance sidecar")
+            prov = json.loads(prov_path.read_text(encoding="utf-8"))
+            result_obj = json.loads(json_path.read_text(encoding="utf-8"))
+            problems = []
+            if result_obj.get("source_id") != r.sid:
+                problems.append("result source_id")
+            if prov.get("source_id") != r.sid:
+                problems.append("sidecar source_id")
+            if prov.get("result_sha256") != inputs[str(json_path)]:
+                problems.append("result sha256")
+            if prov.get("attestation_sha256") != attestation_record.get("sha256"):
+                problems.append("attestation sha256")
+            if generation is not None and prov.get("generation_id") != generation["generation_id"]:
+                problems.append("generation id")
+            if args.shards_dir is not None and (args.shards_dir / f"{r.sid}.csv.gz").exists():
+                if prov.get("shard_sha256") != sha256_file(args.shards_dir / f"{r.sid}.csv.gz"):
+                    problems.append("shard sha256")
+            if problems:
+                raise SystemExit(f"{r.sid}: provenance sidecar mismatch: {problems}")
         scored = score_star(json_path, list(r.truth_freqs), r.primary_freq,
                             TRUTH_QUANTUM_PER_DAY[args.dataset])
         record = {**r._asdict(), **scored}
@@ -893,6 +1054,7 @@ def main() -> None:
             record.update(census_from_shard(args.shards_dir / f"{r.sid}.csv.gz"))
         else:
             record["census_variable"] = None
+        record["prov_valid"] = True
         rows.append(record)
     per_star = pd.DataFrame(rows)
     if per_star.empty:
@@ -929,7 +1091,7 @@ def main() -> None:
     (args.out_dir / "contingency_complementarity.json").write_text(
         json.dumps(contingency(per_star, args.dataset), indent=2) + "\n",
         encoding="utf-8")
-    trigger_rates(per_star, args.dataset).to_csv(
+    trigger_rates(per_star, args.dataset, pilot).to_csv(
         args.out_dir / "trigger_rates.csv", index=False)
     (args.out_dir / "chance_match.json").write_text(
         json.dumps(chance_match_rate(per_star), indent=2) + "\n", encoding="utf-8")
@@ -937,7 +1099,7 @@ def main() -> None:
     for name, surface in surfaces(per_star, args.dataset).items():
         surface.to_csv(args.out_dir / "surfaces" / f"{name}.csv", index=False)
     if args.dataset == "d2":
-        d2_cluster_bootstrap(per_star).to_csv(
+        d2_cluster_bootstrap(per_star, (generation or {}).get("scheduled_tics"), pilot).to_csv(
             args.out_dir / "d2_cluster_completeness.csv", index=False)
     if args.dataset == "d3":
         (args.out_dir / "ppv.csv").write_text(
@@ -958,9 +1120,13 @@ def main() -> None:
         "missing_ids_first5": missing[:5],
         "census_available": int(per_star["census_variable"].notna().sum()),
         "platform_boundary_sensitive": int(per_star["platform_boundary_sensitive"].sum()),
+        "provenance_verified": int(per_star["prov_valid"].astype(bool).sum()),
     }
     manifest = {
         "dataset": args.dataset,
+        "pilot": pilot,
+        "confirmatory_allowed": not pilot,
+        "generation_id": (generation or {}).get("generation_id", ""),
         "replay_attestation": attestation_record,
         "spec_sha256": sha256_file(REPO_ROOT / "generalization/METRICS_SPEC.md"),
         "attrition": attrition,
