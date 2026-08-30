@@ -32,9 +32,15 @@ Windows detached launches ONLY via WMI:
    `python scripts/generalization/build_panels_generic.py
     --roster generalization/data/d3/roster_d3.csv
     --cache-dir <synced irsa_cache> --out-dir outputs/generalization/d3_panels`
-3. COMMIT the crossmatch data freeze: crossmatch_qc.csv + an
-   adjudication file (any positive with nearest_separation ≥ 1.5″ or
-   multiple clusters gets a per-star disposition) BEFORE step 4.
+3. COMMIT the crossmatch data freeze BEFORE step 4 (zero discretion):
+   `python scripts/generalization/d3_crossmatch_adjudicate.py
+    --panels-dir outputs/generalization/d3_panels` → commit
+   `generalization/data/d3/crossmatch_freeze/` (crossmatch_adjudication.csv:
+   dispositions crossmatched_clean / crossmatched_ambiguous [sep ≥ 1.5″ or
+   > 1 object in cone] / crossmatched_crowded / not_crossmatched /
+   cache_missing / read_error; the frozen chain's `crossmatched` flag is
+   never overridden; attrition_by_class.csv; freeze_manifest.json with SHAs)
+   together with a copy of crossmatch_qc.csv and shard_index.txt.
 4. Timing pilot: `python scripts/generalization/run_generalization_ls.py
     --shard-dir outputs/generalization/d3_panels/exposure_stars
     --shard-index outputs/generalization/d3_panels/shard_index.txt
