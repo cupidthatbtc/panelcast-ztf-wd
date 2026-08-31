@@ -1,0 +1,11 @@
+{
+  "dataset": "d2-tess-dav",
+  "total": 144,
+  "pending_at_start": 46,
+  "completed_now": 46,
+  "failed": 0,
+  "elapsed_seconds": 2342.7,
+  "stars_per_hour": 70.69,
+  "eta_hours": 0.0,
+  "workers": 12
+}

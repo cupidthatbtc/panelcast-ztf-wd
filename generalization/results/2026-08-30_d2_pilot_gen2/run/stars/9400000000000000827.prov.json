@@ -1,0 +1,15 @@
+{
+  "source_id": "9400000000000000827",
+  "passes": [
+    "low",
+    "high"
+  ],
+  "shard_sha256": "103f1b78ddaa314ae78227f979f28dcaa2ece9e86ed97d3e8e427b0250a95e6d",
+  "result_sha256": "4fd0a3d2d5565f7d1e85c8d88791bd54b7da3c21a09eb91ff49ec515eb718680",
+  "env_digest": "5c7db739717ff0bebc5e9eaa5346abc0a778a6d747a13e32d2925a6e7a88e78c",
+  "driver": "run_generalization_ls.py",
+  "generation_id": "129740d1809c7a347e16474d2186aac30a8f4eac29f9b06b0fc047cc1c4ef7cb",
+  "attestation_sha256": "64e1937a8d453cdbe41ffb53a14c0fdaff70a8dcd8580bbb6487661dd334c5ef",
+  "frozen_digest": "5c1c4982fc5b847f2f0e36cf34d472c28c1e59ea7300e4aedab718e222469059",
+  "campaign_digest": "ad45cfae2ea0bf8bb5e7c2313964ba93775e5c0dfd51743d2934a68f5a961f6a"
+}

@@ -1,0 +1,26 @@
+{
+  "n_positives_scored": 30,
+  "table": {
+    "census_and_ls": 11,
+    "census_only": 2,
+    "ls_only": 6,
+    "neither": 11
+  },
+  "union_completeness": {
+    "p": 0.6333333333333333,
+    "lo": null,
+    "hi": null
+  },
+  "incremental_census_only": {
+    "p": 0.06666666666666667,
+    "lo": null,
+    "hi": null
+  },
+  "incremental_ls_only": {
+    "p": 0.2,
+    "lo": null,
+    "hi": null
+  },
+  "mcnemar": "prohibited for d2 (cluster structure); use the target-cluster paired-difference bootstrap",
+  "inference": "descriptive counts over nominal arm-B windows; no row-level intervals for D2"
+}

@@ -1,0 +1,4 @@
+endpoint,n_pairs_scored,n_targets,n_unique_windows,both,b_only,c_only,neither,union,p_b,p_b_lo,p_b_hi,p_c,p_c_lo,p_c_hi,paired_diff_b_minus_c,paired_diff_b_minus_c_lo,paired_diff_b_minus_c_hi,p_b_and_not_c,p_b_and_not_c_lo,p_b_and_not_c_hi,n_pairs_not_run,p_b_recovery
+D,10,6,10,6.0,2.0,0.0,2.0,8.0,0.75,0.4,1.0,0.5,0.16666666666666666,0.8333333333333334,0.25,0.0,0.6,0.25,0.0,0.6,,
+R,10,6,10,0.0,3.0,0.0,7.0,3.0,0.3333333333333333,0.04875000000000007,0.6666666666666666,0.0,0.0,0.0,0.3333333333333333,0.04875000000000007,0.6666666666666666,0.3333333333333333,0.04875000000000007,0.6666666666666666,,
+quiet_control_conditioned,2,2,2,,,,,,0.5,,,,,,,,,,,,20.0,0.0
