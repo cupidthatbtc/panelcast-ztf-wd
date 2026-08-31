@@ -61,6 +61,15 @@ Windows detached launches ONLY via WMI:
     completion.csv, the panels dir) then
    `plot_generalization.py`.
 
+7. Post-launch descriptive decomposition (AFTER step 6; FULL run only, never
+   the pilot; admitted by generalization/reviews/G5prep/sol_diurnal.md):
+   `python scripts/generalization/descriptive/d3_trigger_decomposition.py
+    --metrics-dir <metrics> --out-dir <results>/descriptive_postlaunch`
+   Writes d3_trigger_decomposition.csv + README.md (verbatim disclosure
+   sentence) + manifest.json. Arithmetic partition of the frozen rule-1
+   best-pass P3 numerator over its unchanged 2,314-star denominator —
+   no interval, no veto, no estimand change; never applied to census.
+
 ## D2 sequence (laptop, after D3 per slip rule — desktop unreachable)
 
 1. Generation (LAPTOP; all-or-nothing, ~90 s; `<gen>` must not exist;

@@ -230,3 +230,36 @@ docstring stays untouched until a deliberate regeneration. Amendment 4 is
 disclosed as pilot-informed; no further estimand-hierarchy change is
 permitted after it. Frozen document SHAs: unchanged from the Amendment-4
 entry above.
+
+## 2026-08-31: Post-launch descriptive admission — D3 diurnal-band partition
+
+Trigger: the non-confirmatory 150-star D3 timing pilot showed the raw
+negative-class (dsct_flag0) rule-1 triggers concentrated near 1.00/2.00 c/d
+(solar-diurnal alias family; the frozen veto covers only the sidereal
+family). Adjudicated BEFORE any full-campaign D3 metric was computed
+(prompt: reviews/G5prep/PROMPT_diurnal.md; verdict:
+reviews/G5prep/sol_diurnal.md). Verdict: ADMIT-AS-DESCRIPTIVE.
+
+Terms (binding): P3 unchanged — rule 1, best pass, all 2,314 dsct_flag0
+members, frozen Wilson interval. The addition is a post-launch arithmetic
+partition of P3's observed numerator ONLY: within_solar_diurnal_band iff
+f < 4 / d and min_{k in 1..3} |f - k * 1.000000 / d| <= 0.020000 / d
+(closed endpoints; bands [0.980,1.020], [1.980,2.020], [2.980,3.020] / d);
+abort rather than classify silently if any confirmed negative lacks a
+finite best-pass frequency. No low-frequency-floor term. No confidence
+intervals, tests, acceptance thresholds, or weighting; the outside-band
+component is never called a "corrected" or "de-aliased" P3; the
+decomposition is never applied to the census trigger rate and never used
+to veto, exclude, or reclassify any trigger. Output segregated at
+<results>/descriptive_postlaunch/d3_trigger_decomposition.csv with
+analysis_status=postlaunch_pilot_informed_descriptive, prespecified=false,
+interval=none; the verdict's verbatim disclosure sentence ships beside it.
+fp_frequency_distribution.csv remains the prespecified frequency audit.
+
+Amendment 4's prohibition on further estimand-hierarchy changes is
+untouched: GENERALIZATION_PLAN.md / METRICS_SPEC.md bytes unchanged (SHAs
+as in the Amendment-4 entry). Code lives at
+scripts/generalization/descriptive/d3_trigger_decomposition.py —
+deliberately OUTSIDE the campaign_file_shas() glob surface
+(scripts/generalization/*.py, non-recursive), so pulling this commit on
+the laptop is SHA-neutral for the live D3/D2 runners' drift guards.
