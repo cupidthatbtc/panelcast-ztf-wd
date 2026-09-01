@@ -1,3 +1,5 @@
+> **SUPERSEDED (2026-09-01):** this skeleton predates Amendment 4 (recovery-primary P4, plain-Wilson P3). The authoritative writing structure is `generalization/writing/outline/OUTLINE.md` §1.2 + `EVIDENCE_MAP.md`; keep this file only as the G2-era record.
+
 # Abstract skeleton + supportable claims (G2 abstract lens, 2026-08-28)
 
 Source: generalization/reviews/G2/sol_abstract.md (sol@xhigh). For G6:
