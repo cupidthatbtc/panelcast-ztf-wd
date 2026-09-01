@@ -52,7 +52,13 @@ Windows detached launches ONLY via WMI:
 5. Full run: same command without `--limit`, `--out-dir
    outputs/generalization/d3_run --work-root C:/ls_scratch/d3_run`
    (resume-safe: sidecar-bound).
-6. Metrics (Mac): `metrics_generalization.py --dataset d3
+6. Metrics (Mac; `--crossmatch-qc` is REQUIRED for d3 since the G5prep round-2
+   compliance repair — mandated attrition table + d3_mo_join_covariates.csv +
+   the == 456 guard; the laptop chain's pre-fix metrics are archived
+   uninterpreted and the AUTHORITATIVE bundle is the Mac post-fix run, guarded
+   by `scripts/generalization/descriptive/compare_metrics_runs.py --reference
+   <laptop pre-fix dir> --candidate <mac dir>` → must print GUARD PASS):
+   `metrics_generalization.py --dataset d3
     --stars-dir <stars> --run-manifest <d3_run/manifest.json>
     --shards-dir <d3_panels/exposure_stars> --shard-index <d3_panels/shard_index.txt>
     --census-csv <census_generic.csv>

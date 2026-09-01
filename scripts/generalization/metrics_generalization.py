@@ -219,10 +219,208 @@ def truth_d1() -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
-def truth_d3() -> pd.DataFrame:
+# ---- D3 spec-compliance (G5prep round 2, item 1 = COMPLIANCE; METRICS_SPEC
+# "assert count == 456", "joined-vs-unjoined covariate table mandatory", and the
+# multidimensional attrition table of "Eligibility and attrition"). Implemented
+# post-launch as a delayed implementation of frozen requirements; frozen
+# constants below are the reviewer's ruled values (reviews/G5prep/sol_round2.md).
+D3_COMPLIANCE_FIELDS = {"analysis_status": "prespecified_compliance",
+                        "prespecified": True, "interval": "none"}
+D3_FREQ_SCORABLE_POSITIVES = 456
+D3_TEFF_CUTS_K = (6597.0, 6737.0, 7092.5)
+D3_SEP_CUTS_ARCSEC = (0.054159657268769895, 0.0972924425684607, 0.15375607598589985, 1.0)
+D3_AMP_EDGES_MMAG = (0.5, 1.0, 2.0, 5.0, 10.0, 20.0, 50.0)
+D3_AMP_LABELS = ("<0.5", "[0.5,1)", "[1,2)", "[2,5)", "[5,10)", "[10,20)", "[20,50)", ">=50")
+D3_PERIOD_EDGES_S = (100.0, 200.0, 500.0, 1000.0, 2000.0, 0.05 * 86400.0, 0.2 * 86400.0,
+                     86400.0, 10.0 * 86400.0, 100.0 * 86400.0)
+D3_PERIOD_LABELS = ("<100 s", "[100,200) s", "[200,500) s", "[500,1000) s", "[1000,2000) s",
+                    "[2000 s,0.05 d)", "[0.05,0.2) d", "[0.2,1) d", "[1,10) d", "[10,100) d",
+                    ">=100 d")
+D3_TEFF_LABELS = ("<6597", "[6597,6737)", "[6737,7092.5)", ">=7092.5")
+D3_SEP_LABELS = ("<0.0542", "[0.0542,0.0973)", "[0.0973,0.1538)", "[0.1538,1.0)", ">=1.0")
+D3_CONE_EDGES = (4, 7, 10)
+D3_CONE_LABELS = ("0-3", "4-6", "7-9", ">=10")
+D3_MO_JOIN_COVARIATES = ("gmag", "Teff", "logg", "ra", "dec", "subhour", "cache_present",
+                         "qc_passed", "both_passes", "nearest_separation_arcsec",
+                         "ztf_objects_in_cone", "selected_ztf_objects",
+                         "zg_clean_rows", "zr_clean_rows")
+D3_ATTRITION_COLUMNS = ["class_label", "amp_bin", "mo_join_status", "magnitude_bin",
+                        "period_bin", "teff_bin", "cone_count_bin", "separation_bin",
+                        "n_roster", "n_fetched", "n_crossmatched", "n_qc_passed",
+                        "n_both_passes", "analysis_status", "prespecified", "interval"]
+D3_COVARIATE_COLUMNS = ["mo_join_status", "covariate", "n_group", "n_nonmissing", "n_missing",
+                        "mean", "sd", "p10", "p25", "p50", "p75", "p90", "min", "max",
+                        "analysis_status", "prespecified", "interval"]
+
+
+def _d3_sources() -> tuple[pd.DataFrame, pd.DataFrame]:
     roster = pd.read_csv(REPO_ROOT / "generalization/data/d3/roster_d3.csv",
                          dtype={"source_id": str})
     mo = pd.read_csv(REPO_ROOT / "generalization/data/d3/raw/mo2026_table2.csv")
+    return roster, mo
+
+
+def _strict_true(value) -> bool:
+    """True only for a genuine boolean True (Python or numpy) or the string
+    "True"; NaN/None/anything else is False — never bool(NaN)."""
+    if isinstance(value, (bool, np.bool_)):
+        return bool(value)
+    return isinstance(value, str) and value == "True"
+
+
+def _left_closed_bin(value, edges: tuple, labels: tuple, unknown: str) -> str:
+    """Left-closed/right-open bins; NaN -> unknown; len(labels) == len(edges) + 1."""
+    if value is None or not np.isfinite(float(value)):
+        return unknown
+    x = float(value)
+    for edge, label in zip(edges, labels):
+        if x < edge:
+            return label
+    return labels[-1]
+
+
+def d3_mo_joined(roster: pd.DataFrame, mo: pd.DataFrame) -> pd.Series:
+    """Ruled definition: a dsct_flag1 KIC is mo_joined iff it has >= 1 finite Mo
+    table-2 Freq, a finite maximum-amplitude row, and finite positive dominant
+    frequency and finite dominant amplitude in the roster. Indexed by source_id."""
+    finite_freq = mo[np.isfinite(pd.to_numeric(mo["Freq"], errors="coerce"))]
+    kics_with_freq = set(finite_freq["KIC"].astype(int))
+    amp = pd.to_numeric(mo["Amp"], errors="coerce")
+    kics_with_max_amp = set(mo.loc[np.isfinite(amp), "KIC"].astype(int))
+    dom_f = pd.to_numeric(roster["dom_freq_per_day"], errors="coerce")
+    dom_a = pd.to_numeric(roster["amp_mmag"], errors="coerce")
+    joined = (
+        (roster["class_label"] == "dsct_flag1")
+        & roster["KIC"].astype(int).isin(kics_with_freq)
+        & roster["KIC"].astype(int).isin(kics_with_max_amp)
+        & np.isfinite(dom_f) & (dom_f > 0) & np.isfinite(dom_a)
+    )
+    return pd.Series(joined.to_numpy(), index=roster["source_id"].to_numpy(), name="mo_joined")
+
+
+def d3_freq_scorable_guard(truth: pd.DataFrame, mo_joined: pd.Series) -> None:
+    """METRICS_SPEC: assert count == 456; identity with P2's freq_scorable rows."""
+    n_joined = int(mo_joined.sum())
+    if n_joined != D3_FREQ_SCORABLE_POSITIVES:
+        raise SystemExit(f"Mo-joined dsct_flag1 positives = {n_joined} != "
+                         f"{D3_FREQ_SCORABLE_POSITIVES} (METRICS_SPEC guard)")
+    p2_ids = set(truth.loc[(truth["class_label"] == "dsct_flag1")
+                           & truth["freq_scorable"].astype(bool), "sid"])
+    joined_ids = set(mo_joined.index[mo_joined.to_numpy()])
+    if p2_ids != joined_ids:
+        raise SystemExit(f"freq_scorable positives ({len(p2_ids)}) != Mo-joined set "
+                         f"({len(joined_ids)}): {sorted(p2_ids ^ joined_ids)[:5]}")
+
+
+def _d3_stage_frame(roster: pd.DataFrame, qc: pd.DataFrame, per_star: pd.DataFrame,
+                    mo_joined: pd.Series) -> pd.DataFrame:
+    """One row per roster star: ruled bins + cumulative stage flags."""
+    q = qc.set_index("source_id")
+    missing_qc = set(roster["source_id"]) - set(q.index)
+    if missing_qc:
+        raise SystemExit(f"{len(missing_qc)} roster stars absent from crossmatch_qc")
+    ps = per_star.set_index("sid")
+    rows = []
+    for r in roster.itertuples(index=False):
+        sid = r.source_id
+        qr = q.loc[sid]
+        sep = pd.to_numeric(pd.Series([qr.get("nearest_separation_arcsec")]), errors="coerce").iloc[0]
+        cone = pd.to_numeric(pd.Series([qr.get("ztf_objects_in_cone")]), errors="coerce").iloc[0]
+        n_sel = pd.to_numeric(pd.Series([qr.get("selected_ztf_objects")]), errors="coerce").iloc[0]
+        fetched = bool(qr.get("cache_present")) if pd.notna(qr.get("cache_present")) else False
+        crossmatched_stage = bool(str(qr.get("read_status")) == "ok" and np.isfinite(sep)
+                                  and np.isfinite(n_sel) and n_sel >= 1)
+        qc_passed = bool(qr.get("crossmatched")) if pd.notna(qr.get("crossmatched")) else False
+        both = False
+        if sid in ps.index:
+            row = ps.loc[sid]
+            both = bool(row.get("best_status") != "missing"
+                        and _strict_true(row.get("low_available"))
+                        and _strict_true(row.get("high_available")))
+        if (qc_passed and not crossmatched_stage) or (crossmatched_stage and not fetched) \
+                or (both and not qc_passed):
+            raise SystemExit(f"{sid}: attrition stages are not monotone "
+                             f"(fetched={fetched}, crossmatched={crossmatched_stage}, "
+                             f"qc={qc_passed}, both={both})")
+        gmag = pd.to_numeric(pd.Series([r.gmag]), errors="coerce").iloc[0]
+        amp = pd.to_numeric(pd.Series([r.amp_mmag]), errors="coerce").iloc[0]
+        if np.isfinite(amp) and amp < 0:
+            raise SystemExit(f"{sid}: negative finite amplitude {amp}")
+        dom_f = pd.to_numeric(pd.Series([r.dom_freq_per_day]), errors="coerce").iloc[0]
+        period_s = 86400.0 / dom_f if np.isfinite(dom_f) and dom_f > 0 else math.nan
+        rows.append({
+            "source_id": sid,
+            "class_label": r.class_label,
+            "amp_bin": _left_closed_bin(amp, D3_AMP_EDGES_MMAG, D3_AMP_LABELS, "amp_unknown"),
+            "mo_join_status": "mo_joined" if bool(mo_joined.get(sid, False)) else "mo_unjoined",
+            "magnitude_bin": ("g_unknown" if not np.isfinite(gmag)
+                              else ("g_le_14" if gmag <= 14.0 else "g_gt_14")),
+            "period_bin": _left_closed_bin(period_s, D3_PERIOD_EDGES_S, D3_PERIOD_LABELS,
+                                           "period_unknown"),
+            "teff_bin": _left_closed_bin(pd.to_numeric(pd.Series([r.Teff]), errors="coerce").iloc[0],
+                                         D3_TEFF_CUTS_K, D3_TEFF_LABELS, "teff_unknown"),
+            "cone_count_bin": _left_closed_bin(cone, D3_CONE_EDGES, D3_CONE_LABELS, "cone_unknown"),
+            "separation_bin": _left_closed_bin(sep, D3_SEP_CUTS_ARCSEC, D3_SEP_LABELS, "sep_unknown"),
+            "fetched": fetched, "crossmatched": crossmatched_stage,
+            "qc_passed": qc_passed, "both_passes": both,
+            "gmag": gmag, "Teff": pd.to_numeric(pd.Series([r.Teff]), errors="coerce").iloc[0],
+            "logg": pd.to_numeric(pd.Series([r.logg]), errors="coerce").iloc[0],
+            "ra": float(r.ra), "dec": float(r.dec), "subhour": bool(r.subhour),
+            "cache_present": fetched,
+            "nearest_separation_arcsec": sep, "ztf_objects_in_cone": cone,
+            "selected_ztf_objects": n_sel,
+            "zg_clean_rows": pd.to_numeric(pd.Series([qr.get("zg_clean_rows")]), errors="coerce").iloc[0],
+            "zr_clean_rows": pd.to_numeric(pd.Series([qr.get("zr_clean_rows")]), errors="coerce").iloc[0],
+        })
+    return pd.DataFrame(rows)
+
+
+def d3_attrition_table(stage: pd.DataFrame) -> pd.DataFrame:
+    keys = ["class_label", "amp_bin", "mo_join_status", "magnitude_bin", "period_bin",
+            "teff_bin", "cone_count_bin", "separation_bin"]
+    g = stage.groupby(keys, sort=True)
+    table = g.agg(n_roster=("source_id", "size"), n_fetched=("fetched", "sum"),
+                  n_crossmatched=("crossmatched", "sum"), n_qc_passed=("qc_passed", "sum"),
+                  n_both_passes=("both_passes", "sum")).reset_index()
+    for a, b in (("n_roster", "n_fetched"), ("n_fetched", "n_crossmatched"),
+                 ("n_crossmatched", "n_qc_passed"), ("n_qc_passed", "n_both_passes")):
+        if (table[a] < table[b]).any():
+            raise SystemExit(f"attrition not monotone: {b} > {a} in some cell")
+    if int(table["n_roster"].sum()) != len(stage):
+        raise SystemExit("attrition cells do not partition the roster")
+    for k, v in D3_COMPLIANCE_FIELDS.items():
+        table[k] = v
+    return table[D3_ATTRITION_COLUMNS]
+
+
+def d3_mo_join_covariates(stage: pd.DataFrame) -> pd.DataFrame:
+    positives = stage[stage["class_label"] == "dsct_flag1"]
+    if len(positives) != 610:
+        raise SystemExit(f"{len(positives)} dsct_flag1 rows != 610")
+    rows = []
+    for status in ("mo_joined", "mo_unjoined"):
+        group = positives[positives["mo_join_status"] == status]
+        for cov in D3_MO_JOIN_COVARIATES:
+            values = pd.to_numeric(group[cov].astype(float), errors="coerce")
+            finite = values[np.isfinite(values)]
+            stats = {"mean": math.nan, "sd": math.nan, "p10": math.nan, "p25": math.nan,
+                     "p50": math.nan, "p75": math.nan, "p90": math.nan,
+                     "min": math.nan, "max": math.nan}
+            if len(finite):
+                arr = finite.to_numpy(dtype=float)
+                q = np.quantile(arr, [0.10, 0.25, 0.50, 0.75, 0.90])
+                stats = {"mean": float(arr.mean()), "sd": float(arr.std(ddof=0)),
+                         "p10": float(q[0]), "p25": float(q[1]), "p50": float(q[2]),
+                         "p75": float(q[3]), "p90": float(q[4]),
+                         "min": float(arr.min()), "max": float(arr.max())}
+            rows.append({"mo_join_status": status, "covariate": cov, "n_group": len(group),
+                         "n_nonmissing": int(len(finite)), "n_missing": int(len(group) - len(finite)),
+                         **stats, **D3_COMPLIANCE_FIELDS})
+    return pd.DataFrame(rows, columns=D3_COVARIATE_COLUMNS)
+
+
+def truth_d3() -> pd.DataFrame:
+    roster, mo = _d3_sources()
     mo["freq_per_day"] = mo["Freq"] * 86400.0 / 1e6
     freq_lists = mo.groupby("KIC")["freq_per_day"].apply(list).to_dict()
     rows = []
@@ -1350,6 +1548,9 @@ def main() -> None:
         truth = truth_d1()
     elif args.dataset == "d3":
         truth = truth_d3()
+        d3_roster, d3_mo = _d3_sources()
+        d3_joined = d3_mo_joined(d3_roster, d3_mo)
+        d3_freq_scorable_guard(truth, d3_joined)   # METRICS_SPEC: == 456, before any output
     else:
         if args.shards_dir is None:
             raise SystemExit("d2 needs --shards-dir")
@@ -1637,8 +1838,21 @@ def main() -> None:
         json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
     (args.out_dir / "inputs_sha256.json").write_text(
         json.dumps(inputs, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    (args.out_dir / "attrition.csv").write_text(
+    # the seven-scalar audit (formerly attrition.csv) is preserved as
+    # attrition_summary.csv; for d3 attrition.csv becomes the METRICS_SPEC-
+    # mandated multidimensional table (G5prep round 2, item 1)
+    (args.out_dir / "attrition_summary.csv").write_text(
         pd.DataFrame([attrition]).to_csv(index=False), encoding="utf-8")
+    if args.dataset == "d3":
+        if qc_frame is None:
+            raise SystemExit("d3 metrics require --crossmatch-qc (mandated attrition table)")
+        stage = _d3_stage_frame(d3_roster, qc_frame, per_star, d3_joined)
+        d3_attrition_table(stage).to_csv(args.out_dir / "attrition.csv", index=False)
+        d3_mo_join_covariates(stage).to_csv(
+            args.out_dir / "d3_mo_join_covariates.csv", index=False)
+    else:
+        (args.out_dir / "attrition.csv").write_text(
+            pd.DataFrame([attrition]).to_csv(index=False), encoding="utf-8")
     print(json.dumps(attrition, indent=2))
     print(f"[metrics] wrote {args.out_dir}")
 
