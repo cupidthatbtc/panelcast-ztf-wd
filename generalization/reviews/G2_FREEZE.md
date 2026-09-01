@@ -235,8 +235,10 @@ entry above.
 
 Trigger: the non-confirmatory 150-star D3 timing pilot showed the raw
 negative-class (dsct_flag0) rule-1 triggers concentrated near 1.00/2.00 c/d
-(solar-diurnal alias family; the frozen veto covers only the sidereal
-family). Adjudicated BEFORE any full-campaign D3 metric was computed
+(solar-diurnal alias family; the frozen veto's ANALYTIC locus test covers
+only k·f_sid within ±1.5/T — about one-fifth of the solar–sidereal
+separation — while its family-agnostic local window-power test fires only
+above threshold 0.1; see writing/brief_diurnal/BRIEF.md). Adjudicated BEFORE any full-campaign D3 metric was computed
 (prompt: reviews/G5prep/PROMPT_diurnal.md; verdict:
 reviews/G5prep/sol_diurnal.md). Verdict: ADMIT-AS-DESCRIPTIVE.
 

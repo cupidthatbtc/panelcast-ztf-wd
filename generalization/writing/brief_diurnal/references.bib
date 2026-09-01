@@ -1,0 +1,199 @@
+% References for generalization/writing/brief_diurnal/BRIEF.md
+% Fields were checked against the arXiv/publisher text where possible.
+% DOIs are given only where read from the source or publisher page; otherwise omitted (see SUMMARY.md [UNVERIFIED] list).
+
+@ARTICLE{VanderPlas2018,
+  author  = {{VanderPlas}, Jacob T.},
+  title   = {Understanding the Lomb-Scargle Periodogram},
+  journal = {The Astrophysical Journal Supplement Series},
+  year    = 2018,
+  volume  = 236,
+  pages   = {16},
+  doi     = {10.3847/1538-4365/aab766},
+  eprint  = {1703.09824},
+  note    = {\S4.2.1 (LINEAR window, 1-day spike from night-time-only sampling); \S7.2 Eq.~45 (aliasing at $f_0 + n\,\delta f$, $\delta f = 1$ cycle/day; $\sim$36\% of simulated objects on this failure mode); \S7.3.1 Eq.~48 (window power = L-S of unit data)}
+}
+
+@ARTICLE{Dawson2010,
+  author  = {{Dawson}, Rebekah I. and {Fabrycky}, Daniel C.},
+  title   = {Radial Velocity Planets De-aliased: A New, Short Period for Super-Earth 55 Cnc e},
+  journal = {The Astrophysical Journal},
+  year    = 2010,
+  volume  = 722,
+  pages   = {937--953},
+  doi     = {10.1088/0004-637X/722/1/937},
+  eprint  = {1005.4050},
+  note    = {\S2.1--2.2: window peaks at $n\,\mathrm{day}^{-1} + m\,\mathrm{yr}^{-1}$; solar/sidereal doublet at 1.0000 and 1.0027 day$^{-1}$; relative height set by phase coverage}
+}
+
+@ARTICLE{Bellm2019a,
+  author  = {{Bellm}, Eric C. and {Kulkarni}, Shrinivas R. and {Graham}, Matthew J. and others},
+  title   = {The Zwicky Transient Facility: System Overview, Performance, and First Results},
+  journal = {Publications of the Astronomical Society of the Pacific},
+  year    = 2019,
+  volume  = 131,
+  pages   = {018002},
+  doi     = {10.1088/1538-3873/aaecbe},
+  eprint  = {1902.01932},
+  note    = {1.01 arcsec/pixel; $\sim$2.0 arcsec FWHM; 30 s exposures; Northern Sky Survey three-day cadence}
+}
+
+@ARTICLE{Bellm2019b,
+  author  = {{Bellm}, Eric C. and {Kulkarni}, Shrinivas R. and {Barlow}, Tom and others},
+  title   = {The Zwicky Transient Facility: Surveys and Scheduler},
+  journal = {Publications of the Astronomical Society of the Pacific},
+  year    = 2019,
+  volume  = 131,
+  pages   = {068003},
+  doi     = {10.1088/1538-3873/ab0c2a},
+  eprint  = {1905.02209},
+  note    = {\S6: every third night one g and one r exposure separated by $\geq$30 min; Fig.~7 hour-angle histogram}
+}
+
+@ARTICLE{Masci2019,
+  author  = {{Masci}, Frank J. and {Laher}, Russ R. and {Rusholme}, Ben and others},
+  title   = {The Zwicky Transient Facility: Data Processing, Products, and Archive},
+  journal = {Publications of the Astronomical Society of the Pacific},
+  year    = 2019,
+  volume  = 131,
+  pages   = {018003},
+  doi     = {10.1088/1538-3873/aae8ac},
+  eprint  = {1902.01872},
+  note    = {\S7.3: relative-photometry repeatability $\sim$10 mmag; no significant degradation in dense fields}
+}
+
+@ARTICLE{Chen2020,
+  author  = {{Chen}, Xiaodian and {Wang}, Shu and {Deng}, Licai and {de Grijs}, Richard and {Yang}, Ming and {Tian}, Hao},
+  title   = {The Zwicky Transient Facility Catalog of Periodic Variable Stars},
+  journal = {The Astrophysical Journal Supplement Series},
+  year    = 2020,
+  volume  = 249,
+  pages   = {18},
+  doi     = {10.3847/1538-4365/ab9cae},
+  eprint  = {2005.08662},
+  note    = {\S3: $1/P_a = 1/P_r + 1/P_c$, $P_c = 0.5, 1, 2$ d ("one-day sampling cadence"); exclusion e.g. $|P-1|<0.03$ d with poor fit; \S5: "aliased periods around one day are almost excluded"}
+}
+
+@ARTICLE{Coughlin2021,
+  author  = {{Coughlin}, Michael W. and {Burdge}, Kevin and {Phinney}, E. Sterl and others},
+  title   = {The ZTF Source Classification Project -- II. Periodicity and variability processing metrics},
+  journal = {Monthly Notices of the Royal Astronomical Society},
+  year    = 2021,
+  volume  = 505,
+  pages   = {2954--2965},
+  eprint  = {2009.14071},
+  note    = {\S4, Fig.~11: removed bands 47.99--48.01, 46.99--47.01, 45.99--46.01, 3.95--4.05, 2.95--3.05, 1.95--2.05, 0.95--1.05, 0.48--0.52, 0.03--0.04 c/d ($\sim$1\% of frequency range); residual excess at band edges. DOI not confirmed from text}
+}
+
+@ARTICLE{vanRoestel2021,
+  author  = {{van Roestel}, Jan and {Duev}, Dmitry A. and {Mahabal}, Ashish A. and others},
+  title   = {The ZTF Source Classification Project. I. Methods and Infrastructure},
+  journal = {The Astronomical Journal},
+  year    = 2021,
+  volume  = 161,
+  pages   = {267},
+  doi     = {10.3847/1538-3881/abe853},
+  eprint  = {2102.11304},
+  note    = {No independent diurnal-alias treatment; period processing deferred to Coughlin et al. (2021)}
+}
+
+@ARTICLE{Heinze2018,
+  author  = {{Heinze}, A. N. and {Tonry}, J. L. and {Denneau}, L. and others},
+  title   = {A First Catalog of Variable Stars Measured by the Asteroid Terrestrial-impact Last Alert System (ATLAS)},
+  journal = {The Astronomical Journal},
+  year    = 2018,
+  volume  = 156,
+  pages   = {241},
+  doi     = {10.3847/1538-3881/aae47f},
+  eprint  = {1804.02132},
+  note    = {\S2: "diurnal aliasing that is unavoidable for ground-based observations from a single longitude"; \S4 Eq.~4: sidereal aliases $j\in\{-3,\dots,3,\pm0.5\}$, $t_{\rm sid}=0.99726957$ d; Figs 24/26: concentrations at 1/3, 1/2, 1, 2 d from aliased long-period variables}
+}
+
+@ARTICLE{Drake2014,
+  author  = {{Drake}, A. J. and {Graham}, M. J. and {Djorgovski}, S. G. and others},
+  title   = {The Catalina Surveys Periodic Variable Star Catalog},
+  journal = {The Astrophysical Journal Supplement Series},
+  year    = 2014,
+  volume  = 213,
+  pages   = {9},
+  doi     = {10.1088/0067-0049/213/1/9},
+  eprint  = {1405.4290},
+  note    = {\S4: alias ranges near fractions/multiples of a sidereal day and lunar months removed; 144k $\to$ 128k candidates; "a few percent" of true variables lost}
+}
+
+@ARTICLE{Jayasinghe2020,
+  author  = {{Jayasinghe}, T. and {Stanek}, K. Z. and {Kochanek}, C. S. and others},
+  title   = {The ASAS-SN catalogue of variable stars -- V. Variables in the Southern hemisphere},
+  journal = {Monthly Notices of the Royal Astronomical Society},
+  year    = 2020,
+  volume  = 491,
+  pages   = {13--28},
+  doi     = {10.1093/mnras/stz2711},
+  eprint  = {1907.10609},
+  note    = {\S3.5: tightened criteria for periods near aliases of a sidereal day ($P\approx1, 2, 30$ d); "slight deficits" of catalogued variables there. Cited as Jayasinghe et al. (2019c) by Christy et al. (2023)}
+}
+
+@ARTICLE{Christy2023,
+  author  = {{Christy}, Collin T. and {Jayasinghe}, T. and {Stanek}, K. Z. and others},
+  title   = {The ASAS-SN catalogue of variable stars X: discovery of 116\,000 new variable stars using G-band photometry},
+  journal = {Monthly Notices of the Royal Astronomical Society},
+  year    = 2023,
+  volume  = 519,
+  pages   = {5271--5287},
+  eprint  = {2205.02239},
+  note    = {Prob $>0.95$ near 1, 2, 29, 60 d; persistent "discrete spike near $P\sim1$ day"; JUNK class trained on diurnal false positives; multi-longitude sites reduce diurnal aliasing. DOI and end page not confirmed from text}
+}
+
+@ARTICLE{Murphy2019,
+  author  = {{Murphy}, Simon J. and {Hey}, Daniel and {Van Reeth}, Timothy and {Bedding}, Timothy R.},
+  title   = {Gaia-derived luminosities of Kepler A/F stars and the pulsator fraction across the $\delta$ Scuti instability strip},
+  journal = {Monthly Notices of the Royal Astronomical Society},
+  year    = 2019,
+  volume  = 485,
+  pages   = {2380--2400},
+  doi     = {10.1093/mnras/stz590},
+  eprint  = {1903.00015},
+  note    = {\S3: Fourier transforms computed only over 5--43.9 d$^{-1}$ ("did not calculate the Fourier transform below 5 d$^{-1}$"); non-dSct sample = 12\,135 non-pulsators + 207 stars with other $>5$ d$^{-1}$ variability; known EBs/ellipsoidals removed}
+}
+
+@ARTICLE{Balona2013,
+  author  = {{Balona}, L. A.},
+  title   = {Activity in A-type stars},
+  journal = {Monthly Notices of the Royal Astronomical Society},
+  year    = 2013,
+  volume  = 431,
+  pages   = {2240--2252},
+  doi     = {10.1093/mnras/stt322},
+  note    = {Abstract: "In about 875 (40 per cent) A-type stars, the periodogram shows a simple peak and its harmonic", interpreted as rotational modulation}
+}
+
+@ARTICLE{Coughlin2014,
+  author  = {{Coughlin}, Jeffrey L. and {Thompson}, Susan E. and {Bryson}, Stephen T. and others},
+  title   = {Contamination in the Kepler Field. Identification of 685 KOIs as False Positives via Ephemeris Matching Based on Q1--Q12 Data},
+  journal = {The Astronomical Journal},
+  year    = 2014,
+  volume  = 147,
+  pages   = {119},
+  doi     = {10.1088/0004-6256/147/5/119},
+  eprint  = {1401.1240},
+  note    = {12\% of analysed KOIs are contamination false positives; Kepler pixel 3.98 arcsec}
+}
+
+@ARTICLE{Kramer2023,
+  author  = {{Kramer}, Daniel and {Gowanlock}, Michael and {Trilling}, David and {McNeill}, Andrew and {Erasmus}, Nicolas},
+  title   = {Removing aliases in time-series photometry},
+  journal = {Astronomy and Computing},
+  year    = 2023,
+  volume  = 44,
+  eprint  = {2304.13843},
+  note    = {"all ground-based surveys will have the 24 h alias"; ZTF asteroid masks near 24, 12, 8, 6, 4.8 h; Table 3 match rates 64.8/65.8/69.0/70.1\% (baseline/mask/window/MC); 1--2\% of true periods inside masks. Article number and DOI not confirmed}
+}
+
+@ARTICLE{McLennan2026,
+  author  = {{McLennan}, Jonathan A. G. and {Farihi}, Jay and {Parsons}, Steven G.},
+  title   = {An eclipsing CEMP candidate discovered in a search for dwarf carbon stars in post-common envelope binaries},
+  journal = {arXiv e-prints},
+  year    = 2026,
+  eprint  = {2605.12024},
+  note    = {Preprint (MNRAS style, not yet peer-reviewed). \S3.2: unit-flux L-S window periodogram on the actual timestamps; peaks coincident with window peaks/aliases discarded with a 0.02 d$^{-1}$ tolerance}
+}
