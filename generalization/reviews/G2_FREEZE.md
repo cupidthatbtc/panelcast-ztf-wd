@@ -265,3 +265,39 @@ scripts/generalization/descriptive/d3_trigger_decomposition.py —
 deliberately OUTSIDE the campaign_file_shas() glob surface
 (scripts/generalization/*.py, non-recursive), so pulling this commit on
 the laptop is SHA-neutral for the live D3/D2 runners' drift guards.
+
+## 2026-09-01: G5prep round 2 — pre-metrics ruling on the methods-panel findings
+
+Trigger: a fresh five-persona methods panel (writing/methods_review/, 39
+findings, 0 critical) on the frozen plan/spec; load-bearing facts verified
+against the roster/Mo tables/metrics code before adjudication (prompt:
+reviews/G5prep/PROMPT_round2.md; ruling: reviews/G5prep/sol_round2.md; fixed
+2026-09-01 ~15:40 EDT, before any full-campaign D3/D2 metric existed).
+
+Rulings (binding): item 1 F07 = COMPLIANCE — METRICS_SPEC-mandated D3
+attrition table (class × amp × Mo-join × g≤14 × period × Teff × cone-count ×
+separation; cumulative stages roster→fetched→crossmatched→QC→both-passes),
+`d3_mo_join_covariates.csv`, and the `== 456` frequency-scorable guard are
+implemented in metrics_generalization.py post-launch; magnitude strata use
+`gmag <= 14.0` as the spec says (roster's legacy `< 14.0` flag ignored, roster
+untouched); the automatic pre-fix laptop metrics are archived uninterpreted,
+then metrics are re-run on the Mac with the guard: byte identity of every
+pre-existing science output except attrition.csv; expected-only diffs in
+attrition/manifest/path-keyed provenance; identical input-content SHAs; 456/154
+counts. Items 2–10 = ADMIT-DESCRIPTIVE (segregated under
+`<result>/descriptive_postlaunch/`, analysis_status=postlaunch_descriptive,
+prespecified=false, interval=none): fR/Nyquist-reflection rescoring of the 40
+aliased-dominant targets + P2 by dominant-frequency regime (<4/4–24/≥24 c/d);
+confirmed-positive match-class × any-top-peak partition (610 denominator);
+per-pass rows beside P4 (presentation only); D2 K × template-status, control
+reuse figure, paired A/B table; negative trigger strata (g≤14, Teff cuts
+6597/6737/7092.5 K, merged oids ≤1/2/3–4/≥5, pass, fixed 4×4 RA/Dec grid) +
+covariates by class; D3-vs-pool coverage + a95 by class/pass/band;
+dominant-only confirmed-conditioned 10,000-derangement chance rate
+(PCG64(20260829)); D1-vs-D3 confirmed-frequency histogram (fixed edges) +
+yearly-alias/Kepler-reflection predicates in a separate file; dated
+prespecification-exposure table + the reconciliation sentence. REFUSED:
+applying the solar-diurnal band rule to confirmed positives. Disclosure
+register (F06, F12, F13, F19, F20, F22–F31, F35, F36, F39): disclosure-only.
+No endpoint, denominator, matching rule, interval, or hierarchy changes.
+GENERALIZATION_PLAN.md / METRICS_SPEC.md bytes unchanged.
