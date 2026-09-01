@@ -237,7 +237,8 @@ D3_PERIOD_LABELS = ("<100 s", "[100,200) s", "[200,500) s", "[500,1000) s", "[10
                     "[2000 s,0.05 d)", "[0.05,0.2) d", "[0.2,1) d", "[1,10) d", "[10,100) d",
                     ">=100 d")
 D3_TEFF_LABELS = ("<6597", "[6597,6737)", "[6737,7092.5)", ">=7092.5")
-D3_SEP_LABELS = ("<0.0542", "[0.0542,0.0973)", "[0.0973,0.1538)", "[0.1538,1.0)", ">=1.0")
+D3_SEP_LABELS = ("<0.054159657268769895", "[0.054159657268769895,0.0972924425684607)",
+                 "[0.0972924425684607,0.15375607598589985)", "[0.15375607598589985,1.0)", ">=1.0")
 D3_CONE_EDGES = (4, 7, 10)
 D3_CONE_LABELS = ("0-3", "4-6", "7-9", ">=10")
 D3_MO_JOIN_COVARIATES = ("gmag", "Teff", "logg", "ra", "dec", "subhour", "cache_present",
@@ -327,10 +328,10 @@ def _d3_stage_frame(roster: pd.DataFrame, qc: pd.DataFrame, per_star: pd.DataFra
         sep = pd.to_numeric(pd.Series([qr.get("nearest_separation_arcsec")]), errors="coerce").iloc[0]
         cone = pd.to_numeric(pd.Series([qr.get("ztf_objects_in_cone")]), errors="coerce").iloc[0]
         n_sel = pd.to_numeric(pd.Series([qr.get("selected_ztf_objects")]), errors="coerce").iloc[0]
-        fetched = bool(qr.get("cache_present")) if pd.notna(qr.get("cache_present")) else False
+        fetched = _strict_true(qr.get("cache_present"))
         crossmatched_stage = bool(str(qr.get("read_status")) == "ok" and np.isfinite(sep)
                                   and np.isfinite(n_sel) and n_sel >= 1)
-        qc_passed = bool(qr.get("crossmatched")) if pd.notna(qr.get("crossmatched")) else False
+        qc_passed = _strict_true(qr.get("crossmatched"))
         both = False
         if sid in ps.index:
             row = ps.loc[sid]
@@ -1544,6 +1545,8 @@ def main() -> None:
         }
     if args.dataset in ("d2", "d3") and args.shards_dir is None:
         raise SystemExit("d2/d3 metrics require --shards-dir (the run's shard universe)")
+    if args.dataset == "d3" and args.crossmatch_qc is None:
+        raise SystemExit("d3 metrics require --crossmatch-qc (METRICS_SPEC-mandated attrition table)")
     if args.dataset == "d1":
         truth = truth_d1()
     elif args.dataset == "d3":

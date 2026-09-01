@@ -58,6 +58,13 @@ Windows detached launches ONLY via WMI:
    uninterpreted and the AUTHORITATIVE bundle is the Mac post-fix run, guarded
    by `scripts/generalization/descriptive/compare_metrics_runs.py --reference
    <laptop pre-fix dir> --candidate <mac dir>` → must print GUARD PASS):
+   Mac prerequisite (verifier defect 3): laptop run manifests store the
+   attestation as the Windows-relative literal `outputs\generalization\
+   replay_gate_full\replay_report.json`; from the repo root create a symlink
+   with exactly that (backslash-containing) filename pointing at
+   generalization/attestation/laptop_replay_full_2026-08-29/replay_report.json
+   after confirming its SHA-256 equals the run manifest's
+   replay_attestation.sha256 (64e1937a…). Never edit the metrics loader for it.
    `metrics_generalization.py --dataset d3
     --stars-dir <stars> --run-manifest <d3_run/manifest.json>
     --shards-dir <d3_panels/exposure_stars> --shard-index <d3_panels/shard_index.txt>

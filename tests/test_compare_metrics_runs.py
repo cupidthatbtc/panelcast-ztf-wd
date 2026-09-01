@@ -27,7 +27,7 @@ def test_guard_passes_on_expected_diffs_only(tmp_path):
     ref_m = {"dataset": "d3", "pilot": False, "campaign_sha256": {"a": "1"}, "env": {"machine": "laptop"},
              "inputs_sha256_count": 2, "inputs_sha256_digest": "x", "frozen_sha256": {"f": "1"}}
     cand_m = dict(ref_m, campaign_sha256={"a": "2"}, env={"machine": "mac"}, inputs_sha256_digest="y")
-    _bundle(tmp_path / "ref", scalars, ref_m, {"C:/lap/roster.csv": "s1", "C:/lap/stars/1.json": "s2"})
+    _bundle(tmp_path / "ref", scalars, ref_m, {r"C:\Users\lap\roster.csv": "s1", r"C:\Users\lap\stars\1.json": "s2"})
     _bundle(tmp_path / "cand", "class_label,n_roster\ndsct_flag0,3\n", cand_m,
             {"/mac/roster.csv": "s1", "/mac/stars/1.json": "s2"},
             extra={"attrition_summary.csv": scalars, "d3_mo_join_covariates.csv": "mo_join_status\n"})

@@ -66,7 +66,9 @@ def compare(reference: Path, candidate: Path) -> list[str]:
     if "inputs_sha256.json" in ref_files and "inputs_sha256.json" in cand_files:
         def canon(path: Path) -> Counter:
             data = json.loads(path.read_text())
-            return Counter((Path(k).name if not k.startswith("generation_input:") else k, v)
+            # laptop keys are Windows paths (backslashes are ONE component on macOS)
+            return Counter((k if k.startswith("generation_input:")
+                            else k.replace("\\", "/").rsplit("/", 1)[-1], v)
                            for k, v in data.items())
         if canon(reference / "inputs_sha256.json") != canon(candidate / "inputs_sha256.json"):
             problems.append("inputs_sha256.json content SHAs differ after path canonicalisation")

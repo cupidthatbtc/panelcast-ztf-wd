@@ -301,3 +301,23 @@ applying the solar-diurnal band rule to confirmed positives. Disclosure
 register (F06, F12, F13, F19, F20, F22–F31, F35, F36, F39): disclosure-only.
 No endpoint, denominator, matching rule, interval, or hierarchy changes.
 GENERALIZATION_PLAN.md / METRICS_SPEC.md bytes unchanged.
+
+Round-2 implementation verified 2026-09-01 (independent fresh-context
+verifier, reviews/G5prep/VERIFIER_round2_code.md): CONDITIONAL PASS — every
+ruled definition conforms and was re-derived on the real roster/Mo/crossmatch
+files. Three defects fixed before any real D3 metric: (1) compare_metrics_runs
+canonicalisation of Windows-backslash input keys (would have produced a false
+GUARD FAIL); (2) separation-bin labels now the ruled strings verbatim
+(boundaries were already exact); (3) the laptop run manifest's Windows-relative
+attestation path is made to resolve on the Mac by a literal-name symlink
+(RUNBOOK step 6), never by editing the metrics loader. Defensible choices
+recorded: `freq_scorable` asserted identical to the Mo-joined set rather than
+re-set (preserves per_star.csv byte identity); `wg_stratum` = fixed K labels
+wg_p10/p50/p90; per-module README/manifest sidecars in the shared
+descriptive_postlaunch/ directory; rescoring file = the 40 aliased-dominant
+rows only; extra-relations file = one row per per_star row; a95 n_missing =
+n_roster − n_finite. Provenance correction: the ruled separation cuts
+(0.054159657268769895 / 0.0972924425684607 / 0.15375607598589985) reproduce
+from the 2,955 finite-separation crossmatch rows, not the 2,901
+crossmatched==True rows named in the ruling's parenthetical; the constants
+themselves are used verbatim. Tests: 141.

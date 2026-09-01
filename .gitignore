@@ -22,3 +22,6 @@ data/roster/_source_provenance/jestin2026_draft.tex
 .venv-gen/
 generalization/data/*/raw/
 .venv-spoc/
+
+# Mac-side literal-name symlink so laptop run manifests (Windows relative attestation path) resolve (RUNBOOK step 6)
+outputs\\generalization\\replay_gate_full\\replay_report.json

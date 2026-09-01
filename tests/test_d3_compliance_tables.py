@@ -45,7 +45,7 @@ def test_bin_edges_are_left_closed_right_open():
     assert b(6596.999, mg.D3_TEFF_CUTS_K, mg.D3_TEFF_LABELS, "u") == "<6597"
     assert b(7092.5, mg.D3_TEFF_CUTS_K, mg.D3_TEFF_LABELS, "u") == ">=7092.5"
     assert b(1.0, mg.D3_SEP_CUTS_ARCSEC, mg.D3_SEP_LABELS, "u") == ">=1.0"
-    assert b(0.99999, mg.D3_SEP_CUTS_ARCSEC, mg.D3_SEP_LABELS, "u") == "[0.1538,1.0)"
+    assert b(0.99999, mg.D3_SEP_CUTS_ARCSEC, mg.D3_SEP_LABELS, "u") == "[0.15375607598589985,1.0)"
     assert b(3, mg.D3_CONE_EDGES, mg.D3_CONE_LABELS, "u") == "0-3"
     assert b(4, mg.D3_CONE_EDGES, mg.D3_CONE_LABELS, "u") == "4-6"
     assert b(10, mg.D3_CONE_EDGES, mg.D3_CONE_LABELS, "u") == ">=10"
@@ -84,7 +84,7 @@ def test_stage_frame_bins_and_stages():
     assert s0["magnitude_bin"] == "g_le_14"            # boundary star enters g_le_14 (spec: <=)
     assert s0["amp_bin"] == "[2,5)" and s0["period_bin"] == "[0.05,0.2) d"  # 10 c/d = 8640 s = 0.1 d
     assert s0["teff_bin"] == "[6597,6737)" and s0["cone_count_bin"] == "0-3"
-    assert s0["separation_bin"] == "<0.0542" and s0["mo_join_status"] == "mo_joined"
+    assert s0["separation_bin"] == "<0.054159657268769895" and s0["mo_join_status"] == "mo_joined"
     assert bool(s0["fetched"]) and bool(s0["crossmatched"]) and bool(s0["qc_passed"]) and bool(s0["both_passes"])
     s2 = stage.iloc[2]
     assert s2["magnitude_bin"] == "g_unknown" and s2["amp_bin"] == "amp_unknown"
