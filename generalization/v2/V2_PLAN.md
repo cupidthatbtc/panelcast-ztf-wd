@@ -305,10 +305,15 @@ commit is an ancestor of HEAD, and creates
 `HOLDOUT_LAUNCH_<dataset>.json` ATOMICALLY (O_EXCL) before computation; a
 relaunch is permitted only as an exact resume of the locked configuration
 (same list, constants, code, split, plan, artifact, output directory).
-Holdout-id protection: outside the registered mode — dev runs, debug runs
-(`--allow-nonstandard-ids`), runs without a split file — any requested id
-that belongs to a registered holdout list is refused, so a holdout star
-cannot be scored under other constants or code by any path of the runner.
+Holdout-id protection: any requested id that belongs to a CANONICAL holdout
+list is refused outside the registered mode (dev runs, debug runs with
+`--allow-nonstandard-ids`, runs without a split file) AND under any
+registration root other than the canonical one (a copied registration,
+however complete, cannot launch canonical holdout ids); the metrics refuse a
+holdout run manifest whose registration is not canonical (defense in
+depth), and the comparison refuses it again. So a holdout star cannot be
+scored under other constants or code by any path of the runner, the
+metrics or the comparison.
 
 `metrics_generalization.py --engine v2`: skips the replay-attestation
 requirement (tier `v2_unattested`), binds sidecars to the run manifest's
@@ -377,3 +382,10 @@ the revision, then the dev runs.
   mandatory chance-match beside P2, strict-recovery paired-control contrast;
   (5) the audit implementations committed (`scripts/v2/analysis/`, outside
   the code digest) and the contradictory docstrings removed.
+- 2026-09-02, before any registered run (round-3 confirmation review,
+  `generalization/reviews/V2G1/sol_plan_review_r3.md`, REVISE on two
+  residuals): canonical holdout ids require the canonical registration root
+  in the runner itself (copied-root regression test), the metrics refuse
+  non-canonical holdout manifests; the chance-match files are validated
+  (finite required fields, ≥ 1 permutation) and SHA-bound; the stale
+  discordance docstring corrected.

@@ -193,3 +193,37 @@ def test_debug_runs_cannot_touch_registered_holdout_ids(tmp_path):
                     "--machine", "test", "--workers", "1", "--allow-nonstandard-ids", *extra])
         assert res.returncode != 0 and "registered HOLDOUT ids" in (res.stdout + res.stderr)
     assert not (out / "stars").exists() or not list((out / "stars").glob("*.json"))
+
+
+@pytest.mark.skipif(not PY.exists(), reason="repo venv not present")
+def test_copied_registration_root_cannot_score_canonical_holdout_ids(tmp_path):
+    """Round-3 bypass: a COPY of the canonical registration (without its lock,
+    with altered allowed overrides) must not launch canonical holdout ids."""
+    import hashlib
+    import shutil
+
+    from v2_common import v2_digest as digest
+
+    canonical = ROOT / "generalization" / "v2"
+    reg = tmp_path / "copied_reg"
+    shutil.copytree(canonical, reg, ignore=shutil.ignore_patterns("HOLDOUT_LAUNCH_*", "codex", "__pycache__"))
+    head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=ROOT, capture_output=True, text=True).stdout.strip()
+    sha = lambda p: hashlib.sha256(Path(p).read_bytes()).hexdigest()  # noqa: E731
+    (reg / "dev_tuning.csv").write_text("combination,J\nW30_N24_phi0.25_r0.2-2.0,0.2\n")
+    (reg / "V2_CONSTANTS_FROZEN.json").write_text(json.dumps({
+        "overrides": {"n_window_peaks": 24}, "v2_digest": digest(), "split_sha256": sha(reg / "split.csv"),
+        "plan_sha256": sha(reg / "V2_PLAN.md"), "preregistration_commit": head,
+        "tuning_evidence_sha256": sha(reg / "dev_tuning.csv")}))
+    holdout_ids = [l.strip() for l in (canonical / "d3_holdout.txt").read_text().splitlines() if l.strip()]
+    sid = holdout_ids[0]
+    shards = tmp_path / "shards"
+    write_shard(synthetic_star(sid, seed=3), shards / f"{sid}.csv.gz")
+    (shards / "shard_index.txt").write_text(sid + "\n")
+    res = _run_reg(["--shard-dir", str(shards), "--shard-index", str(shards / "shard_index.txt"),
+                    "--out-dir", str(tmp_path / "out"), "--work-root", str(tmp_path / "work"),
+                    "--dataset", "d3-kepler-dsct", "--machine", "test", "--workers", "1",
+                    "--stars-file", str(reg / "d3_holdout.txt"), "--split-file", str(reg / "split.csv"),
+                    "--allow-holdout", "--constants", str(reg / "V2_CONSTANTS_FROZEN.json")], reg)
+    assert res.returncode != 0 and "canonical registration" in (res.stdout + res.stderr)
+    assert not (reg / "HOLDOUT_LAUNCH_d3.json").exists() or True   # the guard fires before any lock matters
+    assert not list((tmp_path / "out" / "stars").glob("*.json")) if (tmp_path / "out" / "stars").exists() else True

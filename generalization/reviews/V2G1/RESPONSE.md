@@ -36,3 +36,11 @@ computed).
 | 12 | PARTIAL | metrics sidecar keys include `plan_sha256`, `preregistration_commit`, `constants_artifact_sha256`; the comparison binds both metrics manifests, the run manifest, the registered list, the split, the constants artifact and the lock. |
 | 13 | PARTIAL | stale docstrings (`dev_tuning.py`, `multiband.py`) rewritten. |
 | 1, 2, 5, 6, 9, 11 | RESOLVED | — |
+
+# Round 3 (confirmation) — `sol_plan_review_r3.md`, verdict REVISE on two residuals; dispositions
+
+| # | round-3 status | disposition (ACCEPTED) |
+|---|---|---|
+| 4 / (b) | NOT RESOLVED (copied root) | `run_v2_ls.py`: any requested id in a CANONICAL holdout list is refused unless the run is a registered holdout run under the CANONICAL registration root — a copied root (`V2_REGISTRATION_ROOT`) with its own artifact and no lock is refused before any lock is consulted (`test_copied_registration_root_cannot_score_canonical_holdout_ids`); `metrics_generalization.attestation_record_for("v2")` refuses a holdout manifest with `canonical_registration != True` (defense in depth, tested); the comparison already refused it. |
+| 7 | PARTIAL | `compare_engines.py`: docstring corrected to the exact discordance bound; `chance_match.json` of both bundles must exist for D3 with finite `accidental_direct_match_rate_mean` / `_p95` and `permutations ≥ 1`, and both files are SHA-bound in `inputs_sha256`. |
+| 3, 8, 10, 12, 13, (a), (c) | RESOLVED | — |

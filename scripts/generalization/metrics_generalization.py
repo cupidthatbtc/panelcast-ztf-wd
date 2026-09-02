@@ -1490,6 +1490,10 @@ def attestation_record_for(engine: str, run_manifest: dict,
     if run_manifest.get("engine") != "v2":
         raise SystemExit("--engine v2 requires a run manifest with engine == 'v2'")
     binding = run_manifest["binding"]
+    if binding.get("split_half") == "holdout" and run_manifest.get("canonical_registration") is not True:
+        # defense in depth (V2G1 round 3): a holdout run is scored only if it
+        # was executed under the canonical registration (lock + artifact)
+        raise SystemExit("v2 holdout run manifest was not produced under the canonical registration")
     return {
         "tier": "v2_unattested", "path": "", "sha256": "v2-unattested",
         "engine": "v2", "v2_digest": binding["v2_digest"],

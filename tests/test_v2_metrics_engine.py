@@ -91,3 +91,21 @@ def test_compare_allows_only_new_engine_manifest_key(tmp_path):
         json.dumps({"dataset": "d3", "engine": "frozen"}), encoding="utf-8")
 
     assert compare(reference, candidate) == []
+
+
+def test_v2_holdout_manifest_requires_canonical_registration(tmp_path):
+    """Defense in depth (V2G1 round 3): a v2 holdout run produced under a
+    non-canonical registration root is refused by the metrics."""
+    import json
+
+    path = tmp_path / "manifest.json"
+    base = {"engine": "v2", "machine": "m", "binding": {"v2_digest": "d", "constants_sha256": "c",
+                                                         "split_half": "holdout"}}
+    path.write_text(json.dumps({**base, "canonical_registration": False}))
+    with pytest.raises(SystemExit):
+        metrics.attestation_record_for("v2", json.loads(path.read_text()), path)
+    path.write_text(json.dumps({**base, "canonical_registration": True}))
+    assert metrics.attestation_record_for("v2", json.loads(path.read_text()), path)["tier"] == "v2_unattested"
+    dev = {**base, "binding": {**base["binding"], "split_half": "dev"}, "canonical_registration": False}
+    path.write_text(json.dumps(dev))
+    assert metrics.attestation_record_for("v2", json.loads(path.read_text()), path)["tier"] == "v2_unattested"

@@ -20,7 +20,8 @@ and usable variants (target means over scheduled strata; common-draw target
 bootstrap), and the target-clustered injected-vs-paired-control contrasts.
 Statistics: per-arm Wilson 95 %, paired difference v2 − frozen with a seeded
 star (or target) bootstrap (B = 2000, seed 20260902; no discordant pairs ->
-the difference interval is the degenerate [0, 0] and is flagged), exact
+the exact discordance bound [-U95, +U95], U95 the one-sided Clopper-Pearson
+upper bound of the discordance proportion at 0 of n, flagged), exact
 two-sided McNemar on discordant pairs. The pre-declared STRONG reading is a
 descriptive operational screen, not a hypothesis test.
 """
@@ -403,18 +404,29 @@ def main() -> None:
     frozen, v2, counts = build_frames(args.dataset, args.half, split, frozen_all, v2_all, runner_ids)
 
     rows = endpoints(args.dataset, frozen, v2)
-    chance = {}
+    chance, chance_files = {}, {}
     for label, directory in (("frozen", args.frozen_metrics_dir), ("v2", args.v2_metrics_dir)):
         path = directory / "chance_match.json"
-        if args.dataset == "d3" and not path.exists():
-            raise SystemExit(f"{path} is required (chance-match rate beside P2)")
-        if path.exists():
+        if args.dataset == "d3":
+            if not path.exists():
+                raise SystemExit(f"{path} is required (chance-match rate beside P2)")
+            payload = json.loads(path.read_text(encoding="utf-8"))
+            for key in ("accidental_direct_match_rate_mean", "accidental_direct_match_rate_p95", "permutations"):
+                value = payload.get(key)
+                if not isinstance(value, (int, float)) or isinstance(value, bool) or not math.isfinite(float(value)):
+                    raise SystemExit(f"{path}: required chance-match field {key} is missing or not finite")
+            if int(payload["permutations"]) < 1:
+                raise SystemExit(f"{path}: chance-match has no permutations")
+            chance[label] = payload
+            chance_files[str(path)] = sha256_file(path)
+        elif path.exists():
             chance[label] = json.loads(path.read_text(encoding="utf-8"))
+            chance_files[str(path)] = sha256_file(path)
     for row in rows:
         if row["endpoint"].startswith("P2"):
             for label in ("frozen", "v2"):
-                row[f"{label}_chance_direct_mean"] = chance.get(label, {}).get("accidental_direct_match_rate_mean", math.nan)
-                row[f"{label}_chance_direct_p95"] = chance.get(label, {}).get("accidental_direct_match_rate_p95", math.nan)
+                row[f"{label}_chance_direct_mean"] = chance[label]["accidental_direct_match_rate_mean"]
+                row[f"{label}_chance_direct_p95"] = chance[label]["accidental_direct_match_rate_p95"]
     args.out_dir.mkdir(parents=True, exist_ok=True)
     table = pd.DataFrame(rows)
     table.to_csv(args.out_dir / "endpoints.csv", index=False, lineterminator="\n")
@@ -431,6 +443,7 @@ def main() -> None:
                                                 args.v2_metrics_dir / "manifest.json")}
     if args.constants_artifact is not None:
         inputs[str(args.constants_artifact)] = sha256_file(args.constants_artifact)
+    inputs.update(chance_files)
     (args.out_dir / "manifest.json").write_text(json.dumps({
         "dataset": args.dataset, "half": args.half, "frames": counts,
         "registration": registration,

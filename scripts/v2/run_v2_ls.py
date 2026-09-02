@@ -376,15 +376,19 @@ def main() -> None:
     elif only is not None and not args.allow_nonstandard_ids:
         raise SystemExit("--stars-file without --split-file: pass --split-file generalization/v2/split.csv "
                          "(or --allow-nonstandard-ids for debug subsets)")
-    if not holdout_record:
-        # holdout-id protection outside the registered mode (round-2 (b)):
-        # no debug, dev or unregistered run may touch a registered holdout id
-        requested = only if only is not None else {
-            path.name.split(".csv")[0] for path in args.shard_dir.glob("*.csv.gz")}
-        touched = requested & canonical_holdout_ids()
-        if touched:
-            raise SystemExit(f"{len(touched)} requested ids are registered HOLDOUT ids; they can only be "
-                             "scored in the registered holdout mode (--split-file + --allow-holdout)")
+    # holdout-id protection (round-2 (b), round-3): a CANONICAL holdout id can
+    # only ever be scored by a registered holdout run under the CANONICAL
+    # registration root — never by a debug, dev or unregistered run, and never
+    # under a copied registration root (whatever it contains)
+    requested = only if only is not None else {
+        path.name.split(".csv")[0] for path in args.shard_dir.glob("*.csv.gz")}
+    touched = requested & canonical_holdout_ids()
+    if touched and not holdout_record:
+        raise SystemExit(f"{len(touched)} requested ids are registered HOLDOUT ids; they can only be "
+                         "scored in the registered holdout mode (--split-file + --allow-holdout)")
+    if touched and root != CANONICAL_REGISTRATION:
+        raise SystemExit(f"{len(touched)} requested ids are CANONICAL holdout ids: a registered holdout run "
+                         f"must use the canonical registration {CANONICAL_REGISTRATION}, not {root}")
     binding = {
         "engine": ENGINE,
         "v2_digest": v2_digest(),
