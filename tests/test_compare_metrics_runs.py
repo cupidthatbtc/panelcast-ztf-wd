@@ -46,3 +46,16 @@ def test_guard_fails_on_science_diff_and_bad_manifest(tmp_path):
     assert "science output differs: per_star.csv" in joined
     assert "manifest key differs: frozen_sha256" in joined
     assert "unexpected new files" in joined
+
+
+def test_newline_only_difference_is_identical_newline_not_a_defect(tmp_path):
+    scalars = "roster,scored\n3,3\n"
+    m = {"dataset": "d3", "pilot": False, "frozen_sha256": {"f": "1"}}
+    _bundle(tmp_path / "ref", scalars.replace("\n", "\r\n"), m, {"a": "s1"})
+    (tmp_path / "ref" / "per_star.csv").write_bytes(b"sid,best_status\r\n1,confirmed\r\n")
+    _bundle(tmp_path / "cand", "x\n", m, {"a": "s1"},
+            extra={"attrition_summary.csv": scalars, "d3_mo_join_covariates.csv": ""})
+    assert compare(tmp_path / "ref", tmp_path / "cand") == []
+    # a real content change under CRLF still fails
+    (tmp_path / "ref" / "per_star.csv").write_bytes(b"sid,best_status\r\n1,candidate\r\n")
+    assert any("per_star.csv" in p for p in compare(tmp_path / "ref", tmp_path / "cand"))

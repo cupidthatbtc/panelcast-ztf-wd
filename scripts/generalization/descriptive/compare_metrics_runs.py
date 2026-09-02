@@ -27,8 +27,26 @@ MANIFEST_MAY_DIFFER = {"campaign_sha256", "env", "inputs_sha256_count", "inputs_
 SPECIAL = {"attrition.csv", "manifest.json", "inputs_sha256.json"}
 
 
+TEXT_SUFFIXES = {".csv", ".json", ".txt", ".md"}
+
+
 def sha(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def sha_lf(path: Path) -> str:
+    """SHA-256 after CRLF -> LF normalisation (Windows text-mode writes)."""
+    return hashlib.sha256(path.read_bytes().replace(b"\r\n", b"\n")).hexdigest()
+
+
+def identity_tier(a: Path, b: Path) -> str:
+    """identical_bytes | identical_newline | differs — the replay gate's vocabulary
+    (its full-928 attestation classified 7 files as identical_newline)."""
+    if sha(a) == sha(b):
+        return "identical_bytes"
+    if a.suffix in TEXT_SUFFIXES and sha_lf(a) == sha_lf(b):
+        return "identical_newline"
+    return "differs"
 
 
 def compare(reference: Path, candidate: Path) -> list[str]:
@@ -41,17 +59,22 @@ def compare(reference: Path, candidate: Path) -> list[str]:
     extra = cand_files - ref_files
     if extra - EXPECTED_NEW:
         problems.append(f"unexpected new files: {sorted(extra - EXPECTED_NEW)[:5]}")
+    tiers = Counter()
     for rel in sorted(ref_files & cand_files):
         if rel in SPECIAL:
             continue
-        if sha(reference / rel) != sha(candidate / rel):
+        tier = identity_tier(reference / rel, candidate / rel)
+        tiers[tier] += 1
+        if tier == "differs":
             problems.append(f"science output differs: {rel}")
+    print(f"science outputs: {tiers['identical_bytes']} identical_bytes, "
+          f"{tiers['identical_newline']} identical_newline, {tiers['differs']} differ")
     # attrition: reference scalars == candidate attrition_summary
     if "attrition.csv" in ref_files:
         summary = candidate / "attrition_summary.csv"
         if not summary.exists():
             problems.append("candidate has no attrition_summary.csv")
-        elif sha(reference / "attrition.csv") != sha(summary):
+        elif identity_tier(reference / "attrition.csv", summary) == "differs":
             problems.append("reference attrition.csv != candidate attrition_summary.csv")
     # manifest: only the allowed keys may differ
     if "manifest.json" in ref_files and "manifest.json" in cand_files:
