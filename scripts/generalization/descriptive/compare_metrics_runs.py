@@ -18,6 +18,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import re
 import sys
 from collections import Counter
 from pathlib import Path
@@ -35,8 +36,10 @@ def sha(path: Path) -> str:
 
 
 def sha_lf(path: Path) -> str:
-    """SHA-256 after CRLF -> LF normalisation (Windows text-mode writes)."""
-    return hashlib.sha256(path.read_bytes().replace(b"\r\n", b"\n")).hexdigest()
+    """SHA-256 after newline normalisation: any run of CR before LF -> LF.
+    Windows text-mode writes give CRLF, and write_text(to_csv(...)) gives
+    CR CR LF (pandas emits CRLF, then text mode translates the LF again)."""
+    return hashlib.sha256(re.sub(rb"\r+\n", b"\n", path.read_bytes())).hexdigest()
 
 
 def identity_tier(a: Path, b: Path) -> str:

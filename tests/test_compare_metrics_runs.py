@@ -59,3 +59,13 @@ def test_newline_only_difference_is_identical_newline_not_a_defect(tmp_path):
     # a real content change under CRLF still fails
     (tmp_path / "ref" / "per_star.csv").write_bytes(b"sid,best_status\r\n1,candidate\r\n")
     assert any("per_star.csv" in p for p in compare(tmp_path / "ref", tmp_path / "cand"))
+
+
+def test_double_cr_from_write_text_to_csv_is_identical_newline(tmp_path):
+    scalars = "roster,scored\n3,3\n"
+    m = {"dataset": "d3", "pilot": False, "frozen_sha256": {"f": "1"}}
+    _bundle(tmp_path / "ref", scalars.replace("\n", "\r\r\n"), m, {"a": "s1"})
+    (tmp_path / "ref" / "trigger_rates.csv").write_bytes(b"quantity,p\r\r\nx,0.1\r\r\n")
+    _bundle(tmp_path / "cand", "x\n", m, {"a": "s1"},
+            extra={"attrition_summary.csv": scalars, "d3_mo_join_covariates.csv": ""})
+    assert compare(tmp_path / "ref", tmp_path / "cand") == []
