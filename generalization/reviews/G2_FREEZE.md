@@ -333,3 +333,14 @@ input-count fields; input content SHAs identical after path canonicalisation.
 Authoritative D3 metrics = generalization/results/2026-09-02_d3/metrics (Mac);
 the laptop pre-fix bundle is archived beside it uninterpreted
 (metrics_laptop_prefix/). Guard tool commits 8bc637e, 70bc860.
+
+Disclosure (found on the real D3 bundle, 2026-09-02): for the 154 unjoined
+dsct_flag1 positives the frozen metrics' `best_candidate_matches_dominant`
+reads `unmatched` rather than `unscored` because the roster dominant frequency
+reaches classify_match as a float NaN (not None); `best_candidate_matches_
+any_mode` is `unscored` as intended. No estimand reads that cell (the P2
+frame excludes unjoined stars; P1/P3 ignore match classes). The frozen
+per_star.csv is left byte-identical; the ruled descriptive modules enforce the
+ruled `unscored` label for unjoined rows (positive partition records
+n_unjoined_relabelled_unscored; frequency audits leave relation cells blank
+when the dominant is NaN). Disclosed here and in the disclosure register.

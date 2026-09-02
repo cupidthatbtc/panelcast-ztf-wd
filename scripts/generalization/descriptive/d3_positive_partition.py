@@ -101,7 +101,14 @@ def partition(per_star: pd.DataFrame,
         )
     flag_bool = flags.map(truthy)
     unjoined = ~confirmed["freq_scorable"].map(truthy)
-    if (unjoined & (classes != UNSCORED)).any():
+    # Ruling: "unjoined confirmed positives remain `unscored`, never dropped".
+    # The frozen metrics label them `unmatched` because the roster dominant
+    # frequency is NaN (float, not None) when classify_match runs; no estimand
+    # reads that cell (P2 excludes unjoined stars). Enforce the ruled label
+    # here; the count is recorded in the manifest and disclosed.
+    n_relabelled = int((unjoined & (classes != UNSCORED)).sum())
+    classes = classes.where(~unjoined, UNSCORED)
+    if (unjoined & (classes != UNSCORED)).any():  # pragma: no cover - relabelled above
         raise SystemExit(
             "an unjoined (not freq_scorable) confirmed positive carries a scored "
             "dominant-match class; per_star.csv is inconsistent"
@@ -122,6 +129,7 @@ def partition(per_star: pd.DataFrame,
                     n_cell / n_confirmed if n_confirmed else math.nan),
             })
     table = common.with_status(pd.DataFrame(rows))[COLUMNS]
+    table.attrs["n_unjoined_relabelled_unscored"] = n_relabelled
     if len(table) != 12:  # pragma: no cover - fixed cross
         raise SystemExit("partition does not have 12 cells")
     if int(table["n_cell"].sum()) != n_confirmed:  # pragma: no cover - identity
@@ -205,6 +213,8 @@ def main(argv: list[str] | None = None) -> None:
         "cells": {f"{r.match_class}|any_top_peak={str(r.any_top_peak_matches_any_mode).lower()}":
                   int(r.n_cell) for r in table.itertuples()},
     }
+    manifest["n_unjoined_relabelled_unscored"] = int(
+        table.attrs.get("n_unjoined_relabelled_unscored", 0))
     common.write_json(args.out_dir / MANIFEST_FILE, manifest)
     print(table.to_string(index=False))
     print(f"[positive_partition] wrote {args.out_dir}")

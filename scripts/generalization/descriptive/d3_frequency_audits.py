@@ -249,10 +249,14 @@ def extra_relations(per_star: pd.DataFrame,
         if frozen_dom not in common.MATCH_CLASSES_WITH_UNSCORED \
                 or frozen_any not in common.MATCH_CLASSES_WITH_UNSCORED:
             raise SystemExit(f"{r.sid}: frozen match class outside the taxonomy")
-        dom_scored = frozen_dom != UNSCORED
+        # Unjoined positives (NaN roster dominant) carry the frozen label
+        # `unmatched` because the metrics classified against a float NaN; no
+        # estimand reads that cell. Treat a NaN dominant as not scored here so
+        # the relation columns stay blank (ruling: explicit unknown cells).
+        dom_scored = frozen_dom != UNSCORED and not math.isnan(dominant)
         any_scored = frozen_any != UNSCORED
-        if dom_scored and (math.isnan(best) or math.isnan(dominant) or math.isnan(tol)):
-            raise SystemExit(f"{r.sid}: frozen dominant match is scored but candidate/dominant/tolerance missing")
+        if dom_scored and (math.isnan(best) or math.isnan(tol)):
+            raise SystemExit(f"{r.sid}: frozen dominant match is scored but candidate/tolerance missing")
         if any_scored and (math.isnan(best) or not truth or math.isnan(tol)):
             raise SystemExit(f"{r.sid}: frozen any-mode match is scored but candidate/truth/tolerance missing")
         if not dom_scored and not math.isnan(best) and not math.isnan(dominant):

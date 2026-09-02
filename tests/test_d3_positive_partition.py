@@ -105,9 +105,14 @@ def test_guards_abort():
     bad_flag = pd.DataFrame(base + [_row("c", "confirmed", "direct", math.nan)])
     with pytest.raises(SystemExit, match="explicit any_top_peak"):
         partition(bad_flag, expected_positives=3)
+    # an unjoined positive carrying a scored class (the frozen metrics' NaN-dominant
+    # quirk) is relabelled `unscored` as ruled, never dropped, and counted
     unjoined_scored = pd.DataFrame(base + [_row("c", "confirmed", "direct", True, scorable=False)])
-    with pytest.raises(SystemExit, match="unjoined"):
-        partition(unjoined_scored, expected_positives=3)
+    relabelled = partition(unjoined_scored, expected_positives=3)
+    assert relabelled.attrs["n_unjoined_relabelled_unscored"] == 1
+    cell = relabelled[(relabelled.match_class == "unscored") & (relabelled.any_top_peak_matches_any_mode == True)]  # noqa: E712
+    assert int(cell["n_cell"].iloc[0]) == 1
+    assert int(relabelled["n_cell"].sum()) == 2
     not_positive = pd.DataFrame(base + [{**_row("c", "confirmed", "direct", True), "label_positive": False}])
     with pytest.raises(SystemExit, match="not label_positive"):
         partition(not_positive, expected_positives=3)
