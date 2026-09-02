@@ -175,14 +175,26 @@ split SHAs, tuning protocol, endpoints, disclosures). Code: `scripts/v2/`
    --out-dir generalization/results/<date>_d3_v2/metrics` (pilot=true: the
    truth is the half); D2 likewise with `--shards-dir <d2_shards_gen2>`.
    Descriptive modules run unchanged on the v2 bundle.
-6. Comparison: `compare_engines.py --dataset d3 --half holdout
+6. Comparison (frames from the split roster; `dev_smoke` excluded):
+   `compare_engines.py --dataset d3 --half holdout
    --frozen-per-star generalization/results/2026-09-02_d3/metrics/per_star.csv
    --v2-per-star generalization/results/<date>_d3_v2/metrics/per_star.csv
-   --flag-sids 9000000000000892667 9000000000004752731 9000000000009596355
-   9000000000005475187 --out-dir generalization/results/<date>_synthesis/d3`
-   (D2 likewise with the frozen D2 bundle). Then G5 (fresh verifier + sol),
+   --runner-list generalization/v2/d3_holdout.txt
+   --frozen-metrics-dir … --v2-metrics-dir …
+   --constants-artifact generalization/v2/V2_CONSTANTS_FROZEN.json
+   --out-dir generalization/results/<date>_synthesis/d3` (D2 likewise with the
+   frozen D2 bundle and `d2_holdout.txt`). Then G5 (fresh verifier + sol),
    abstract, G6.
-7. Machine hygiene: the Mac stays quiet unless its owner allows sustained
+7. Declared descriptive audits (after the runs; `scripts/v2/analysis/`, outside
+   the v2 code digest): `veto_exposure.py --dataset d3 --stars-dir <run>/stars
+   --shards-dir <shards> --constants <artifact> --out-dir <results>/descriptive_v2/`
+   (truth-frequency veto exposure by component); `leakage_audit.py --stars-file
+   <dev ids> --shards-dir <d3 shards> --reference-stars-dir outputs/v2/d3_dev_w30/stars
+   --work-root <scratch> --out-dir …` (low-frequency injection on dev windows;
+   dev ids only, refuses others).
+8. Machine hygiene: the Mac stays quiet unless its owner allows sustained
    load (2026-09-02); v2 code edits must be re-copied to the laptop
    (`scp scripts/v2/*.py win:…/scripts/v2/`) and the v2 digests compared
-   before any run — a digest mismatch voids resume.
+   before any run — a digest mismatch voids resume and, after the constants
+   freeze, the registered holdout. New analysis code goes in
+   `scripts/v2/analysis/` so the digest never moves after the dev runs start.
