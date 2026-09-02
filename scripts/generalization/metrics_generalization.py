@@ -1479,9 +1479,40 @@ def sha256_file(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def attestation_record_for(engine: str, run_manifest: dict,
+                           run_manifest_path: Path) -> dict:
+    if engine == "frozen":
+        if run_manifest.get("engine") == "v2":
+            raise SystemExit("v2 run manifest cannot be scored with --engine frozen")
+        return {"tier": "published_bundle"}
+    if engine != "v2":
+        raise ValueError(f"unknown metrics engine: {engine}")
+    if run_manifest.get("engine") != "v2":
+        raise SystemExit("--engine v2 requires a run manifest with engine == 'v2'")
+    binding = run_manifest["binding"]
+    return {
+        "tier": "v2_unattested", "path": "", "sha256": "v2-unattested",
+        "engine": "v2", "v2_digest": binding["v2_digest"],
+        "constants_sha256": binding["constants_sha256"],
+        "machine": run_manifest.get("machine", ""), "roster_size": None,
+        "f64_max_relative_difference": None, "boundary_margin_relative": 1e-9,
+        "run_manifest_sha256": sha256_file(run_manifest_path),
+    }
+
+
+def sidecar_binding_keys(engine: str) -> tuple[str, ...]:
+    if engine == "frozen":
+        return ("frozen_digest", "campaign_digest", "generation_id")
+    if engine == "v2":
+        return ("engine", "frozen_digest", "v2_digest", "constants_sha256", "generation_id",
+                "machine", "split_sha256", "split_half", "stars_file_sha256")
+    raise ValueError(f"unknown metrics engine: {engine}")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--dataset", choices=("d1", "d2", "d3"), required=True)
+    parser.add_argument("--engine", choices=("frozen", "v2"), default="frozen")
     parser.add_argument("--stars-dir", type=Path, required=True)
     parser.add_argument("--census-csv", type=Path, default=None)
     parser.add_argument("--shards-dir", type=Path, default=None,
@@ -1518,31 +1549,33 @@ def main() -> None:
         if not str(run_manifest.get("dataset", "")).startswith(args.dataset):
             raise SystemExit(f"run manifest dataset {run_manifest.get('dataset')!r} is not {args.dataset}")
         pilot = bool(run_manifest.get("pilot", False))
-        att_path = Path(run_manifest.get("replay_attestation", {}).get("path", ""))
-        if not att_path.exists():
-            raise SystemExit(f"run manifest's replay attestation not found: {att_path}")
-        attestation = json.loads(att_path.read_text(encoding="utf-8"))
-        if attestation.get("gate") != "replay_gate" or attestation.get("passed") is not True:
-            # decision-equivalent tier: allowed ONLY if every star's diagnostic is clean
-            diag = [s_.get("decision_equivalence") for s_ in attestation.get("stars", [])]
-            if not diag or any(d is None or not d.get("decisions_identical") for d in diag):
-                raise SystemExit("attestation is neither a strict PASS nor fully decision-equivalent")
-            tier = "decision_identical"
-            f64_max = max(d["f64_max_relative_difference"] for d in diag)
-            boundary_margin = max(100.0 * f64_max, 1e-9)
-        else:
-            tier = "strict"
-            f64_max = 0.0
+        attestation_record = attestation_record_for(args.engine, run_manifest, args.run_manifest)
+        if args.engine == "frozen":
+            att_path = Path(run_manifest.get("replay_attestation", {}).get("path", ""))
+            if not att_path.exists():
+                raise SystemExit(f"run manifest's replay attestation not found: {att_path}")
+            attestation = json.loads(att_path.read_text(encoding="utf-8"))
+            if attestation.get("gate") != "replay_gate" or attestation.get("passed") is not True:
+                # decision-equivalent tier: allowed ONLY if every star's diagnostic is clean
+                diag = [s_.get("decision_equivalence") for s_ in attestation.get("stars", [])]
+                if not diag or any(d is None or not d.get("decisions_identical") for d in diag):
+                    raise SystemExit("attestation is neither a strict PASS nor fully decision-equivalent")
+                tier = "decision_identical"
+                f64_max = max(d["f64_max_relative_difference"] for d in diag)
+                boundary_margin = max(100.0 * f64_max, 1e-9)
+            else:
+                tier = "strict"
+                f64_max = 0.0
+            attestation_record = {
+                "tier": tier, "path": str(att_path),
+                "sha256": sha256_file(att_path),
+                "roster_size": attestation.get("roster_size", len(attestation.get("stars", []))),
+                "f64_max_relative_difference": f64_max,
+                "boundary_margin_relative": boundary_margin,
+                "run_manifest_sha256": sha256_file(args.run_manifest),
+            }
         if run_manifest.get("frozen_sha256") != frozen_file_shas():
             raise SystemExit("run manifest frozen SHAs differ from this checkout")
-        attestation_record = {
-            "tier": tier, "path": str(att_path),
-            "sha256": sha256_file(att_path),
-            "roster_size": attestation.get("roster_size", len(attestation.get("stars", []))),
-            "f64_max_relative_difference": f64_max,
-            "boundary_margin_relative": boundary_margin,
-            "run_manifest_sha256": sha256_file(args.run_manifest),
-        }
     if args.dataset in ("d2", "d3") and args.shards_dir is None:
         raise SystemExit("d2/d3 metrics require --shards-dir (the run's shard universe)")
     if args.dataset == "d3" and args.crossmatch_qc is None:
@@ -1687,7 +1720,9 @@ def main() -> None:
                 problems.append("pass set")
             if prov.get("env_digest") != run_env_digest:
                 problems.append("env digest")
-            for key in ("frozen_digest", "campaign_digest", "generation_id"):
+            if args.engine == "v2" and prov.get("driver") != "run_v2_ls.py":
+                problems.append("driver")
+            for key in sidecar_binding_keys(args.engine):
                 if prov.get(key) != run_binding.get(key):
                     problems.append(f"binding {key}")
             if completion is not None:
@@ -1822,6 +1857,7 @@ def main() -> None:
     }
     manifest = {
         "dataset": args.dataset,
+        "engine": args.engine,
         "pilot": pilot,
         "confirmatory_allowed": not pilot,
         "generation_id": (generation or {}).get("generation_id", ""),

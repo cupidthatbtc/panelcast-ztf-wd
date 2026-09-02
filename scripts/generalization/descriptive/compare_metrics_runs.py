@@ -7,8 +7,9 @@ Sufficient guard, as ruled:
   1. byte identity for every pre-existing science output except attrition.csv;
   2. expected-only diffs: attrition.csv (reference scalars must equal the
      candidate's attrition_summary.csv), manifest.json (only campaign_sha256,
-     env, inputs_sha256_count/digest may differ), path-keyed inputs_sha256.json
-     (identical content SHAs after canonicalising paths to basenames);
+     env, inputs_sha256_count/digest, and engine may differ), path-keyed
+     inputs_sha256.json (identical content SHAs after canonicalising paths to
+     basenames);
   3. the candidate's new files are exactly the compliance outputs.
 Exit 1 on any unexpected difference.
 """
@@ -24,7 +25,8 @@ from collections import Counter
 from pathlib import Path
 
 EXPECTED_NEW = {"attrition_summary.csv", "d3_mo_join_covariates.csv"}
-MANIFEST_MAY_DIFFER = {"campaign_sha256", "env", "inputs_sha256_count", "inputs_sha256_digest"}
+MANIFEST_MAY_DIFFER = {"campaign_sha256", "engine", "env", "inputs_sha256_count",
+                       "inputs_sha256_digest"}
 SPECIAL = {"attrition.csv", "manifest.json", "inputs_sha256.json"}
 
 
@@ -72,11 +74,17 @@ def compare(reference: Path, candidate: Path) -> list[str]:
             problems.append(f"science output differs: {rel}")
     print(f"science outputs: {tiers['identical_bytes']} identical_bytes, "
           f"{tiers['identical_newline']} identical_newline, {tiers['differs']} differ")
-    # attrition: reference scalars == candidate attrition_summary
+    # attrition: a PRE-fix reference (no attrition_summary.csv) holds the seven
+    # scalars in attrition.csv, which must equal the candidate's
+    # attrition_summary.csv; a POST-fix reference is compared file-for-file
     if "attrition.csv" in ref_files:
         summary = candidate / "attrition_summary.csv"
         if not summary.exists():
             problems.append("candidate has no attrition_summary.csv")
+        elif "attrition_summary.csv" in ref_files:
+            for name in ("attrition.csv", "attrition_summary.csv"):
+                if identity_tier(reference / name, candidate / name) == "differs":
+                    problems.append(f"science output differs: {name}")
         elif identity_tier(reference / "attrition.csv", summary) == "differs":
             problems.append("reference attrition.csv != candidate attrition_summary.csv")
     # manifest: only the allowed keys may differ

@@ -144,3 +144,45 @@ Mac (M5, macOS arm64) is NOT an attested machine: strict tier fails on bytes
 stopped at 311/928 (battery) — partial record in
 `outputs/generalization/replay_gate_mac_full/PARTIAL_RUN_ATTESTATION.json`.
 Rule: multi-hour compute on the Mac only on mains power; default to the laptop.
+
+## v2 detector arm (Phase 2, pre-registered 2026-09-02)
+
+Governing document: `generalization/v2/V2_PLAN.md` (algorithm, constants,
+split SHAs, tuning protocol, endpoints, disclosures). Code: `scripts/v2/`
+(outside every SHA surface; frozen helpers read-only through frozen_api).
+
+1. Split (already built, SHA-quoted in the plan): `scripts/v2/make_split.py`
+   → `generalization/v2/split.csv` + runner id lists. Never rebuild after the
+   first v2 run; the runner refuses id lists that span both halves.
+2. Dev runs (laptop, after chain2 "CHAIN2 DONE"; `v2_laptop_chain.ps1`,
+   log `v2_chain.log`): `run_v2_ls.py --shard-dir <shards> --shard-index
+   <index> --out-dir outputs/v2/<name> --work-root <scratch> --dataset
+   d3-kepler-dsct|d2-tess-dav --machine <label> --workers 12 --stars-file
+   generalization/v2/d3_dev.txt --split-file generalization/v2/split.csv
+   [--constants generalization/v2/constants_w10.json]`.
+3. Tuning (dev only): `rescore_v2.py --stars-dir outputs/v2/d3_dev/stars --out
+   <csv>` (and on d2_dev) → `dev_tuning.py --d3-rescore … --d2-rescore … --out-dir
+   generalization/v2/tuning/` → `chosen_overrides.json`; window-ladder subsets
+   compared on the same ids. Freeze the result as
+   `generalization/v2/V2_CONSTANTS_FROZEN.json` + a §10 amendment; commit.
+4. Holdout (ONCE, after the sol review ADMITs the plan and the constants are
+   frozen): the same runner command with `d3_holdout.txt` / `d2_holdout.txt`,
+   `--constants generalization/v2/V2_CONSTANTS_FROZEN.json --allow-holdout`.
+5. Metrics: `metrics_generalization.py --engine v2 --dataset d3 --stars-dir
+   outputs/v2/d3_holdout/stars --run-manifest outputs/v2/d3_holdout/manifest.json
+   --shards-dir <d3 panels>/exposure_stars --shard-index <d3 panels>/shard_index.txt
+   --stars-file generalization/v2/d3_holdout.txt --census-csv … --crossmatch-qc …
+   --out-dir generalization/results/<date>_d3_v2/metrics` (pilot=true: the
+   truth is the half); D2 likewise with `--shards-dir <d2_shards_gen2>`.
+   Descriptive modules run unchanged on the v2 bundle.
+6. Comparison: `compare_engines.py --dataset d3 --half holdout
+   --frozen-per-star generalization/results/2026-09-02_d3/metrics/per_star.csv
+   --v2-per-star generalization/results/<date>_d3_v2/metrics/per_star.csv
+   --flag-sids 9000000000000892667 9000000000004752731 9000000000009596355
+   9000000000005475187 --out-dir generalization/results/<date>_synthesis/d3`
+   (D2 likewise with the frozen D2 bundle). Then G5 (fresh verifier + sol),
+   abstract, G6.
+7. Machine hygiene: the Mac stays quiet unless its owner allows sustained
+   load (2026-09-02); v2 code edits must be re-copied to the laptop
+   (`scp scripts/v2/*.py win:…/scripts/v2/`) and the v2 digests compared
+   before any run — a digest mismatch voids resume.

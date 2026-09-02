@@ -1,0 +1,291 @@
+{
+  "rule": {
+    "d3": "even KIC -> dev, odd KIC -> holdout; the four development smoke stars -> dev_smoke (excluded from both halves)",
+    "d2": "A/B by TIC parity (even -> dev); nulls serial < 500 -> dev; a control referenced by any odd-TIC nominal-B shard -> holdout, else -> dev; dev D2 run = dev nulls only, dev B/controls deferred until after the holdout"
+  },
+  "smoke_sids": [
+    "9000000000000892667",
+    "9000000000004752731",
+    "9000000000009596355",
+    "9000000000005475187"
+  ],
+  "sources": {
+    "generalization/data/d3/roster_d3.csv": "d04f6e4ecde3492f5ee0807d4cf725df8081c4cf91e0c417707146fef86ba7e9",
+    "generalization/data/d3/crossmatch_freeze/panels_shard_index.txt": "ce792543574f298989ccf636464a42b79b9c1d81f3ab8ac911c784d1288c0db9",
+    "generalization/results/2026-08-30_d2_pilot_gen2/run/shard_manifest_gen2.csv": "826016d77a7228d2737f1f1306fb0024d5b98c33d8c5aa4154dfb02142852fc4"
+  },
+  "d3_class_balance": {
+    "dev": {
+      "dsct_flag0": 1164,
+      "dsct_flag1": 308,
+      "dsct_flag2": 36
+    },
+    "dev_smoke": {
+      "dsct_flag0": 1,
+      "dsct_flag1": 3,
+      "dsct_flag2": 0
+    },
+    "holdout": {
+      "dsct_flag0": 1149,
+      "dsct_flag1": 299,
+      "dsct_flag2": 40
+    }
+  },
+  "d3_runner_lists": {
+    "d3_dev.txt": 1458,
+    "d3_holdout.txt": 1439,
+    "d3_dev_smoke.txt": 4
+  },
+  "d2_counts": [
+    {
+      "split": "dev",
+      "group": "A",
+      "scenario": "nominal",
+      "n": 180
+    },
+    {
+      "split": "dev",
+      "group": "B",
+      "scenario": "ampscale_0.7",
+      "n": 60
+    },
+    {
+      "split": "dev",
+      "group": "B",
+      "scenario": "ampscale_1.3",
+      "n": 60
+    },
+    {
+      "split": "dev",
+      "group": "B",
+      "scenario": "cadence_alt",
+      "n": 18
+    },
+    {
+      "split": "dev",
+      "group": "B",
+      "scenario": "dropout",
+      "n": 43
+    },
+    {
+      "split": "dev",
+      "group": "B",
+      "scenario": "ladder_g1r1",
+      "n": 60
+    },
+    {
+      "split": "dev",
+      "group": "B",
+      "scenario": "ladder_g1r2",
+      "n": 60
+    },
+    {
+      "split": "dev",
+      "group": "B",
+      "scenario": "ladder_g1r3",
+      "n": 60
+    },
+    {
+      "split": "dev",
+      "group": "B",
+      "scenario": "ladder_g2r1",
+      "n": 60
+    },
+    {
+      "split": "dev",
+      "group": "B",
+      "scenario": "ladder_g2r3",
+      "n": 60
+    },
+    {
+      "split": "dev",
+      "group": "B",
+      "scenario": "ladder_g3r1",
+      "n": 60
+    },
+    {
+      "split": "dev",
+      "group": "B",
+      "scenario": "ladder_g3r2",
+      "n": 60
+    },
+    {
+      "split": "dev",
+      "group": "B",
+      "scenario": "ladder_g3r3",
+      "n": 60
+    },
+    {
+      "split": "dev",
+      "group": "B",
+      "scenario": "nominal",
+      "n": 180
+    },
+    {
+      "split": "dev",
+      "group": "B",
+      "scenario": "phase_1",
+      "n": 60
+    },
+    {
+      "split": "dev",
+      "group": "B",
+      "scenario": "phase_2",
+      "n": 60
+    },
+    {
+      "split": "dev",
+      "group": "B",
+      "scenario": "redilution",
+      "n": 13
+    },
+    {
+      "split": "dev",
+      "group": "ctrl",
+      "scenario": "control",
+      "n": 39
+    },
+    {
+      "split": "dev",
+      "group": "gauss_null",
+      "scenario": "gauss_null",
+      "n": 500
+    },
+    {
+      "split": "holdout",
+      "group": "A",
+      "scenario": "nominal",
+      "n": 129
+    },
+    {
+      "split": "holdout",
+      "group": "B",
+      "scenario": "ampscale_0.7",
+      "n": 43
+    },
+    {
+      "split": "holdout",
+      "group": "B",
+      "scenario": "ampscale_1.3",
+      "n": 43
+    },
+    {
+      "split": "holdout",
+      "group": "B",
+      "scenario": "cadence_alt",
+      "n": 15
+    },
+    {
+      "split": "holdout",
+      "group": "B",
+      "scenario": "dropout",
+      "n": 33
+    },
+    {
+      "split": "holdout",
+      "group": "B",
+      "scenario": "ladder_g1r1",
+      "n": 43
+    },
+    {
+      "split": "holdout",
+      "group": "B",
+      "scenario": "ladder_g1r2",
+      "n": 43
+    },
+    {
+      "split": "holdout",
+      "group": "B",
+      "scenario": "ladder_g1r3",
+      "n": 43
+    },
+    {
+      "split": "holdout",
+      "group": "B",
+      "scenario": "ladder_g2r1",
+      "n": 43
+    },
+    {
+      "split": "holdout",
+      "group": "B",
+      "scenario": "ladder_g2r3",
+      "n": 43
+    },
+    {
+      "split": "holdout",
+      "group": "B",
+      "scenario": "ladder_g3r1",
+      "n": 43
+    },
+    {
+      "split": "holdout",
+      "group": "B",
+      "scenario": "ladder_g3r2",
+      "n": 43
+    },
+    {
+      "split": "holdout",
+      "group": "B",
+      "scenario": "ladder_g3r3",
+      "n": 43
+    },
+    {
+      "split": "holdout",
+      "group": "B",
+      "scenario": "nominal",
+      "n": 129
+    },
+    {
+      "split": "holdout",
+      "group": "B",
+      "scenario": "phase_1",
+      "n": 43
+    },
+    {
+      "split": "holdout",
+      "group": "B",
+      "scenario": "phase_2",
+      "n": 43
+    },
+    {
+      "split": "holdout",
+      "group": "B",
+      "scenario": "redilution",
+      "n": 7
+    },
+    {
+      "split": "holdout",
+      "group": "ctrl",
+      "scenario": "control",
+      "n": 67
+    },
+    {
+      "split": "holdout",
+      "group": "gauss_null",
+      "scenario": "gauss_null",
+      "n": 500
+    }
+  ],
+  "d2_runner_lists": {
+    "d2_dev.txt": 500,
+    "d2_holdout.txt": 696,
+    "d2_dev_deferred.txt": 219
+  },
+  "overlap30": 30,
+  "controls_referenced_by_both_parities_assigned_holdout": 43,
+  "controls_unreferenced": 0,
+  "nominal_b_template_windows_in_both_halves": 43,
+  "nominal_b_template_windows_total": 106,
+  "null_template_windows_in_both_halves": 72,
+  "null_template_windows_total": 928,
+  "outputs": {
+    "split.csv": "a486056f1f8a2b5f87d579ee184720820caf661894e19092723003e5701d40f8",
+    "d3_dev.txt": "957c63a29931551f72dfdc89c49f27730d8ea6a81dfd0f50e475d28d1da437db",
+    "d3_holdout.txt": "eca7e01e954297969e54d257fc308c1afaf0d7863bd340f5b044781b5b63a802",
+    "d3_dev_smoke.txt": "3b016eb9917f5079cf532c78af89c3eb7fd67e92d3fb5e731bb146086e1e53b7",
+    "d2_dev.txt": "71325ec07ab7b483d4c7b1a7f0df5d68cb18f12a17d8ac04f49ad6e5fefa577a",
+    "d2_holdout.txt": "cd44f5179a0e78a12b3c64c5b9352ba3de1c634da299ea8ea6930079aaf03a14",
+    "d2_dev_deferred.txt": "c3494f4d19f3fd3dd81d22f31dce42ba1d5776a18ccfdefeac5983eb84923e0f",
+    "overlap30.txt": "92713ce6622dd7f909d1a5cda3801e3e76127592041ec1ff31e4021c87584637"
+  }
+}
