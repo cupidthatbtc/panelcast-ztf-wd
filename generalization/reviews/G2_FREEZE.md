@@ -344,3 +344,11 @@ per_star.csv is left byte-identical; the ruled descriptive modules enforce the
 ruled `unscored` label for unjoined rows (positive partition records
 n_unjoined_relabelled_unscored; frequency audits leave relation cells blank
 when the dominant is NaN). Disclosed here and in the disclosure register.
+
+Disclosure: mid-run raw peek at D2 (2026-09-02 13:30 EDT, 846/3,089 shards
+complete, lexicographic order → low-TIC arm-B targets across scenarios), read
+directly from result JSONs with an approximate any-pass/first-confirmed proxy
+(not the frozen best-pass selection), unweighted, non-confirmatory. No
+decision, definition, or code follows from it; every D2 endpoint and the
+round-2 descriptive set were fixed before it. Recorded so the exposure table
+stays complete.
