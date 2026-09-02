@@ -321,3 +321,15 @@ n_roster − n_finite. Provenance correction: the ruled separation cuts
 from the 2,955 finite-separation crossmatch rows, not the 2,901
 crossmatched==True rows named in the ruling's parenthetical; the constants
 themselves are used verbatim. Tests: 141.
+
+D3 FULL run landed 2026-09-02 01:28 UTC-4 (2,901/2,901, 0 failures; laptop
+frozen metrics rc=0, provenance_verified 2,901). Ruled guard executed on the
+real pair (laptop pre-fix `d3_metrics` vs Mac post-fix `d3_metrics_mac`):
+GUARD PASS — 13 science outputs identical after newline normalisation (the
+laptop writes CRLF, and write_text(to_csv(...)) yields CR CR LF; the replay
+gate's `identical_newline` tier), 0 differ; attrition.csv == candidate
+attrition_summary.csv; manifest differs only in campaign_sha256/env/
+input-count fields; input content SHAs identical after path canonicalisation.
+Authoritative D3 metrics = generalization/results/2026-09-02_d3/metrics (Mac);
+the laptop pre-fix bundle is archived beside it uninterpreted
+(metrics_laptop_prefix/). Guard tool commits 8bc637e, 70bc860.
