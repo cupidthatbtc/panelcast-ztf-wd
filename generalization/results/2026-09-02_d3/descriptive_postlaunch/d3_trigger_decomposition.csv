@@ -1,0 +1,3 @@
+component,rule,pass_basis,n_negative,n_confirmed_total,n_component,rate_of_all_negatives,share_of_confirmed,band_definition,analysis_status,prespecified,interval
+within_solar_diurnal_band,confirmed,best,2314,963,121,0.05229040622299049,0.1256490134994808,"f < 4/d and min_{k in 1..3} |f - k*1.000000/d| <= 0.020000/d (closed endpoints): [0.980,1.020] U [1.980,2.020] U [2.980,3.020] c/d",postlaunch_pilot_informed_descriptive,False,none
+outside_solar_diurnal_band,confirmed,best,2314,963,842,0.36387208297320656,0.8743509865005192,"f < 4/d and min_{k in 1..3} |f - k*1.000000/d| <= 0.020000/d (closed endpoints): [0.980,1.020] U [1.980,2.020] U [2.980,3.020] c/d",postlaunch_pilot_informed_descriptive,False,none

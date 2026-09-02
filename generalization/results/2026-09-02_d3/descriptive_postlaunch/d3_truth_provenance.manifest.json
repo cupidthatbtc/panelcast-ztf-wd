@@ -1,0 +1,155 @@
+{
+  "analysis_status": "postlaunch_descriptive",
+  "prespecified": false,
+  "interval": "none",
+  "verdict_file": "generalization/reviews/G5prep/sol_round2.md",
+  "script_sha256": "f4bc11b352df46087c0af83f08ab31e53ac700aa6f8ce652f3c5ebb7f8ca7eb3",
+  "common_module_sha256": "0262004d934d0ec0fa6abde0254f44022fac8f5ffc99b06ba630fb6664077b27",
+  "frozen_sha256": {
+    "scripts/run_catalog_lomb_scargle.py": "34a4de5d234cab07dc3231e5671f4220f5c4ab1bdd4b3d92183bb7e443da6c46",
+    "scripts/run_lomb_scargle.py": "ce9211254949969b5d2e7a93f350eb387014aaf0a15f939753c599c1261a4e78",
+    "scripts/lomb_scargle_common.py": "5ed3983e6a9b91f86b4ba2afc37025ba97fee4ef8a0086259140618927bfef7d",
+    "scripts/build_catalog_panels.py": "1fb659cfdf6997751bc7589b70bdd26fa0d210f49e0e9da5da82bcbb1a5d9794",
+    "scripts/fetch_catalog_lightcurves.py": "e28f4ade76fedf78e056b26b62549a4c5dfc1e0c76d5d127876cce7b3cb3ed82"
+  },
+  "campaign_sha256": {
+    "scripts/generalization/build_d2_roster.py": "901c95c64825c42125a066c2678c195b520d99e64c0a9a528eef41872361acbe",
+    "scripts/generalization/build_d2_shards.py": "ee9ddc0bf6aa0f697dcd3e809d7a702349d9797cc883fc4c97f6be4a62ee8eba",
+    "scripts/generalization/build_d3_roster.py": "3d7b2d23ffa6a21acf20fde3b998f5d69a0637ade643048c5d457f022b75c056",
+    "scripts/generalization/build_panels_generic.py": "759bff3db9f28513ac914c869424140392d3c5244b80fca8c67c0bc8271d875a",
+    "scripts/generalization/d2_spoc_verification.py": "62d21dce2a70d233495cabc7b6f963510812dc2f387396c6e7789bfaca6b5503",
+    "scripts/generalization/d2_truth_model.py": "5aadff374b167dbca687b90d2cf168a3823687bb04282e495cb2ab96f70775e7",
+    "scripts/generalization/d3_crossmatch_adjudicate.py": "be87d75c59abc7c62115c66565ee78220a267888919d7ee429f2d7155c243c0f",
+    "scripts/generalization/frozen_api.py": "127eb86ad19c0b08aac6f832087f1b8c430d8f15e80b334d30892f94df78de16",
+    "scripts/generalization/metrics_generalization.py": "2fccfc9747f115875910a40e7d4f9908c23b1033e440654dab5b7379c3eb85b9",
+    "scripts/generalization/panel_golden_gate.py": "e5a6d5df176e92b02eecf0f5235a059d8782c565f5b84b3c9a3d0fc3c6849655",
+    "scripts/generalization/plot_generalization.py": "699f1041bcaf85c3f514af812761d4858bbd3573dd74716486d687b0b13dcc05",
+    "scripts/generalization/replay_gate.py": "0b2f8b834e8ff3c97e6689f7485b3eb02a5d01399a21da018dd32e69a258139e",
+    "scripts/generalization/run_generalization_ls.py": "fc4d6c3af42c53f8ade3f9eceba8c30f697ec642bbdee3f9ced78e1d8eddf284",
+    "scripts/generalization/verify_cli_identity.py": "840d233f78ff8fc289f2b77661479d02bcfbab26b4f3fa6bdc413b7959905728",
+    "scripts/generalization/watch_run.py": "6e74a6bb66e3bb6aff4c4941a75e02e14745c576e2e435e676dd17e965dc3a8e",
+    "generalization/GENERALIZATION_PLAN.md": "e2cd36af2cbb4bc11537b3f7e90c1b722bb8b0c611d3e887879c7105b10ddc65",
+    "generalization/METRICS_SPEC.md": "66013732a585c4a612376704e3c1e9af2ba81919e30eb9c1967e0ec4bfc02eca"
+  },
+  "verdict_sha256": "84fbde7a502125c73fa57058351923acc293d567e20a3f07957419a68f2c1ddb",
+  "item": "sol_round2 item 2 (F02-F04)",
+  "constants": {
+    "table1_match_tolerance_uhz": 0.1,
+    "f_nyq_uhz": 283.2,
+    "f_nyq_per_day": 24.46848,
+    "uhz_to_per_day": "x * 86400.0 / 1e6 (the frozen truth loader's expression)",
+    "tolerance": "1.5 / baseline_days",
+    "regimes": [
+      {
+        "name": "dominant_lt_4",
+        "lo_inclusive": -Infinity,
+        "hi_exclusive": 4.0
+      },
+      {
+        "name": "dominant_4_to_24",
+        "lo_inclusive": 4.0,
+        "hi_exclusive": 24.0
+      },
+      {
+        "name": "dominant_ge_24",
+        "lo_inclusive": 24.0,
+        "hi_exclusive": Infinity
+      }
+    ],
+    "counts_only_regimes": [
+      "dominant_ge_24"
+    ]
+  },
+  "inputs_sha256": {
+    "per_star.csv": "36abc4653df8c331eb4d22e98ca1a0bbe1c82aeed19cec73cf7b0d45b15cc1cd",
+    "metrics_manifest.json": "2e5772b161679369bdaa15dfcea541ad07ae1e645304b049374d2a090333008d",
+    "inputs_sha256.json": "f55768d8aa195bea77342620ed09930acab973d579e96d83541042a10a08ab3e",
+    "completeness_by_class_pass_rule.csv": "13267cce40a78c8577b161bf6098fcd79beecf843c4d0327ebd101aad2d3c757",
+    "/Users/jackneo/Documents/vonhippel-base9/astro-wd/generalization/data/d3/roster_d3.csv": "d04f6e4ecde3492f5ee0807d4cf725df8081c4cf91e0c417707146fef86ba7e9",
+    "/Users/jackneo/Documents/vonhippel-base9/astro-wd/generalization/data/d3/raw/mo2026_table1.csv": "ad3d7a613080671c21da03aa5a0a072acfa89bb1afde08ec951345b1111fde99",
+    "/Users/jackneo/Documents/vonhippel-base9/astro-wd/generalization/data/d3/raw/mo2026_table2.csv": "f9b43552789065d949b5776f1311b93c7f9003dea5019f7e796f68d76cf9961e",
+    "outputs/generalization/d3_sync/d3_run/stars/9000000000003529242.json": "a6d34a5db2cf8921e5d1695565f60ff4dd1a190187c1ae8c3d0c43965f1016a4",
+    "outputs/generalization/d3_sync/d3_run/stars/9000000000003655115.json": "e76ed3cdcbcf4cc09fa4edf4a9e0893493630242079e194c8b04d77855d6e6bd",
+    "outputs/generalization/d3_sync/d3_run/stars/9000000000003757814.json": "15062f87692e6c7dba62fd91357fbe72c6c8e2ead55f0f4bb3362d815a5ebc25",
+    "outputs/generalization/d3_sync/d3_run/stars/9000000000003868588.json": "7b6668b6b3054edcb71e2c00eccd8c88943d7f83618771ced99dfcb9e6ed4417",
+    "outputs/generalization/d3_sync/d3_run/stars/9000000000004077275.json": "a0b763ec21ea7cc2babaa0e4f98c5be6b00fdbd76529c57298d7f70e9251ec3e",
+    "outputs/generalization/d3_sync/d3_run/stars/9000000000004178654.json": "59c4cd36432f7553a317cdf000746e84017799454cc8917baf59b0f0b105d1db",
+    "outputs/generalization/d3_sync/d3_run/stars/9000000000004580484.json": "3f24d0f4981e4a28178149c1bbb07016670e547c4c7b72171fadd4440a182504",
+    "outputs/generalization/d3_sync/d3_run/stars/9000000000004679562.json": "1f3d9ff98f6ca5e0aad869488bb4201af8c8a875df8ffa27fe884c1efab901e4",
+    "outputs/generalization/d3_sync/d3_run/stars/9000000000004852661.json": "638da15ca4a087168a310c8b60a16b919fcf82f3dadf09c52fe2e937dca9b39f",
+    "outputs/generalization/d3_sync/d3_run/stars/9000000000004903473.json": "c16b66b27ac3e8719fcc7925e6b2a1cb0a038e66cfa84cb0a0e7befb51eaa5a9",
+    "outputs/generalization/d3_sync/d3_run/stars/9000000000004945346.json": "9989dc9775ced1b29910b40b84e27a292fb0bd8fa27f0bd1b71bb3faa92d4704",
+    "outputs/generalization/d3_sync/d3_run/stars/9000000000005019234.json": "a4f2778caa679e7d7de1fea9ed4c6cb0f73a367d0b2a5fc490eaf66ad308b068",
+    "outputs/generalization/d3_sync/d3_run/stars/9000000000005295005.json": "ee77bd6578334816502f9b76492d84fb80525fd9f1f501ec86e94156f295a4ef",
+    "outputs/generalization/d3_sync/d3_run/stars/9000000000005462692.json": "e81482a7f9823fc0c776c8926d88caf47bc9909aef6a6af9a7d733d2aa19ad4e",
+    "outputs/generalization/d3_sync/d3_run/stars/9000000000005482510.json": "eb6a5766b264011380c889b24e6a49d25828ac95e85be37135c49336f5b97281",
+    "outputs/generalization/d3_sync/d3_run/stars/9000000000005819178.json": "e02bc52fd84c8dabc3c378b85bed97bb1e514854c64165b74d8234144aa90fa6",
+    "outputs/generalization/d3_sync/d3_run/stars/9000000000006041680.json": "894a9f6bd14c4af1ea205971f7d489ea1cd323665afc6d86d3070f2af0fae40e",
+    "outputs/generalization/d3_sync/d3_run/stars/9000000000006139591.json": "2fa1b74698796faa069b35bc7e52b7766b04876c2c9d14ceb7c1f2520591db6f",
+    "outputs/generalization/d3_sync/d3_run/stars/9000000000006520969.json": "b189b10393b537089e151ec89f7ba93c2410a56f3225f9ba0b67a2e225f4b92e",
+    "outputs/generalization/d3_sync/d3_run/stars/9000000000007021890.json": "be41a9367f29bd584f4598235cda9ace1483e92416fb169cccc953d6410df857",
+    "outputs/generalization/d3_sync/d3_run/stars/9000000000007455624.json": "21bf0b724c73709e9836b228b1bb41ddfb4e993223449a8d7779968303752679",
+    "outputs/generalization/d3_sync/d3_run/stars/9000000000007909392.json": "5f050e27f16dc23c98b2acbbb05936860a2eb2c33abbf439df41cec56f05cb58",
+    "outputs/generalization/d3_sync/d3_run/stars/9000000000007977956.json": "664cb01c7741cd77ec485297c51efd06f08cf13366be740676da3d78fd82fa74",
+    "outputs/generalization/d3_sync/d3_run/stars/9000000000008004558.json": "c05a6c69d50bc8aa99051eea3429be0288970a4e0dddac064584004c572f6270",
+    "outputs/generalization/d3_sync/d3_run/stars/9000000000008120184.json": "d788d160818179d952c9d099af74800912b01e1127a87f3c4eb4c9acb9048656",
+    "outputs/generalization/d3_sync/d3_run/stars/9000000000008129588.json": "59f2bf69e7ac6d2e75b3e59ee2c23e4103445c84dcc3c7e2d21558743b20fef8",
+    "outputs/generalization/d3_sync/d3_run/stars/9000000000008571022.json": "98896ebd531d0f6d6584acd6da7093d10e7ec728ee8f55f0343a4b6f14ceea37",
+    "outputs/generalization/d3_sync/d3_run/stars/9000000000008848942.json": "834277b41bd9ad92d32c3a818d0933d7d5e0a2dbf63ead73d0c0af2f6fe1ed06",
+    "outputs/generalization/d3_sync/d3_run/stars/9000000000009115188.json": "1b5d84461e8622efb9dfe6f789bfad69d69950d095f1b30c611b3bbde93fee44",
+    "outputs/generalization/d3_sync/d3_run/stars/9000000000009178501.json": "2f5016087f5bb5fefe7aba986906b87b290d939f1406e9fef31972ddf4fe2da0",
+    "outputs/generalization/d3_sync/d3_run/stars/9000000000009228115.json": "71a73b2baab69295a92ef288c1bc542f324d4edb9b6d5fae7b3c07f3ed002ea6",
+    "outputs/generalization/d3_sync/d3_run/stars/9000000000009265050.json": "24d3b78cfa22c7082a806bbdbc3d10f442da59d1e393484a82ca04577ab56d85",
+    "outputs/generalization/d3_sync/d3_run/stars/9000000000009488445.json": "de890ccb07f09414bea4c3a29cc5379c028b9f795097b13a13a2655b08c8ef43",
+    "outputs/generalization/d3_sync/d3_run/stars/9000000000009488454.json": "423df401f0ddb7ff3a2ce95615239b8d3cdd7da6e97c25c433672d394fdf52c7",
+    "outputs/generalization/d3_sync/d3_run/stars/9000000000009649801.json": "d17b93ce8f19ae2669ddad337139f205a9e6788b6066f7cfd12117c8c7183679",
+    "outputs/generalization/d3_sync/d3_run/stars/9000000000010056931.json": "b8264add5ed68bd9297a4a7a363f5fc46303dd9430ea59754bc9362367e77d15",
+    "outputs/generalization/d3_sync/d3_run/stars/9000000000011179734.json": "1b167e354df134d7f1fa145bc332f32e507162909c7ee6c171526447109c6a1e",
+    "outputs/generalization/d3_sync/d3_run/stars/9000000000011355938.json": "1516beff22aaecb6bc28eba4dd3a5d11097a675f4bccc03a75287d06e40ab009",
+    "outputs/generalization/d3_sync/d3_run/stars/9000000000011858293.json": "a7c9fe23a7523589399c607b013ee93142af9bdd23db13d130e7c54872cfb6ab"
+  },
+  "outputs_sha256": {
+    "d3_truth_provenance_rescoring.csv": "2be3a8cacd0b7da1cd261ae6f4cdce6ef56e97f01bfa4d1ebeaed3f2c4223612",
+    "d3_p2_by_dominant_frequency_regime.csv": "ec3063f76dd1c4e7f3635a6946cdfd335bdc74d55c0f1496a35acf2fc11c2993"
+  },
+  "metrics_bundle": {
+    "dataset": "d3",
+    "pilot": false,
+    "stars_dir": "outputs/generalization/d3_sync/d3_run/stars"
+  },
+  "counts": {
+    "n_aliased_dominant": 40,
+    "n_aliased_with_result": 39,
+    "best_candidate_match_fR": {
+      "unmatched": 35,
+      "direct": 3,
+      "window_alias": 1,
+      "unscored": 1
+    },
+    "matches_nyquist_reflection_true": 0,
+    "best_candidate_matches_any_mode_plus_fR": {
+      "unmatched": 35,
+      "direct": 3,
+      "window_alias": 1,
+      "unscored": 1
+    },
+    "any_top_peak_matches_any_mode_plus_fR_true": 8,
+    "regime": {
+      "dominant_lt_4": {
+        "n_p2": 115,
+        "k_confirmed": 53,
+        "k_direct_recovery": 10
+      },
+      "dominant_4_to_24": {
+        "n_p2": 318,
+        "k_confirmed": 183,
+        "k_direct_recovery": 62
+      },
+      "dominant_ge_24": {
+        "n_p2": 8,
+        "k_confirmed": 2,
+        "k_direct_recovery": 0
+      }
+    }
+  }
+}

@@ -1,0 +1,62 @@
+{
+  "analysis_status": "postlaunch_descriptive",
+  "prespecified": false,
+  "interval": "none",
+  "figure": "d1_d3_confirmed_frequency_histogram.png",
+  "source_csv": "d1_d3_confirmed_frequency_histogram.csv",
+  "source_csv_sha256": "6f3beae83bcf99539ddfcecd3d2a511149397615a4993950577ff74ac5c7198c",
+  "png_sha256": "510d943e741376ab2adab2d331f71005cd12d23886596a16c86bae27b22b1409",
+  "edges_per_day": [
+    0,
+    0.25,
+    0.5,
+    0.75,
+    0.98,
+    1.02,
+    1.25,
+    1.5,
+    1.75,
+    1.98,
+    2.02,
+    2.25,
+    2.5,
+    2.75,
+    2.98,
+    3.02,
+    3.25,
+    3.5,
+    3.75,
+    4,
+    6,
+    8,
+    12,
+    16,
+    20,
+    24,
+    32,
+    48,
+    96,
+    192,
+    384,
+    768,
+    1440,
+    "inf"
+  ],
+  "bins": "left-closed/right-open; final finite edge 1440 included in the overflow bin [1440, inf)",
+  "normalisation": "each dataset separately by its confirmed count (share_of_confirmed)",
+  "density_per_day": "share_of_confirmed / (freq_hi - freq_lo) for finite bins; blank for the overflow bin",
+  "selections": {
+    "D1": "blind_status==\"confirmed\" (928-star published catalog)",
+    "D3": "dsct_flag0 and best_status==\"confirmed\""
+  },
+  "n_confirmed_total": {
+    "D1": 342,
+    "D3": 963
+  },
+  "n_overflow_ge_1440": {
+    "D1": 0,
+    "D3": 0
+  },
+  "plot": "density (share per d^-1) as step outlines over the finite bins; symlog x axis (linear below 0.25 d^-1) so the [0, 0.25) bin is drawn; overflow counts in the legend",
+  "verdict_file": "generalization/reviews/G5prep/sol_round2.md"
+}

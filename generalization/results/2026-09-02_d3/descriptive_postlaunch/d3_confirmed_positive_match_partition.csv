@@ -1,0 +1,13 @@
+match_class,any_top_peak_matches_any_mode,n_positive,n_confirmed_positive,n_cell,rate_of_all_positives,share_of_confirmed_positives,analysis_status,prespecified,interval
+direct,False,610,327,29,0.047540983606557376,0.08868501529051988,postlaunch_descriptive,False,none
+direct,True,610,327,43,0.07049180327868852,0.13149847094801223,postlaunch_descriptive,False,none
+harmonic,False,610,327,1,0.001639344262295082,0.0030581039755351682,postlaunch_descriptive,False,none
+harmonic,True,610,327,0,0.0,0.0,postlaunch_descriptive,False,none
+window_alias,False,610,327,0,0.0,0.0,postlaunch_descriptive,False,none
+window_alias,True,610,327,1,0.001639344262295082,0.0030581039755351682,postlaunch_descriptive,False,none
+ambiguous,False,610,327,0,0.0,0.0,postlaunch_descriptive,False,none
+ambiguous,True,610,327,0,0.0,0.0,postlaunch_descriptive,False,none
+unmatched,False,610,327,126,0.20655737704918034,0.3853211009174312,postlaunch_descriptive,False,none
+unmatched,True,610,327,38,0.06229508196721312,0.1162079510703364,postlaunch_descriptive,False,none
+unscored,False,610,327,89,0.14590163934426228,0.27217125382262997,postlaunch_descriptive,False,none
+unscored,True,610,327,0,0.0,0.0,postlaunch_descriptive,False,none

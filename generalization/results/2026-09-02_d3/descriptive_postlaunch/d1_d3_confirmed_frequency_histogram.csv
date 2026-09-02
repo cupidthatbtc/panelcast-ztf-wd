@@ -1,0 +1,67 @@
+dataset,selection,bin_index,freq_lo_per_day,freq_hi_per_day,n_confirmed_total,n_bin,share_of_confirmed,density_per_day,analysis_status,prespecified,interval
+D1,"blind_status==""confirmed"" (928-star published catalog)",0,0.0,0.25,342,22,0.06432748538011696,0.2573099415204678,postlaunch_descriptive,False,none
+D1,"blind_status==""confirmed"" (928-star published catalog)",1,0.25,0.5,342,9,0.02631578947368421,0.10526315789473684,postlaunch_descriptive,False,none
+D1,"blind_status==""confirmed"" (928-star published catalog)",2,0.5,0.75,342,7,0.02046783625730994,0.08187134502923976,postlaunch_descriptive,False,none
+D1,"blind_status==""confirmed"" (928-star published catalog)",3,0.75,0.98,342,19,0.05555555555555555,0.24154589371980678,postlaunch_descriptive,False,none
+D1,"blind_status==""confirmed"" (928-star published catalog)",4,0.98,1.02,342,14,0.04093567251461988,1.0233918128654962,postlaunch_descriptive,False,none
+D1,"blind_status==""confirmed"" (928-star published catalog)",5,1.02,1.25,342,17,0.049707602339181284,0.21612001017035343,postlaunch_descriptive,False,none
+D1,"blind_status==""confirmed"" (928-star published catalog)",6,1.25,1.5,342,13,0.038011695906432746,0.15204678362573099,postlaunch_descriptive,False,none
+D1,"blind_status==""confirmed"" (928-star published catalog)",7,1.5,1.75,342,12,0.03508771929824561,0.14035087719298245,postlaunch_descriptive,False,none
+D1,"blind_status==""confirmed"" (928-star published catalog)",8,1.75,1.98,342,12,0.03508771929824561,0.15255530129672007,postlaunch_descriptive,False,none
+D1,"blind_status==""confirmed"" (928-star published catalog)",9,1.98,2.02,342,2,0.005847953216374269,0.14619883040935658,postlaunch_descriptive,False,none
+D1,"blind_status==""confirmed"" (928-star published catalog)",10,2.02,2.25,342,4,0.011695906432748537,0.05085176709890669,postlaunch_descriptive,False,none
+D1,"blind_status==""confirmed"" (928-star published catalog)",11,2.25,2.5,342,5,0.014619883040935672,0.05847953216374269,postlaunch_descriptive,False,none
+D1,"blind_status==""confirmed"" (928-star published catalog)",12,2.5,2.75,342,4,0.011695906432748537,0.04678362573099415,postlaunch_descriptive,False,none
+D1,"blind_status==""confirmed"" (928-star published catalog)",13,2.75,2.98,342,5,0.014619883040935672,0.06356470887363336,postlaunch_descriptive,False,none
+D1,"blind_status==""confirmed"" (928-star published catalog)",14,2.98,3.02,342,2,0.005847953216374269,0.14619883040935658,postlaunch_descriptive,False,none
+D1,"blind_status==""confirmed"" (928-star published catalog)",15,3.02,3.25,342,7,0.02046783625730994,0.0889905924230867,postlaunch_descriptive,False,none
+D1,"blind_status==""confirmed"" (928-star published catalog)",16,3.25,3.5,342,8,0.023391812865497075,0.0935672514619883,postlaunch_descriptive,False,none
+D1,"blind_status==""confirmed"" (928-star published catalog)",17,3.5,3.75,342,4,0.011695906432748537,0.04678362573099415,postlaunch_descriptive,False,none
+D1,"blind_status==""confirmed"" (928-star published catalog)",18,3.75,4.0,342,8,0.023391812865497075,0.0935672514619883,postlaunch_descriptive,False,none
+D1,"blind_status==""confirmed"" (928-star published catalog)",19,4.0,6.0,342,26,0.07602339181286549,0.038011695906432746,postlaunch_descriptive,False,none
+D1,"blind_status==""confirmed"" (928-star published catalog)",20,6.0,8.0,342,17,0.049707602339181284,0.024853801169590642,postlaunch_descriptive,False,none
+D1,"blind_status==""confirmed"" (928-star published catalog)",21,8.0,12.0,342,28,0.08187134502923976,0.02046783625730994,postlaunch_descriptive,False,none
+D1,"blind_status==""confirmed"" (928-star published catalog)",22,12.0,16.0,342,12,0.03508771929824561,0.008771929824561403,postlaunch_descriptive,False,none
+D1,"blind_status==""confirmed"" (928-star published catalog)",23,16.0,20.0,342,4,0.011695906432748537,0.0029239766081871343,postlaunch_descriptive,False,none
+D1,"blind_status==""confirmed"" (928-star published catalog)",24,20.0,24.0,342,2,0.005847953216374269,0.0014619883040935672,postlaunch_descriptive,False,none
+D1,"blind_status==""confirmed"" (928-star published catalog)",25,24.0,32.0,342,3,0.008771929824561403,0.0010964912280701754,postlaunch_descriptive,False,none
+D1,"blind_status==""confirmed"" (928-star published catalog)",26,32.0,48.0,342,11,0.03216374269005848,0.002010233918128655,postlaunch_descriptive,False,none
+D1,"blind_status==""confirmed"" (928-star published catalog)",27,48.0,96.0,342,4,0.011695906432748537,0.00024366471734892786,postlaunch_descriptive,False,none
+D1,"blind_status==""confirmed"" (928-star published catalog)",28,96.0,192.0,342,23,0.06725146198830409,0.0007005360623781676,postlaunch_descriptive,False,none
+D1,"blind_status==""confirmed"" (928-star published catalog)",29,192.0,384.0,342,25,0.07309941520467836,0.0003807261208576998,postlaunch_descriptive,False,none
+D1,"blind_status==""confirmed"" (928-star published catalog)",30,384.0,768.0,342,3,0.008771929824561403,2.2843567251461987e-05,postlaunch_descriptive,False,none
+D1,"blind_status==""confirmed"" (928-star published catalog)",31,768.0,1440.0,342,10,0.029239766081871343,4.3511556669451404e-05,postlaunch_descriptive,False,none
+D1,"blind_status==""confirmed"" (928-star published catalog)",32,1440.0,inf,342,0,0.0,,postlaunch_descriptive,False,none
+D3,"dsct_flag0 and best_status==""confirmed""",0,0.0,0.25,963,248,0.25752855659397716,1.0301142263759087,postlaunch_descriptive,False,none
+D3,"dsct_flag0 and best_status==""confirmed""",1,0.25,0.5,963,14,0.014537902388369679,0.058151609553478714,postlaunch_descriptive,False,none
+D3,"dsct_flag0 and best_status==""confirmed""",2,0.5,0.75,963,28,0.029075804776739357,0.11630321910695743,postlaunch_descriptive,False,none
+D3,"dsct_flag0 and best_status==""confirmed""",3,0.75,0.98,963,248,0.25752855659397716,1.119689376495553,postlaunch_descriptive,False,none
+D3,"dsct_flag0 and best_status==""confirmed""",4,0.98,1.02,963,83,0.08618899273104881,2.154724818276218,postlaunch_descriptive,False,none
+D3,"dsct_flag0 and best_status==""confirmed""",5,1.02,1.25,963,25,0.02596053997923157,0.11287191295318075,postlaunch_descriptive,False,none
+D3,"dsct_flag0 and best_status==""confirmed""",6,1.25,1.5,963,11,0.01142263759086189,0.04569055036344756,postlaunch_descriptive,False,none
+D3,"dsct_flag0 and best_status==""confirmed""",7,1.5,1.75,963,8,0.008307372793354102,0.033229491173416406,postlaunch_descriptive,False,none
+D3,"dsct_flag0 and best_status==""confirmed""",8,1.75,1.98,963,130,0.13499480789200416,0.5869339473565399,postlaunch_descriptive,False,none
+D3,"dsct_flag0 and best_status==""confirmed""",9,1.98,2.02,963,33,0.03426791277258567,0.856697819314641,postlaunch_descriptive,False,none
+D3,"dsct_flag0 and best_status==""confirmed""",10,2.02,2.25,963,10,0.010384215991692628,0.045148765181272296,postlaunch_descriptive,False,none
+D3,"dsct_flag0 and best_status==""confirmed""",11,2.25,2.5,963,2,0.0020768431983385254,0.008307372793354102,postlaunch_descriptive,False,none
+D3,"dsct_flag0 and best_status==""confirmed""",12,2.5,2.75,963,5,0.005192107995846314,0.020768431983385256,postlaunch_descriptive,False,none
+D3,"dsct_flag0 and best_status==""confirmed""",13,2.75,2.98,963,16,0.016614745586708203,0.07223802429003567,postlaunch_descriptive,False,none
+D3,"dsct_flag0 and best_status==""confirmed""",14,2.98,3.02,963,5,0.005192107995846314,0.12980269989615772,postlaunch_descriptive,False,none
+D3,"dsct_flag0 and best_status==""confirmed""",15,3.02,3.25,963,4,0.004153686396677051,0.01805950607250892,postlaunch_descriptive,False,none
+D3,"dsct_flag0 and best_status==""confirmed""",16,3.25,3.5,963,4,0.004153686396677051,0.016614745586708203,postlaunch_descriptive,False,none
+D3,"dsct_flag0 and best_status==""confirmed""",17,3.5,3.75,963,1,0.0010384215991692627,0.004153686396677051,postlaunch_descriptive,False,none
+D3,"dsct_flag0 and best_status==""confirmed""",18,3.75,4.0,963,6,0.006230529595015576,0.024922118380062305,postlaunch_descriptive,False,none
+D3,"dsct_flag0 and best_status==""confirmed""",19,4.0,6.0,963,22,0.02284527518172378,0.01142263759086189,postlaunch_descriptive,False,none
+D3,"dsct_flag0 and best_status==""confirmed""",20,6.0,8.0,963,3,0.003115264797507788,0.001557632398753894,postlaunch_descriptive,False,none
+D3,"dsct_flag0 and best_status==""confirmed""",21,8.0,12.0,963,7,0.007268951194184839,0.0018172377985462098,postlaunch_descriptive,False,none
+D3,"dsct_flag0 and best_status==""confirmed""",22,12.0,16.0,963,1,0.0010384215991692627,0.00025960539979231567,postlaunch_descriptive,False,none
+D3,"dsct_flag0 and best_status==""confirmed""",23,16.0,20.0,963,1,0.0010384215991692627,0.00025960539979231567,postlaunch_descriptive,False,none
+D3,"dsct_flag0 and best_status==""confirmed""",24,20.0,24.0,963,0,0.0,0.0,postlaunch_descriptive,False,none
+D3,"dsct_flag0 and best_status==""confirmed""",25,24.0,32.0,963,1,0.0010384215991692627,0.00012980269989615784,postlaunch_descriptive,False,none
+D3,"dsct_flag0 and best_status==""confirmed""",26,32.0,48.0,963,3,0.003115264797507788,0.00019470404984423675,postlaunch_descriptive,False,none
+D3,"dsct_flag0 and best_status==""confirmed""",27,48.0,96.0,963,1,0.0010384215991692627,2.1633783316026305e-05,postlaunch_descriptive,False,none
+D3,"dsct_flag0 and best_status==""confirmed""",28,96.0,192.0,963,1,0.0010384215991692627,1.0816891658013152e-05,postlaunch_descriptive,False,none
+D3,"dsct_flag0 and best_status==""confirmed""",29,192.0,384.0,963,0,0.0,0.0,postlaunch_descriptive,False,none
+D3,"dsct_flag0 and best_status==""confirmed""",30,384.0,768.0,963,8,0.008307372793354102,2.1633783316026305e-05,postlaunch_descriptive,False,none
+D3,"dsct_flag0 and best_status==""confirmed""",31,768.0,1440.0,963,34,0.035306334371754934,5.253918805320675e-05,postlaunch_descriptive,False,none
+D3,"dsct_flag0 and best_status==""confirmed""",32,1440.0,inf,963,0,0.0,,postlaunch_descriptive,False,none

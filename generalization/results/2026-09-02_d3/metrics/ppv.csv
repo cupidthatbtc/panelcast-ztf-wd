@@ -1,0 +1,2 @@
+estimand,p,lo,hi,interval,n_triggered,bootstrap_B_effective,dsct2_triggered_reported_separately
+frame_specific_label_ppv,0.09727346142899344,0.09374390140765886,0.10097766514186661,survey_bootstrap_fpc_rescaled,1290,2000,38

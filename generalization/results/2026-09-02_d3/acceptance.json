@@ -1,0 +1,17 @@
+{
+  "bundle": "2026-09-02_d3",
+  "checks": {
+    "run_complete_2901": true,
+    "provenance_verified_2901": true,
+    "pilot_false_confirmatory_allowed": true,
+    "attestation_strict": true,
+    "frozen_sha_match": true,
+    "guard_pass_laptop_vs_mac": true,
+    "mo_joined_456": true,
+    "attrition_partitions_roster_3000": true,
+    "p3_rule1_n_2314": true,
+    "decomposition_identity": true,
+    "tests_143_passed": true
+  },
+  "all_pass": true
+}

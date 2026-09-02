@@ -1,0 +1,11 @@
+{
+  "dataset": "d3-kepler-dsct",
+  "total": 2901,
+  "pending_at_start": 1717,
+  "completed_now": 1717,
+  "failed": 0,
+  "elapsed_seconds": 89215.8,
+  "stars_per_hour": 69.28,
+  "eta_hours": 0.0,
+  "workers": 12
+}

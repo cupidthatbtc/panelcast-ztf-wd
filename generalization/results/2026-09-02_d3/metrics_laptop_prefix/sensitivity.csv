@@ -1,0 +1,4 @@
+variant,subset,n,k,p,lo,hi,inference
+near_saturation,positives,387,224,0.5788113695090439,0.5290804112383491,0.62699310303022,descriptive (row-level Wilson); inference lives in the cluster tables
+safe_magnitude,positives,198,103,0.5202020202020202,0.45089442106016625,0.5887406472094643,descriptive (row-level Wilson); inference lives in the cluster tables
+crowding_clean,positives,44,16,0.36363636363636365,0.23783529708820186,0.5113362312095656,descriptive (row-level Wilson); inference lives in the cluster tables

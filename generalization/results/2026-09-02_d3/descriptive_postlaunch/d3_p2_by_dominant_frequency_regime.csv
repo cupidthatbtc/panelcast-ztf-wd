@@ -1,0 +1,4 @@
+dominant_frequency_regime,lo_inclusive_per_day,hi_exclusive_per_day,n_p2,k_confirmed,k_direct_recovery,rate_direct_recovery,analysis_status,prespecified,interval
+dominant_lt_4,-inf,4.0,115,53,10,0.08695652173913043,postlaunch_descriptive,False,none
+dominant_4_to_24,4.0,24.0,318,183,62,0.1949685534591195,postlaunch_descriptive,False,none
+dominant_ge_24,24.0,inf,8,2,0,,postlaunch_descriptive,False,none

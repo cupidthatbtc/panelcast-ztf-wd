@@ -1,0 +1,11 @@
+frame,covariate,n_frame,n_nonmissing,min,p10,p25,p50,p75,p90,max,analysis_status,prespecified,interval
+D3_crossmatched,zg_n_exp,2901,2901,22.0,108.0,695.0,754.0,1187.0,1408.0,3070.0,postlaunch_descriptive,False,none
+D3_crossmatched,zr_n_exp,2901,2901,33.0,135.0,1119.0,1225.0,1533.0,2211.0,4012.0,postlaunch_descriptive,False,none
+D3_crossmatched,zg_n_nights,2901,2901,15.0,50.0,613.0,640.0,766.0,813.0,1121.0,postlaunch_descriptive,False,none
+D3_crossmatched,zr_n_nights,2901,2901,19.0,63.0,644.0,687.0,786.0,840.0,1153.0,postlaunch_descriptive,False,none
+D3_crossmatched,wg_contrasts,2901,2901,1.0,30.0,81.0,119.0,422.0,603.0,2001.0,postlaunch_descriptive,False,none
+development_pool,zg_n_exp,928,928,20.0,81.4,242.75,437.5,681.25,1178.3000000000002,3827.0,postlaunch_descriptive,False,none
+development_pool,zr_n_exp,928,928,24.0,96.4,301.75,639.5,1064.0,1482.3000000000002,3883.0,postlaunch_descriptive,False,none
+development_pool,zg_n_nights,928,928,16.0,55.7,228.0,371.5,519.75,701.6000000000001,1157.0,postlaunch_descriptive,False,none
+development_pool,zr_n_nights,928,928,21.0,62.7,224.75,400.0,588.25,756.3000000000001,1181.0,postlaunch_descriptive,False,none
+development_pool,wg_contrasts,928,928,0.0,6.0,19.0,58.0,154.5,452.30000000000075,2670.0,postlaunch_descriptive,False,none

@@ -1,0 +1,73 @@
+{
+  "dataset": "d3",
+  "pilot": false,
+  "confirmatory_allowed": true,
+  "generation_id": "",
+  "replay_attestation": {
+    "tier": "strict",
+    "path": "outputs\\generalization\\replay_gate_full\\replay_report.json",
+    "sha256": "64e1937a8d453cdbe41ffb53a14c0fdaff70a8dcd8580bbb6487661dd334c5ef",
+    "roster_size": 928,
+    "f64_max_relative_difference": 0.0,
+    "boundary_margin_relative": 1e-09,
+    "run_manifest_sha256": "697c3536343630accc8023af353afbb5a0c2f95a9093d23a0936771c180d0070"
+  },
+  "spec_sha256": "66013732a585c4a612376704e3c1e9af2ba81919e30eb9c1967e0ec4bfc02eca",
+  "attrition": {
+    "roster": 3000,
+    "scored": 3000,
+    "missing_star_json": 99,
+    "missing_ids_first5": [
+      "9000000000002714707",
+      "9000000000002715483",
+      "9000000000003426991",
+      "9000000000003455863",
+      "9000000000003657237"
+    ],
+    "census_available": 2901,
+    "platform_boundary_sensitive": 0,
+    "provenance_verified": 2901
+  },
+  "inputs_sha256_count": 5807,
+  "inputs_sha256_digest": "c2887cc897268246e9db66a5112da6e5f31f9691612999bb2bd4e7c8a34672b5",
+  "env": {
+    "python": "3.12.12",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "machine": "Jacks_7i_5090",
+    "numpy": "2.3.5",
+    "numpy_blas": "blas 3.9.0",
+    "scipy": "1.16.3",
+    "astropy": "8.0.1",
+    "astropy_iers_data": "0.2026.7.27.0.56.29",
+    "pyerfa": "2.0.1.5",
+    "pandas": "2.3.3",
+    "omp_num_threads": "",
+    "openblas_num_threads": ""
+  },
+  "frozen_sha256": {
+    "scripts/run_catalog_lomb_scargle.py": "34a4de5d234cab07dc3231e5671f4220f5c4ab1bdd4b3d92183bb7e443da6c46",
+    "scripts/run_lomb_scargle.py": "ce9211254949969b5d2e7a93f350eb387014aaf0a15f939753c599c1261a4e78",
+    "scripts/lomb_scargle_common.py": "5ed3983e6a9b91f86b4ba2afc37025ba97fee4ef8a0086259140618927bfef7d",
+    "scripts/build_catalog_panels.py": "1fb659cfdf6997751bc7589b70bdd26fa0d210f49e0e9da5da82bcbb1a5d9794",
+    "scripts/fetch_catalog_lightcurves.py": "e28f4ade76fedf78e056b26b62549a4c5dfc1e0c76d5d127876cce7b3cb3ed82"
+  },
+  "campaign_sha256": {
+    "scripts/generalization/build_d2_roster.py": "901c95c64825c42125a066c2678c195b520d99e64c0a9a528eef41872361acbe",
+    "scripts/generalization/build_d2_shards.py": "ee9ddc0bf6aa0f697dcd3e809d7a702349d9797cc883fc4c97f6be4a62ee8eba",
+    "scripts/generalization/build_d3_roster.py": "3d7b2d23ffa6a21acf20fde3b998f5d69a0637ade643048c5d457f022b75c056",
+    "scripts/generalization/build_panels_generic.py": "759bff3db9f28513ac914c869424140392d3c5244b80fca8c67c0bc8271d875a",
+    "scripts/generalization/d2_spoc_verification.py": "62d21dce2a70d233495cabc7b6f963510812dc2f387396c6e7789bfaca6b5503",
+    "scripts/generalization/d2_truth_model.py": "5aadff374b167dbca687b90d2cf168a3823687bb04282e495cb2ab96f70775e7",
+    "scripts/generalization/d3_crossmatch_adjudicate.py": "be87d75c59abc7c62115c66565ee78220a267888919d7ee429f2d7155c243c0f",
+    "scripts/generalization/frozen_api.py": "127eb86ad19c0b08aac6f832087f1b8c430d8f15e80b334d30892f94df78de16",
+    "scripts/generalization/metrics_generalization.py": "51193dc722b3cb14bc2f4e4974b8c8d16fa194f831d98617fe062c825f655414",
+    "scripts/generalization/panel_golden_gate.py": "e5a6d5df176e92b02eecf0f5235a059d8782c565f5b84b3c9a3d0fc3c6849655",
+    "scripts/generalization/plot_generalization.py": "699f1041bcaf85c3f514af812761d4858bbd3573dd74716486d687b0b13dcc05",
+    "scripts/generalization/replay_gate.py": "0b2f8b834e8ff3c97e6689f7485b3eb02a5d01399a21da018dd32e69a258139e",
+    "scripts/generalization/run_generalization_ls.py": "fc4d6c3af42c53f8ade3f9eceba8c30f697ec642bbdee3f9ced78e1d8eddf284",
+    "scripts/generalization/verify_cli_identity.py": "840d233f78ff8fc289f2b77661479d02bcfbab26b4f3fa6bdc413b7959905728",
+    "scripts/generalization/watch_run.py": "6e74a6bb66e3bb6aff4c4941a75e02e14745c576e2e435e676dd17e965dc3a8e",
+    "generalization/GENERALIZATION_PLAN.md": "e2cd36af2cbb4bc11537b3f7e90c1b722bb8b0c611d3e887879c7105b10ddc65",
+    "generalization/METRICS_SPEC.md": "66013732a585c4a612376704e3c1e9af2ba81919e30eb9c1967e0ec4bfc02eca"
+  }
+}

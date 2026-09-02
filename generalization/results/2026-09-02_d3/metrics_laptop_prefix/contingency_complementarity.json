@@ -1,0 +1,25 @@
+{
+  "n_positives_scored": 585,
+  "table": {
+    "census_and_ls": 18,
+    "census_only": 7,
+    "ls_only": 309,
+    "neither": 251
+  },
+  "union_completeness": {
+    "p": 0.5709401709401709,
+    "lo": 0.5304983466149248,
+    "hi": 0.6104564023360556
+  },
+  "incremental_census_only": {
+    "p": 0.011965811965811967,
+    "lo": 0.0058080726976210036,
+    "hi": 0.024491184519128337
+  },
+  "incremental_ls_only": {
+    "p": 0.5282051282051282,
+    "lo": 0.4877001207636999,
+    "hi": 0.5683421288192202
+  },
+  "mcnemar_exact_p_secondary": 8.948591379055871e-82
+}

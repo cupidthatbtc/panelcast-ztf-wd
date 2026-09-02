@@ -1,0 +1,2 @@
+conditioning,truth_basis,derangements,seed,n_confirmed,accidental_direct_rate_mean,accidental_direct_rate_median,accidental_direct_rate_q95,analysis_status,prespecified,interval
+p2_frame_confirmed_finite_best_and_dominant,dominant_only_star_level_derangement,10000,20260829,238,0.00030126050420168065,0.0,0.004201680672268907,postlaunch_descriptive,False,none
