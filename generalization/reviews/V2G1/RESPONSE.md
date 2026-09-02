@@ -23,3 +23,16 @@ REVISE. Every finding is accepted; dispositions below reference the revised
 Pending for the confirmation round: none of the findings is deferred; the audits of
 findings 10–11 are descriptive outputs produced after the dev runs (declared, not yet
 computed).
+
+# Round 2 (confirmation) — `sol_plan_review_r2.md`, verdict REVISE; dispositions
+
+| # | round-2 status | disposition (all ACCEPTED) |
+|---|---|---|
+| 3 | PARTIAL | `rescore_v2.combination_id` includes the trend window (54 labels, §3 order); `dev_tuning.py` ingests both trend-window tables for D3 and the nulls, asserts 54 combinations and the denominators (D3 rows = registered dev list; D2 rows = 500 dev nulls; roster 308 / 1,164), uses the frozen P2 frame, applies the §3 tie order, records `tuning_constraint_failure`, verifies the pre-registration commit is an ancestor of HEAD and emits `V2_CONSTANTS_FROZEN.json` bound to code / split / plan / commit / evidence / inputs. |
+| 4 | NOT RESOLVED | (b) closed: `--split-file` must be the registered split at the registration root; every unregistered path (debug, dev, no split file) refuses any registered holdout id (`canonical_holdout_ids`), tested; the lock is created with O_EXCL; the artifact's `preregistration_commit` must be an ancestor of HEAD and its `tuning_evidence_sha256` must match `dev_tuning.csv`; the lock records `registration_root` / `canonical_registration`; the comparison refuses non-canonical registrations. The test uses HEAD as the commit and refuses "deadbeef". |
+| 7 | PARTIAL | exact discordance bound [−U95, +U95] at zero discordant pairs; chance-match mandatory beside P2 (both bundles); strict-recovery paired-control contrast added (control scored against the partner's injected dominant frequency). |
+| 8 | PARTIAL | the runner list is authenticated against `split_manifest.json` (`<dataset>_<half>.txt` SHA) before any frame is built. |
+| 10 | PARTIAL | audit implementations committed (`scripts/v2/analysis/veto_exposure.py`, `leakage_audit.py`, f10e57e); the contradictory sentences in `detrend.py` and `window.py` replaced by the leakage / exposure statements. |
+| 12 | PARTIAL | metrics sidecar keys include `plan_sha256`, `preregistration_commit`, `constants_artifact_sha256`; the comparison binds both metrics manifests, the run manifest, the registered list, the split, the constants artifact and the lock. |
+| 13 | PARTIAL | stale docstrings (`dev_tuning.py`, `multiband.py`) rewritten. |
+| 1, 2, 5, 6, 9, 11 | RESOLVED | — |

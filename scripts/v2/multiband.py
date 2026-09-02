@@ -12,8 +12,10 @@ detection >> recovery on both datasets. v2:
               periodogram is therefore computed with the frozen helper on the
               frozen grid (a test pins the identity with astropy).
   candidates: union of the top-15 per-band peaks and the top-15 joint peaks,
-              clustered at 1.5/T (frozen cluster logic reimplemented:
-              unaliased first, then power), capped at 30.
+              clustered at 1.5/T in order of decreasing power ONLY (the
+              frozen unaliased-first order would make the candidate set
+              depend on the tunable veto constants), capped at 45 = every
+              peak row; the alias flags enter the decision, not the set.
   joint fit : at each candidate one weighted least-squares fit of
               mean + A sin(2 pi f t + phi) per band (block-diagonal design,
               both bands on ONE time origin) -> A_g, A_r, phi_g, phi_r.

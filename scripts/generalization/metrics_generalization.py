@@ -1504,8 +1504,11 @@ def sidecar_binding_keys(engine: str) -> tuple[str, ...]:
     if engine == "frozen":
         return ("frozen_digest", "campaign_digest", "generation_id")
     if engine == "v2":
+        # the last three are present only for registered holdout runs; a dev
+        # run's sidecar and manifest both lack them (None == None)
         return ("engine", "frozen_digest", "v2_digest", "constants_sha256", "generation_id",
-                "machine", "split_sha256", "split_half", "stars_file_sha256")
+                "machine", "split_sha256", "split_half", "stars_file_sha256",
+                "plan_sha256", "preregistration_commit", "constants_artifact_sha256")
     raise ValueError(f"unknown metrics engine: {engine}")
 
 

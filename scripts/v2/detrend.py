@@ -15,11 +15,13 @@ at high W_g). v2:
              used. Single-exposure nights are KEPT, valued relative to the
              local trend.
 
-The 30-day scale (0.033 c/d) sits far below the low-pass floor (2/T ~ 0.0007
-c/d is NOT affected because the low pass never uses this trend) and far above
-the high-pass lower bound (24 c/d); a trend that smooth cannot inject or
-remove power in the high band. Both series use ONE time origin (the star's
-first epoch across both bands) so per-band phases are comparable.
+The running median removes only the slowest variability (scale ~1 / window);
+everything between ~0.03 and 24 c/d stays in the high-pass series and CAN
+alias into the 24-1440 c/d band through the spectral window (the frozen
+nightly median removed it): this leakage is measured on dev windows
+(scripts/v2/analysis/leakage_audit.py) and disclosed, not assumed away.
+Both series use ONE time origin (the star's first epoch across both bands)
+so per-band phases are comparable.
 """
 
 from __future__ import annotations

@@ -71,6 +71,7 @@ def test_v2_attestation_record_and_sidecar_binding(tmp_path):
     assert metrics.sidecar_binding_keys("v2") == (
         "engine", "frozen_digest", "v2_digest", "constants_sha256", "generation_id",
         "machine", "split_sha256", "split_half", "stars_file_sha256",
+        "plan_sha256", "preregistration_commit", "constants_artifact_sha256",
     )
 
 

@@ -160,11 +160,15 @@ split SHAs, tuning protocol, endpoints, disclosures). Code: `scripts/v2/`
    d3-kepler-dsct|d2-tess-dav --machine <label> --workers 12 --stars-file
    generalization/v2/d3_dev.txt --split-file generalization/v2/split.csv
    [--constants generalization/v2/constants_w10.json]`.
-3. Tuning (dev only): `rescore_v2.py --stars-dir outputs/v2/d3_dev/stars --out
-   <csv>` (and on d2_dev) → `dev_tuning.py --d3-rescore … --d2-rescore … --out-dir
-   generalization/v2/tuning/` → `chosen_overrides.json`; window-ladder subsets
-   compared on the same ids. Freeze the result as
-   `generalization/v2/V2_CONSTANTS_FROZEN.json` + a §10 amendment; commit.
+3. Tuning (dev only): `rescore_v2.py --stars-dir outputs/v2/d3_dev_w30/stars
+   --out <d3_w30.csv>` (and d3_dev_w10, d2_dev_w30, d2_dev_w10) →
+   `dev_tuning.py --d3-rescore <d3_w30.csv> <d3_w10.csv> --d2-rescore
+   <d2_w30.csv> <d2_w10.csv> --frozen-per-star
+   generalization/results/2026-09-02_d3/metrics/per_star.csv
+   --preregistration-commit 5ceb019` → writes `generalization/v2/dev_tuning.csv`
+   and `generalization/v2/V2_CONSTANTS_FROZEN.json` (bound to code / split /
+   plan / commit / evidence). Add the §10 amendment; commit; copy both files
+   to the laptop's `generalization\v2\` before the holdout.
 4. Holdout (ONCE, after the sol review ADMITs the plan and the constants are
    frozen): the same runner command with `d3_holdout.txt` / `d2_holdout.txt`,
    `--constants generalization/v2/V2_CONSTANTS_FROZEN.json --allow-holdout`.

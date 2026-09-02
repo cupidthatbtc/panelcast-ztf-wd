@@ -26,6 +26,7 @@ import datetime
 import functools
 import hashlib
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -158,6 +159,40 @@ def write_progress(path: Path, payload: dict) -> None:
 
 
 FROZEN_CONSTANTS_NAME = "V2_CONSTANTS_FROZEN.json"
+CANONICAL_REGISTRATION = (REPO_ROOT / "generalization" / "v2").resolve()
+
+
+def registration_root() -> Path:
+    """The registration directory (split, lists, plan, constants artifact,
+    locks). Canonical = generalization/v2; the V2_REGISTRATION_ROOT
+    environment variable exists for the test suite only — a run under a
+    non-canonical root is marked canonical_registration = false in its
+    manifest and is refused by the comparison."""
+    return Path(os.environ.get("V2_REGISTRATION_ROOT", str(CANONICAL_REGISTRATION))).resolve()
+
+
+def canonical_holdout_ids() -> set[str]:
+    """Every registered holdout id of both datasets (from the CANONICAL
+    registration, whatever the root in use): a debug or unregistered run may
+    never touch them."""
+    ids: set[str] = set()
+    for name in ("d3_holdout.txt", "d2_holdout.txt"):
+        path = CANONICAL_REGISTRATION / name
+        if path.exists():
+            ids |= {line.strip() for line in path.read_text().splitlines() if line.strip()}
+    return ids
+
+
+def verify_preregistration_commit(commit: str) -> None:
+    if not commit:
+        raise SystemExit("frozen-constants artifact lacks preregistration_commit")
+    full = subprocess.run(["git", "rev-parse", "--verify", f"{commit}^{{commit}}"], cwd=REPO_ROOT,
+                          capture_output=True, text=True)
+    if full.returncode != 0:
+        raise SystemExit(f"pre-registration commit {commit} is not in this repository")
+    ancestor = subprocess.run(["git", "merge-base", "--is-ancestor", full.stdout.strip(), "HEAD"], cwd=REPO_ROOT)
+    if ancestor.returncode != 0:
+        raise SystemExit(f"pre-registration commit {commit} is not an ancestor of HEAD")
 
 
 def load_constants(spec: str | None) -> V2Constants:
@@ -171,43 +206,55 @@ def load_constants(spec: str | None) -> V2Constants:
     return with_overrides(DEFAULT, **overrides)
 
 
-def registered_holdout(args, constants: V2Constants, split_record: dict, stars_sha: str) -> dict:
-    """Single-execution holdout discipline (G-review 2026-09-02 finding 4):
-    the exact registered holdout list, no --limit, the frozen-constants
-    artifact whose v2-code / split / plan digests match this checkout, and one
-    lock file per dataset created before computation; a relaunch must be an
-    exact resume of the locked run."""
+def registered_holdout(args, constants: V2Constants, split_record: dict, stars_sha: str,
+                       root: Path) -> dict:
+    """Single-execution holdout discipline (G-review 2026-09-02 finding 4,
+    round 2 (b)): the exact registered holdout list, no --limit, the
+    frozen-constants artifact at the registration root whose v2-code / split /
+    plan digests match this checkout, whose pre-registration commit is an
+    ancestor of HEAD and whose evidence table is intact, and one lock file per
+    dataset created ATOMICALLY (O_EXCL) before computation; a relaunch must be
+    an exact resume of the locked run."""
     dataset = args.dataset.split("-")[0]
     if args.limit is not None:
         raise SystemExit("holdout runs forbid --limit")
-    manifest = json.loads((args.split_file.parent / "split_manifest.json").read_text(encoding="utf-8"))
+    manifest = json.loads((root / "split_manifest.json").read_text(encoding="utf-8"))
     expected = manifest["outputs"].get(f"{dataset}_holdout.txt")
     if stars_sha != expected:
         raise SystemExit("holdout runs must use the registered holdout list exactly "
-                         f"({dataset}_holdout.txt, SHA {expected[:12]}…)")
-    artifact_path = Path(args.constants) if args.constants else None
-    if artifact_path is None or artifact_path.name != FROZEN_CONSTANTS_NAME or not artifact_path.exists():
-        raise SystemExit(f"holdout runs require --constants <path>/{FROZEN_CONSTANTS_NAME}")
+                         f"({dataset}_holdout.txt, SHA {str(expected)[:12]}…)")
+    if manifest["outputs"].get("split.csv") != split_record["sha256"]:
+        raise SystemExit("split.csv does not match the registered split manifest")
+    artifact_path = (root / FROZEN_CONSTANTS_NAME).resolve()
+    if not args.constants or Path(args.constants).resolve() != artifact_path or not artifact_path.exists():
+        raise SystemExit(f"holdout runs require --constants {artifact_path} (the registered artifact)")
     artifact = json.loads(artifact_path.read_text(encoding="utf-8"))
-    plan_path = args.split_file.parent / "V2_PLAN.md"
     checks = {
         "v2_digest": (artifact.get("v2_digest"), v2_digest()),
         "split_sha256": (artifact.get("split_sha256"), split_record["sha256"]),
-        "plan_sha256": (artifact.get("plan_sha256"), sha256_file(plan_path)),
+        "plan_sha256": (artifact.get("plan_sha256"), sha256_file(root / "V2_PLAN.md")),
+        "tuning_evidence_sha256": (artifact.get("tuning_evidence_sha256"),
+                                   sha256_file(root / "dev_tuning.csv") if (root / "dev_tuning.csv").exists() else None),
     }
     bad = {k: v for k, v in checks.items() if v[0] != v[1]}
     if bad:
         raise SystemExit(f"frozen-constants artifact does not match this checkout: {bad}")
-    lock_path = args.split_file.parent / f"HOLDOUT_LAUNCH_{dataset}.json"
+    verify_preregistration_commit(str(artifact.get("preregistration_commit", "")))
+    lock_path = root / f"HOLDOUT_LAUNCH_{dataset}.json"
     record = {
         "dataset": dataset, "machine": args.machine, "out_dir": str(args.out_dir.resolve()),
         "stars_file_sha256": stars_sha, "constants_sha256": constants_sha256(constants),
         "v2_digest": v2_digest(), "split_sha256": split_record["sha256"],
         "plan_sha256": checks["plan_sha256"][1],
-        "preregistration_commit": artifact.get("preregistration_commit", ""),
+        "preregistration_commit": artifact["preregistration_commit"],
         "constants_artifact_sha256": sha256_file(artifact_path),
+        "tuning_evidence_sha256": checks["tuning_evidence_sha256"][1],
+        "registration_root": str(root),
+        "canonical_registration": root == CANONICAL_REGISTRATION,
     }
-    if lock_path.exists():
+    try:
+        fd = os.open(lock_path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o644)
+    except FileExistsError:
         existing = json.loads(lock_path.read_text(encoding="utf-8"))
         drift = {k: (existing.get(k), v) for k, v in record.items() if existing.get(k) != v}
         if drift:
@@ -216,7 +263,8 @@ def registered_holdout(args, constants: V2Constants, split_record: dict, stars_s
         record = existing
     else:
         record["launched_utc"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
-        lock_path.write_text(json.dumps(record, indent=2) + "\n", encoding="utf-8")
+        with os.fdopen(fd, "w", encoding="utf-8") as handle:
+            handle.write(json.dumps(record, indent=2) + "\n")
     return {"lock_file": str(lock_path), **record}
 
 
@@ -310,9 +358,12 @@ def main() -> None:
         only = {line.strip() for line in args.stars_file.read_text().splitlines() if line.strip()}
     split_record = {"file": "", "sha256": "", "half": ""}
     holdout_record: dict = {}
+    root = registration_root()
     if args.split_file is not None:
         if only is None:
             raise SystemExit("--split-file requires --stars-file (one half of the split)")
+        if args.split_file.resolve() != (root / "split.csv").resolve():
+            raise SystemExit(f"--split-file must be the registered split {root / 'split.csv'}")
         half = split_half(args.split_file, args.dataset.split("-")[0], only)
         if half == "dev_smoke":
             raise SystemExit("dev_smoke stars are excluded from every registered run")
@@ -321,10 +372,19 @@ def main() -> None:
             if not args.allow_holdout:
                 raise SystemExit("these are HOLDOUT ids: refusing without --allow-holdout "
                                  "(pre-registration: the holdout is scored once, after dev)")
-            holdout_record = registered_holdout(args, constants, split_record, stars_sha)
+            holdout_record = registered_holdout(args, constants, split_record, stars_sha, root)
     elif only is not None and not args.allow_nonstandard_ids:
         raise SystemExit("--stars-file without --split-file: pass --split-file generalization/v2/split.csv "
                          "(or --allow-nonstandard-ids for debug subsets)")
+    if not holdout_record:
+        # holdout-id protection outside the registered mode (round-2 (b)):
+        # no debug, dev or unregistered run may touch a registered holdout id
+        requested = only if only is not None else {
+            path.name.split(".csv")[0] for path in args.shard_dir.glob("*.csv.gz")}
+        touched = requested & canonical_holdout_ids()
+        if touched:
+            raise SystemExit(f"{len(touched)} requested ids are registered HOLDOUT ids; they can only be "
+                             "scored in the registered holdout mode (--split-file + --allow-holdout)")
     binding = {
         "engine": ENGINE,
         "v2_digest": v2_digest(),
@@ -340,6 +400,7 @@ def main() -> None:
     if holdout_record:
         binding["plan_sha256"] = holdout_record["plan_sha256"]
         binding["preregistration_commit"] = holdout_record["preregistration_commit"]
+        binding["constants_artifact_sha256"] = holdout_record["constants_artifact_sha256"]
     pending, source_ids = scan_pending(args.shard_dir, star_dir, passes, only, args.limit, binding)
     total = len(source_ids)
     if not args.allow_nonstandard_ids:
@@ -422,6 +483,8 @@ def main() -> None:
         "split": split_record,
         "allow_holdout": bool(args.allow_holdout),
         "holdout_registration": holdout_record,
+        "registration_root": str(root),
+        "canonical_registration": root == CANONICAL_REGISTRATION,
         "constants": constants.as_dict(),
         "constants_sha256": binding["constants_sha256"],
         "env": env_versions(),

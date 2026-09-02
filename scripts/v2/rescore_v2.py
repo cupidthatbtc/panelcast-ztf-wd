@@ -43,17 +43,23 @@ FIXED = [float(locus["frequency_per_day"]) for locus in fixed_loci()]
 
 
 def combination_id(constants: V2Constants) -> str:
-    return (f"N{constants.n_window_peaks}_phi{constants.phase_tolerance_cycles}"
+    """Label of one point of the 2 x 3 x 3 x 3 = 54 candidate grid (V2_PLAN.md
+    §3), trend window included."""
+    return (f"W{constants.trend_window_days:g}_N{constants.n_window_peaks}"
+            f"_phi{constants.phase_tolerance_cycles}"
             f"_r{constants.amp_ratio_min}-{constants.amp_ratio_max}")
 
 
-def combinations() -> list[tuple[str, V2Constants]]:
+def combinations(trend_window_days: float | None = None) -> list[tuple[str, V2Constants]]:
+    """The candidate grid in §3 order (window, N, phase, ratio); restricted to
+    one trend window when given (the window of the run being re-scored)."""
+    windows = TUNABLE["trend_window_days"] if trend_window_days is None else (trend_window_days,)
     combos = []
-    for n, phase, ratio in itertools.product(TUNABLE["n_window_peaks"],
-                                             TUNABLE["phase_tolerance_cycles"],
-                                             TUNABLE["amp_ratio"]):
-        constants = replace(DEFAULT, n_window_peaks=n, phase_tolerance_cycles=phase,
-                            amp_ratio_min=ratio[0], amp_ratio_max=ratio[1])
+    for window, n, phase, ratio in itertools.product(windows, TUNABLE["n_window_peaks"],
+                                                     TUNABLE["phase_tolerance_cycles"],
+                                                     TUNABLE["amp_ratio"]):
+        constants = replace(DEFAULT, trend_window_days=float(window), n_window_peaks=n,
+                            phase_tolerance_cycles=phase, amp_ratio_min=ratio[0], amp_ratio_max=ratio[1])
         combos.append((combination_id(constants), constants))
     return combos
 
@@ -146,19 +152,25 @@ def main() -> None:
     parser.add_argument("--stars-dir", type=Path, required=True)
     parser.add_argument("--out", type=Path, required=True)
     args = parser.parse_args()
-    combos = combinations()
     rows = []
+    combos_by_window: dict[float, list[tuple[str, V2Constants]]] = {}
     for path in sorted(args.stars_dir.glob("*.json")):
         if path.name.endswith((".prov.json", ".error.json")):
             continue
         result = json.loads(path.read_text(encoding="utf-8"))
         if not result.get("complete") or result.get("engine") != "v2":
             continue
+        window = float(result["v2"]["constants"]["trend_window_days"])
+        if window not in TUNABLE["trend_window_days"]:
+            raise SystemExit(f"{path.name}: trend window {window} is not a declared candidate")
+        combos = combos_by_window.setdefault(window, combinations(window))
         for combo_id, constants in combos:
-            rows.append({"combination": combo_id, **rescore_star(result, constants)})
+            rows.append({"combination": combo_id, "trend_window_days": window,
+                         **rescore_star(result, constants)})
     frame = pd.DataFrame(rows)
     frame.to_csv(args.out, index=False, lineterminator="\n")
-    print(f"[rescore] {frame['sid'].nunique() if len(frame) else 0} stars x {len(combos)} combinations -> {args.out}")
+    n_combos = sum(len(c) for c in combos_by_window.values())
+    print(f"[rescore] {frame['sid'].nunique() if len(frame) else 0} stars x {n_combos} combinations -> {args.out}")
 
 
 if __name__ == "__main__":

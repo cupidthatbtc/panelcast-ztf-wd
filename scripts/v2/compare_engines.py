@@ -40,7 +40,9 @@ from scipy import stats
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT / "scripts" / "generalization"))
-from metrics_generalization import cp_one_sided_bounds, wilson  # noqa: E402
+from metrics_generalization import classify_match, cp_one_sided_bounds, wilson  # noqa: E402
+
+CANONICAL_REGISTRATION = (REPO_ROOT / "generalization" / "v2").resolve()
 
 BOOTSTRAP_B = 2000
 BOOTSTRAP_SEED = 20260902
@@ -97,7 +99,11 @@ def paired_rate_row(endpoint: str, frame_label: str, frozen: np.ndarray, v2: np.
         b, c, p_mc = mcnemar_exact(frozen, v2)
         diff = float(v2.mean() - frozen.mean())
         if b + c == 0:
-            lo, hi, note = 0.0, 0.0, "no discordant pairs: degenerate difference interval"
+            # exact discordance bound: with 0 discordant pairs among n the
+            # discordance proportion is <= its one-sided 95 % Clopper-Pearson
+            # upper bound U, so |difference| <= U
+            upper = cp_one_sided_bounds(0, n)[1]
+            lo, hi, note = -upper, upper, "no discordant pairs: exact discordance bound [-U95, +U95]"
         else:
             idx = rng.integers(0, n, size=(BOOTSTRAP_B, n))
             boots = v2[idx].mean(axis=1) - frozen[idx].mean(axis=1)
@@ -162,47 +168,68 @@ def d2_target_rows(frozen: pd.DataFrame, v2: pd.DataFrame, rng: np.random.Genera
     return rows
 
 
+def _strict_recovery(table: pd.DataFrame, sid: str, primary: float, baseline: float) -> float:
+    """confirmed AND the candidate frequency directly matches the partner's
+    injected dominant frequency (frozen classify_match, tol 1.5 / T)."""
+    if str(table.loc[sid, "best_status"]) != "confirmed":
+        return 0.0
+    freq = table.loc[sid, "best_frequency_per_day"]
+    if pd.isna(freq) or pd.isna(primary):
+        return 0.0
+    return float(classify_match(float(freq), [float(primary)], 1.5 / baseline) == "direct")
+
+
 def d2_control_contrast_rows(frozen: pd.DataFrame, v2: pd.DataFrame, rng: np.random.Generator,
                              suffix: str) -> list[dict]:
-    """Target-clustered injected-vs-paired-control trigger contrast per arm
-    (D_b − D_c averaged per target) and the arm difference."""
+    """Target-clustered injected-vs-paired-control contrasts per arm
+    (D_b − D_c for the trigger; R_b − R_c for strict recovery, the control
+    scored against its partner's injected dominant frequency), averaged per
+    target, and the arm difference."""
     rows = []
     by_sid = {"frozen": frozen.set_index("sid"), "v2": v2.set_index("sid")}
     b = frozen[(frozen["arm"] == "B") & (frozen["scenario"] == "nominal")]
     b = b[b["control_campaign_id"].astype(str).str.len() > 0]
-    contrasts: dict[str, dict[str, list[float]]] = {"frozen": {}, "v2": {}}
+    contrasts = {kind: {"frozen": {}, "v2": {}} for kind in ("trigger", "strict_recovery")}
     n_pairs = 0
     for r in b.itertuples(index=False):
         control = str(r.control_campaign_id)
         if control not in by_sid["frozen"].index or control not in by_sid["v2"].index:
             continue
         n_pairs += 1
+        primary = float(r.primary_freq) if not pd.isna(r.primary_freq) else math.nan
         for arm in ("frozen", "v2"):
             table = by_sid[arm]
             d_b = float(str(table.loc[r.sid, "best_status"]) == "confirmed")
             d_c = float(str(table.loc[control, "best_status"]) == "confirmed")
-            contrasts[arm].setdefault(str(r.cluster), []).append(d_b - d_c)
-    targets = sorted(contrasts["frozen"])
-    f_t = np.array([np.mean(contrasts["frozen"][t]) for t in targets])
-    v_t = np.array([np.mean(contrasts["v2"][t]) for t in targets])
-    n = len(targets)
-    if n:
-        idx = rng.integers(0, n, size=(BOOTSTRAP_B, n))
-        fboot, vboot = f_t[idx].mean(axis=1), v_t[idx].mean(axis=1)
-    else:
-        fboot = vboot = np.full(BOOTSTRAP_B, math.nan)
-    rows.append({
-        "endpoint": "control_contrast_trigger", "frame": f"d2 injected-minus-paired-control, {n} targets, {n_pairs} pairs{suffix}",
-        "n": n, "interval": "target_bootstrap",
-        "frozen_k": math.nan, "frozen_p": float(f_t.mean()) if n else math.nan,
-        "frozen_lo": float(np.quantile(fboot, 0.025)), "frozen_hi": float(np.quantile(fboot, 0.975)),
-        "v2_k": math.nan, "v2_p": float(v_t.mean()) if n else math.nan,
-        "v2_lo": float(np.quantile(vboot, 0.025)), "v2_hi": float(np.quantile(vboot, 0.975)),
-        "diff": float((v_t - f_t).mean()) if n else math.nan,
-        "diff_lo": float(np.quantile(vboot - fboot, 0.025)), "diff_hi": float(np.quantile(vboot - fboot, 0.975)),
-        "frozen_only": int(np.sum(f_t > v_t)), "v2_only": int(np.sum(v_t > f_t)), "mcnemar_exact_p": math.nan,
-        "note": "pairs whose control lacks a result in either arm are dropped (count in frame)",
-    })
+            contrasts["trigger"][arm].setdefault(str(r.cluster), []).append(d_b - d_c)
+            baseline_b = float(table.loc[r.sid, "baseline_days"]) if not pd.isna(table.loc[r.sid, "baseline_days"]) else math.nan
+            baseline_c = float(table.loc[control, "baseline_days"]) if not pd.isna(table.loc[control, "baseline_days"]) else math.nan
+            r_b = _strict_recovery(table, r.sid, primary, baseline_b) if baseline_b > 0 else 0.0
+            r_c = _strict_recovery(table, control, primary, baseline_c) if baseline_c > 0 else 0.0
+            contrasts["strict_recovery"][arm].setdefault(str(r.cluster), []).append(r_b - r_c)
+    for kind, per_arm in contrasts.items():
+        targets = sorted(per_arm["frozen"])
+        f_t = np.array([np.mean(per_arm["frozen"][t]) for t in targets])
+        v_t = np.array([np.mean(per_arm["v2"][t]) for t in targets])
+        n = len(targets)
+        if n:
+            idx = rng.integers(0, n, size=(BOOTSTRAP_B, n))
+            fboot, vboot = f_t[idx].mean(axis=1), v_t[idx].mean(axis=1)
+        else:
+            fboot = vboot = np.full(BOOTSTRAP_B, math.nan)
+        rows.append({
+            "endpoint": f"control_contrast_{kind}",
+            "frame": f"d2 injected-minus-paired-control ({kind}), {n} targets, {n_pairs} pairs{suffix}",
+            "n": n, "interval": "target_bootstrap",
+            "frozen_k": math.nan, "frozen_p": float(f_t.mean()) if n else math.nan,
+            "frozen_lo": float(np.quantile(fboot, 0.025)), "frozen_hi": float(np.quantile(fboot, 0.975)),
+            "v2_k": math.nan, "v2_p": float(v_t.mean()) if n else math.nan,
+            "v2_lo": float(np.quantile(vboot, 0.025)), "v2_hi": float(np.quantile(vboot, 0.975)),
+            "diff": float((v_t - f_t).mean()) if n else math.nan,
+            "diff_lo": float(np.quantile(vboot - fboot, 0.025)), "diff_hi": float(np.quantile(vboot - fboot, 0.975)),
+            "frozen_only": int(np.sum(f_t > v_t)), "v2_only": int(np.sum(v_t > f_t)), "mcnemar_exact_p": math.nan,
+            "note": "pairs whose control lacks a result in either arm are dropped (count in frame)",
+        })
     return rows
 
 
@@ -276,6 +303,80 @@ def build_frames(dataset: str, half: str, split: pd.DataFrame, frozen: pd.DataFr
     return frozen_frame, v2_frame, counts
 
 
+def verify_registration(args, registration: Path, runner_ids: set[str]) -> dict:
+    """Bind the comparison to the registration (round-2 findings 8 and 12):
+    the canonical split and runner list (SHAs from split_manifest.json), the
+    v2 run manifest (engine, half, list and split SHAs, canonical
+    registration), both metrics manifests (the v2 one bound to the run
+    manifest), and — for the holdout — the lock file and the constants
+    artifact. Returns the record written to the output manifest."""
+    manifest = json.loads((registration / "split_manifest.json").read_text(encoding="utf-8"))
+    dataset, half = args.dataset, args.half
+    split_sha, runner_sha = sha256_file(args.split), sha256_file(args.runner_list)
+    if args.split.resolve() != (registration / "split.csv").resolve() or manifest["outputs"]["split.csv"] != split_sha:
+        raise SystemExit("--split must be the registered generalization/v2/split.csv")
+    if manifest["outputs"].get(f"{dataset}_{half}.txt") != runner_sha:
+        raise SystemExit(f"--runner-list is not the registered {dataset}_{half}.txt")
+    listed = {line.strip() for line in args.runner_list.read_text().splitlines() if line.strip()}
+    if listed != runner_ids:
+        raise SystemExit("runner list mismatch")
+    run_manifest = json.loads(args.v2_run_manifest.read_text(encoding="utf-8"))
+    binding = run_manifest.get("binding", {})
+    problems = []
+    if run_manifest.get("engine") != "v2":
+        problems.append("run manifest engine")
+    if not str(run_manifest.get("dataset", "")).startswith(dataset):
+        problems.append("run manifest dataset")
+    if binding.get("split_half") != half:
+        problems.append("run manifest half")
+    if binding.get("stars_file_sha256") != runner_sha:
+        problems.append("run manifest stars_file_sha256")
+    if binding.get("split_sha256") != split_sha:
+        problems.append("run manifest split_sha256")
+    if run_manifest.get("canonical_registration") is not True:
+        problems.append("run manifest canonical_registration")
+    v2_metrics = json.loads((args.v2_metrics_dir / "manifest.json").read_text(encoding="utf-8"))
+    frozen_metrics = json.loads((args.frozen_metrics_dir / "manifest.json").read_text(encoding="utf-8"))
+    if v2_metrics.get("engine") != "v2" or v2_metrics.get("dataset") != dataset:
+        problems.append("v2 metrics manifest engine/dataset")
+    if v2_metrics.get("replay_attestation", {}).get("run_manifest_sha256") != sha256_file(args.v2_run_manifest):
+        problems.append("v2 metrics manifest is not bound to this run manifest")
+    if frozen_metrics.get("engine", "frozen") != "frozen" or frozen_metrics.get("dataset") != dataset:
+        problems.append("frozen metrics manifest engine/dataset")
+    if frozen_metrics.get("pilot"):
+        problems.append("frozen metrics bundle is a pilot")
+    for directory in (args.frozen_metrics_dir, args.v2_metrics_dir):
+        if not (directory / "per_star.csv").exists():
+            problems.append(f"{directory} lacks per_star.csv")
+    if args.frozen_per_star.resolve() != (args.frozen_metrics_dir / "per_star.csv").resolve() or \
+            args.v2_per_star.resolve() != (args.v2_metrics_dir / "per_star.csv").resolve():
+        problems.append("per-star tables must be the metrics bundles' own per_star.csv")
+    record = {"split_sha256": split_sha, "runner_list_sha256": runner_sha,
+              "v2_run_manifest_sha256": sha256_file(args.v2_run_manifest),
+              "v2_metrics_manifest_sha256": sha256_file(args.v2_metrics_dir / "manifest.json"),
+              "frozen_metrics_manifest_sha256": sha256_file(args.frozen_metrics_dir / "manifest.json"),
+              "v2_digest": binding.get("v2_digest"), "constants_sha256": binding.get("constants_sha256")}
+    if half == "holdout":
+        lock_path = registration / f"HOLDOUT_LAUNCH_{dataset}.json"
+        if not lock_path.exists():
+            problems.append("holdout lock file missing")
+        else:
+            lock = json.loads(lock_path.read_text(encoding="utf-8"))
+            for key in ("stars_file_sha256", "constants_sha256", "v2_digest", "split_sha256", "plan_sha256",
+                        "preregistration_commit", "constants_artifact_sha256"):
+                if lock.get(key) != binding.get(key):
+                    problems.append(f"lock vs run manifest: {key}")
+            if lock.get("canonical_registration") is not True:
+                problems.append("holdout lock is not from the canonical registration")
+            if args.constants_artifact is None or sha256_file(args.constants_artifact) != lock.get("constants_artifact_sha256"):
+                problems.append("constants artifact missing or not the locked one")
+            record["holdout_lock_sha256"] = sha256_file(lock_path)
+            record["constants_artifact_sha256"] = lock.get("constants_artifact_sha256")
+    if problems:
+        raise SystemExit(f"registration binding failed: {problems}")
+    return record
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--dataset", choices=("d2", "d3"), required=True)
@@ -285,9 +386,12 @@ def main() -> None:
     parser.add_argument("--half", choices=("dev", "holdout"), required=True)
     parser.add_argument("--runner-list", type=Path, required=True,
                         help="the registered id list the v2 run used (e.g. generalization/v2/d3_holdout.txt)")
-    parser.add_argument("--frozen-metrics-dir", type=Path, default=None, help="for chance_match.json")
-    parser.add_argument("--v2-metrics-dir", type=Path, default=None, help="for chance_match.json")
-    parser.add_argument("--constants-artifact", type=Path, default=None)
+    parser.add_argument("--v2-run-manifest", type=Path, required=True, help="the v2 run's manifest.json")
+    parser.add_argument("--frozen-metrics-dir", type=Path, required=True, help="frozen metrics bundle (manifest + chance_match)")
+    parser.add_argument("--v2-metrics-dir", type=Path, required=True, help="v2 metrics bundle (manifest + chance_match)")
+    parser.add_argument("--constants-artifact", type=Path, default=None, help="required for the holdout")
+    parser.add_argument("--registration-root", type=Path, default=CANONICAL_REGISTRATION,
+                        help="tests only; a non-canonical root is recorded and the run manifest must still be canonical")
     parser.add_argument("--out-dir", type=Path, required=True)
     args = parser.parse_args()
 
@@ -295,9 +399,22 @@ def main() -> None:
     frozen_all = pd.read_csv(args.frozen_per_star, dtype={"sid": str, "cluster": str, "control_campaign_id": str})
     v2_all = pd.read_csv(args.v2_per_star, dtype={"sid": str, "cluster": str, "control_campaign_id": str})
     runner_ids = {line.strip() for line in args.runner_list.read_text().splitlines() if line.strip()}
+    registration = verify_registration(args, args.registration_root.resolve(), runner_ids)
     frozen, v2, counts = build_frames(args.dataset, args.half, split, frozen_all, v2_all, runner_ids)
 
     rows = endpoints(args.dataset, frozen, v2)
+    chance = {}
+    for label, directory in (("frozen", args.frozen_metrics_dir), ("v2", args.v2_metrics_dir)):
+        path = directory / "chance_match.json"
+        if args.dataset == "d3" and not path.exists():
+            raise SystemExit(f"{path} is required (chance-match rate beside P2)")
+        if path.exists():
+            chance[label] = json.loads(path.read_text(encoding="utf-8"))
+    for row in rows:
+        if row["endpoint"].startswith("P2"):
+            for label in ("frozen", "v2"):
+                row[f"{label}_chance_direct_mean"] = chance.get(label, {}).get("accidental_direct_match_rate_mean", math.nan)
+                row[f"{label}_chance_direct_p95"] = chance.get(label, {}).get("accidental_direct_match_rate_p95", math.nan)
     args.out_dir.mkdir(parents=True, exist_ok=True)
     table = pd.DataFrame(rows)
     table.to_csv(args.out_dir / "endpoints.csv", index=False, lineterminator="\n")
@@ -308,16 +425,15 @@ def main() -> None:
     avail.groupby([group, "frozen_usable", "v2_usable"]).size().reset_index(name="n").to_csv(
         args.out_dir / "availability_transitions.csv", index=False, lineterminator="\n")
     smoke = split[(split["dataset"] == args.dataset) & (split["split"] == "dev_smoke")]["sid"].tolist()
-    chance = {}
-    for label, directory in (("frozen", args.frozen_metrics_dir), ("v2", args.v2_metrics_dir)):
-        if directory is not None and (directory / "chance_match.json").exists():
-            chance[label] = json.loads((directory / "chance_match.json").read_text())
     inputs = {str(p): sha256_file(p) for p in (args.frozen_per_star, args.v2_per_star, args.split,
-                                                args.runner_list, Path(__file__).resolve())}
+                                                args.runner_list, args.v2_run_manifest, Path(__file__).resolve(),
+                                                args.frozen_metrics_dir / "manifest.json",
+                                                args.v2_metrics_dir / "manifest.json")}
     if args.constants_artifact is not None:
         inputs[str(args.constants_artifact)] = sha256_file(args.constants_artifact)
     (args.out_dir / "manifest.json").write_text(json.dumps({
         "dataset": args.dataset, "half": args.half, "frames": counts,
+        "registration": registration,
         "smoke_sids_excluded": smoke,
         "statistics": {"per_arm_interval": "Wilson 95 % (CP upper for nulls)",
                        "paired_difference": f"star/target bootstrap B={BOOTSTRAP_B} seed={BOOTSTRAP_SEED}",

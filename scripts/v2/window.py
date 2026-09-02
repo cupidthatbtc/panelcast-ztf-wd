@@ -18,8 +18,11 @@ ANY listed spectral-window locus:
 `is_alias_of_stronger` is generalised to the solar AND sidereal spacings and
 to the mirror family k * spacing - f0 (the 1 - delta / 2 - delta wings: the
 strongest D3 false-trigger locus, e.g. sidereal - lunar = 0.9688 c/d).
-delta Sct (4-24 c/d) and DAV (40-1200 c/d) science frequencies are untouched
-by construction; true ~1 c/d rotators are sacrificed and disclosed.
+The fixed loci avoid the delta Sct (4-24 c/d) and DAV (40-1200 c/d) science
+bands, but the data-driven loci, the local window test, the mirror family
+and the cross-pass partners CAN veto real signals anywhere: the exposure of
+the truth frequencies is measured (scripts/v2/analysis/veto_exposure.py) and
+disclosed; true ~1 c/d rotators and ~29.5 d variables are sacrificed.
 """
 
 from __future__ import annotations

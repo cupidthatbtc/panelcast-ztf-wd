@@ -211,11 +211,15 @@ Only the four tunable constants, each within its declared set:
    list and the re-scored low pass; the joint top-5 after veto is re-derived
    from the recorded joint top-15; the coherence gates are re-applied to the
    recorded Δφ and A_r/A_g. No periodogram is recomputed.
-3. `scripts/v2/dev_tuning.py` asserts all 54 combinations and the expected
-   denominators, computes on the DEV ids P1_dev (flag1 roster, missing = 0),
+3. `scripts/v2/dev_tuning.py` ingests the re-score tables of BOTH trend
+   windows for D3 and for the dev nulls, asserts all 54 combinations
+   (labels `W<window>_N<n>_phi<phase>_r<min>-<max>`) and the expected
+   denominators (each combination's D3 rows = the registered dev runner
+   list exactly; D2 rows = the 500 dev nulls exactly; roster counts 308 /
+   1,164), computes on the DEV ids P1_dev (flag1 roster, missing = 0),
    P2_dev (frozen P2 frame: Mo-joined, freq-scorable, eligible, frozen-usable;
-   v2 unavailable = non-recovery), P3_dev (flag0 roster) and the dev-null
-   confirmed count, and J = P2_dev − P3_dev.
+   v2 unavailable or missing = non-recovery), P3_dev (flag0 roster) and the
+   dev-null confirmed count, and J = P2_dev − P3_dev.
 4. Selection rule (fixed now): the combination maximizing J subject to
    (a) at most 2 of the 500 dev nulls `confirmed` and (b) P1_dev ≥ P1_dev of
    the default combination − 0.05. Ties: the first feasible maximizer in the
@@ -223,10 +227,12 @@ Only the four tunable constants, each within its declared set:
    If no combination is feasible, the default is retained and
    `tuning_constraint_failure = true` is recorded. No other criterion, no
    manual override.
-5. The result is written to `V2_CONSTANTS_FROZEN.json` (overrides, the v2
-   code digest, split SHA, plan SHA, the pre-registration commit, the SHA of
-   the evidence table `dev_tuning.csv`), an amendment entry is added to §10,
-   the commit is made, and only then is the holdout scored — once (§8).
+5. The result is written to `V2_CONSTANTS_FROZEN.json` (overrides, the
+   chosen label, `tuning_constraint_failure`, the v2 code digest, split SHA,
+   plan SHA, the pre-registration commit — verified to be an ancestor of
+   HEAD —, the SHA of the evidence table `dev_tuning.csv` and of every
+   input), an amendment entry is added to §10, the commit is made, and only
+   then is the holdout scored — once (§8).
 
 Not tunable, ever: bounds, grids, FAP threshold, tolerance, the rule's
 structure, the veto's fixed loci, the alignment / detrend definitions.
@@ -241,8 +247,11 @@ full-run per-star table restricted to the same ids (no frozen re-run).
 Statistics: per-arm Wilson 95 % (exact one-sided Clopper–Pearson upper for
 the nulls); paired difference v2 − frozen with a seeded star (D3) or target
 (D2) bootstrap, B = 2000, seed 20260902 — when there are no discordant pairs
-the difference interval is the degenerate [0, 0] and is flagged; exact
-two-sided McNemar on the discordant pairs (D3 binary endpoints).
+the bootstrap is replaced by the exact discordance bound [−U, +U] with U the
+one-sided 95 % Clopper–Pearson upper bound of the discordance proportion at
+0 of n, and flagged; exact two-sided McNemar on the discordant pairs (D3
+binary endpoints). The chance-match rates (`chance_match.json` of both
+metrics bundles) are mandatory beside every P2 row.
 
 | endpoint | frame (holdout) | statistic |
 |---|---|---|
@@ -252,7 +261,7 @@ two-sided McNemar on the discordant pairs (D3 binary endpoints).
 | P3 negative-class trigger rate | D3 flag0 roster (1,149); also per pass | Wilson; paired diff; McNemar |
 | P4 D2 conditional recovery and trigger | nominal arm-B, 43 holdout targets; ELIGIBLE (scheduled-strata denominator, missing = 0) and USABLE variants | common-draw target bootstrap → paired difference CI |
 | P5-style Gaussian false-alarm | 500 holdout nulls | CP upper each; McNemar — a DESCRIPTIVE SCREEN: even 0/500 has U95 = 0.60 %, so this half cannot pass the frozen P5 0.5 % criterion; it is not a confirmatory decision |
-| paired-control contrast | injected-minus-paired-control trigger per target (67 holdout controls) | target bootstrap per arm and the arm difference |
+| paired-control contrasts | injected-minus-paired-control TRIGGER and STRICT-RECOVERY (the control scored against its partner's injected dominant frequency) per target (67 holdout controls) | target bootstrap per arm and the arm difference |
 | descriptive (no inference) | status transitions frozen → v2 and availability transitions; P3 by merged-oid count, by pass, by ruled frequency band; alignment offsets, shared-night counts, unshifted-oid counts and the endpoints without alignment-affected stars; coherence failures stratified by phase error and amplitude S/N; TRUTH-FREQUENCY VETO EXPOSURE by dataset / pass / band / component (fixed loci, data peaks, local test, mirror, cross-pass) and their union; the LEAKAGE AUDIT (a low-frequency-only sinusoid injected into dev D3 windows: high-pass trigger rate with and without the injection) | tables |
 
 Pre-declared reading (a descriptive operational screen, not a hypothesis
@@ -282,22 +291,39 @@ scripts/generalization/*.py; the metrics bundle records the spec/campaign
 SHAs separately). Sidecars, completion.csv, IN_PROGRESS refusal and the
 resume scan follow the frozen driver.
 
-Registered holdout mode (`--allow-holdout`): requires the registered
-holdout list exactly (SHA equal to `split_manifest.json`), forbids
-`--limit`, requires `--constants generalization/v2/V2_CONSTANTS_FROZEN.json`
-whose v2-code digest, split SHA and plan SHA equal this checkout's, and
-creates `generalization/v2/HOLDOUT_LAUNCH_<dataset>.json` before computation;
-a relaunch is permitted only as an exact resume of the locked configuration
-(same list, constants, code, split, plan, output directory).
+Registration = the canonical directory `generalization/v2/` (split,
+manifest, lists, plan, `dev_tuning.csv`, `V2_CONSTANTS_FROZEN.json`,
+locks). `--split-file` must be the registered `split.csv` (a copy elsewhere
+is refused); every run records `registration_root` and
+`canonical_registration` (the test suite may point the root elsewhere, and
+such runs are refused by the comparison). Registered holdout mode
+(`--allow-holdout`): requires the registered holdout list exactly (SHA equal
+to `split_manifest.json`), forbids `--limit`, requires `--constants` = the
+registered `V2_CONSTANTS_FROZEN.json` whose v2-code digest, split SHA, plan
+SHA and evidence-table SHA equal this checkout's and whose pre-registration
+commit is an ancestor of HEAD, and creates
+`HOLDOUT_LAUNCH_<dataset>.json` ATOMICALLY (O_EXCL) before computation; a
+relaunch is permitted only as an exact resume of the locked configuration
+(same list, constants, code, split, plan, artifact, output directory).
+Holdout-id protection: outside the registered mode — dev runs, debug runs
+(`--allow-nonstandard-ids`), runs without a split file — any requested id
+that belongs to a registered holdout list is refused, so a holdout star
+cannot be scored under other constants or code by any path of the runner.
 
 `metrics_generalization.py --engine v2`: skips the replay-attestation
 requirement (tier `v2_unattested`), binds sidecars to the run manifest's
 binding keys (including machine, split, half and list SHAs), labels
 `manifest.engine = "v2"`; the frozen path is untouched and guarded by
 `compare_metrics_runs.py` on the D3 frozen bundle (PASS recorded in
-codex/METRICS_ENGINE_REPORT.md). The comparison output is bound to both
-metrics-manifest SHAs, the split SHA, the comparison-script SHA, the
-constants artifact and the smoke exclusions (its manifest.json).
+codex/METRICS_ENGINE_REPORT.md). The comparison (`compare_engines.py`)
+REQUIRES and verifies: the registered split and runner list (SHAs from
+`split_manifest.json`), the v2 run manifest (engine, dataset, half, list
+and split SHAs, canonical registration), both metrics manifests (the v2 one
+bound to the run manifest's SHA, the frozen one a full run of the dataset),
+the metrics bundles' own per-star tables, and for the holdout the lock file
+(every locked key equal to the run manifest's binding) and the locked
+constants artifact; its manifest.json records all of these SHAs, the
+comparison-script SHA and the smoke exclusions.
 
 ## 9. Machines and schedule
 
@@ -337,3 +363,17 @@ the revision, then the dev runs.
   declared, "untouched by construction" removed; (9) the coherence gate
   described as operational; (10) window-peak separation on the combined T.
   Development inspection after the split used `d3_dev.txt` ids only.
+- 2026-09-02, before any registered run (round-2 confirmation review,
+  `generalization/reviews/V2G1/sol_plan_review_r2.md`, REVISE): (1) the
+  selector ingests both trend-window runs, asserts the 54 labelled
+  combinations and denominators, uses the frozen P2 frame, applies the §3
+  tie order, records `tuning_constraint_failure` and emits the bound
+  `V2_CONSTANTS_FROZEN.json`; (2) holdout bypasses closed — canonical
+  registration paths and SHAs, holdout-id protection on every unregistered
+  path, atomic lock creation, pre-registration-commit ancestry and
+  evidence-table verification; (3) the comparison requires and binds both
+  metrics manifests, the run manifest, the registered list, the split, the
+  constants artifact and the holdout lock; (4) exact discordance bound,
+  mandatory chance-match beside P2, strict-recovery paired-control contrast;
+  (5) the audit implementations committed (`scripts/v2/analysis/`, outside
+  the code digest) and the contradictory docstrings removed.

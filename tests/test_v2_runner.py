@@ -90,12 +90,15 @@ def test_end_to_end_run_resume_and_constants_change(tmp_path):
 
 
 def _fake_registration(root: Path, split_sha_holder: dict) -> tuple[Path, Path]:
-    """A minimal registered-holdout environment: split.csv, split_manifest.json,
-    V2_PLAN.md and V2_CONSTANTS_FROZEN.json in one directory."""
+    """A minimal registered-holdout environment (split.csv, split_manifest.json,
+    V2_PLAN.md, dev_tuning.csv, V2_CONSTANTS_FROZEN.json) under a test
+    registration root selected with the V2_REGISTRATION_ROOT variable; the
+    pre-registration commit is the repository HEAD (a real ancestor)."""
     import hashlib
 
     from v2_common import v2_digest as digest
 
+    head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=ROOT, capture_output=True, text=True).stdout.strip()
     reg = root / "reg"
     reg.mkdir()
     split = reg / "split.csv"
@@ -104,13 +107,23 @@ def _fake_registration(root: Path, split_sha_holder: dict) -> tuple[Path, Path]:
     holdout = reg / "d3_holdout.txt"
     holdout.write_text("\n".join(SIDS[:2]) + "\n")
     (reg / "V2_PLAN.md").write_text("# plan\n")
+    (reg / "dev_tuning.csv").write_text("combination,J\nW30_N6_phi0.15_r0.3-1.5,0.1\n")
     sha = lambda p: hashlib.sha256(Path(p).read_bytes()).hexdigest()  # noqa: E731
-    (reg / "split_manifest.json").write_text(json.dumps({"outputs": {"d3_holdout.txt": sha(holdout)}}))
+    (reg / "split_manifest.json").write_text(json.dumps({"outputs": {"d3_holdout.txt": sha(holdout),
+                                                                     "split.csv": sha(split)}}))
     (reg / "V2_CONSTANTS_FROZEN.json").write_text(json.dumps({
         "overrides": {"n_window_peaks": 6}, "v2_digest": digest(), "split_sha256": sha(split),
-        "plan_sha256": sha(reg / "V2_PLAN.md"), "preregistration_commit": "deadbeef"}))
-    split_sha_holder["split"] = sha(split)
+        "plan_sha256": sha(reg / "V2_PLAN.md"), "preregistration_commit": head,
+        "tuning_evidence_sha256": sha(reg / "dev_tuning.csv")}))
+    split_sha_holder["split"], split_sha_holder["commit"] = sha(split), head
     return reg, holdout
+
+
+def _run_reg(args: list[str], reg: Path) -> subprocess.CompletedProcess:
+    import os
+
+    env = dict(os.environ, V2_REGISTRATION_ROOT=str(reg))
+    return subprocess.run([str(PY), str(RUNNER), *args], capture_output=True, text=True, cwd=ROOT, env=env)
 
 
 @pytest.mark.skipif(not PY.exists(), reason="repo venv not present")
@@ -126,23 +139,57 @@ def test_registered_holdout_mode_locks_and_refuses_drift(tmp_path):
     base = ["--shard-dir", str(shards), "--shard-index", str(index), "--out-dir", str(out),
             "--work-root", str(tmp_path / "work"), "--dataset", "d3-test", "--machine", "test",
             "--workers", "2", "--stars-file", str(holdout), "--split-file", str(reg / "split.csv")]
-    refused = _run(base)
+    refused = _run_reg(base, reg)
     assert refused.returncode != 0 and "HOLDOUT" in (refused.stdout + refused.stderr)
-    no_artifact = _run(base + ["--allow-holdout"])
+    no_artifact = _run_reg(base + ["--allow-holdout"], reg)
     assert no_artifact.returncode != 0 and "V2_CONSTANTS_FROZEN" in (no_artifact.stdout + no_artifact.stderr)
-    ok = _run(base + ["--allow-holdout", "--constants", str(reg / "V2_CONSTANTS_FROZEN.json")])
+    # the split file must be the registered one (a copy elsewhere is refused)
+    copy = tmp_path / "elsewhere.csv"
+    copy.write_bytes((reg / "split.csv").read_bytes())
+    elsewhere = _run_reg(base[:-1] + [str(copy), "--allow-holdout", "--constants", str(reg / "V2_CONSTANTS_FROZEN.json")], reg)
+    assert elsewhere.returncode != 0 and "registered split" in (elsewhere.stdout + elsewhere.stderr)
+    ok = _run_reg(base + ["--allow-holdout", "--constants", str(reg / "V2_CONSTANTS_FROZEN.json")], reg)
     assert ok.returncode == 0, ok.stdout + ok.stderr
     lock = json.loads((reg / "HOLDOUT_LAUNCH_d3.json").read_text())
-    assert lock["split_sha256"] == holder["split"] and lock["preregistration_commit"] == "deadbeef"
+    assert lock["split_sha256"] == holder["split"] and lock["preregistration_commit"] == holder["commit"]
+    assert lock["canonical_registration"] is False      # test root, recorded as non-canonical
     manifest = json.loads((out / "manifest.json").read_text())
     assert manifest["binding"]["split_half"] == "holdout" and manifest["binding"]["plan_sha256"] == lock["plan_sha256"]
+    assert manifest["binding"]["constants_artifact_sha256"] == lock["constants_artifact_sha256"]
     assert manifest["constants"]["n_window_peaks"] == 6 and manifest["holdout_registration"]["lock_file"]
-    resume = _run(base + ["--allow-holdout", "--constants", str(reg / "V2_CONSTANTS_FROZEN.json")])
+    assert manifest["canonical_registration"] is False
+    resume = _run_reg(base + ["--allow-holdout", "--constants", str(reg / "V2_CONSTANTS_FROZEN.json")], reg)
     assert resume.returncode == 0 and "pending=0" in resume.stdout
     # a different constants artifact (drift) is refused by the lock
     (reg / "V2_CONSTANTS_FROZEN.json").write_text(json.dumps({
         **json.loads((reg / "V2_CONSTANTS_FROZEN.json").read_text()), "overrides": {"n_window_peaks": 24}}))
-    drift = _run(base + ["--allow-holdout", "--constants", str(reg / "V2_CONSTANTS_FROZEN.json")])
+    drift = _run_reg(base + ["--allow-holdout", "--constants", str(reg / "V2_CONSTANTS_FROZEN.json")], reg)
     assert drift.returncode != 0 and "exact resume" in (drift.stdout + drift.stderr)
-    limited = _run(base + ["--allow-holdout", "--limit", "1", "--constants", str(reg / "V2_CONSTANTS_FROZEN.json")])
+    limited = _run_reg(base + ["--allow-holdout", "--limit", "1", "--constants", str(reg / "V2_CONSTANTS_FROZEN.json")], reg)
     assert limited.returncode != 0
+    # a bogus pre-registration commit is refused
+    artifact = json.loads((reg / "V2_CONSTANTS_FROZEN.json").read_text())
+    (reg / "V2_CONSTANTS_FROZEN.json").write_text(json.dumps({**artifact, "overrides": {"n_window_peaks": 6},
+                                                              "preregistration_commit": "deadbeef"}))
+    bogus = _run_reg(base + ["--allow-holdout", "--constants", str(reg / "V2_CONSTANTS_FROZEN.json")], reg)
+    assert bogus.returncode != 0 and "not in this repository" in (bogus.stdout + bogus.stderr)
+
+
+@pytest.mark.skipif(not PY.exists(), reason="repo venv not present")
+def test_debug_runs_cannot_touch_registered_holdout_ids(tmp_path):
+    """Round-2 bypass: a debug run (--allow-nonstandard-ids, no split file) on
+    a CANONICAL holdout id is refused."""
+    holdout_ids = [l.strip() for l in (ROOT / "generalization/v2/d3_holdout.txt").read_text().splitlines() if l.strip()]
+    sid = holdout_ids[0]
+    shards = tmp_path / "shards"
+    write_shard(synthetic_star(sid, seed=7), shards / f"{sid}.csv.gz")
+    (shards / "shard_index.txt").write_text(sid + "\n")
+    stars = tmp_path / "ids.txt"
+    stars.write_text(sid + "\n")
+    out = tmp_path / "dbg"
+    for extra in ([], ["--stars-file", str(stars)]):
+        res = _run(["--shard-dir", str(shards), "--shard-index", str(shards / "shard_index.txt"),
+                    "--out-dir", str(out), "--work-root", str(tmp_path / "work"), "--dataset", "d3-test",
+                    "--machine", "test", "--workers", "1", "--allow-nonstandard-ids", *extra])
+        assert res.returncode != 0 and "registered HOLDOUT ids" in (res.stdout + res.stderr)
+    assert not (out / "stars").exists() or not list((out / "stars").glob("*.json"))

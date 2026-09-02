@@ -35,9 +35,12 @@ def results(tmp_path_factory):
 
 def test_combinations_cover_the_declared_sets():
     ids = [c for c, _ in combinations()]
-    assert len(ids) == len(set(ids)) == 27
-    assert combination_id(DEFAULT) in ids
-    assert all(f"N{n}_" in "".join(ids) for n in TUNABLE["n_window_peaks"])
+    assert len(ids) == len(set(ids)) == 54
+    assert combination_id(DEFAULT) == "W30_N12_phi0.15_r0.3-1.5" and combination_id(DEFAULT) in ids
+    assert ids[0] == combination_id(DEFAULT)          # §3 order: the default is first
+    assert [c for c, _ in combinations(30.0)] == ids[:27]
+    assert all(c.startswith("W10_") for c, _ in combinations(10.0))
+    assert all(f"_N{n}_" in "".join(ids) for n in TUNABLE["n_window_peaks"])
 
 
 def test_default_rescore_reproduces_the_run(results):
