@@ -341,9 +341,10 @@ and its digest must equal the Mac's before every run. The Mac (M5,
 sustained load; the overlap set is run on both machines and decision
 agreement reported. Results: `generalization/results/<date>_d3_v2/`,
 `<date>_d2_v2/`, `<date>_synthesis/` (frozen vs v2 side by side, evidence
-map). Reviewer gate: one sol round on this document (REVISE, 2026-09-02;
-dispositions in `generalization/reviews/V2G1/`), a confirmation round on
-the revision, then the dev runs.
+map). Reviewer gate: `generalization/reviews/V2G1/` — round 1 REVISE and
+four confirmation rounds (REVISE) closed one by one, **ADMIT at round 6
+(2026-09-02, VERDICT.md)**; the dev runs start only after the admitted
+code is staged on the laptop with digest parity.
 
 ## 10. Amendments and disclosures
 

@@ -57,3 +57,5 @@ computed).
 | # | round-5 status | disposition (ACCEPTED) |
 |---|---|---|
 | frozen_api.py outside both digests | NOT RESOLVED | `v2_common.v2_file_shas()` now includes `scripts/generalization/frozen_api.py`, so `v2_digest` — hence the sidecar binding, the resume scan, the end-of-run drift check, the constants artifact, the holdout lock, the metrics sidecar/attestation checks and the comparison's registration checks — covers the complete v2 runtime code (§8). Tests: `test_v2_digest_covers_frozen_api`, `test_relaunch_after_frozen_api_drift_is_refused` (a registered run, an appended byte in frozen_api.py → the relaunch is refused; restored → exact resume reuses everything). |
+
+# Round 6 — `sol_plan_review_r6.md`: RESOLVED, **VERDICT: ADMIT** (see VERDICT.md).
