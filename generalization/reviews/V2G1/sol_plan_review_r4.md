@@ -1,0 +1,7 @@
+1. **Holdout bypass — NOT RESOLVED.** Registered holdout mode still permits `--allow-nonstandard-ids --passes low` (`run_v2_ls.py:325-327`), while the lock omits ordered passes (`244-254`). Relaunching after a standard run therefore passes the lock, deletes prior results on pass mismatch, and recomputes them (`125-151`). Reversed `high,low` is also accepted by metrics because pass validation is set-based (`metrics_generalization.py:134-135,1726`), and comparison never checks passes (`compare_engines.py:324-375`). Additionally, the copied-root guard runs after lock creation (`run_v2_ls.py:375,389`); its test assertion is vacuous (`test_v2_runner.py:228`).
+
+2. **Chance-match validation/binding and docstring — RESOLVED.** Both D3 files are required and validated for finite fields and positive permutations (`compare_engines.py:407-424`), included beside P2 (`425-429`), and SHA-bound (`440-446`). The discordance docstring is corrected (`22-24`).
+
+Focused pytest requiring no temporary files passed; the read-only sandbox prevented the write-dependent tests.
+
+**VERDICT: REVISE** — Require ordered `low,high` and forbid debug options in registered holdout mode; bind passes and complete execution/code identity in the lock; verify them again in metrics/comparison; move the canonical-root rejection before lock handling; replace the vacuous copied-root assertion and add pass-order/drift regression tests.

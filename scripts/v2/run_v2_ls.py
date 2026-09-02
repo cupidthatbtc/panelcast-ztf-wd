@@ -207,17 +207,24 @@ def load_constants(spec: str | None) -> V2Constants:
 
 
 def registered_holdout(args, constants: V2Constants, split_record: dict, stars_sha: str,
-                       root: Path) -> dict:
+                       root: Path, passes: tuple[str, ...]) -> dict:
     """Single-execution holdout discipline (G-review 2026-09-02 finding 4,
-    round 2 (b)): the exact registered holdout list, no --limit, the
-    frozen-constants artifact at the registration root whose v2-code / split /
-    plan digests match this checkout, whose pre-registration commit is an
-    ancestor of HEAD and whose evidence table is intact, and one lock file per
-    dataset created ATOMICALLY (O_EXCL) before computation; a relaunch must be
+    rounds 2–4): the exact registered holdout list, exactly the ordered
+    frozen pass set low,high, no debug options, the frozen-constants artifact
+    at the registration root whose v2-code / split / plan digests match this
+    checkout, whose pre-registration commit is an ancestor of HEAD and whose
+    evidence table is intact, and one lock file per dataset created
+    ATOMICALLY (O_EXCL) before computation binding the complete execution
+    identity (list, constants, v2 and frozen code, split, plan, artifact,
+    passes, shard index, environment, output directory); a relaunch must be
     an exact resume of the locked run."""
     dataset = args.dataset.split("-")[0]
-    if args.limit is not None:
-        raise SystemExit("holdout runs forbid --limit")
+    if args.limit is not None or args.allow_nonstandard_ids:
+        raise SystemExit("holdout runs forbid --limit and --allow-nonstandard-ids")
+    if tuple(passes) != ("low", "high"):
+        raise SystemExit("holdout runs use exactly --passes low,high (ordered)")
+    if args.shard_index is None:
+        raise SystemExit("holdout runs require --shard-index")
     manifest = json.loads((root / "split_manifest.json").read_text(encoding="utf-8"))
     expected = manifest["outputs"].get(f"{dataset}_holdout.txt")
     if stars_sha != expected:
@@ -251,6 +258,12 @@ def registered_holdout(args, constants: V2Constants, split_record: dict, stars_s
         "tuning_evidence_sha256": checks["tuning_evidence_sha256"][1],
         "registration_root": str(root),
         "canonical_registration": root == CANONICAL_REGISTRATION,
+        "passes": list(passes),
+        "frozen_digest": frozen_digest(),
+        "env_digest": env_digest(),
+        "shard_index_sha256": sha256_file(args.shard_index),
+        "shard_dir": str(args.shard_dir.resolve()),
+        "constants_overrides": artifact.get("overrides", {}),
     }
     try:
         fd = os.open(lock_path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o644)
@@ -359,6 +372,23 @@ def main() -> None:
     split_record = {"file": "", "sha256": "", "half": ""}
     holdout_record: dict = {}
     root = registration_root()
+    # holdout-id protection FIRST (round-2 (b), round-3, round-4): a CANONICAL
+    # holdout id can only ever be scored by a registered holdout run
+    # (--split-file + --allow-holdout, no debug options) under the CANONICAL
+    # registration root — never by a debug, dev or unregistered run, and never
+    # under a copied registration root; refused before any lock is touched
+    requested = only if only is not None else {
+        path.name.split(".csv")[0] for path in args.shard_dir.glob("*.csv.gz")}
+    touched = requested & canonical_holdout_ids()
+    if touched and root != CANONICAL_REGISTRATION:
+        raise SystemExit(f"{len(touched)} requested ids are CANONICAL holdout ids: a registered holdout run "
+                         f"must use the canonical registration {CANONICAL_REGISTRATION}, not {root}")
+    if touched and not (args.split_file is not None and args.allow_holdout):
+        raise SystemExit(f"{len(touched)} requested ids are registered HOLDOUT ids; they can only be "
+                         "scored in the registered holdout mode (--split-file + --allow-holdout)")
+    if touched and (args.allow_nonstandard_ids or args.limit is not None or passes != ("low", "high")):
+        raise SystemExit("registered holdout runs take no debug options: exactly --passes low,high, "
+                         "no --limit, no --allow-nonstandard-ids")
     if args.split_file is not None:
         if only is None:
             raise SystemExit("--split-file requires --stars-file (one half of the split)")
@@ -372,23 +402,12 @@ def main() -> None:
             if not args.allow_holdout:
                 raise SystemExit("these are HOLDOUT ids: refusing without --allow-holdout "
                                  "(pre-registration: the holdout is scored once, after dev)")
-            holdout_record = registered_holdout(args, constants, split_record, stars_sha, root)
+            holdout_record = registered_holdout(args, constants, split_record, stars_sha, root, passes)
     elif only is not None and not args.allow_nonstandard_ids:
         raise SystemExit("--stars-file without --split-file: pass --split-file generalization/v2/split.csv "
                          "(or --allow-nonstandard-ids for debug subsets)")
-    # holdout-id protection (round-2 (b), round-3): a CANONICAL holdout id can
-    # only ever be scored by a registered holdout run under the CANONICAL
-    # registration root — never by a debug, dev or unregistered run, and never
-    # under a copied registration root (whatever it contains)
-    requested = only if only is not None else {
-        path.name.split(".csv")[0] for path in args.shard_dir.glob("*.csv.gz")}
-    touched = requested & canonical_holdout_ids()
     if touched and not holdout_record:
-        raise SystemExit(f"{len(touched)} requested ids are registered HOLDOUT ids; they can only be "
-                         "scored in the registered holdout mode (--split-file + --allow-holdout)")
-    if touched and root != CANONICAL_REGISTRATION:
-        raise SystemExit(f"{len(touched)} requested ids are CANONICAL holdout ids: a registered holdout run "
-                         f"must use the canonical registration {CANONICAL_REGISTRATION}, not {root}")
+        raise SystemExit("registered holdout ids without a registered holdout run")
     binding = {
         "engine": ENGINE,
         "v2_digest": v2_digest(),

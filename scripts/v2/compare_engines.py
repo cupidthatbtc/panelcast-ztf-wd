@@ -336,6 +336,10 @@ def verify_registration(args, registration: Path, runner_ids: set[str]) -> dict:
         problems.append("run manifest split_sha256")
     if run_manifest.get("canonical_registration") is not True:
         problems.append("run manifest canonical_registration")
+    if list(run_manifest.get("passes", [])) != ["low", "high"]:
+        problems.append("run manifest passes are not exactly ['low', 'high']")
+    if run_manifest.get("limit") is not None:
+        problems.append("run manifest used --limit")
     v2_metrics = json.loads((args.v2_metrics_dir / "manifest.json").read_text(encoding="utf-8"))
     frozen_metrics = json.loads((args.frozen_metrics_dir / "manifest.json").read_text(encoding="utf-8"))
     if v2_metrics.get("engine") != "v2" or v2_metrics.get("dataset") != dataset:
@@ -369,6 +373,19 @@ def verify_registration(args, registration: Path, runner_ids: set[str]) -> dict:
                     problems.append(f"lock vs run manifest: {key}")
             if lock.get("canonical_registration") is not True:
                 problems.append("holdout lock is not from the canonical registration")
+            if list(lock.get("passes", [])) != list(run_manifest.get("passes", [])) or \
+                    list(lock.get("passes", [])) != ["low", "high"]:
+                problems.append("lock vs run manifest: passes")
+            if lock.get("frozen_digest") != binding.get("frozen_digest"):
+                problems.append("lock vs run manifest: frozen_digest")
+            env_digest = hashlib.sha256(json.dumps(run_manifest.get("env", {}), sort_keys=True).encode()).hexdigest()
+            if lock.get("env_digest") != env_digest:
+                problems.append("lock vs run manifest: env_digest")
+            if lock.get("shard_index_sha256") != run_manifest.get("shard_index_sha256"):
+                problems.append("lock vs run manifest: shard_index_sha256")
+            if not run_manifest.get("holdout_registration") or \
+                    run_manifest["holdout_registration"].get("lock_file", "").split("/")[-1] != lock_path.name:
+                problems.append("run manifest holdout registration record")
             if args.constants_artifact is None or sha256_file(args.constants_artifact) != lock.get("constants_artifact_sha256"):
                 problems.append("constants artifact missing or not the locked one")
             record["holdout_lock_sha256"] = sha256_file(lock_path)

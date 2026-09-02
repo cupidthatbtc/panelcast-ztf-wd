@@ -225,5 +225,44 @@ def test_copied_registration_root_cannot_score_canonical_holdout_ids(tmp_path):
                     "--stars-file", str(reg / "d3_holdout.txt"), "--split-file", str(reg / "split.csv"),
                     "--allow-holdout", "--constants", str(reg / "V2_CONSTANTS_FROZEN.json")], reg)
     assert res.returncode != 0 and "canonical registration" in (res.stdout + res.stderr)
-    assert not (reg / "HOLDOUT_LAUNCH_d3.json").exists() or True   # the guard fires before any lock matters
-    assert not list((tmp_path / "out" / "stars").glob("*.json")) if (tmp_path / "out" / "stars").exists() else True
+    # refused BEFORE any lock handling: no lock under the copied root, no output
+    assert not (reg / "HOLDOUT_LAUNCH_d3.json").exists()
+    assert not (tmp_path / "out" / "stars").exists() or not list((tmp_path / "out" / "stars").glob("*.json"))
+    assert not (tmp_path / "out" / "manifest.json").exists()
+
+
+@pytest.mark.skipif(not PY.exists(), reason="repo venv not present")
+def test_registered_holdout_refuses_debug_options_and_binds_passes(tmp_path):
+    """Round-4 residual: the registered mode takes no debug options, requires
+    the ordered frozen pass set and binds passes / code / environment in the lock."""
+    shards = tmp_path / "shards"
+    for i, sid in enumerate(SIDS):
+        write_shard(synthetic_star(sid, seed=300 + i), shards / f"{sid}.csv.gz")
+    index = shards / "shard_index.txt"
+    index.write_text("\n".join(SIDS) + "\n")
+    holder: dict = {}
+    reg, holdout = _fake_registration(tmp_path, holder)
+    out = tmp_path / "hold"
+    base = ["--shard-dir", str(shards), "--shard-index", str(index), "--out-dir", str(out),
+            "--work-root", str(tmp_path / "work"), "--dataset", "d3-test", "--machine", "test",
+            "--workers", "2", "--stars-file", str(holdout), "--split-file", str(reg / "split.csv"),
+            "--allow-holdout", "--constants", str(reg / "V2_CONSTANTS_FROZEN.json")]
+    for extra, needle in ((["--passes", "high,low"], "low,high"), (["--passes", "low"], "low,high"),
+                          (["--allow-nonstandard-ids"], "--allow-nonstandard-ids"), (["--limit", "2"], "--limit")):
+        res = _run_reg(base + extra, reg)
+        assert res.returncode != 0 and needle in (res.stdout + res.stderr), extra
+        assert not (reg / "HOLDOUT_LAUNCH_d3.json").exists()
+    ok = _run_reg(base, reg)
+    assert ok.returncode == 0, ok.stdout + ok.stderr
+    lock = json.loads((reg / "HOLDOUT_LAUNCH_d3.json").read_text())
+    manifest = json.loads((out / "manifest.json").read_text())
+    assert lock["passes"] == ["low", "high"] == manifest["passes"]
+    assert lock["frozen_digest"] == manifest["binding"]["frozen_digest"]
+    assert lock["shard_index_sha256"] == manifest["shard_index_sha256"]
+    assert lock["constants_overrides"] == {"n_window_peaks": 6}
+    import hashlib as _h
+    assert lock["env_digest"] == _h.sha256(json.dumps(manifest["env"], sort_keys=True).encode()).hexdigest()
+    # a relaunch with a different pass order is refused by the guard, not silently recomputed
+    reorder = _run_reg(base + ["--passes", "high,low"], reg)
+    assert reorder.returncode != 0
+    assert json.loads((out / "manifest.json").read_text())["passes"] == ["low", "high"]

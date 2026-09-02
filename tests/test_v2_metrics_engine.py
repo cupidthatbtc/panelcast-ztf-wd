@@ -99,8 +99,9 @@ def test_v2_holdout_manifest_requires_canonical_registration(tmp_path):
     import json
 
     path = tmp_path / "manifest.json"
-    base = {"engine": "v2", "machine": "m", "binding": {"v2_digest": "d", "constants_sha256": "c",
-                                                         "split_half": "holdout"}}
+    base = {"engine": "v2", "machine": "m", "passes": ["low", "high"], "limit": None,
+            "holdout_registration": {"lock_file": "x"},
+            "binding": {"v2_digest": "d", "constants_sha256": "c", "split_half": "holdout"}}
     path.write_text(json.dumps({**base, "canonical_registration": False}))
     with pytest.raises(SystemExit):
         metrics.attestation_record_for("v2", json.loads(path.read_text()), path)
@@ -109,3 +110,19 @@ def test_v2_holdout_manifest_requires_canonical_registration(tmp_path):
     dev = {**base, "binding": {**base["binding"], "split_half": "dev"}, "canonical_registration": False}
     path.write_text(json.dumps(dev))
     assert metrics.attestation_record_for("v2", json.loads(path.read_text()), path)["tier"] == "v2_unattested"
+
+
+def test_v2_holdout_manifest_requires_ordered_passes_and_registration(tmp_path):
+    import json
+
+    path = tmp_path / "manifest.json"
+    good = {"engine": "v2", "machine": "m", "canonical_registration": True, "passes": ["low", "high"],
+            "limit": None, "holdout_registration": {"lock_file": "x"},
+            "binding": {"v2_digest": "d", "constants_sha256": "c", "split_half": "holdout"}}
+    path.write_text(json.dumps(good))
+    assert metrics.attestation_record_for("v2", json.loads(path.read_text()), path)["tier"] == "v2_unattested"
+    for bad in ({**good, "passes": ["high", "low"]}, {**good, "passes": ["low"]},
+                {**good, "limit": 5}, {**good, "holdout_registration": {}}):
+        path.write_text(json.dumps(bad))
+        with pytest.raises(SystemExit):
+            metrics.attestation_record_for("v2", json.loads(path.read_text()), path)
