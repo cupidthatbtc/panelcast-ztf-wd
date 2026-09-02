@@ -14,7 +14,14 @@ for attempt in $(seq 1 400); do
     echo "$(date '+%FT%T') attempt $attempt: mac=$MAC laptop=$LAP"
     if [ "$LAP" = "$MAC" ]; then
       echo "$(date '+%FT%T') PARITY OK"
-      ssh -o ConnectTimeout=20 win "Get-Content C:\Users\jcwen\Projects\astro-wd\v2_chain.log -Tail 1" 2>/dev/null | tr -d '\r'
+      # ship the admitted digest + the digest-gated chain, restart the parked chain
+      printf '%s\n' "$MAC" > outputs/v2/expected_v2_digest.txt
+      scp -o ConnectTimeout=20 -q outputs/v2/expected_v2_digest.txt win:C:/Users/jcwen/Projects/astro-wd/generalization/v2/EXPECTED_V2_DIGEST.txt
+      scp -o ConnectTimeout=20 -q scripts/v2/v2_laptop_chain.ps1 win:C:/Users/jcwen/Projects/astro-wd/v2_laptop_chain.ps1
+      scp -o ConnectTimeout=20 -q scripts/v2/v2_chain_restart.ps1 win:C:/Users/jcwen/Projects/astro-wd/v2_chain_restart.ps1
+      ssh -o ConnectTimeout=30 win "powershell -NoProfile -ExecutionPolicy Bypass -File C:\Users\jcwen\Projects\astro-wd\v2_chain_restart.ps1" 2>/dev/null | tr -d '\r'
+      sleep 8
+      ssh -o ConnectTimeout=20 win "Get-Content C:\Users\jcwen\Projects\astro-wd\v2_chain.log -Tail 2" 2>/dev/null | tr -d '\r'
       curl -s -m 10 -H "Title: v2 laptop sync" -d "scripts/v2 re-staged on the laptop, digest parity OK ($MAC)" https://ntfy.sh/jack-pings-f594ecfd9ef1a9c2 > /dev/null || true
       exit 0
     fi
