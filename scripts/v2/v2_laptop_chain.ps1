@@ -18,11 +18,12 @@ function AssertDigest($stage) {
   # the admitted v2 runtime digest is shipped by the Mac (scripts/v2/analysis/sync_laptop.sh);
   # every stage refuses to start unless the staged code matches it
   $expectedFile = "$root\generalization\v2\EXPECTED_V2_DIGEST.txt"
-  if (-not (Test-Path $expectedFile)) { Log "$stage: no EXPECTED_V2_DIGEST.txt — refusing"; Push "v2 chain BLOCKED" "$stage: no expected digest file"; exit 2 }
+  if (-not (Test-Path $expectedFile)) { Log "${stage}: no EXPECTED_V2_DIGEST.txt - refusing"; Push "v2 chain BLOCKED" "${stage}: no expected digest file"; exit 2 }
   $expected = (Get-Content $expectedFile -Raw).Trim()
-  $actual = (& $py -c "import sys; sys.path.insert(0,'scripts/v2'); import v2_common; print(v2_common.v2_digest())" 2>$null | Select-Object -Last 1).Trim()
-  if ($actual -ne $expected) { Log "$stage: digest $actual != expected $expected — refusing"; Push "v2 chain BLOCKED" "$stage: staged code digest differs from the admitted digest"; exit 2 }
-  Log "$stage: digest OK $actual"
+  $digestOut = & $py "$root\scripts\v2\analysis\print_digest.py" 2>&1
+  $actual = ($digestOut | ForEach-Object { "$_" } | Select-Object -Last 1).Trim()
+  if ($actual -ne $expected) { Log "${stage}: digest $actual != expected $expected - refusing"; Push "v2 chain BLOCKED" "${stage}: staged code digest differs from the admitted digest"; exit 2 }
+  Log "${stage}: digest OK $actual"
 }
 Log "V2 CHAIN START (pid $PID)"
 while (-not (Select-String -Path "$root\chain2.log" -Pattern "CHAIN2 DONE" -Quiet)) { Start-Sleep -Seconds 600 }

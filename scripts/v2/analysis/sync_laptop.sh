@@ -17,6 +17,8 @@ for attempt in $(seq 1 400); do
       # ship the admitted digest + the digest-gated chain, restart the parked chain
       printf '%s\n' "$MAC" > outputs/v2/expected_v2_digest.txt
       scp -o ConnectTimeout=20 -q outputs/v2/expected_v2_digest.txt win:C:/Users/jcwen/Projects/astro-wd/generalization/v2/EXPECTED_V2_DIGEST.txt
+      ssh -o ConnectTimeout=20 win "New-Item -ItemType Directory -Force -Path C:\Users\jcwen\Projects\astro-wd\scripts\v2\analysis | Out-Null" > /dev/null 2>&1
+      scp -o ConnectTimeout=20 -q scripts/v2/analysis/print_digest.py win:C:/Users/jcwen/Projects/astro-wd/scripts/v2/analysis/print_digest.py
       scp -o ConnectTimeout=20 -q scripts/v2/v2_laptop_chain.ps1 win:C:/Users/jcwen/Projects/astro-wd/v2_laptop_chain.ps1
       scp -o ConnectTimeout=20 -q scripts/v2/v2_chain_restart.ps1 win:C:/Users/jcwen/Projects/astro-wd/v2_chain_restart.ps1
       ssh -o ConnectTimeout=30 win "powershell -NoProfile -ExecutionPolicy Bypass -File C:\Users\jcwen\Projects\astro-wd\v2_chain_restart.ps1" 2>/dev/null | tr -d '\r'
