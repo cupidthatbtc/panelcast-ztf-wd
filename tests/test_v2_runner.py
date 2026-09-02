@@ -266,3 +266,48 @@ def test_registered_holdout_refuses_debug_options_and_binds_passes(tmp_path):
     reorder = _run_reg(base + ["--passes", "high,low"], reg)
     assert reorder.returncode != 0
     assert json.loads((out / "manifest.json").read_text())["passes"] == ["low", "high"]
+
+
+def test_v2_digest_covers_frozen_api():
+    from v2_common import FROZEN_API_PATH, v2_file_shas
+
+    shas = v2_file_shas()
+    assert "scripts/generalization/frozen_api.py" in shas
+    assert FROZEN_API_PATH.exists() and set(k for k in shas if k.startswith("scripts/v2/")) >= {
+        "scripts/v2/analyze_star_v2.py", "scripts/v2/run_v2_ls.py", "scripts/v2/rule.py"}
+
+
+@pytest.mark.skipif(not PY.exists(), reason="repo venv not present")
+def test_relaunch_after_frozen_api_drift_is_refused(tmp_path):
+    """Round-5 residual: editing frozen_api.py between launches changes the
+    v2 runtime digest, so a registered relaunch is refused by the lock and an
+    unregistered resume recomputes nothing silently (the binding differs)."""
+    api = ROOT / "scripts" / "generalization" / "frozen_api.py"
+    dirty = subprocess.run(["git", "status", "--porcelain", str(api)], cwd=ROOT, capture_output=True, text=True).stdout
+    if dirty.strip():
+        pytest.skip("frozen_api.py has local modifications; not touching it")
+    shards = tmp_path / "shards"
+    for i, sid in enumerate(SIDS):
+        write_shard(synthetic_star(sid, seed=400 + i), shards / f"{sid}.csv.gz")
+    index = shards / "shard_index.txt"
+    index.write_text("\n".join(SIDS) + "\n")
+    holder: dict = {}
+    reg, holdout = _fake_registration(tmp_path, holder)
+    out = tmp_path / "hold"
+    base = ["--shard-dir", str(shards), "--shard-index", str(index), "--out-dir", str(out),
+            "--work-root", str(tmp_path / "work"), "--dataset", "d3-test", "--machine", "test",
+            "--workers", "2", "--stars-file", str(holdout), "--split-file", str(reg / "split.csv"),
+            "--allow-holdout", "--constants", str(reg / "V2_CONSTANTS_FROZEN.json")]
+    ok = _run_reg(base, reg)
+    assert ok.returncode == 0, ok.stdout + ok.stderr
+    original = api.read_bytes()
+    try:
+        api.write_bytes(original + b"\n# drift (test)\n")
+        drifted = _run_reg(base, reg)
+    finally:
+        api.write_bytes(original)
+    assert drifted.returncode != 0 and ("frozen-constants artifact does not match" in (drifted.stdout + drifted.stderr)
+                                        or "exact resume" in (drifted.stdout + drifted.stderr))
+    # restored: the exact resume works again and reuses every result
+    again = _run_reg(base, reg)
+    assert again.returncode == 0 and "pending=0" in again.stdout

@@ -282,8 +282,9 @@ post-selection internal validation, not confirmatory external validation."
 
 ## 8. Provenance, single holdout execution, metrics
 
-`run_v2_ls.py`: binding = {engine, v2_digest (SHA over scripts/v2/*.py),
-frozen_digest, constants_sha256, generation_id, attestation_sha256 =
+`run_v2_ls.py`: binding = {engine, v2_digest (SHA over scripts/v2/*.py AND
+scripts/generalization/frozen_api.py, the gate module v2 imports the frozen
+helpers through), frozen_digest, constants_sha256, generation_id, attestation_sha256 =
 "v2-unattested", machine, split_sha256, split_half, stars_file_sha256}; a
 holdout run adds plan_sha256 and preregistration_commit. The campaign digest
 is recorded at start for audit but is NOT bound (v2 numerics never depend on
@@ -389,3 +390,9 @@ the revision, then the dev runs.
   non-canonical holdout manifests; the chance-match files are validated
   (finite required fields, ≥ 1 permutation) and SHA-bound; the stale
   discordance docstring corrected.
+- 2026-09-02, before any registered run (rounds 4–5): the registered mode
+  refuses every debug option and requires the ordered pass set `low,high`;
+  the canonical-holdout-id guard runs before any lock handling; the lock
+  binds passes, frozen and v2 code digests, environment, shard index,
+  shard directory and the constants overrides, re-verified by the metrics
+  and the comparison; `frozen_api.py` is part of the v2 code digest.

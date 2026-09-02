@@ -130,12 +130,20 @@ def with_overrides(base: V2Constants = DEFAULT, **overrides) -> V2Constants:
     return replace(base, **kwargs)
 
 
+FROZEN_API_PATH = REPO_ROOT / "scripts" / "generalization" / "frozen_api.py"
+
+
 def v2_file_shas() -> dict[str, str]:
-    """SHA-256 of every scripts/v2/*.py file (the v2 code identity)."""
-    return {
+    """SHA-256 of every scripts/v2/*.py file PLUS scripts/generalization/
+    frozen_api.py — the complete v2 runtime code identity: v2 imports the
+    frozen helpers through frozen_api, which is in neither the frozen nor
+    the v2-only surface (V2G1 round 5)."""
+    shas = {
         f"scripts/v2/{path.name}": hashlib.sha256(path.read_bytes()).hexdigest()
         for path in sorted(V2_DIR.glob("*.py"))
     }
+    shas["scripts/generalization/frozen_api.py"] = hashlib.sha256(FROZEN_API_PATH.read_bytes()).hexdigest()
+    return shas
 
 
 def v2_digest() -> str:
