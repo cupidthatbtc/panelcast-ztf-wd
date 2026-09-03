@@ -23,6 +23,7 @@ ONLY from the frozen metrics outputs named beside each slot; never from
 | `DIAGNOSTIC` | prespecified but explicitly non-inferential (D1 frequency recovery; arm-A positive injections; `any_top_peak_matches_any_mode`; Romero self-window arm; SAP re-dilution arm) | METRICS_SPEC.md, GENERALIZATION_PLAN.md |
 | `PROVENANCE` | attested facts about the frozen pipeline (replay gates, tags, SHAs, env pins) | RUNBOOK.md, attestation/ |
 | `PILOT` | never a result; may be cited only as the disclosed motivation for Amendment 4 | G2_FREEZE.md Amendment 4 |
+| `V2-HOLDOUT` | a frozen-vs-v2 paired comparison endpoint on the pre-registered v2 holdout; a descriptive operational screen (STRONG/other), never a hypothesis test or a confirmatory decision; the v2 arm's own P5-analog (Gaussian nulls) is diagnostic screen only — it cannot meet the frozen P5 0.5 % criterion at n = 500 | `generalization/v2/V2_PLAN.md` §6–§7 (ADMIT: `reviews/V2G1/VERDICT.md`) |
 
 Amendment 4 forbids any further estimand-hierarchy change. Nothing in this
 outline creates, renames, swaps, or re-denominates an estimand. If a draft
@@ -52,6 +53,28 @@ g = 13.5–17.5, 49 with 20-s solutions, 33 mixed-cadence, 76 dropout-eligible,
 106 unique arm-B windows; W_g pool 10/50/90th = 6/58/452, surface edges
 {15, 41, 84, 217}; P5 arithmetic at n = 1000: x = 0 → U95 = 0.299 %,
 x = 1 → 0.474 % (accept), x = 2 → 0.628 % (reject).
+
+**D3 frozen headline numbers now exist** (`generalization/results/2026-09-02_d3/README.md`,
+certified GUARD PASS) and may be quoted with their file bindings: P1 610→327
+(0.536 [0.496, 0.575]); P1 usable 585→327 (0.559 [0.518, 0.599]); P2 441→72
+(0.163 [0.132, 0.201]), correct-frequency fraction among detected 238→72
+(0.303 [0.248, 0.364]); P3 2,314→963 (0.416 [0.396, 0.436]), census 65
+(0.028 [0.022, 0.036]), either 993 (0.429 [0.409, 0.449]); census completeness
+25/610 (0.041 [0.028, 0.060]); union 334/585 (0.571 [0.530, 0.610]); PPV
+0.097 [0.094, 0.101]; contingency 18/7/309/251, incremental census 0.012,
+incremental LS 0.528, McNemar p = 9e-82; chance direct-match mean 0.0037,
+p95 0.0091. D2 full run still in progress on the laptop.
+
+**v2 detector arm** (`generalization/v2/V2_PLAN.md`, ADMIT at V2G1 round 6,
+`reviews/V2G1/VERDICT.md`, 2026-09-02): a second, pre-registered detector fixing
+the four mechanisms the D3 descriptive tables diagnosed (oid zero-point
+alignment, an extended alias veto, a joint two-band finder with a
+phase-coherence gate, support-aware detrending), judged ONCE on an odd-KIC/
+odd-TIC holdout against the frozen arm on the same stars
+(`scripts/v2/compare_engines.py`). Status at outline time: code ADMITTED,
+digest locked, dev runs not yet started (gated on the frozen D2 run finishing).
+No v2 number exists yet; every v2 slot below is conditional on the holdout
+landing before G6 — see CONTINGENCIES.md §6.
 
 ---
 
@@ -87,9 +110,18 @@ gives file → row selector → columns; full detail in EVIDENCE_MAP.md.
 | S12 | B (drop 3rd) | 170 | Median-window recovery spans ⟨p_min–p_max⟩ over the prespecified 3 × 3 bandpass grid; paired uninjected controls recover the injected dominant mode in ⟨x_c/m⟩ pairs. | d2_scenario_contrasts.csv → scenario ∈ ladder_*, endpoint=recovery → p_scenario (min/max, endpoints named); d2_paired_controls_summary.csv → endpoint=R → c_only, p_c | DESCRIPTIVE-PRESPEC; SECONDARY |
 | S13 | A | 140 | Zero-amplitude Gaussian nulls give FPR_Gaussian = ⟨x/1000⟩ (one-sided 95 % Clopper–Pearson upper ⟨U %⟩), ⟨meeting / failing⟩ the preregistered ≤ 0.5 % acceptance. | trigger_rates.csv → quantity=fpr_gaussian → k, cp_one_sided_95_upper, acceptance_u95_leq_0.005, confirmatory_decision | PRIMARY-P5 (sole confirmatory) |
 | S14 | A | 130 | In each assessment the census and period-search responses remain empirically non-overlapping; the three are reported side by side, not pooled. | contingency_complementarity.json for D1, D2 (descriptive counts), D3: BOTH discordant cells > 0 in each, else rewrite (see CONTINGENCIES §3) | DESCRIPTIVE-PRESPEC (conditional sentence) |
+| S15 | C (conditional; cut if the v2 holdout has not landed by G6) | 220 | After inspecting the frozen arm's descriptive failure analysis, a pre-registered v2 detector (aligned zero points, phase-coherent two-band amplitude, an extended alias veto) was evaluated once on an odd-ID holdout excluding four development stars: negative-class trigger rate ⟨p3_v2⟩ vs ⟨p3_frozen⟩ (paired Δ ⟨lo, hi⟩), detection completeness ⟨p1_v2⟩ vs ⟨p1_frozen⟩, ⟨x/500⟩ Gaussian nulls triggering. | `scripts/v2/compare_engines.py` output `endpoints.csv` → endpoint ∈ {P1_detection, P3_negative_trigger, P5_gaussian_false_alarm} → frozen_p/lo/hi, v2_p/lo/hi, diff, diff_lo, diff_hi, mcnemar_exact_p | V2-HOLDOUT |
+| S16 | C (conditional, ships only with S15) | 260 | V2_PLAN.md §7 disclosure sentence, VERBATIM: "After full-cohort frozen-arm failure analysis, we fixed a digest-locked but not byte-replay-attested v2 detector, selected four prespecified constants on development data, and evaluated it once on an internal odd-ID holdout excluding four stars used during development; this is post-selection internal validation, not confirmatory external validation." | `generalization/v2/V2_PLAN.md` §7 | V2-HOLDOUT (mandatory disclosure, verbatim, not paraphrased) |
 
 Tier A total ≈ 1,780 characters; Tier B adds ≈ 490 → 2,270. Expect to keep
-two of S8/S10/S12. Character count is decided at G6 on the filled text.
+two of S8/S10/S12. Character count is decided at G6 on the filled text. S15/S16
+(≈ 480 chars together) are OUTSIDE this budget: they replace nothing and are
+included only if they fit after every Tier-A/B slot is filled and only if the
+v2 holdout numbers exist (V2_PLAN.md §6 STRONG/other reading, never a
+hypothesis test); if they do not fit or do not exist, the abstract states the
+frozen calibration alone and closes with "a redesigned rule (v2) is under
+evaluation on a pre-registered holdout; results follow at the poster
+(January)" in place of S15, dropping S16 — see CONTINGENCIES.md §6.4.
 
 ### 1.3 Abstract rules of construction
 - Word/phrase substitutions are fixed by METRICS_SPEC vocabulary: "detection completeness", "frequency-recovery completeness", "correct-frequency fraction among detected positives", "negative-class trigger rate", "Gaussian-null false-alarm rate (FPR_Gaussian)", "conditional injection-recovery efficiency of the search stage", "native trigger rate of the template pool", "post-injection rule-1 trigger rate", "frame-specific label PPV", "prespecified finite-grid sensitivity range".
@@ -97,6 +129,8 @@ two of S8/S10/S12. Character count is decided at G6 on the filled text.
 - The pilot numbers (16/30, 7/30, 8/10, 10/10) never appear.
 - The 928-catalog counts (109/233/94/492; 327) never appear as completeness; they are D1 descriptives only and are out of the abstract.
 - The descriptive diurnal partition is NOT in the abstract (post-launch; no interval).
+- S15/S16 use the v2 vocabulary fixed by V2_PLAN.md: "pre-registered v2 detector", "odd-ID holdout", "internal post-selection validation" (never "external" or "confirmatory"); the disclosure sentence (S16) is quoted verbatim, never paraphrased; the STRONG/other reading is reported as a descriptive operational screen, never as a hypothesis test or a p-value claim.
+- No v2 number is dev-half; no v2 number predates the holdout lock (`generalization/v2/HOLDOUT_LAUNCH_<dataset>.json`); the four `dev_smoke` stars never appear in a v2 abstract number.
 - Keywords (AAS category picks): stellar pulsations; time-domain astronomy; sky surveys; astronomy data analysis; white dwarf stars; δ Scuti stars.
 
 ---
@@ -106,13 +140,26 @@ two of S8/S10/S12. Character count is decided at G6 on the filled text.
 Layout: reuse `poster/poster.html` (42 × 36 in, three columns, Times, the
 `.scoreline`, `.defbox`, `.tally`, "What this does not establish" and "What was
 frozen, and when" blocks). No new CSS. Figures regenerate from CSVs only
-(METRICS_SPEC "Figures via plot_generalization.py from these CSVs only").
+(METRICS_SPEC "Figures via plot_generalization.py from these CSVs only"; the
+v2 synthesis figures regenerate from `compare_engines.py` outputs only).
 
 Operational gotcha: `scripts/generalization/*.py` (non-recursive) is the
 `campaign_file_shas()` drift-guard surface for the LIVE runners. Do not edit
 `plot_generalization.py` until both runs have finished and metrics are
 computed; until then, new figure functions go in a subdirectory (pattern already
 used: `scripts/generalization/descriptive/`), e.g. `scripts/generalization/figures/`.
+The v2 figures have the SAME constraint one level over: `scripts/v2/*.py` plus
+`scripts/generalization/frozen_api.py` is the ADMITTED v2 code digest bound
+into every dev/holdout run and lock — new v2 figure code goes in
+`scripts/v2/analysis/` (already the home of `veto_exposure.py`/
+`leakage_audit.py`) and NEVER touches `scripts/v2/*.py` while a dev or holdout
+run is live, or the digest gate refuses every subsequent stage.
+
+For the January poster (v2 confirmed as the deliverable regardless of the
+abstract's fate — CONTINGENCIES.md §6.4), the layout below is the full,
+eight-plus-four-figure version; if v2 has not reached the holdout by the
+AAS 249 poster print date, §6/F9–F12 are omitted and the poster reverts to
+the seven-section, eight-figure layout below.
 
 ### 2.1 Header
 - Title: one of §1.1. Subtitle: "three separate response assessments of one frozen pipeline".
@@ -127,8 +174,9 @@ used: `scripts/generalization/descriptive/`), e.g. `scripts/generalization/figur
 | 3 | D3 — external-label validation on real ZTF photometry | Figures F1–F4; `.tally` of the attrition chain 3,000 → 2,901 crossmatched → ⟨usable⟩ → ⟨both passes⟩ by class. | attrition.csv; data/d3/crossmatch_freeze/attrition_by_class.csv |
 | 4 | D2 — conditional injection-recovery of the search stage | Figures F5–F7; one-paragraph design (truth model, sinc de/re-integration, bandpass grid, W_g strata, K = 3, paired controls, 1,000 Gaussian nulls). | GENERALIZATION_PLAN.md D2 design |
 | 5 | D1 — the finite-roster anchor | Figure F8 (reuse `figures/headtohead.png`); tally 11/13 · 9/13 · 13/13 · 0/5 confirmed (+1 candidate). | master_table.csv; METRICS_SPEC D1 validation on record |
-| 6 | What this does not establish | Rendered from Part D (poster-length version: 6 bullets). | Part D |
-| 7 | What was frozen, and when | Pre-registration timeline: spec frozen 2026-08-28 (G2, 6 rounds), A2/A3 2026-08-30 (pre-run), A4 2026-08-30 (post-pilot, pre-confirmatory, disclosed), descriptive diurnal admission 2026-08-31 (post-launch, disclosed). | G2_FREEZE.md |
+| 6 (conditional; drop if v2 has not reached the holdout) | v2 — a redesigned detector on a pre-registered holdout | The disclosure sentence (S16, verbatim) as the section lede; Figures F9–F12; a `.defbox` naming the four fixed mechanisms (align/veto/joint+coherence/detrend) beside the frozen `.defbox` of §2. | V2_PLAN.md §1–§2, §7; `scripts/v2/compare_engines.py` outputs |
+| 7 | What this does not establish | Rendered from Part D (poster-length version: 6 bullets, + the v2 bullets N29–N34 if §6 is present). | Part D |
+| 8 | What was frozen, and when | Pre-registration timeline: spec frozen 2026-08-28 (G2, 6 rounds), A2/A3 2026-08-30 (pre-run), A4 2026-08-30 (post-pilot, pre-confirmatory, disclosed), descriptive diurnal admission 2026-08-31 (post-launch, disclosed); v2 pre-registered 2026-09-02, V2G1 ADMIT at round 6 (5 REVISE rounds closed) same day. | G2_FREEZE.md; `reviews/V2G1/VERDICT.md` |
 | Footer | Take-away, data & code, acknowledgements, references | Take-away = S14 + "variability flags should ship with class-specific response estimates and their denominators". Mandatory citations: Sokolovsky+2017, Guidry+2021, Hermes+2017, Murphy+2019, Bowman+2016, Mo+2026, Romero+2022, Romero+2025, Gentile Fusillo+2021, Masci+2019, Jestin arXiv:2509.15133. | GENERALIZATION_PLAN.md "Mandatory citations" |
 
 ### 2.3 Figure list
@@ -142,8 +190,14 @@ used: `scripts/generalization/descriptive/`), e.g. `scripts/generalization/figur
 | F6 D2 sensitivity | Paired scenario-minus-nominal-K1 differences with common-draw intervals for the 8 ladder points, phase_1/2, ampscale 0.7/1.3, dropout, cadence_alt; degenerate rows drawn as the CP discordance bound (marked); endpoint scenarios of the min–max named | A "band"; a CI on the min–max; crossing of axes | d2_scenario_contrasts.csv → scenario, endpoint=recovery, denominator=eligible → diff, diff_lo, diff_hi, discordance_u95, interval | DESCRIPTIVE-PRESPEC | NEW |
 | F7 D2 nulls & controls | (a) FPR_Gaussian: x/1000 with the exact one-sided CP upper and the 0.5 % acceptance line; (b) paired controls: 2 × 2 for D and for R, b_only / c_only / union, P(R_B=1,R_C=0) with cluster CI; (c) native trigger rate of the 106 control windows with reuse counts | "real-sky FPR"; subtraction of the native rate from P4 | trigger_rates.csv → fpr_gaussian, native_trigger_rate; d2_paired_controls_summary.csv → endpoint ∈ {D,R}; d2_control_reuse.csv → n_b_assignments | PRIMARY-P5; SECONDARY (paired R/D); DESCRIPTIVE-PRESPEC (native) | NEW |
 | F8 D1 anchor | Reuse `poster/figures/headtohead.png` (blind L-S period vs g amplitude, 19 stars, channel colour) with the finite-roster caption | Any population completeness reading | committed D1 tables (talk/data) | ANCHOR (DESCRIPTIVE-PRESPEC counts) | exists (MATLAB) |
+| F9 frozen vs v2, paired endpoints (holdout) | Per-endpoint frozen/v2 point + Wilson (CP upper for the null screen) with the paired difference and its interval, for P1, P3, P3 by pass, P2 (with chance-match rates of both bundles), and D2 P4 recovery (eligible & usable), P4 trigger, the null screen, and the two paired-control contrasts; exact McNemar p annotated where computed | Any p<0.05 framing; any claim the difference is "significant"; any number from the dev half | `scripts/v2/compare_engines.py` → `endpoints.csv` → endpoint, n, frozen_p/lo/hi, v2_p/lo/hi, diff, diff_lo, diff_hi, mcnemar_exact_p, frozen/v2_chance_direct_mean/p95 (P2 rows) | V2-HOLDOUT | NEW |
+| F10 status transitions + availability | Frozen→v2 best-status transition counts by class (D3) / arm (D2); a second panel of frozen-usable × v2-usable counts | Any "improvement rate" without the transition table beside it | `compare_engines.py` → `status_transitions.csv` (class_label\|arm, frozen_best_status, v2_best_status columns), `availability_transitions.csv` (class_label\|arm, frozen_usable, v2_usable, n) | V2-HOLDOUT (descriptive) | NEW |
+| F11 veto exposure + leakage audit | (a) fraction of truth frequencies vetoed by component (fixed loci, data-driven peaks, local test, mirror family, cross-pass partners) and their union, by pass/band; (b) the low-frequency injection leakage audit on dev windows: high-pass confirmed-count with vs without the injection, and how many new confirmations are alias partners of the injection | Any claim the veto "does not affect" science frequencies; any leakage number from the holdout | `scripts/v2/analysis/veto_exposure.py` → `veto_exposure_summary.csv` (pass, band, veto_fixed/_data/_local/_stronger/_cross_pass/_union _mean/_sum, n); `leakage_audit.py` → `leakage_audit_summary.json` (n, injection, high_confirmed_reference/_injected, high_new_confirmations_that_are_partners, low_detects_injection) | V2-HOLDOUT (descriptive; dev-window audit) | NEW |
+| F12 v2 mechanism panel | (a) per-oid alignment: offset (mmag) vs shared-night count, applied/unshifted marked; (b) coherence-gate failures stratified by phase-error and amplitude S/N, confirmed vs candidate outcome | Any causal reading of the strata; any claim alignment offsets are astrophysical | per-star v2 JSON `v2.alignment` (band, oid, n, n_shared_nights, offset_mmag, applied, role) and `passes[p]["v2"].candidates[]` (delta_phase_cycles, amp_ratio_r_over_g, coherent) aggregated by a not-yet-written script (`scripts/v2/analysis/mechanism_summary.py` — open item, SUMMARY.md) | V2-HOLDOUT (descriptive) | TBD script |
 
-Poster figure priority if space binds: F1, F5, F7, F3, F2, F6, F4, F8.
+Poster figure priority if space binds: F1, F5, F7, F3, F2, F6, F4, F8, then
+(if v2 landed) F9, F1[0-2] in that order — F9 (the headline comparison) never
+drops before F6.
 
 ---
 
@@ -188,6 +242,17 @@ Estimate | 95 % interval (method) | Status. Rows (order fixed):
 15. D2 FPR_Gaussian — 1,000 nulls — ⟨x/1000⟩ — one-sided CP upper ⟨U⟩; acceptance ≤ 0.5 % ⟨PASS/FAIL⟩ — PRIMARY-P5 (confirmatory)
 16. D1 anchor: L-S 11/13, census 9/13, union 13/13, constants 0/5 confirmed (+1 candidate) — 13 / 5 — Wilson — ANCHOR
 
+Rows 17–23 (CONDITIONAL: appended only if the v2 holdout has landed by G6;
+Status column reads "holdout, post-selection internal validation" on every
+v2 row; source `compare_engines.py` → `endpoints.csv` unless noted):
+17. v2 D3 detection completeness, paired vs frozen — 299 (flag1 roster) — ⟨⟩ — Wilson + paired diff + McNemar — holdout, post-selection internal validation
+18. v2 D3 frequency-recovery, paired vs frozen (frozen P2 frame) — ⟨n⟩ — ⟨⟩ — Wilson + paired diff + McNemar; chance-match both bundles — holdout, post-selection internal validation
+19. v2 D3 negative-class trigger rate, paired vs frozen — 1,149 (flag0 roster) — ⟨⟩ — Wilson + paired diff + McNemar — holdout, post-selection internal validation
+20. v2 D2 conditional recovery, nominal arm B, eligible & usable, paired vs frozen — 43 targets — ⟨⟩ — target-cluster bootstrap paired diff — holdout, post-selection internal validation
+21. v2 D2 paired-control contrasts (trigger; strict recovery), paired vs frozen — 67 controls — ⟨⟩ — target bootstrap — holdout, post-selection internal validation
+22. v2 D2 null screen (descriptive; NOT the frozen P5 decision) — 500 holdout nulls — ⟨x/500⟩ — one-sided CP upper — descriptive operational screen, not confirmatory
+23. v2 truth-frequency veto exposure, by component and union — ⟨⟩ — ⟨⟩ — descriptive — DESCRIPTIVE (mechanism)
+
 ### 3.2 Paragraph-level claims (RNAAS; each with artifact + status; full table in EVIDENCE_MAP.md)
 | ID | Section | Claim (one sentence each) | Evidence artifact | Status |
 |---|---|---|---|---|
@@ -210,6 +275,16 @@ Estimate | 95 % interval (method) | Status. Rows (order fixed):
 | C17 | §4 | D2 is not real-sky completeness (template selection, phases, stationarity, bandpass, upstream processing); D3 is a g ≥ 13.2 Kepler-field statement; the negative class contains real variables; amplitudes are historical Kepler-band; Mo-join missingness is informative. | METRICS_SPEC limitations; G1 RESPONSE | limitation |
 | C18 | §4 | Post-launch descriptive: the confirmed-negative frequencies concentrate in / outside the solar-diurnal bands in ⟨n_w / n_o⟩; disclosure sentence verbatim; no correction applied. | descriptive_postlaunch/d3_trigger_decomposition.csv | DESCRIPTIVE-POST-LAUNCH |
 | C19 | §4 | Recommendation: survey variability flags should ship with class-specific response estimates and their denominators. | — | framing |
+| C20 | §3 (conditional) | v2 sentence (S15) with the paired P1/P3/P5-screen differences and their intervals. | `compare_engines.py` → `endpoints.csv` | V2-HOLDOUT |
+| C21 | §3 (conditional) | v2 D2 sentence: conditional recovery and the paired-control contrasts, eligible & usable. | same → `P4_recovery_eligible/_usable`, `control_contrast_*` | V2-HOLDOUT |
+| C22 | §4 (conditional) | v2 disclosure sentence (S16), verbatim; the STRONG/other reading is a descriptive operational screen, never a hypothesis test; the four `dev_smoke` stars are excluded from every number. | `generalization/v2/V2_PLAN.md` §7 | V2-HOLDOUT (mandatory if §3 v2 claims appear) |
+| C23 | §4 (conditional) | v2 is an internal post-selection validation (architecture chosen from the same D3 campaign the holdout is drawn from); it does not establish external validity beyond the frozen arm's own limits (C17). | V2_PLAN.md §1 "What the holdout validates" | limitation |
+| C24 | §4 (conditional) | Truth-frequency veto exposure and the leakage audit are reported so the extended veto's cost is visible, not asserted away. | F11 artifacts | V2-HOLDOUT (descriptive) |
+
+If §3/§4 v2 claims (C20–C24) are included, reallocate ≈ 70 words from §2 (300→270)
+and ≈ 50 from the Abstract block (already absorbed by S15/S16 being outside its
+budget); if v2 has not landed, C20–C24 and Table 1 rows 17–23 are cut entirely
+and the RNAAS budget in §3.1 is unchanged.
 
 Transitions: §1 ends on "what the three samples can and cannot claim" → §2
 opens with the freeze; §2 ends on the estimand family → §3 opens with Table 1;
@@ -221,10 +296,10 @@ opens with the freeze; §2 ends on the estimand family → §3 opens with Table 
 | 1 | Introduction | 450 | — | C1–C3 + literature (Sokolovsky, Guidry, Hermes, Oelkers) |
 | 2 | The frozen pipeline and its attestation | 350 | — | C4, C7, C8 |
 | 3 | Three response assessments | 700 | Table 1 (from §3.1) | C5, C6; attrition table in text |
-| 4 | Results | 1,100 | Fig 1 = F1+F2 stacked; Fig 2 = F3+F4; Fig 3 = F5+F6; Fig 4 = F7 | C9–C16 |
-| 5 | What is and is not established | 600 | — | C17, C18 + the Part D list in prose |
+| 4 | Results | 1,100 | Fig 1 = F1+F2 stacked; Fig 2 = F3+F4; Fig 3 = F5+F6; Fig 4 = F7 (if v2 landed: Fig 4 = F7+F9 stacked, dropping F9 to online appendix only if the 5-figure/table cap is exceeded) | C9–C16 (+ C20–C21 if v2 landed) |
+| 5 | What is and is not established | 600 | — | C17, C18 + the Part D list in prose (+ C22–C23, N29–N34 if v2 landed) |
 | 6 | Summary | 200 | — | S14, C19 |
-| — | Appendix (online) | — | attrition.csv, sensitivity.csv, ppv.csv, d2_control_reuse.csv as machine-readable tables | DESCRIPTIVE-PRESPEC |
+| — | Appendix (online) | — | attrition.csv, sensitivity.csv, ppv.csv, d2_control_reuse.csv as machine-readable tables (+ endpoints.csv, veto_exposure_summary.csv, leakage_audit_summary.json if v2 landed and F9/F11 were dropped to the appendix) | DESCRIPTIVE-PRESPEC / V2-HOLDOUT |
 
 ---
 
@@ -263,10 +338,20 @@ phrases", METRICS_SPEC vocabulary, ABSTRACT_SKELETON "cannot support", Amendment
 | N26 | "Unbiased for the 928-window frame" (D2 aggregate) | G4 stats obs. 1 | "equal-weight target mean over a fixed three-window design, conditional on the frozen windows" |
 | N27 | Frequency-recovery claims for D1 | spec D1 | D1 frequency recovery = DIAGNOSTIC only |
 | N28 | Mo super-Nyquist sub-hour stratum described as sub-hour signals *in the ZTF source* without the blend caveat | plan sub-hour caveat | "sub-hour signal established in the Kepler aperture" |
+| N29 | Any v2 number from the DEV half (D3 `d3_dev.txt`, D2 `d2_dev.txt`/`d2_dev_deferred.txt`) presented as a result | V2_PLAN.md §5, §8 ("the holdout is scored once") | "holdout only, once"; dev numbers stay in `generalization/v2/dev_tuning.csv` as tuning evidence, never quoted as a finding |
+| N30 | v2 described as "external validation", "confirmatory", "independently confirms", or any p-value / significance language on the STRONG/other reading | V2_PLAN.md §1, §6 | "internal post-selection validation"; "descriptive operational screen" |
+| N31 | A "corrected" frozen P3 (or any frozen number) derived from or adjusted by the v2 arm; v2 presented as fixing the frozen result rather than as a separate arm | V2_PLAN.md §1 ("v2 is a NEW arm") | "a second, separately reported detector arm evaluated on the same stars" |
+| N32 | Pooling frozen and v2 estimates into one number; a combined interval across arms | N2 (pooling), V2_PLAN.md §6 | side-by-side table with the paired difference only |
+| N33 | Any v2 constant (trend window, N window peaks, phase tolerance, amplitude ratio) presented as pre-fixed rather than dev-tuned within its declared V2_PLAN.md §3 candidate set; omitting `tuning_constraint_failure` when true | V2_PLAN.md §5 | cite `V2_CONSTANTS_FROZEN.json`; if `tuning_constraint_failure=true`, say so ("no dev combination met the constraint; the default constants were retained") |
+| N34 | Any v2 number quoted before `generalization/v2/HOLDOUT_LAUNCH_<dataset>.json` exists for that dataset; any v2 number from a non-canonical or unregistered run | V2_PLAN.md §8 (registered single-execution holdout) | cite the lock file's timestamp; if it does not exist, the number does not exist |
 
 ---
 
 ## Part E — Contingencies
 See CONTINGENCIES.md: the outline above is branch-neutral; the STRONG and UGLY
 branches change the headline sentence (S14), the poster claim paragraph, and
-§4 of the paper, never the estimands, the table rows, or the labels.
+§4 of the paper, never the estimands, the table rows, or the labels. §6 of
+CONTINGENCIES.md covers the v2 branches (STRONG / partial / negative /
+tuning-constraint-failure) and never changes S1–S14, Table 1 rows 1–16, or
+any frozen label either — only S15/S16, poster §6, and Table 1 rows 17–23
+(all conditional, all v2) are affected.

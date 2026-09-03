@@ -88,8 +88,74 @@ search") and cite the three JSONs.
 | D2 full run fails or overruns | run not complete by 2026-09-06; failed shards > 2 % | Slip rule: D3 + D1 abstract; D2 "in progress"; the paper waits. |
 | D3 metrics guard failure (crossmatch, sidecar, env) | any `SystemExit` in metrics | Fix the input chain, never the spec; if unfixable by 2026-09-15, D3 is out and there is no external-validation claim — abstract becomes D2 + D1 injection-recovery only (plan slip rule, second clause). |
 | Diurnal partition finds a confirmed negative without a finite best-pass frequency | script aborts by design | Report the abort; the partition is omitted, P3 unaffected. |
+| v2 dev runs slip | `v2_chain.log` has not logged "V2 DEV RUNS DONE" by 2026-09-08 | Drop S15/S16 and Table 1 rows 17–23 from the AAS/RNAAS submission (2026-09-22 decision point, same as the D2 rule); v2 is not on the paper's critical path — the January poster carries it regardless. |
+| v2 holdout slips or the registered lock cannot be created | no `HOLDOUT_LAUNCH_<dataset>.json` by 2026-09-14 | Same as above: abstract/paper ship frozen-only; poster (January) carries v2 whenever it lands. |
+| v2 tuning selector reports `tuning_constraint_failure=true` | `V2_CONSTANTS_FROZEN.json` → `tuning_constraint_failure: true` | Not a stop condition — proceed to the holdout with the DEFAULT constants; disclose the failure verbatim wherever v2 constants are named (N33). |
 
 ## 5. What never changes across branches
 Estimands, denominators, rules, passes, interval methods, the five primary
 tuples, the P5 acceptance rule, the labels on every number, the disclosure
 sentence, the mandatory citations, the "not allowed" list (OUTLINE Part D).
+The same holds for the v2 arm: its estimands (V2_PLAN.md §6), its tunable-
+constant candidate sets (§3), the selection rule (§5), the disclosure
+sentence (§7, quoted verbatim, never paraphrased), and the "holdout scored
+once" rule never change across the branches in §6 below.
+
+## 6. v2 arm branches (STRONG / partial / negative / tuning-constraint-failure)
+
+Trigger table (V2_PLAN.md §6 pre-declared reading; a descriptive operational
+screen, not a hypothesis test — this framing itself never changes across
+branches):
+
+| Branch | Trigger (all on the D3/D2 holdout; `endpoints.csv`) |
+|---|---|
+| STRONG | P3 (`P3_negative_trigger`) falls by ≥ 15 points vs frozen AND P1 (`P1_detection`) is not more than 5 points lower AND ≤ 2 of the 500 holdout nulls (`P5_gaussian_false_alarm`) are confirmed |
+| PARTIAL | one of the three STRONG conditions fails but the direction is right (e.g. P3 falls but < 15 points, or P1 drops 5–15 points, or 3–10 nulls confirmed) |
+| NEGATIVE | P3 does not fall, or falls while P1 collapses (> 15 points lower), or ≥ 10 of 500 nulls confirm |
+| TUNING_CONSTRAINT_FAILURE | `V2_CONSTANTS_FROZEN.json` → `tuning_constraint_failure: true` (no dev combination satisfied §5's constraints; defaults retained) — orthogonal to the three above; report it and proceed |
+
+Reading discipline, unconditional: the null screen (500 holdout nulls) can
+NEVER "PASS" the frozen P5 0.5 % acceptance rule — even 0 of 500 confirms has
+U95 = 0.60 % > 0.5 %. It is reported as a descriptive screen only ("≤ 2/500
+confirmed, consistent with a low false-alarm rate on this half") and never
+as a confirmatory decision, in every branch. The four `dev_smoke` stars are
+never in a primary v2 number in any branch (a table including them is
+labelled "contaminated sensitivity analysis" and never appears in the
+abstract, RNAAS table, or poster scoreline).
+
+### 6.1 STRONG
+S15 fills as drafted in OUTLINE.md (paired differences with intervals for
+P1/P3/nulls). Poster §6 leads with F9 showing the paired improvement; the
+claim paragraph of §6 states the STRONG trigger values that were met. RNAAS
+Table 1 rows 17–23 report the numbers; C20–C21 lead §3's v2 paragraph.
+
+### 6.2 PARTIAL (most likely)
+S15 states the paired differences as measured, without a STRONG/other
+verdict word ("v2 lowers the negative-class trigger rate by ⟨Δ⟩ points
+[⟨lo⟩, ⟨hi⟩] with detection completeness ⟨p1_v2⟩ vs ⟨p1_frozen⟩ and ⟨x/500⟩
+nulls confirmed"). Poster §6 states plainly which of the three STRONG
+conditions held and which did not; F9 is unchanged (it always shows all
+paired endpoints, STRONG or not).
+
+### 6.3 NEGATIVE
+S15 (if kept at all — consider dropping to the schedule-contingency "under
+evaluation" sentence instead, §4 above) states the honest negative: "v2
+changes the negative-class trigger rate by ⟨Δ; CI⟩ and detection
+completeness by ⟨Δ; CI⟩ on the holdout; the frozen calibration stands." No
+STRONG language, no "despite", no burying the null result — F9/F10/F11 ship
+regardless (the mechanism and veto-exposure figures are informative
+independent of the headline direction). Paper §4 gains one clause: "the
+redesigned rule does not improve on the frozen arm within this holdout;
+[component] accounts for [share] of the change (dev ablation is
+descriptive only, never in the holdout table)."
+
+### 6.4 v2 not ready by the abstract/RNAAS deadline (schedule branch, ties to §4 above)
+Abstract: drop S15/S16 entirely; close S14 with the single sentence "A
+redesigned detector (v2) fixing the diagnosed mechanisms is under
+evaluation on a pre-registered holdout; results follow at the poster
+(January)." RNAAS: Table 1 rows 17–23 and claims C20–C24 are cut; §4 keeps
+one clause naming v2 as future work, no numbers. Poster §6/F9–F12: OMITTED
+at the January print date only if the holdout genuinely has not landed by
+then — v2 is the poster's intended deliverable regardless of the abstract's
+fate, so this branch is expected to resolve well before the poster, not to
+persist through January.

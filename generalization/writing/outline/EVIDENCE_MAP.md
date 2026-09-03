@@ -9,9 +9,14 @@ verified against the gen2 pilot outputs (same code path) and
 
 Status vocabulary (binding; see OUTLINE.md §0.2): PRIMARY-P1…P5 · SECONDARY ·
 DESCRIPTIVE-PRESPEC · DESCRIPTIVE-POST-LAUNCH · DIAGNOSTIC · PROVENANCE · ANCHOR ·
-PILOT (never a result).
+PILOT (never a result) · V2-HOLDOUT (frozen-vs-v2 paired comparison endpoint;
+descriptive operational screen, never confirmatory).
 
 Use columns: A = abstract slot, F = poster figure, C = paper claim (OUTLINE.md).
+Section 6 below (`V2-*` IDs) added 2026-09-02 after V2G1 ADMIT
+(`generalization/v2/V2_PLAN.md`, `reviews/V2G1/VERDICT.md`); every row is
+conditional on `generalization/v2/HOLDOUT_LAUNCH_<dataset>.json` existing for
+that dataset (V2_PLAN.md §8) and excludes the four `dev_smoke` stars.
 
 ## 1. D3 — externally labeled, magnitude-restricted validation on real ZTF photometry
 
@@ -90,15 +95,46 @@ Use columns: A = abstract slot, F = poster figure, C = paper claim (OUTLINE.md).
 | PV-7 | Every scored result provenance-bound (sidecars, completion table, generation id, attestation SHA) | metrics manifest.json, inputs_sha256.json; attrition.csv → provenance_verified | PROVENANCE |
 | PV-8 | Amendment 4 motivation (degenerate exposure strata; detection-only measured native triggers) | results/2026-08-30_d2_pilot/README.md; reviews/G4/ | PILOT — cite as motivation only, never as a number |
 
-## 5. Synthesis claims (qualitative only)
+## 5. v2 arm — frozen-vs-v2 paired comparison (pre-registered holdout, V2_PLAN.md §6)
+
+All rows: frame excludes the four `dev_smoke` stars (V2_PLAN.md §4); ids
+without a v2 result are scored as failures, never dropped (`compare_engines.py::
+build_frames`); statistics = per-arm Wilson 95 % (CP upper for nulls), paired
+difference via a seeded star/target bootstrap (B=2000, seed 20260902) or the
+exact discordance bound at zero discordant pairs, exact two-sided McNemar
+(D3 binary endpoints). Files below are under `outputs/v2/<run>/` (dev) or
+`generalization/results/<date>_{d3,d2}_v2/` (holdout metrics) and
+`generalization/results/<date>_synthesis/{d3,d2}/` (comparison outputs).
+
+| ID | Claim (template) | Artifact → row selector → columns | Estimator / interval | Status | Used in |
+|---|---|---|---|---|---|
+| V2-1 | D3 detection completeness, frozen vs v2, paired | `compare_engines.py` → `endpoints.csv` → endpoint=P1_detection → n(=299), frozen_p/lo/hi, v2_p/lo/hi, diff, diff_lo, diff_hi, frozen_only, v2_only, mcnemar_exact_p | Wilson; paired diff (bootstrap or exact discordance bound); McNemar | V2-HOLDOUT | S15, F9, C20, T1 row 17 |
+| V2-2 | D3 frequency recovery on the frozen P2 frame, frozen vs v2, paired, with chance-match | same → endpoint=P2_recovery → same columns + frozen_chance_direct_mean/p95, v2_chance_direct_mean/p95 | Wilson; paired diff; McNemar; chance-match both bundles | V2-HOLDOUT | S15, F9, C20, T1 row 18 |
+| V2-3 | D3 frequency recovery, sensitivity (usable in both arms) | same → endpoint=P2_recovery_both_usable | same | V2-HOLDOUT (sensitivity) | appendix |
+| V2-4 | D3 negative-class trigger rate, frozen vs v2, paired (roster + per pass) | same → endpoint ∈ {P3_negative_trigger, P3_negative_trigger_low, P3_negative_trigger_high} → n(=1,149 roster), same columns | Wilson; paired diff; McNemar | V2-HOLDOUT | S15, F9, C20, T1 row 19 |
+| V2-5 | D2 conditional recovery/trigger, nominal arm B, eligible & usable, frozen vs v2, paired | same → endpoint ∈ {P4_recovery_eligible, P4_recovery_usable, P4_trigger_eligible, P4_trigger_usable} → n(=43 targets), frozen_p/lo/hi, v2_p/lo/hi, diff, diff_lo, diff_hi | target-cluster bootstrap paired diff | V2-HOLDOUT | S15, F9, C21, T1 row 20 |
+| V2-6 | D2 null screen (descriptive; NOT the frozen P5 decision) | same → endpoint=P5_gaussian_false_alarm → n(=500), frozen_p (CP upper), v2_p (CP upper), diff | one-sided CP upper each; U95 floor 0.60 % at x=0/n=500 | V2-HOLDOUT (descriptive screen) | S15, F9, T1 row 22 |
+| V2-7 | D2 paired-control contrasts: trigger and strict recovery, frozen vs v2 | same → endpoint ∈ {control_contrast_trigger, control_contrast_strict_recovery} → n(=67 controls), frozen_p, v2_p, diff, diff_lo, diff_hi | target bootstrap per arm and the arm difference | V2-HOLDOUT | C21, T1 row 21 |
+| V2-8 | Status transitions, frozen best_status → v2 best_status, by class (D3) / arm (D2) | `compare_engines.py` → `status_transitions.csv` → class_label\|arm, frozen_best_status, one column per v2 best_status value (crosstab counts) | crosstab counts | V2-HOLDOUT (descriptive) | F10 |
+| V2-9 | Availability transitions, frozen-usable × v2-usable, by class/arm | `compare_engines.py` → `availability_transitions.csv` → class_label\|arm, frozen_usable, v2_usable, n | counts | V2-HOLDOUT (descriptive) | F10 |
+| V2-10 | Truth-frequency veto exposure by component (fixed loci, data-driven peaks, local test, mirror family, cross-pass partners) and union, by pass/band | `scripts/v2/analysis/veto_exposure.py` → `veto_exposure_summary.csv` → pass, band, veto_fixed/_data/_local/_stronger/_cross_pass/_union (_mean fraction, _sum count), n; per-star detail in `veto_exposure_per_truth.csv` | descriptive fraction | V2-HOLDOUT (mechanism) | F11, C24, T1 row 23 |
+| V2-11 | Leakage audit: low-frequency injection on dev D3 windows, high-pass confirmed count with/without injection, partner-alias check | `scripts/v2/analysis/leakage_audit.py` → `leakage_audit_summary.json` → n, injection{frequency_per_day, amplitude_mmag, phase_cycles}, high_confirmed_reference, high_confirmed_injected, high_new_confirmations_that_are_partners, low_detects_injection; per-star `leakage_audit_per_star.csv` | descriptive; dev-window audit, never holdout | V2-HOLDOUT (mechanism; dev-window) | F11 |
+| V2-12 | Per-oid alignment offsets and shared-night support | per-star v2 JSON `v2.alignment[]` → band, oid, n, n_shared_nights, offset_mmag, applied, role; `v2.n_oids` | descriptive; no aggregate script yet — SUMMARY.md open item | V2-HOLDOUT (mechanism) | F12 |
+| V2-13 | Coherence-gate failures stratified by phase error and amplitude S/N | per-star v2 JSON `passes[<pass>]["v2"].candidates[]` → delta_phase_cycles, amp_ratio_r_over_g, coherent, zg_phase_error_cycles, zr_phase_error_cycles (in rule.py's evaluate_candidates_v2 output) | descriptive; no aggregate script yet — SUMMARY.md open item | V2-HOLDOUT (mechanism) | F12 |
+| V2-14 | Dev-tuning selection record (which of the 54 combinations was chosen, and why) | `generalization/v2/dev_tuning.csv` (combination, P1_dev, P2_dev, P3_dev, dev_nulls_confirmed, J, feasible, chosen) + `V2_CONSTANTS_FROZEN.json` (overrides, chosen, tuning_constraint_failure, selection_rule, v2_digest, split_sha256, plan_sha256, preregistration_commit, tuning_evidence_sha256) | deterministic selector (V2_PLAN.md §5) | V2-HOLDOUT (provenance; dev, never a result) | N33, methods §2 |
+| V2-15 | Holdout execution provenance (single registered run per dataset) | `generalization/v2/HOLDOUT_LAUNCH_{d3,d2}.json` (lock; every key equal to the run manifest's binding) + `outputs/v2/{d3,d2}_holdout/manifest.json` (binding: engine, v2_digest, frozen_digest, constants_sha256, machine, split_sha256, split_half, stars_file_sha256, plan_sha256, preregistration_commit, passes, env_digest, shard_index_sha256) | attested (digest-locked, not byte-replay-attested) | PROVENANCE | N34, methods §2 |
+
+## 6. Synthesis claims (qualitative only)
 
 | ID | Claim | Condition | Artifact | Status |
 |---|---|---|---|---|
 | SY-1 | Census and confirmed period-search responses are empirically non-redundant in each assessment | both discordant cells > 0 in each of D1, D2, D3 | three contingency_complementarity.json files | DESCRIPTIVE-PRESPEC, conditional |
 | SY-2 | The three assessments separate finite-anchor behavior, model-conditioned recovery, and externally labeled performance | always | design | framing |
 | SY-3 | Any cross-dataset comparison is a side-by-side table, never a pooled estimate | always | Table 1 | rule (N2) |
+| SY-4 | The frozen arm and the v2 arm are reported side by side on the holdout, paired, never pooled; v2 is internal post-selection validation, not a fourth external assessment | v2 holdout landed | Table 1 rows 17–23; V2_PLAN.md §1 | rule (N31, N32) |
 
-## 6. Slot → artifact cross-index (abstract)
+## 7. Slot → artifact cross-index (abstract)
 S2→PV-2 · S3→D3-14 · S4→D2-25 · S5→D1-1 · S6→D3-1, D3-2 · S7→D3-3, D3-4 ·
 S8→D3-7 · S9→D3-10 · S10→D3-13 · S11→D2-1, D2-2, D2-3 · S12→D2-8, D2-18 ·
-S13→D2-15 · S14→SY-1.
+S13→D2-15 · S14→SY-1 · S15→V2-1, V2-4, V2-6 · S16→V2-15 (V2_PLAN.md §7,
+quoted verbatim, no artifact lookup).
