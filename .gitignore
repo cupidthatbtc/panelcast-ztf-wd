@@ -29,3 +29,4 @@ outputs\\generalization\\replay_gate_full\\replay_report.json
 # v2 codex subagent transcripts (prompts and reports are tracked; raw run logs are not)
 generalization/v2/codex/*_run.log
 generalization/v2/codex/*_last_message.md
+generalization/reviews/*/*_last_message.md
