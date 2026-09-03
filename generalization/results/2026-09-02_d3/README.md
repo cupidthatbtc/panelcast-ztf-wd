@@ -40,7 +40,7 @@ Chance direct-match (prespecified, any-mode, 100 permutations): mean 0.0037, p95
 | fR rescoring, 40 aliased-dominant targets | 20 confirmed → 3 direct on fR; 0 Nyquist-reflection matches |
 | dominant-only confirmed-conditioned chance (10,000 derangements) | mean 0.0003, q95 0.0042 |
 | a95 medians (mmag) | high zg/zr 1.03/1.09 (neg), 1.15/1.15 (pos); low 2.62/2.87 (neg), 2.98/3.15 (pos) |
-| coverage D3 vs 928 pool (medians) | zg epochs 754 vs 437; nights 640 vs 372; W_g 119 vs 58 |
+| coverage D3 vs 928 pool (medians) | zg epochs 754 vs 437.5; nights 640 vs 371.5; W_g 119 vs 58 |
 
 Compliance outputs (METRICS_SPEC-mandated, implemented post-launch): `metrics/attrition.csv`
 (555 cells; roster 3,000 → fetched 3,000 → crossmatched 2,955 → QC 2,901 →
@@ -53,3 +53,12 @@ ruled solar-diurnal bands hold 12.6 % of the P3 numerator — the remainder sits
 broad 1−δ / 2−δ alias wings and a cluster near 0.034 c/d (see
 `metrics/fp_frequency_distribution.csv` and `descriptive_postlaunch/d1_d3_confirmed_frequency_histogram.csv`).
 No band member is reclassified; no "corrected" P3 exists.
+
+## Errata
+
+- 2026-09-03 (G5 independent re-derivation, `generalization/reviews/G5/verifier_d3.md`): the
+  development-pool medians in the coverage line were transcribed as integers (437, 372); the
+  frozen `descriptive_postlaunch/d3_vs_pool_coverage.csv` gives 437.5 and 371.5 (linear medians
+  of 928 windows). The line above now quotes the file values. Every other headline and
+  descriptive number reproduced exactly. This README's entry in `SHA256SUMS` was recomputed for
+  this edit; no other file changed.

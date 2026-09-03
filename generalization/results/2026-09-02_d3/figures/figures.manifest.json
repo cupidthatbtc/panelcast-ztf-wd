@@ -1,0 +1,301 @@
+{
+  "bundle": "generalization/results/2026-09-02_d3",
+  "inputs_sha256": {
+    "metrics/surfaces/detection_amplitude.csv": "00130f14b937a03abf59a0e342ec0b872fc01cfe77b9cdfb98de083fe53ad91c",
+    "metrics/surfaces/freq_recovery_period_amplitude.csv": "6dd892a9a7f060fd39626d9c3a579f0399d9a277d6aa59211084a1c404f30c11",
+    "metrics/completeness_by_class_pass_rule.csv": "13267cce40a78c8577b161bf6098fcd79beecf843c4d0327ebd101aad2d3c757",
+    "metrics/trigger_rates.csv": "7d12c2d656a724d27126aa5946bebcaa579edebbf919691b78850d22067a2236",
+    "metrics/fp_frequency_distribution.csv": "2f8c292fd3ae2fc63630b0b7b7e64cfe800f11063b4c2d22f91b3c2347f58ba9",
+    "metrics/contingency_complementarity.json": "11520ecaa8d138a4424f339dba4a650e81f95881cb45e7b83116087e74f653d5",
+    "descriptive_postlaunch/d3_trigger_decomposition.csv": "aca6a0f1e52252bf37d2077ced4847b33a161ecd8ffbf1445773f3337d2998d5",
+    "descriptive_postlaunch/README.md": "31518d7393129c803f7f08b6ba5e35f864aad3e8b44168511bc496a0d9b4db05"
+  },
+  "script_sha256": "97cfcf743dd1ef644399ff281bc4ba1080a6988450d032370e586255f2d9aad7",
+  "figures": {
+    "F1": {
+      "png": "f1_turn_on.png",
+      "pdf": "f1_turn_on.pdf",
+      "numbers": {
+        "detection": {
+          "unknown": {
+            "n": 154,
+            "k": 89,
+            "p": 0.577922077922078,
+            "lo": 0.4989530516684212,
+            "hi": 0.6530982546190078
+          },
+          "<0.5": {
+            "n": 84,
+            "k": 31,
+            "p": 0.369047619047619,
+            "lo": 0.2737011850902025,
+            "hi": 0.4758476009231608
+          },
+          "0.5-1": {
+            "n": 70,
+            "k": 20,
+            "p": 0.2857142857142857,
+            "lo": 0.1932222037871975,
+            "hi": 0.4005019658172025
+          },
+          "1-2": {
+            "n": 97,
+            "k": 47,
+            "p": 0.4845360824742268,
+            "lo": 0.3875815952518113,
+            "hi": 0.5826687359603313
+          },
+          "2-5": {
+            "n": 106,
+            "k": 66,
+            "p": 0.6226415094339622,
+            "lo": 0.5276023949623552,
+            "hi": 0.709102400104529
+          },
+          "5-10": {
+            "n": 51,
+            "k": 39,
+            "p": 0.7647058823529411,
+            "lo": 0.632377748398347,
+            "hi": 0.8599505116553716
+          },
+          "10-20": {
+            "n": 23,
+            "k": 14,
+            "p": 0.6086956521739131,
+            "lo": 0.4078552239138171,
+            "hi": 0.7784237720752205
+          },
+          "20-50": {
+            "n": 18,
+            "k": 14,
+            "p": 0.7777777777777778,
+            "lo": 0.5478541568378739,
+            "hi": 0.9099907189139832
+          },
+          ">=50": {
+            "n": 7,
+            "k": 7,
+            "p": 1.0,
+            "lo": 0.6456695649333126,
+            "hi": 1.0
+          }
+        },
+        "recovery": {
+          "<0.5": {
+            "n": 83,
+            "k": 0,
+            "p": 0.0,
+            "lo": 3.469446951953614e-18,
+            "hi": 0.04423530964197385
+          },
+          "0.5-1": {
+            "n": 69,
+            "k": 0,
+            "p": 0.0,
+            "lo": 3.469446951953614e-18,
+            "hi": 0.05273725818905173
+          },
+          "1-2": {
+            "n": 96,
+            "k": 7,
+            "p": 0.07291666666666667,
+            "lo": 0.03576758131036273,
+            "hi": 0.14293031665140193
+          },
+          "2-5": {
+            "n": 100,
+            "k": 26,
+            "p": 0.26,
+            "lo": 0.18404698464748132,
+            "hi": 0.3537098944918718
+          },
+          "5-10": {
+            "n": 50,
+            "k": 20,
+            "p": 0.4,
+            "lo": 0.27608389730256544,
+            "hi": 0.5381856225241064
+          },
+          "10-20": {
+            "n": 20,
+            "k": 7,
+            "p": 0.35,
+            "lo": 0.18119182410108206,
+            "hi": 0.5671457233147638
+          },
+          "20-50": {
+            "n": 16,
+            "k": 7,
+            "p": 0.4375,
+            "lo": 0.23098652405492354,
+            "hi": 0.6682144360118811
+          },
+          ">=50": {
+            "n": 7,
+            "k": 5,
+            "p": 0.7142857142857143,
+            "lo": 0.35893445183261935,
+            "hi": 0.9177810759959433
+          }
+        }
+      }
+    },
+    "F2": {
+      "png": "f2_rules_scopes.png",
+      "pdf": "f2_rules_scopes.pdf",
+      "numbers": {
+        "confirmed__detection_eligible_roster": {
+          "n": 610,
+          "p": 0.5360655737704918,
+          "lo": 0.4963882978758084,
+          "hi": 0.5752914483644217,
+          "primary": "P1"
+        },
+        "confirmed_or_candidate__detection_eligible_roster": {
+          "n": 610,
+          "p": 0.6672131147540984,
+          "lo": 0.6288754787945469,
+          "hi": 0.703457890137429,
+          "primary": ""
+        },
+        "census__detection_eligible_roster": {
+          "n": 610,
+          "p": 0.040983606557377,
+          "lo": 0.0279119393047276,
+          "hi": 0.0598003812741621,
+          "primary": ""
+        },
+        "either__detection_eligible_roster": {
+          "n": 610,
+          "p": 0.5475409836065573,
+          "lo": 0.5078675849305893,
+          "hi": 0.5866193532951686,
+          "primary": ""
+        },
+        "confirmed__detection_usable_lightcurve": {
+          "n": 585,
+          "p": 0.558974358974359,
+          "lo": 0.5184847881503684,
+          "hi": 0.5986944609775552,
+          "primary": ""
+        },
+        "confirmed_or_candidate__detection_usable_lightcurve": {
+          "n": 585,
+          "p": 0.6957264957264957,
+          "lo": 0.6572655942535178,
+          "hi": 0.7316336528521991,
+          "primary": ""
+        },
+        "census__detection_usable_lightcurve": {
+          "n": 585,
+          "p": 0.0427350427350427,
+          "lo": 0.0291115749144396,
+          "hi": 0.0623246818473132,
+          "primary": ""
+        },
+        "either__detection_usable_lightcurve": {
+          "n": 585,
+          "p": 0.5709401709401709,
+          "lo": 0.5304983466149248,
+          "hi": 0.6104564023360556,
+          "primary": ""
+        },
+        "confirmed__freq_recovery_scorable": {
+          "n": 441,
+          "p": 0.1632653061224489,
+          "lo": 0.131703524276826,
+          "hi": 0.2006428788948392,
+          "primary": "P2"
+        },
+        "confirmed_or_candidate__freq_recovery_scorable": {
+          "n": 441,
+          "p": 0.1678004535147392,
+          "lo": 0.1358248131617577,
+          "hi": 0.2055135576439592,
+          "primary": ""
+        }
+      }
+    },
+    "F3": {
+      "png": "f3_negatives.png",
+      "pdf": "f3_negatives.pdf",
+      "numbers": {
+        "trigger_rate": {
+          "confirmed": {
+            "n": 2314,
+            "p": 0.4161624891961971,
+            "lo": 0.3962338983688841,
+            "hi": 0.4363689750832922
+          },
+          "confirmed_or_candidate": {
+            "n": 2314,
+            "p": 0.5721694036300778,
+            "lo": 0.5519073522377032,
+            "hi": 0.592192236079238
+          },
+          "census": {
+            "n": 2314,
+            "p": 0.0280898876404494,
+            "lo": 0.0221001084202282,
+            "hi": 0.0356439009085167
+          },
+          "either": {
+            "n": 2314,
+            "p": 0.4291270527225583,
+            "lo": 0.4090944562406422,
+            "hi": 0.4493945708014036
+          }
+        },
+        "decomposition": {
+          "within_solar_diurnal_band": {
+            "n": 121,
+            "n_confirmed_total": 963,
+            "rate_of_all_negatives": 0.0522904062229904
+          },
+          "outside_solar_diurnal_band": {
+            "n": 842,
+            "n_confirmed_total": 963,
+            "rate_of_all_negatives": 0.3638720829732065
+          }
+        }
+      }
+    },
+    "F4": {
+      "png": "f4_complementarity.png",
+      "pdf": "f4_complementarity.pdf",
+      "numbers": {
+        "table": {
+          "census_and_ls": 18,
+          "census_only": 7,
+          "ls_only": 309,
+          "neither": 251
+        },
+        "union_completeness": {
+          "p": 0.5709401709401709,
+          "lo": 0.5304983466149248,
+          "hi": 0.6104564023360556
+        },
+        "incremental_census_only": {
+          "p": 0.011965811965811967,
+          "lo": 0.0058080726976210036,
+          "hi": 0.024491184519128337
+        },
+        "incremental_ls_only": {
+          "p": 0.5282051282051282,
+          "lo": 0.4877001207636999,
+          "hi": 0.5683421288192202
+        },
+        "mcnemar_exact_p_secondary": 8.948591379055871e-82,
+        "n_positives_scored": 585
+      }
+    }
+  },
+  "disclosure_sentence_f3": "Post-launch, pilot-informed descriptive analysis: after inspection of raw, unweighted per-pass statuses from the non-representative 150-star D3 timing pilot, and after the full D3 L-S run had launched but before any full-campaign metric was computed, we fixed the solar-diurnal frequency bands at union_{k=1..3} [k-0.020, k+0.020] / d; d3_trigger_decomposition.csv is an unweighted arithmetic partition of the frozen rule-1, best-pass D3 negative-class P3 numerator over its unchanged 2,314-star denominator, was not prespecified, carries no interval or confirmatory interpretation, is not used to veto, exclude, or reclassify any trigger, and does not establish that an individual band member is instrumental rather than astrophysical.",
+  "captions": {
+    "F1": "D3 turn-on. Rule-1 (confirmed), best-pass detection completeness (left) and frequency-recovery completeness (right, dominant-direct match, marginalized over period bin) against the historical Kepler-band dominant amplitude, half-open bins {0.5,1,2,5,10,20,50,\u221e} mmag; the left panel adds an explicit `amp_unknown` bar (154 roster stars with no Mo-joined amplitude). Pointwise Wilson 95% only where n \u2265 5, else the raw count. No smoothing, fit, or interpolation. [DESCRIPTIVE-PRESPEC]",
+    "F2": "D3 rules x scopes. Four detection rules (confirmed, confirmed-or-candidate, census, either) at the best pass, across three scopes (detection-eligible roster, detection-usable light curve, frequency-recovery-scorable), Wilson 95% error bars. The confirmed-rule bars at the eligible-roster and freq-recovery-scorable scopes are outlined and marked P1/P2. [PRIMARY-P1/P2 outlined; rest DESCRIPTIVE-PRESPEC]",
+    "F3": "D3 negatives. (a) Negative-class trigger rate per rule (P3 = confirmed), plain Wilson 95%. (b) Histogram of best-pass frequencies of confirmed negatives, low pass (<4 c/d, where the ruled bands sit); the solar-diurnal bands [k\u22120.020, k+0.020] c/d (k=1,2,3) are shaded. Post-launch, pilot-informed descriptive analysis: after inspection of raw, unweighted per-pass statuses from the non-representative 150-star D3 timing pilot, and after the full D3 L-S run had launched but before any full-campaign metric was computed, we fixed the solar-diurnal frequency bands at union_{k=1..3} [k-0.020, k+0.020] / d; d3_trigger_decomposition.csv is an unweighted arithmetic partition of the frozen rule-1, best-pass D3 negative-class P3 numerator over its unchanged 2,314-star denominator, was not prespecified, carries no interval or confirmatory interpretation, is not used to veto, exclude, or reclassify any trigger, and does not establish that an individual band member is instrumental rather than astrophysical. [PRIMARY-P3; DESCRIPTIVE-PRESPEC (histogram, the prespecified FP-frequency audit); DESCRIPTIVE-POST-LAUNCH (shaded bands and their counts)]",
+    "F4": "D3 complementarity. 2x2 census x L-S (rule 1, best pass) on positives with both methods usable; union and incremental yields with Wilson 95%; exact McNemar p in the panel title. [DESCRIPTIVE-PRESPEC; McNemar SECONDARY]"
+  }
+}
