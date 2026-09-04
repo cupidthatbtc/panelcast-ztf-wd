@@ -46,7 +46,11 @@ sys.path.insert(0, str(REPO_ROOT / "scripts" / "generalization"))
 sys.path.insert(0, str(REPO_ROOT / "scripts" / "v2"))
 from metrics_generalization import classify_match  # noqa: E402
 from rescore_v2 import combination_id, combinations  # noqa: E402
-from v2_common import DEFAULT, TUNABLE, v2_digest  # noqa: E402
+from v2_common import DEFAULT, DEV_RUNS_V2_DIGEST, TUNABLE, VETO_AMENDMENT_COMMIT, v2_digest  # noqa: E402
+
+# V2_PLAN.md §5: the four dev runs (dataset, trend window) and their registered lists.
+DEV_RUN_SCHEDULE = {("d3-kepler-dsct", 30.0): "d3_dev.txt", ("d3-kepler-dsct", 10.0): "d3_dev.txt",
+                    ("d2-tess-dav", 30.0): "d2_dev.txt", ("d2-tess-dav", 10.0): "d2_dev.txt"}
 
 REGISTRATION = REPO_ROOT / "generalization" / "v2"
 DEFAULT_ID = combination_id(DEFAULT)
@@ -61,6 +65,74 @@ def sha256_file(path: Path) -> str:
 
 def _bool(series: pd.Series) -> pd.Series:
     return series.astype(str).str.lower().eq("true")
+
+
+def verify_dev_run_manifests(paths: list[Path], registration: Path = REGISTRATION) -> list[dict]:
+    """Fail-closed provenance of the four dev runs (V2_PLAN.md §10,
+    2026-09-04): engine v2, the admitted pre-amendment digest, the dev half,
+    no failures, the registered dev list, complete, and exactly the
+    (dataset, trend window) schedule of §5. Returns the binding records."""
+    records = []
+    seen: set[tuple] = set()
+    for path in paths:
+        m = json.loads(path.read_text(encoding="utf-8"))
+        binding = m.get("binding", {})
+        key = (m.get("dataset"), float(m.get("constants", {}).get("trend_window_days", float("nan"))))
+        problems = []
+        if m.get("engine") != "v2":
+            problems.append("engine is not v2")
+        if binding.get("v2_digest") != DEV_RUNS_V2_DIGEST:
+            problems.append("v2_digest is not the dev-run digest")
+        if m.get("split", {}).get("half") != "dev":
+            problems.append("split half is not dev")
+        if m.get("failures"):
+            problems.append("the run has failures")
+        if key not in DEV_RUN_SCHEDULE:
+            problems.append(f"(dataset, window) {key} is not in the §5 schedule")
+        else:
+            list_path = registration / DEV_RUN_SCHEDULE[key]
+            if binding.get("stars_file_sha256") != sha256_file(list_path):
+                problems.append(f"stars_file_sha256 is not the registered {list_path.name}")
+            n_list = len([line for line in list_path.read_text(encoding="utf-8").splitlines() if line.strip()])
+            total = int(m.get("total", -1))
+            done = total - int(m.get("pending_at_start", 0)) + int(m.get("completed_now", 0))
+            if total != n_list or done != n_list:
+                problems.append(f"completion {done}/{total} != registered list {n_list}")
+        if key in seen:
+            problems.append("duplicate (dataset, window)")
+        seen.add(key)
+        if problems:
+            raise SystemExit(f"{path}: dev-run manifest rejected: {problems}")
+        records.append({"manifest": str(path), "sha256": sha256_file(path), "dataset": key[0],
+                        "trend_window_days": key[1], "v2_digest": binding["v2_digest"],
+                        "stars_file_sha256": binding["stars_file_sha256"], "completed": n_list})
+    if seen != set(DEV_RUN_SCHEDULE):
+        raise SystemExit(f"dev-run manifests do not cover the §5 schedule; missing {sorted(set(DEV_RUN_SCHEDULE) - seen)}")
+    return records
+
+
+def verify_rescore_provenance(csv_paths: list[Path], dev_runs: list[dict]) -> None:
+    """Every re-score table must carry the sidecar `rescore_v2.py --run-manifest`
+    writes, naming one of the verified dev runs as its source, the dev-run
+    digest as the source digest and THIS checkout's digest as the re-score
+    digest, and matching the table's bytes."""
+    shas = {r["sha256"] for r in dev_runs}
+    for path in csv_paths:
+        sidecar = path.with_suffix(path.suffix + ".provenance.json")
+        if not sidecar.exists():
+            raise SystemExit(f"{path}: missing {sidecar.name} (run rescore_v2.py with --run-manifest)")
+        prov = json.loads(sidecar.read_text(encoding="utf-8"))
+        problems = []
+        if prov.get("run_manifest_sha256") not in shas:
+            problems.append("source run manifest is not one of the verified dev runs")
+        if prov.get("source_v2_digest") != DEV_RUNS_V2_DIGEST:
+            problems.append("source digest is not the dev-run digest")
+        if prov.get("rescore_v2_digest") != v2_digest():
+            problems.append("re-score digest is not this checkout's digest")
+        if prov.get("rescore_csv_sha256") != sha256_file(path):
+            problems.append("table bytes differ from the provenance record")
+        if problems:
+            raise SystemExit(f"{path}: re-score provenance rejected: {problems}")
 
 
 def load_rescores(paths: list[Path]) -> pd.DataFrame:
@@ -175,13 +247,15 @@ def main() -> None:
     parser.add_argument("--frozen-per-star", type=Path, required=True, help="frozen D3 metrics per_star.csv")
     parser.add_argument("--split", type=Path, default=REGISTRATION / "split.csv")
     parser.add_argument("--preregistration-commit", required=True)
-    parser.add_argument("--dev-run-digest", default=None,
-                        help="v2 code digest the dev RUNS were produced with when it differs from this "
-                             "checkout's digest (V2_PLAN.md §10 amendment of 2026-09-04: the runs are "
-                             "re-scored exactly under the amended veto, not rerun); recorded, not verified")
+    parser.add_argument("--dev-run-manifests", type=Path, nargs=4, required=True,
+                        help="manifest.json of the four dev runs (D3 30 d, D3 10 d, D2 30 d, D2 10 d); "
+                             "verified fail-closed against the admitted dev-run digest, the dev half, the "
+                             "registered lists and completion; SHA-bound into the artifact (V2_PLAN.md §10)")
     parser.add_argument("--out-dir", type=Path, default=REGISTRATION)
     args = parser.parse_args()
 
+    dev_runs = verify_dev_run_manifests(args.dev_run_manifests)
+    verify_rescore_provenance([*args.d3_rescore, *args.d2_rescore], dev_runs)
     split = pd.read_csv(args.split, dtype=str)
     frozen = pd.read_csv(args.frozen_per_star, dtype={"sid": str, "cluster": str})
     d3 = d3_table(load_rescores(args.d3_rescore), frozen, split)
@@ -194,6 +268,9 @@ def main() -> None:
     evidence = args.out_dir / "dev_tuning.csv"
     table.to_csv(evidence, index=False, lineterminator="\n")
     commit = verify_commit(args.preregistration_commit)
+    amendment = verify_commit(VETO_AMENDMENT_COMMIT)
+    if subprocess.run(["git", "merge-base", "--is-ancestor", commit, amendment], cwd=REPO_ROOT).returncode != 0:
+        raise SystemExit("the pre-registration commit is not an ancestor of the veto amendment commit")
     inputs = {str(p): sha256_file(p) for p in [*args.d3_rescore, *args.d2_rescore, args.frozen_per_star, args.split]}
     artifact = {
         "overrides": overrides_for(chosen),
@@ -202,7 +279,9 @@ def main() -> None:
         "selection_rule": f"max J = P2_dev - P3_dev s.t. dev nulls <= {MAX_DEV_NULLS} and P1_dev >= P1_dev(default) - {P1_SLACK}; "
                           "ties -> first feasible maximizer in V2_PLAN.md §3 order",
         "v2_digest": v2_digest(),
-        "dev_runs_v2_digest": args.dev_run_digest or v2_digest(),
+        "dev_runs_v2_digest": DEV_RUNS_V2_DIGEST,
+        "dev_runs": dev_runs,
+        "veto_amendment_commit": amendment,
         "split_sha256": sha256_file(args.split),
         "plan_sha256": sha256_file(REGISTRATION / "V2_PLAN.md"),
         "preregistration_commit": commit,

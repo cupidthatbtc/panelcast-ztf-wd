@@ -34,9 +34,40 @@ from pathlib import Path
 
 import pandas as pd
 
+import hashlib  # noqa: E402
+
 from rule import STATUS_ORDER, decide
-from v2_common import BANDS, DEFAULT, TUNABLE, WINDOW_POWER_THRESHOLD, V2Constants, overall_result
+from v2_common import (
+    BANDS, DEFAULT, DEV_RUNS_V2_DIGEST, TUNABLE, WINDOW_POWER_THRESHOLD, V2Constants, overall_result, v2_digest,
+)
 from window import fixed_loci, fixed_locus_label
+
+
+def sha256_file(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def verify_run_manifest(path: Path, stars_dir: Path) -> dict:
+    """The source of an offline re-score must be a completed DEV run at the
+    admitted pre-amendment digest (V2_PLAN.md §10, 2026-09-04) whose own
+    stars directory is being re-scored: fail closed on anything else."""
+    manifest = json.loads(path.read_text(encoding="utf-8"))
+    binding = manifest.get("binding", {})
+    problems = []
+    if manifest.get("engine") != "v2":
+        problems.append("engine is not v2")
+    if binding.get("v2_digest") != DEV_RUNS_V2_DIGEST:
+        problems.append(f"v2_digest {str(binding.get('v2_digest'))[:12]} is not the dev-run digest "
+                        f"{DEV_RUNS_V2_DIGEST[:12]}")
+    if manifest.get("split", {}).get("half") != "dev":
+        problems.append("split half is not dev")
+    if manifest.get("failures"):
+        problems.append("the run has failures")
+    if stars_dir.resolve() != (path.parent / "stars").resolve():
+        problems.append("--stars-dir is not the manifest's own stars directory")
+    if problems:
+        raise SystemExit(f"{path}: not an admissible re-score source: {problems}")
+    return manifest
 
 SERIES_NAME = {"zg": "zg", "zr": "zr", "joint": "multiband"}
 FIXED = [float(locus["frequency_per_day"]) for locus in fixed_loci()]   # listed loci (exposure audit)
@@ -150,10 +181,17 @@ def rescore_star(result: dict, constants: V2Constants) -> dict:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--stars-dir", type=Path, required=True)
+    parser.add_argument("--run-manifest", type=Path, required=True,
+                        help="the source run's manifest.json (must be a completed dev run at the "
+                             "admitted pre-amendment digest); its SHA and digest go into <out>.provenance.json")
     parser.add_argument("--out", type=Path, required=True)
     args = parser.parse_args()
+    manifest = verify_run_manifest(args.run_manifest, args.stars_dir)
+    window_expected = float(manifest["constants"]["trend_window_days"])
+    if window_expected not in TUNABLE["trend_window_days"]:
+        raise SystemExit(f"run trend window {window_expected} is not a declared candidate")
     rows = []
-    combos_by_window: dict[float, list[tuple[str, V2Constants]]] = {}
+    combos = combinations(window_expected)
     for path in sorted(args.stars_dir.glob("*.json")):
         if path.name.endswith((".prov.json", ".error.json")):
             continue
@@ -161,16 +199,25 @@ def main() -> None:
         if not result.get("complete") or result.get("engine") != "v2":
             continue
         window = float(result["v2"]["constants"]["trend_window_days"])
-        if window not in TUNABLE["trend_window_days"]:
-            raise SystemExit(f"{path.name}: trend window {window} is not a declared candidate")
-        combos = combos_by_window.setdefault(window, combinations(window))
+        if window != window_expected:
+            raise SystemExit(f"{path.name}: trend window {window} != the run's {window_expected}")
         for combo_id, constants in combos:
             rows.append({"combination": combo_id, "trend_window_days": window,
                          **rescore_star(result, constants)})
     frame = pd.DataFrame(rows)
     frame.to_csv(args.out, index=False, lineterminator="\n")
-    n_combos = sum(len(c) for c in combos_by_window.values())
-    print(f"[rescore] {frame['sid'].nunique() if len(frame) else 0} stars x {n_combos} combinations -> {args.out}")
+    provenance = {
+        "run_manifest": str(args.run_manifest), "run_manifest_sha256": sha256_file(args.run_manifest),
+        "source_v2_digest": DEV_RUNS_V2_DIGEST, "rescore_v2_digest": v2_digest(),
+        "dataset": manifest.get("dataset"), "trend_window_days": window_expected,
+        "stars_file_sha256": manifest.get("binding", {}).get("stars_file_sha256"),
+        "n_stars": int(frame["sid"].nunique()) if len(frame) else 0, "n_combinations": len(combos),
+        "rescore_csv_sha256": sha256_file(args.out),
+    }
+    args.out.with_suffix(args.out.suffix + ".provenance.json").write_text(
+        json.dumps(provenance, indent=2) + "\n", encoding="utf-8")
+    print(f"[rescore] {provenance['n_stars']} stars x {len(combos)} combinations -> {args.out} "
+          f"(source digest {DEV_RUNS_V2_DIGEST[:12]}, re-score digest {provenance['rescore_v2_digest'][:12]})")
 
 
 if __name__ == "__main__":

@@ -388,6 +388,19 @@ def verify_registration(args, registration: Path, runner_ids: set[str]) -> dict:
                 problems.append("run manifest holdout registration record")
             if args.constants_artifact is None or sha256_file(args.constants_artifact) != lock.get("constants_artifact_sha256"):
                 problems.append("constants artifact missing or not the locked one")
+            else:
+                # V2_PLAN.md §10, 2026-09-04: the lock and the artifact bind the veto amendment commit
+                # and the pre-amendment digest of the (re-scored, never rerun) dev runs
+                from v2_common import DEV_RUNS_V2_DIGEST, VETO_AMENDMENT_COMMIT
+                artifact = json.loads(args.constants_artifact.read_text(encoding="utf-8"))
+                if lock.get("veto_amendment_commit") != VETO_AMENDMENT_COMMIT or \
+                        artifact.get("veto_amendment_commit") != VETO_AMENDMENT_COMMIT:
+                    problems.append("lock / constants artifact: veto_amendment_commit")
+                if lock.get("dev_runs_v2_digest") != DEV_RUNS_V2_DIGEST or \
+                        artifact.get("dev_runs_v2_digest") != DEV_RUNS_V2_DIGEST or len(artifact.get("dev_runs", [])) != 4:
+                    problems.append("lock / constants artifact: dev-run digest and manifests")
+                record["veto_amendment_commit"] = lock.get("veto_amendment_commit")
+                record["dev_runs_v2_digest"] = lock.get("dev_runs_v2_digest")
             record["holdout_lock_sha256"] = sha256_file(lock_path)
             record["constants_artifact_sha256"] = lock.get("constants_artifact_sha256")
     if problems:

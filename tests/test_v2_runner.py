@@ -15,12 +15,16 @@ sys.path.insert(0, str(ROOT / "scripts" / "v2"))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import run_v2_ls  # noqa: E402
-from v2_common import v2_digest  # noqa: E402
+from v2_common import DEV_RUNS_V2_DIGEST, VETO_AMENDMENT_COMMIT, v2_digest  # noqa: E402
 from v2_helpers import synthetic_star, write_shard  # noqa: E402
 
 PY = ROOT / ".venv-gen" / "bin" / "python"
 RUNNER = ROOT / "scripts" / "v2" / "run_v2_ls.py"
 SIDS = ["9000000000000000001", "9000000000000000002", "9000000000000000003"]
+# V2_PLAN.md §10 (2026-09-04): every registered artifact binds the amendment commit and the
+# four re-scored dev runs at the pre-amendment digest
+AMENDMENT_BINDING = {"dev_runs_v2_digest": DEV_RUNS_V2_DIGEST, "veto_amendment_commit": VETO_AMENDMENT_COMMIT,
+                     "dev_runs": [{"manifest": f"run{i}", "sha256": "0" * 64} for i in range(4)]}
 
 
 def test_load_constants_accepts_declared_and_rejects_undeclared(tmp_path):
@@ -114,7 +118,7 @@ def _fake_registration(root: Path, split_sha_holder: dict) -> tuple[Path, Path]:
     (reg / "V2_CONSTANTS_FROZEN.json").write_text(json.dumps({
         "overrides": {"n_window_peaks": 6}, "v2_digest": digest(), "split_sha256": sha(split),
         "plan_sha256": sha(reg / "V2_PLAN.md"), "preregistration_commit": head,
-        "tuning_evidence_sha256": sha(reg / "dev_tuning.csv")}))
+        "tuning_evidence_sha256": sha(reg / "dev_tuning.csv"), **AMENDMENT_BINDING}))
     split_sha_holder["split"], split_sha_holder["commit"] = sha(split), head
     return reg, holdout
 
@@ -173,6 +177,13 @@ def test_registered_holdout_mode_locks_and_refuses_drift(tmp_path):
                                                               "preregistration_commit": "deadbeef"}))
     bogus = _run_reg(base + ["--allow-holdout", "--constants", str(reg / "V2_CONSTANTS_FROZEN.json")], reg)
     assert bogus.returncode != 0 and "not in this repository" in (bogus.stdout + bogus.stderr)
+    # V2_PLAN.md §10 (2026-09-04): an artifact without the amendment commit, the dev-run digest or the
+    # four dev-run manifests is refused before any lock handling
+    for broken in ({"veto_amendment_commit": "f" * 40}, {"dev_runs_v2_digest": v2_digest()}, {"dev_runs": []}):
+        (reg / "V2_CONSTANTS_FROZEN.json").write_text(json.dumps({**artifact, "overrides": {"n_window_peaks": 6},
+                                                                  **broken}))
+        res = _run_reg(base + ["--allow-holdout", "--constants", str(reg / "V2_CONSTANTS_FROZEN.json")], reg)
+        assert res.returncode != 0 and "does not match this checkout" in (res.stdout + res.stderr), broken
 
 
 @pytest.mark.skipif(not PY.exists(), reason="repo venv not present")
@@ -213,7 +224,7 @@ def test_copied_registration_root_cannot_score_canonical_holdout_ids(tmp_path):
     (reg / "V2_CONSTANTS_FROZEN.json").write_text(json.dumps({
         "overrides": {"n_window_peaks": 24}, "v2_digest": digest(), "split_sha256": sha(reg / "split.csv"),
         "plan_sha256": sha(reg / "V2_PLAN.md"), "preregistration_commit": head,
-        "tuning_evidence_sha256": sha(reg / "dev_tuning.csv")}))
+        "tuning_evidence_sha256": sha(reg / "dev_tuning.csv"), **AMENDMENT_BINDING}))
     holdout_ids = [l.strip() for l in (canonical / "d3_holdout.txt").read_text().splitlines() if l.strip()]
     sid = holdout_ids[0]
     shards = tmp_path / "shards"

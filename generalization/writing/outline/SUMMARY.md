@@ -20,7 +20,7 @@ outline: abstract slots S15/S16 (Tier C), poster §6 + figures F9–F12, RNAAS
 Table 1 rows 17–23 + claims C20–C24, EVIDENCE_MAP §5 (V2-1…V2-15),
 CONTINGENCIES §6 (STRONG/partial/negative/tuning-constraint-failure
 branches). None of it changes the frozen arm's estimands, table rows, or
-labels (Part D N29–N34 make this explicit). The v2 arm is not on the
+labels (Part D N29–N35 make this explicit). The v2 arm is not on the
 abstract/paper critical path (CONTINGENCIES §4): if the dev runs or the
 holdout slip past the Sep 22 decision point, the submission ships
 frozen-only and the January poster carries v2 whenever it lands.
@@ -50,7 +50,7 @@ D2, no "D3 FPR", no unqualified purity, no ZTF-g threshold from Kepler
 amplitudes, no causal cadence claims, no "band"/CI on the 3×3 grid, no D2
 row-level Wilson, no native-rate subtraction, no "corrected" P3, no pilot
 numbers, no 928-catalog counts as completeness, Amendment 4 disclosed as
-pilot-informed; N29–N34 (new): no v2 number from the dev half, no v2 claim of
+pilot-informed; N29–N35 (new): no v2 number from the dev half, no v2 claim of
 external/confirmatory validation, no "corrected" frozen P3 from v2, no pooling
 frozen+v2, no dev-tuned v2 constant presented as pre-fixed, no v2 number
 before its holdout lock file exists.

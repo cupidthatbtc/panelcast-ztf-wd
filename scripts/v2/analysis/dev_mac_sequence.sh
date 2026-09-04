@@ -45,15 +45,25 @@ print(sys.argv[1], "ok", m["constants"]["trend_window_days"], "d", m["completed_
 EOF
 done
 
-echo "== 3. exact re-score (27 combinations per run)"
+echo "== 3. exact re-score (27 combinations per run; provenance sidecar beside each table)"
 mkdir -p "$TUNE"
 for run in d3_dev_w30 d2_dev_w30 d3_dev_w10 d2_dev_w10; do
-  $PY scripts/v2/rescore_v2.py --stars-dir "$SYNC/$run/stars" --out "$TUNE/rescore_$run.csv"
+  $PY scripts/v2/rescore_v2.py --stars-dir "$SYNC/$run/stars" --run-manifest "$SYNC/$run/manifest.json" --out "$TUNE/rescore_$run.csv"
 done
 
-echo "== 4. selector -> generalization/v2/dev_tuning.csv + V2_CONSTANTS_FROZEN.json"
+echo "== 4. selector -> generalization/v2/dev_tuning.csv + V2_CONSTANTS_FROZEN.json (fail-closed on the four dev manifests)"
 $PY scripts/v2/dev_tuning.py --d3-rescore "$TUNE/rescore_d3_dev_w30.csv" "$TUNE/rescore_d3_dev_w10.csv" \
   --d2-rescore "$TUNE/rescore_d2_dev_w30.csv" "$TUNE/rescore_d2_dev_w10.csv" \
+  --dev-run-manifests "$SYNC/d3_dev_w30/manifest.json" "$SYNC/d3_dev_w10/manifest.json" "$SYNC/d2_dev_w30/manifest.json" "$SYNC/d2_dev_w10/manifest.json" \
   --frozen-per-star generalization/results/2026-09-02_d3/metrics/per_star.csv \
-  --preregistration-commit "$COMMIT" --dev-run-digest "$DEV_RUN_DIGEST"
-echo "DONE: review generalization/v2/dev_tuning.csv, add the §10 amendment, commit, copy dev_tuning.csv + V2_CONSTANTS_FROZEN.json to the laptop, then launch the registered holdout."
+  --preregistration-commit "$COMMIT"
+cat <<'MSG'
+DONE. Next, in this order (plan_sha256 is bound into the artifact):
+  1. read generalization/v2/dev_tuning.csv and the chosen combination;
+  2. write the §10 tuning entry in V2_PLAN.md (chosen combination, constraint status);
+  3. RE-RUN step 4 exactly as above so the artifact binds the final plan;
+  4. commit dev_tuning.csv + V2_CONSTANTS_FROZEN.json + V2_PLAN.md;
+  5. bash scripts/v2/analysis/sync_laptop.sh   (holdout staging; refuses before 'V2 DEV RUNS DONE'; no chain restart);
+  6. on the laptop: git pull (dev runs are over), then v2_holdout_laptop.ps1 (registered, once).
+Never run metrics_generalization on the old-digest dev outputs as amended-veto metrics; only the re-score tables carry the amended veto.
+MSG

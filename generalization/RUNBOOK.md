@@ -165,19 +165,25 @@ split SHAs, tuning protocol, endpoints, disclosures). Code: `scripts/v2/`
    `dev_tuning.py --d3-rescore <d3_w30.csv> <d3_w10.csv> --d2-rescore
    <d2_w30.csv> <d2_w10.csv> --frozen-per-star
    generalization/results/2026-09-02_d3/metrics/per_star.csv
-   --preregistration-commit 5ceb019 --dev-run-digest ecc5df75…` → writes
-   `generalization/v2/dev_tuning.csv` and `generalization/v2/V2_CONSTANTS_FROZEN.json`
-   (bound to code / split / plan / commit / evidence). One command:
-   `bash scripts/v2/analysis/dev_mac_sequence.sh 5ceb019` (waits for "V2 DEV
-   RUNS DONE"). Add the §10 amendment; commit; copy both files to the
-   laptop's `generalization\v2\` before the holdout.
-   AMENDMENT 2026-09-04 (V2_PLAN §10, commit 017c925): the fixed veto loci were
-   extended after inspecting the partial dev run; the dev runs carry the
-   round-6 digest `ecc5df75…` and are RE-SCORED (exactly) under the amended
-   code, digest `1a99db05…`, which is the holdout digest. Do not re-stage the
-   laptop (`scripts/v2/analysis/sync_laptop.sh`) before the chain logs "V2 DEV
-   RUNS DONE" — every stage asserts the OLD expected digest; re-stage right
-   after, then run the sequence above.
+   --preregistration-commit 5ceb019 --dev-run-manifests <4 manifest.json>` →
+   writes `generalization/v2/dev_tuning.csv` and
+   `generalization/v2/V2_CONSTANTS_FROZEN.json` (bound to code / split / plan /
+   commits / evidence / the four dev-run manifests). One command:
+   `bash scripts/v2/analysis/dev_mac_sequence.sh 5ceb019` (refuses until the
+   laptop chain logs "V2 DEV RUNS DONE"; the rescore step needs each run's
+   `--run-manifest`; the tuning step is fail-closed on the dev-run digest).
+   Then: write the §10 tuning entry → RE-RUN the tuning step (the artifact
+   binds `plan_sha256`) → commit → `bash scripts/v2/analysis/sync_laptop.sh`
+   (HOLDOUT STAGING ONLY: copies amended code + plan + lists + dev_tuning.csv
+   + artifact, verifies digest parity, never restarts the dev chain; refuses
+   before "V2 DEV RUNS DONE" and without the artifact) → laptop `git pull`.
+   AMENDMENT 2026-09-04 (V2_PLAN §10, commit 017c925, round-7 revision): the
+   fixed veto loci were extended after inspecting the partial dev run; the
+   dev runs carry the round-6 digest `ecc5df75…` and are RE-SCORED (exactly)
+   under the amended code, whose digest is the holdout digest. Never restart
+   the dev chain at the amended digest (the runner deletes old-digest results
+   for recomputation) and never present metrics on the old-digest dev
+   outputs as amended-veto metrics.
 4. Holdout (ONCE, after the sol review ADMITs the plan and the constants are
    frozen): the same runner command with `d3_holdout.txt` / `d2_holdout.txt`,
    `--constants generalization/v2/V2_CONSTANTS_FROZEN.json --allow-holdout`.

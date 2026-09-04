@@ -59,6 +59,10 @@ SOLAR_FREQUENCY = 1.0
 LUNAR_SYNODIC_DAYS = 29.530589
 SIDEREAL_MONTH_DAYS = 27.321661   # Amendment 2026-09-04 (V2_PLAN.md §10): moon-vs-field cycle
 YEAR_DAYS = 365.25
+# V2_PLAN.md §10, 2026-09-04: the dev runs were produced at the round-6 admitted digest and are
+# re-scored (never rerun) under the amended veto; every downstream artifact binds both.
+DEV_RUNS_V2_DIGEST = "ecc5df75d8f225cbd364d3c498894ab6dce6bf1aeead89ad1de285d4ee57d33c"
+VETO_AMENDMENT_COMMIT = "017c925e161bb83a69a71ee2547dbd67accfdbcb"
 BANDS = ("zg", "zr")
 
 
@@ -164,7 +168,8 @@ def env_digest() -> str:
 
 
 __all__ = [
-    "BANDS", "DEFAULT", "ENGINE", "LUNAR_SYNODIC_DAYS", "PASS_BOUNDS", "REPO_ROOT",
+    "BANDS", "DEFAULT", "DEV_RUNS_V2_DIGEST", "ENGINE", "LUNAR_SYNODIC_DAYS", "PASS_BOUNDS", "REPO_ROOT",
+    "VETO_AMENDMENT_COMMIT",
     "SAMPLES_PER_PEAK", "SCHEMA_VERSION", "SIDEREAL_FREQUENCY", "SIDEREAL_MONTH_DAYS", "SOLAR_FREQUENCY",
     "TUNABLE", "V2Constants", "V2_DIR", "WINDOW_POWER_THRESHOLD", "YEAR_DAYS",
     "FrequencyGrid", "approximate_peak_amplitude", "baluev_fap", "campaign_digest",

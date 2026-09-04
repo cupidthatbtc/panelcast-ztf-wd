@@ -175,7 +175,7 @@ the seven-section, eight-figure layout below.
 | 4 | D2 — conditional injection-recovery of the search stage | Figures F5–F7; one-paragraph design (truth model, sinc de/re-integration, bandpass grid, W_g strata, K = 3, paired controls, 1,000 Gaussian nulls). | GENERALIZATION_PLAN.md D2 design |
 | 5 | D1 — the finite-roster anchor | Figure F8 (reuse `figures/headtohead.png`); tally 11/13 · 9/13 · 13/13 · 0/5 confirmed (+1 candidate). | master_table.csv; METRICS_SPEC D1 validation on record |
 | 6 (conditional; drop if v2 has not reached the holdout) | v2 — a redesigned detector on a pre-registered holdout | The disclosure sentence (S16, verbatim) as the section lede; Figures F9–F12; a `.defbox` naming the four fixed mechanisms (align/veto/joint+coherence/detrend) beside the frozen `.defbox` of §2. | V2_PLAN.md §1–§2, §7; `scripts/v2/compare_engines.py` outputs |
-| 7 | What this does not establish | Rendered from Part D (poster-length version: 6 bullets, + the v2 bullets N29–N34 if §6 is present). | Part D |
+| 7 | What this does not establish | Rendered from Part D (poster-length version: 6 bullets, + the v2 bullets N29–N35 if §6 is present). | Part D |
 | 8 | What was frozen, and when | Pre-registration timeline: spec frozen 2026-08-28 (G2, 6 rounds), A2/A3 2026-08-30 (pre-run), A4 2026-08-30 (post-pilot, pre-confirmatory, disclosed), descriptive diurnal admission 2026-08-31 (post-launch, disclosed); v2 pre-registered 2026-09-02, V2G1 ADMIT at round 6 (5 REVISE rounds closed) same day. | G2_FREEZE.md; `reviews/V2G1/VERDICT.md` |
 | Footer | Take-away, data & code, acknowledgements, references | Take-away = S14 + "variability flags should ship with class-specific response estimates and their denominators". Mandatory citations: Sokolovsky+2017, Guidry+2021, Hermes+2017, Murphy+2019, Bowman+2016, Mo+2026, Romero+2022, Romero+2025, Gentile Fusillo+2021, Masci+2019, Jestin arXiv:2509.15133. | GENERALIZATION_PLAN.md "Mandatory citations" |
 
@@ -297,7 +297,7 @@ opens with the freeze; §2 ends on the estimand family → §3 opens with Table 
 | 2 | The frozen pipeline and its attestation | 350 | — | C4, C7, C8 |
 | 3 | Three response assessments | 700 | Table 1 (from §3.1) | C5, C6; attrition table in text |
 | 4 | Results | 1,100 | Fig 1 = F1+F2 stacked; Fig 2 = F3+F4; Fig 3 = F5+F6; Fig 4 = F7 (if v2 landed: Fig 4 = F7+F9 stacked, dropping F9 to online appendix only if the 5-figure/table cap is exceeded) | C9–C16 (+ C20–C21 if v2 landed) |
-| 5 | What is and is not established | 600 | — | C17, C18 + the Part D list in prose (+ C22–C23, N29–N34 if v2 landed) |
+| 5 | What is and is not established | 600 | — | C17, C18 + the Part D list in prose (+ C22–C23, N29–N35 if v2 landed) |
 | 6 | Summary | 200 | — | S14, C19 |
 | — | Appendix (online) | — | attrition.csv, sensitivity.csv, ppv.csv, d2_control_reuse.csv as machine-readable tables (+ endpoints.csv, veto_exposure_summary.csv, leakage_audit_summary.json if v2 landed and F9/F11 were dropped to the appendix) | DESCRIPTIVE-PRESPEC / V2-HOLDOUT |
 

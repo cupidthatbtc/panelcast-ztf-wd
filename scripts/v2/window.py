@@ -38,11 +38,13 @@ pre-amendment list carried only the synodic one.
 `is_alias_of_stronger` is generalised to the solar AND sidereal spacings and
 to the mirror family k * spacing - f0 (the 1 - delta / 2 - delta wings: the
 strongest D3 false-trigger locus, e.g. sidereal - lunar = 0.9688 c/d).
-The fixed loci avoid the delta Sct (4-24 c/d) and DAV (40-1200 c/d) science
-bands, but the data-driven loci, the local window test, the mirror family
-and the cross-pass partners CAN veto real signals anywhere: the exposure of
-the truth frequencies is measured (scripts/v2/analysis/veto_exposure.py) and
-disclosed; true ~1 c/d rotators and ~29.5 d variables are sacrificed.
+Since the 2026-09-04 amendment the fixed rule reaches INTO the science bands
+(the comb sidebands veto ~1 % of any 1 c/d interval; 7/456 Kepler dominant
+modes and 38/6,558 injected DAV modes on the full truth tables), and the
+data-driven loci, the local window test, the mirror family and the
+cross-pass partners can veto real signals anywhere: the exposure of the
+truth frequencies is measured (scripts/v2/analysis/veto_exposure.py) and
+disclosed; true ~1 c/d rotators and ~27-30 d variables are sacrificed.
 """
 
 from __future__ import annotations

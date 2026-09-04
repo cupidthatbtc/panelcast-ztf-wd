@@ -251,7 +251,8 @@ structure, the veto's fixed loci, the alignment / detrend definitions. The
 fixed loci were extended ONCE, by the closed-form amendment of 2026-09-04
 (§10), logged after inspection of the partial dev run and before any holdout
 star was scored; they are not a tuning dimension, and no further change to
-the veto is admissible after the holdout lock exists.
+the veto is admissible from amendment commit `017c925` onward — including
+the interval before the holdout lock exists.
 
 ## 6. Comparison endpoints (holdout only, frozen vs v2 on the same stars)
 
@@ -422,8 +423,10 @@ code is staged on the laptop with digest parity.
 - 2026-09-04, after inspection of the PARTIAL dev D3 run (1,065 of 1,458
   dev stars scored, 30-d trend window, round-6 digest `ecc5df75d8f225cb…`)
   and before any holdout star was scored (no holdout lock exists; the
-  laptop chain was on the dev stages): closed-form extension of the fixed
-  window-veto loci. Evidence (dev half, partial, never a reportable number):
+  laptop chain was on the dev stages): closed-form, DEV-DERIVED extension of
+  the fixed window-veto loci — a development-informed change to the veto
+  family, disclosed as such, not an originally prespecified physical law.
+  Evidence (dev half, partial, never a reportable number):
   of 94 dev flag0 stars confirmed by v2, 45 sit at 1.9689–1.9690 c/d —
   between the listed loci 1.96614 (2·1.0 − 1/29.530589) and 1.97161
   (2·1.00274 − 1/29.530589) at ≈ 5 tol from each, local window power
@@ -453,11 +456,11 @@ code is staged on the laptop with digest parity.
   and the selection rule stand as pre-registered. Exposure of true
   frequencies: (b) vetoes nine stripes of width 2·tol per harmonic (≈ 1 %
   of any 1 c/d interval at T ≈ 2,765 d, in the δ Sct and the DAV bands
-  alike; measured on the truth tables before the holdout: 7/456 Mo dominant
-  frequencies — 0 before the amendment — and 38/6,558 D2 injected modes, 0
+  alike; measured on the FULL-COHORT truth tables before the holdout —
+  holdout truths included, no holdout result scored: 7/456 Mo dominant
+  frequencies, 0 before the amendment, and 38/6,558 D2 injected modes, 0
   before; 1.0 % of a uniform frequency draw in 4–24 and in 24–1440 c/d),
-  reported by the veto-exposure audit inside its `fixed` component. Code
-  digest after the amendment: `1a99db059a9abe13…` (tests: 257 passed).
+  reported by the veto-exposure audit inside its `fixed` component.
   Applied offline to the partial dev run: 56 of the 94 dev-negative
   confirmations and 9 dev-positive confirmations are removed, none added;
   of the 9, eight sat at the 1.96889 / 48.966 c/d loci with no truth match
@@ -473,3 +476,33 @@ code is staged on the laptop with digest parity.
   the clause "extended its fixed window-veto loci once after inspecting
   development-half results". Reviewer round: `generalization/reviews/V2G1/
   sol_plan_review_r7.md`. Development inspection used `d3_dev.txt` ids only.
+- 2026-09-04, round-7 revision (REVISE → fail-closed provenance of the
+  re-scored dev runs, `sol_plan_review_r7.md`): (1) `rescore_v2.py` requires
+  the source run's manifest, refuses anything but a completed dev run at the
+  dev-run digest `ecc5df75…` re-scoring its own stars directory, and writes
+  `<table>.provenance.json` (manifest SHA, source digest, re-score digest,
+  table SHA); (2) `dev_tuning.py` requires the four dev-run manifests,
+  verifies engine / digest / half / no failures / registered list SHA /
+  completion / the §5 (dataset, window) schedule, verifies every re-score
+  table's provenance sidecar against them and against this checkout's
+  digest, verifies that the pre-registration commit is an ancestor of the
+  amendment commit `017c925e161bb83a69a71ee2547dbd67accfdbcb`, and binds
+  `dev_runs` (the four manifest SHAs), `dev_runs_v2_digest` and
+  `veto_amendment_commit` into `V2_CONSTANTS_FROZEN.json`; (3) the registered
+  holdout runner and the comparison verify those three artifact fields
+  against the constants compiled into the code and the lock records them;
+  (4) the laptop staging script is a holdout-only path: it refuses until the
+  chain has logged "V2 DEV RUNS DONE", copies the amended code, the final
+  plan, `dev_tuning.csv` and the constants artifact, verifies digest parity
+  and never restarts the dev chain (a restart at the amended digest would
+  have deleted the old-digest dev results for recomputation); the Mac
+  extraction and re-score run first; (5) because `plan_sha256` is bound, the
+  §10 tuning entry is written and the artifact regenerated before the
+  holdout; (6) metrics computed on the old-digest dev outputs are never
+  presented as amended-veto metrics — only the re-score tables carry the
+  amended veto; (7) the veto freeze holds from `017c925` onward (§5), the
+  `window.py` docstring no longer claims the fixed loci avoid the science
+  bands, the outline's limitation ranges read N29–N35. Code digest after the
+  revision: `896558e61fa3e75b04d3e2f97d4ed7106d0a4675982b1e03ee5edfd870ca0280`
+  (tests: 268 passed) — the holdout digest unless a further reviewer round
+  changes code, in which case the later §10 entry supersedes this line.
