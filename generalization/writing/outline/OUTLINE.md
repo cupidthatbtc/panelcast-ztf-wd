@@ -344,6 +344,7 @@ phrases", METRICS_SPEC vocabulary, ABSTRACT_SKELETON "cannot support", Amendment
 | N32 | Pooling frozen and v2 estimates into one number; a combined interval across arms | N2 (pooling), V2_PLAN.md §6 | side-by-side table with the paired difference only |
 | N33 | Any v2 constant (trend window, N window peaks, phase tolerance, amplitude ratio) presented as pre-fixed rather than dev-tuned within its declared V2_PLAN.md §3 candidate set; omitting `tuning_constraint_failure` when true | V2_PLAN.md §5 | cite `V2_CONSTANTS_FROZEN.json`; if `tuning_constraint_failure=true`, say so ("no dev combination met the constraint; the default constants were retained") |
 | N34 | Any v2 number quoted before `generalization/v2/HOLDOUT_LAUNCH_<dataset>.json` exists for that dataset; any v2 number from a non-canonical or unregistered run | V2_PLAN.md §8 (registered single-execution holdout) | cite the lock file's timestamp; if it does not exist, the number does not exist |
+| N35 | The v2 window veto presented as fully pre-registered: its fixed loci were extended once (sidereal-month sidebands, comb rule, diurnal bands) after inspecting partial development-half results, before any holdout star (V2_PLAN.md §10, 2026-09-04); any partial-dev number from that inspection quoted as a result | V2_PLAN.md §7 (amended disclosure clause), §10 | the §7 sentence carries the clause "extended its fixed window-veto loci once after inspecting development-half results"; the dev evidence stays in §10, never in a figure or table |
 
 ---
 
