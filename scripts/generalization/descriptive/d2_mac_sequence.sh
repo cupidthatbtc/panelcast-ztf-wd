@@ -29,7 +29,11 @@ $PY scripts/generalization/metrics_generalization.py --dataset d2 \
   --run-manifest "$SYNC/d2_run/manifest.json" --out-dir "$MAC_METRICS"
 
 echo "== 3. ruled guard (laptop pre-fix vs Mac post-fix)"
-$PY $DESC/compare_metrics_runs.py --reference "$SYNC/d2_metrics" --candidate "$MAC_METRICS"
+# D2 truth frequencies are parsed from injected_modes.csv: the laptop's pandas float parser
+# mis-rounds 17-digit decimals by 1 ulp (CROSS_PLATFORM_REPLAY.md), so the two truth columns are
+# compared within last-ulp tolerance; every decision/match column stays byte-bound (disclosed in README)
+$PY $DESC/compare_metrics_runs.py --reference "$SYNC/d2_metrics" --candidate "$MAC_METRICS" \
+  --allow-known-platform-ulp primary_freq,truth_period_days
 
 echo "== 4. admitted descriptive outputs (item 5)"
 OUT="$RES/descriptive_postlaunch"; mkdir -p "$OUT"
