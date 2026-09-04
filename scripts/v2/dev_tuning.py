@@ -46,11 +46,10 @@ sys.path.insert(0, str(REPO_ROOT / "scripts" / "generalization"))
 sys.path.insert(0, str(REPO_ROOT / "scripts" / "v2"))
 from metrics_generalization import classify_match  # noqa: E402
 from rescore_v2 import combination_id, combinations  # noqa: E402
-from v2_common import DEFAULT, DEV_RUNS_V2_DIGEST, TUNABLE, VETO_AMENDMENT_COMMIT, v2_digest  # noqa: E402
-
-# V2_PLAN.md §5: the four dev runs (dataset, trend window) and their registered lists.
-DEV_RUN_SCHEDULE = {("d3-kepler-dsct", 30.0): "d3_dev.txt", ("d3-kepler-dsct", 10.0): "d3_dev.txt",
-                    ("d2-tess-dav", 30.0): "d2_dev.txt", ("d2-tess-dav", 10.0): "d2_dev.txt"}
+from v2_common import (  # noqa: E402
+    DEFAULT, DEV_RUNS_V2_DIGEST, DEV_RUN_SCHEDULE, TUNABLE, VETO_AMENDMENT_COMMIT, dev_run_record,
+    v2_digest, validate_dev_run_records,
+)
 
 REGISTRATION = REPO_ROOT / "generalization" / "v2"
 DEFAULT_ID = combination_id(DEFAULT)
@@ -72,59 +71,37 @@ def verify_dev_run_manifests(paths: list[Path], registration: Path = REGISTRATIO
     2026-09-04): engine v2, the admitted pre-amendment digest, the dev half,
     no failures, the registered dev list, complete, and exactly the
     (dataset, trend window) schedule of §5. Returns the binding records."""
-    records = []
-    seen: set[tuple] = set()
-    for path in paths:
-        m = json.loads(path.read_text(encoding="utf-8"))
-        binding = m.get("binding", {})
-        key = (m.get("dataset"), float(m.get("constants", {}).get("trend_window_days", float("nan"))))
-        problems = []
-        if m.get("engine") != "v2":
-            problems.append("engine is not v2")
-        if binding.get("v2_digest") != DEV_RUNS_V2_DIGEST:
-            problems.append("v2_digest is not the dev-run digest")
-        if m.get("split", {}).get("half") != "dev":
-            problems.append("split half is not dev")
-        if m.get("failures"):
-            problems.append("the run has failures")
-        if key not in DEV_RUN_SCHEDULE:
-            problems.append(f"(dataset, window) {key} is not in the §5 schedule")
-        else:
-            list_path = registration / DEV_RUN_SCHEDULE[key]
-            if binding.get("stars_file_sha256") != sha256_file(list_path):
-                problems.append(f"stars_file_sha256 is not the registered {list_path.name}")
-            n_list = len([line for line in list_path.read_text(encoding="utf-8").splitlines() if line.strip()])
-            total = int(m.get("total", -1))
-            done = total - int(m.get("pending_at_start", 0)) + int(m.get("completed_now", 0))
-            if total != n_list or done != n_list:
-                problems.append(f"completion {done}/{total} != registered list {n_list}")
-        if key in seen:
-            problems.append("duplicate (dataset, window)")
-        seen.add(key)
-        if problems:
-            raise SystemExit(f"{path}: dev-run manifest rejected: {problems}")
-        records.append({"manifest": str(path), "sha256": sha256_file(path), "dataset": key[0],
-                        "trend_window_days": key[1], "v2_digest": binding["v2_digest"],
-                        "stars_file_sha256": binding["stars_file_sha256"], "completed": n_list})
-    if seen != set(DEV_RUN_SCHEDULE):
-        raise SystemExit(f"dev-run manifests do not cover the §5 schedule; missing {sorted(set(DEV_RUN_SCHEDULE) - seen)}")
-    return records
+    records = [dev_run_record(path, registration) for path in paths]   # each verified fail-closed
+    return validate_dev_run_records(records, registration)            # exactly the §5 schedule, once each
 
 
 def verify_rescore_provenance(csv_paths: list[Path], dev_runs: list[dict]) -> None:
     """Every re-score table must carry the sidecar `rescore_v2.py --run-manifest`
-    writes, naming one of the verified dev runs as its source, the dev-run
-    digest as the source digest and THIS checkout's digest as the re-score
-    digest, and matching the table's bytes."""
-    shas = {r["sha256"] for r in dev_runs}
+    writes, naming one verified dev run as its source (by manifest SHA) with
+    THAT run's dataset, trend window and registered-list SHA, the dev-run
+    digest as the source digest, THIS checkout's digest as the re-score
+    digest, and the table's own bytes; the four tables claim the four runs
+    one-to-one."""
+    by_sha = {r["sha256"]: r for r in dev_runs}
+    claimed: dict[str, Path] = {}
     for path in csv_paths:
         sidecar = path.with_suffix(path.suffix + ".provenance.json")
         if not sidecar.exists():
             raise SystemExit(f"{path}: missing {sidecar.name} (run rescore_v2.py with --run-manifest)")
         prov = json.loads(sidecar.read_text(encoding="utf-8"))
         problems = []
-        if prov.get("run_manifest_sha256") not in shas:
+        record = by_sha.get(str(prov.get("run_manifest_sha256")))
+        if record is None:
             problems.append("source run manifest is not one of the verified dev runs")
+        else:
+            if prov.get("dataset") != record["dataset"] or \
+                    float(prov.get("trend_window_days", float("nan"))) != float(record["trend_window_days"]):
+                problems.append("dataset / trend window differ from the source run's record")
+            if prov.get("stars_file_sha256") != record["stars_file_sha256"]:
+                problems.append("registered-list SHA differs from the source run's record")
+            if record["sha256"] in claimed:
+                problems.append(f"source run already claimed by {claimed[record['sha256']].name}")
+            claimed[record["sha256"]] = path
         if prov.get("source_v2_digest") != DEV_RUNS_V2_DIGEST:
             problems.append("source digest is not the dev-run digest")
         if prov.get("rescore_v2_digest") != v2_digest():
@@ -133,6 +110,8 @@ def verify_rescore_provenance(csv_paths: list[Path], dev_runs: list[dict]) -> No
             problems.append("table bytes differ from the provenance record")
         if problems:
             raise SystemExit(f"{path}: re-score provenance rejected: {problems}")
+    if set(claimed) != set(by_sha):
+        raise SystemExit("the re-score tables do not claim the four verified dev runs one-to-one")
 
 
 def load_rescores(paths: list[Path]) -> pd.DataFrame:

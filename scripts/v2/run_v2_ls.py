@@ -236,12 +236,15 @@ def registered_holdout(args, constants: V2Constants, split_record: dict, stars_s
     if not args.constants or Path(args.constants).resolve() != artifact_path or not artifact_path.exists():
         raise SystemExit(f"holdout runs require --constants {artifact_path} (the registered artifact)")
     artifact = json.loads(artifact_path.read_text(encoding="utf-8"))
-    from v2_common import DEV_RUNS_V2_DIGEST, VETO_AMENDMENT_COMMIT  # V2_PLAN.md §10, 2026-09-04
+    from v2_common import DEV_RUNS_V2_DIGEST, VETO_AMENDMENT_COMMIT, validate_dev_run_records  # §10, 2026-09-04
+    try:
+        validate_dev_run_records(artifact.get("dev_runs"), root)   # four records, one per §5 dev run
+    except SystemExit as exc:
+        raise SystemExit(f"frozen-constants artifact does not match this checkout: dev_runs: {exc}")
     checks = {
         "v2_digest": (artifact.get("v2_digest"), v2_digest()),
         "dev_runs_v2_digest": (artifact.get("dev_runs_v2_digest"), DEV_RUNS_V2_DIGEST),
         "veto_amendment_commit": (artifact.get("veto_amendment_commit"), VETO_AMENDMENT_COMMIT),
-        "dev_runs_bound": (len(artifact.get("dev_runs", [])), 4),
         "split_sha256": (artifact.get("split_sha256"), split_record["sha256"]),
         "plan_sha256": (artifact.get("plan_sha256"), sha256_file(root / "V2_PLAN.md")),
         "tuning_evidence_sha256": (artifact.get("tuning_evidence_sha256"),
@@ -258,6 +261,7 @@ def registered_holdout(args, constants: V2Constants, split_record: dict, stars_s
         "stars_file_sha256": stars_sha, "constants_sha256": constants_sha256(constants),
         "v2_digest": v2_digest(), "split_sha256": split_record["sha256"],
         "dev_runs_v2_digest": DEV_RUNS_V2_DIGEST, "veto_amendment_commit": VETO_AMENDMENT_COMMIT,
+        "dev_runs": artifact["dev_runs"],
         "plan_sha256": checks["plan_sha256"][1],
         "preregistration_commit": artifact["preregistration_commit"],
         "constants_artifact_sha256": sha256_file(artifact_path),

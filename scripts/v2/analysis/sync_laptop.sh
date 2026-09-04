@@ -29,7 +29,10 @@ for attempt in $(seq 1 400); do
       && scp -o ConnectTimeout=20 -q generalization/v2/split.csv generalization/v2/*.txt generalization/v2/split_manifest.json \
            generalization/v2/constants_w10.json generalization/v2/V2_PLAN.md generalization/v2/dev_tuning.csv \
            generalization/v2/V2_CONSTANTS_FROZEN.json win:C:/Users/jcwen/Projects/astro-wd/generalization/v2/ \
-      && scp -o ConnectTimeout=20 -q scripts/v2/v2_holdout_laptop.ps1 win:C:/Users/jcwen/Projects/astro-wd/v2_holdout_laptop.ps1
+      && scp -o ConnectTimeout=20 -q scripts/v2/v2_holdout_laptop.ps1 win:C:/Users/jcwen/Projects/astro-wd/v2_holdout_laptop.ps1 \
+      && scp -o ConnectTimeout=20 -q scripts/v2/v2_laptop_chain.ps1 scripts/v2/v2_chain_restart.ps1 win:C:/Users/jcwen/Projects/astro-wd/
+    # the pinned dev chain + restart scripts (they refuse after "V2 DEV RUNS DONE") are staged BEFORE the
+    # amended expected digest is written, so no documented path can relaunch the dev runs at the new digest
     LAP=$(ssh -o ConnectTimeout=20 win "Set-Location $ROOT; .venv\Scripts\python.exe scripts\v2\analysis\print_digest.py" 2>/dev/null | tr -d '\r' | tail -1)
     echo "$(date '+%FT%T') attempt $attempt: mac=$MAC laptop=$LAP"
     if [ "$LAP" = "$MAC" ]; then

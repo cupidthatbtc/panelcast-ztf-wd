@@ -15,16 +15,28 @@ sys.path.insert(0, str(ROOT / "scripts" / "v2"))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import run_v2_ls  # noqa: E402
-from v2_common import DEV_RUNS_V2_DIGEST, VETO_AMENDMENT_COMMIT, v2_digest  # noqa: E402
+from v2_common import (  # noqa: E402
+    DEV_RUNS_V2_DIGEST, DEV_RUN_SCHEDULE, VETO_AMENDMENT_COMMIT, registered_list, v2_digest,
+)
 from v2_helpers import synthetic_star, write_shard  # noqa: E402
 
 PY = ROOT / ".venv-gen" / "bin" / "python"
 RUNNER = ROOT / "scripts" / "v2" / "run_v2_ls.py"
 SIDS = ["9000000000000000001", "9000000000000000002", "9000000000000000003"]
-# V2_PLAN.md §10 (2026-09-04): every registered artifact binds the amendment commit and the
-# four re-scored dev runs at the pre-amendment digest
-AMENDMENT_BINDING = {"dev_runs_v2_digest": DEV_RUNS_V2_DIGEST, "veto_amendment_commit": VETO_AMENDMENT_COMMIT,
-                     "dev_runs": [{"manifest": f"run{i}", "sha256": "0" * 64} for i in range(4)]}
+
+
+def _amendment_binding(reg: Path) -> dict:
+    """V2_PLAN.md §10 (2026-09-04): every registered artifact binds the amendment
+    commit and four well-formed dev-run records (one per §5 schedule entry, at
+    the pre-amendment digest, with the registration root's dev-list SHAs)."""
+    records = []
+    for (dataset, window), name in DEV_RUN_SCHEDULE.items():
+        sha, n = registered_list(reg, name)
+        records.append({"manifest": f"{dataset}_w{window:g}/manifest.json", "sha256": "0" * 64,
+                        "dataset": dataset, "trend_window_days": window, "v2_digest": DEV_RUNS_V2_DIGEST,
+                        "stars_file_sha256": sha, "completed": n})
+    return {"dev_runs_v2_digest": DEV_RUNS_V2_DIGEST, "veto_amendment_commit": VETO_AMENDMENT_COMMIT,
+            "dev_runs": records}
 
 
 def test_load_constants_accepts_declared_and_rejects_undeclared(tmp_path):
@@ -110,6 +122,8 @@ def _fake_registration(root: Path, split_sha_holder: dict) -> tuple[Path, Path]:
                   "scenario": [""] * 3, "split": ["holdout", "holdout", "dev"]}).to_csv(split, index=False)
     holdout = reg / "d3_holdout.txt"
     holdout.write_text("\n".join(SIDS[:2]) + "\n")
+    (reg / "d3_dev.txt").write_text(SIDS[2] + "\n")
+    (reg / "d2_dev.txt").write_text("9000000000000000009\n")
     (reg / "V2_PLAN.md").write_text("# plan\n")
     (reg / "dev_tuning.csv").write_text("combination,J\nW30_N6_phi0.15_r0.3-1.5,0.1\n")
     sha = lambda p: hashlib.sha256(Path(p).read_bytes()).hexdigest()  # noqa: E731
@@ -118,7 +132,7 @@ def _fake_registration(root: Path, split_sha_holder: dict) -> tuple[Path, Path]:
     (reg / "V2_CONSTANTS_FROZEN.json").write_text(json.dumps({
         "overrides": {"n_window_peaks": 6}, "v2_digest": digest(), "split_sha256": sha(split),
         "plan_sha256": sha(reg / "V2_PLAN.md"), "preregistration_commit": head,
-        "tuning_evidence_sha256": sha(reg / "dev_tuning.csv"), **AMENDMENT_BINDING}))
+        "tuning_evidence_sha256": sha(reg / "dev_tuning.csv"), **_amendment_binding(reg)}))
     split_sha_holder["split"], split_sha_holder["commit"] = sha(split), head
     return reg, holdout
 
@@ -179,7 +193,11 @@ def test_registered_holdout_mode_locks_and_refuses_drift(tmp_path):
     assert bogus.returncode != 0 and "not in this repository" in (bogus.stdout + bogus.stderr)
     # V2_PLAN.md §10 (2026-09-04): an artifact without the amendment commit, the dev-run digest or the
     # four dev-run manifests is refused before any lock handling
-    for broken in ({"veto_amendment_commit": "f" * 40}, {"dev_runs_v2_digest": v2_digest()}, {"dev_runs": []}):
+    good_runs = artifact["dev_runs"]
+    for broken in ({"veto_amendment_commit": "f" * 40}, {"dev_runs_v2_digest": v2_digest()}, {"dev_runs": []},
+                   {"dev_runs": "junk"}, {"dev_runs": good_runs[:1] * 4},
+                   {"dev_runs": [{**good_runs[0], "stars_file_sha256": "0" * 64}, *good_runs[1:]]},
+                   {"dev_runs": [{**good_runs[0], "v2_digest": v2_digest()}, *good_runs[1:]]}):
         (reg / "V2_CONSTANTS_FROZEN.json").write_text(json.dumps({**artifact, "overrides": {"n_window_peaks": 6},
                                                                   **broken}))
         res = _run_reg(base + ["--allow-holdout", "--constants", str(reg / "V2_CONSTANTS_FROZEN.json")], reg)
@@ -224,7 +242,7 @@ def test_copied_registration_root_cannot_score_canonical_holdout_ids(tmp_path):
     (reg / "V2_CONSTANTS_FROZEN.json").write_text(json.dumps({
         "overrides": {"n_window_peaks": 24}, "v2_digest": digest(), "split_sha256": sha(reg / "split.csv"),
         "plan_sha256": sha(reg / "V2_PLAN.md"), "preregistration_commit": head,
-        "tuning_evidence_sha256": sha(reg / "dev_tuning.csv"), **AMENDMENT_BINDING}))
+        "tuning_evidence_sha256": sha(reg / "dev_tuning.csv"), **_amendment_binding(reg)}))
     holdout_ids = [l.strip() for l in (canonical / "d3_holdout.txt").read_text().splitlines() if l.strip()]
     sid = holdout_ids[0]
     shards = tmp_path / "shards"

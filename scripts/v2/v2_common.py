@@ -167,7 +167,112 @@ def env_digest() -> str:
     return hashlib.sha256(json.dumps(env_versions(), sort_keys=True).encode()).hexdigest()
 
 
+# ---- V2_PLAN.md §5 / §10: the four dev runs and their fail-closed binding records -------------
+# (dataset, trend window) -> registered dev list; verified by dev_tuning (from the manifests),
+# by the registered holdout runner and by the comparison (from the bound artifact / lock).
+DEV_RUN_SCHEDULE = {("d3-kepler-dsct", 30.0): "d3_dev.txt", ("d3-kepler-dsct", 10.0): "d3_dev.txt",
+                    ("d2-tess-dav", 30.0): "d2_dev.txt", ("d2-tess-dav", 10.0): "d2_dev.txt"}
+DEV_RUN_RECORD_KEYS = ("manifest", "sha256", "dataset", "trend_window_days", "v2_digest",
+                       "stars_file_sha256", "completed")
+
+
+def registered_list(registration: Path, name: str) -> tuple[str, int]:
+    """(SHA-256, number of ids) of a registered id list."""
+    path = Path(registration) / name
+    text = path.read_text(encoding="utf-8")
+    return hashlib.sha256(path.read_bytes()).hexdigest(), len([line for line in text.splitlines() if line.strip()])
+
+
+def run_completion(manifest: dict) -> tuple[int, int]:
+    """(completed, total) of a run_v2_ls.py manifest — its own schema:
+    source_count, pending_at_start, completed_now (resume-aware). A manifest
+    without them is refused, never treated as complete."""
+    try:
+        total = int(manifest["source_count"])
+        done = total - int(manifest["pending_at_start"]) + int(manifest["completed_now"])
+    except (KeyError, TypeError, ValueError) as exc:
+        raise SystemExit("run manifest lacks the completion fields "
+                         f"(source_count, pending_at_start, completed_now): {exc!r}")
+    return done, total
+
+
+def dev_run_record(manifest_path: Path, registration: Path) -> dict:
+    """Verify ONE dev-run manifest fail-closed and return its binding record:
+    engine v2, the admitted pre-amendment digest, the dev half, no failures,
+    no --limit, a (dataset, trend window) of the §5 schedule, the registered
+    dev list (top-level AND binding SHA) and completion equal to its length."""
+    manifest_path = Path(manifest_path)
+    m = json.loads(manifest_path.read_text(encoding="utf-8"))
+    binding = m.get("binding") or {}
+    problems: list[str] = []
+    if m.get("engine") != "v2":
+        problems.append("engine is not v2")
+    if binding.get("v2_digest") != DEV_RUNS_V2_DIGEST:
+        problems.append(f"v2_digest {str(binding.get('v2_digest'))[:12]} is not the dev-run digest "
+                        f"{DEV_RUNS_V2_DIGEST[:12]}")
+    if (m.get("split") or {}).get("half") != "dev":
+        problems.append("split half is not dev")
+    if m.get("failures"):
+        problems.append("the run has failures")
+    if m.get("limit") is not None:
+        problems.append("a --limit run")
+    try:
+        window = float((m.get("constants") or {}).get("trend_window_days"))
+    except (TypeError, ValueError):
+        window = float("nan")
+    key = (m.get("dataset"), window)
+    completed = -1
+    if key not in DEV_RUN_SCHEDULE:
+        problems.append(f"(dataset, window) {key} is not in the §5 schedule")
+    else:
+        list_sha, n_list = registered_list(registration, DEV_RUN_SCHEDULE[key])
+        if m.get("stars_file_sha256") != list_sha or binding.get("stars_file_sha256") != list_sha:
+            problems.append(f"stars_file_sha256 is not the registered {DEV_RUN_SCHEDULE[key]}")
+        done, total = run_completion(m)
+        if total != n_list or done != n_list:
+            problems.append(f"completion {done}/{total} != registered list {n_list}")
+        completed = n_list
+    if problems:
+        raise SystemExit(f"{manifest_path}: dev-run manifest rejected: {problems}")
+    return {"manifest": str(manifest_path), "sha256": hashlib.sha256(manifest_path.read_bytes()).hexdigest(),
+            "dataset": key[0], "trend_window_days": key[1], "v2_digest": binding["v2_digest"],
+            "stars_file_sha256": binding["stars_file_sha256"], "completed": completed}
+
+
+def validate_dev_run_records(records, registration: Path) -> list[dict]:
+    """The bound `dev_runs` of a constants artifact or lock: exactly four
+    well-formed records mapping one-to-one onto the §5 schedule, each at the
+    dev-run digest, with the registered list SHA and its full completion."""
+    import re
+
+    if not isinstance(records, list) or len(records) != 4:
+        raise SystemExit("dev_runs must be a list of exactly 4 records")
+    seen: set[tuple] = set()
+    for record in records:
+        if not isinstance(record, dict) or set(DEV_RUN_RECORD_KEYS) - set(record):
+            raise SystemExit(f"dev_runs record must carry {DEV_RUN_RECORD_KEYS}")
+        try:
+            key = (record["dataset"], float(record["trend_window_days"]))
+        except (TypeError, ValueError):
+            raise SystemExit("dev_runs record has a non-numeric trend window")
+        if key not in DEV_RUN_SCHEDULE or key in seen:
+            raise SystemExit(f"dev_runs record {key} is not a unique §5 schedule entry")
+        seen.add(key)
+        if not re.fullmatch(r"[0-9a-f]{64}", str(record["sha256"])):
+            raise SystemExit("dev_runs record sha256 is not a SHA-256")
+        if record["v2_digest"] != DEV_RUNS_V2_DIGEST:
+            raise SystemExit("dev_runs record digest is not the dev-run digest")
+        list_sha, n_list = registered_list(registration, DEV_RUN_SCHEDULE[key])
+        if record["stars_file_sha256"] != list_sha or int(record["completed"]) != n_list:
+            raise SystemExit(f"dev_runs record {key}: registered list / completion mismatch")
+    if seen != set(DEV_RUN_SCHEDULE):
+        raise SystemExit("dev_runs do not cover the §5 schedule one-to-one")
+    return records
+
+
 __all__ = [
+    "DEV_RUN_RECORD_KEYS", "DEV_RUN_SCHEDULE", "dev_run_record", "registered_list", "run_completion",
+    "validate_dev_run_records",
     "BANDS", "DEFAULT", "DEV_RUNS_V2_DIGEST", "ENGINE", "LUNAR_SYNODIC_DAYS", "PASS_BOUNDS", "REPO_ROOT",
     "VETO_AMENDMENT_COMMIT",
     "SAMPLES_PER_PEAK", "SCHEMA_VERSION", "SIDEREAL_FREQUENCY", "SIDEREAL_MONTH_DAYS", "SOLAR_FREQUENCY",

@@ -44,7 +44,7 @@ confirmatory). Amendment 4 is respected: no estimand is created, renamed,
 swapped, or re-denominated anywhere; the v2 arm adds a parallel estimand
 family (V2_PLAN.md §6) without touching the frozen one.
 
-**Not-allowed list** (34 items, OUTLINE Part D): no "selection-function
+**Not-allowed list** (35 items, OUTLINE Part D): no "selection-function
 measurement" as the measured object, no pooling, no real-sky completeness from
 D2, no "D3 FPR", no unqualified purity, no ZTF-g threshold from Kepler
 amplitudes, no causal cadence claims, no "band"/CI on the 3×3 grid, no D2
@@ -53,7 +53,9 @@ numbers, no 928-catalog counts as completeness, Amendment 4 disclosed as
 pilot-informed; N29–N35 (new): no v2 number from the dev half, no v2 claim of
 external/confirmatory validation, no "corrected" frozen P3 from v2, no pooling
 frozen+v2, no dev-tuned v2 constant presented as pre-fixed, no v2 number
-before its holdout lock file exists.
+before its holdout lock file exists, no v2 window veto presented as fully
+pre-registered (its fixed loci were extended once after partial dev-half
+inspection, V2_PLAN.md §10 2026-09-04; the §7 disclosure clause is mandatory).
 
 **Contingencies.** Ugly = pre-registered explanatory headline: bounded zeros
 are measurements (one-sided 95 % CP: 0/610 → 0.49 %, 0/103 → 2.87 %, 0/48 →

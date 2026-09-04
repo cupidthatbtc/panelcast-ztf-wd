@@ -38,36 +38,28 @@ import hashlib  # noqa: E402
 
 from rule import STATUS_ORDER, decide
 from v2_common import (
-    BANDS, DEFAULT, DEV_RUNS_V2_DIGEST, TUNABLE, WINDOW_POWER_THRESHOLD, V2Constants, overall_result, v2_digest,
+    BANDS, DEFAULT, DEV_RUNS_V2_DIGEST, REPO_ROOT, TUNABLE, WINDOW_POWER_THRESHOLD, V2Constants,
+    dev_run_record, overall_result, v2_digest,
 )
 from window import fixed_loci, fixed_locus_label
+
+REGISTRATION = REPO_ROOT / "generalization" / "v2"
 
 
 def sha256_file(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def verify_run_manifest(path: Path, stars_dir: Path) -> dict:
-    """The source of an offline re-score must be a completed DEV run at the
-    admitted pre-amendment digest (V2_PLAN.md §10, 2026-09-04) whose own
-    stars directory is being re-scored: fail closed on anything else."""
-    manifest = json.loads(path.read_text(encoding="utf-8"))
-    binding = manifest.get("binding", {})
-    problems = []
-    if manifest.get("engine") != "v2":
-        problems.append("engine is not v2")
-    if binding.get("v2_digest") != DEV_RUNS_V2_DIGEST:
-        problems.append(f"v2_digest {str(binding.get('v2_digest'))[:12]} is not the dev-run digest "
-                        f"{DEV_RUNS_V2_DIGEST[:12]}")
-    if manifest.get("split", {}).get("half") != "dev":
-        problems.append("split half is not dev")
-    if manifest.get("failures"):
-        problems.append("the run has failures")
-    if stars_dir.resolve() != (path.parent / "stars").resolve():
-        problems.append("--stars-dir is not the manifest's own stars directory")
-    if problems:
-        raise SystemExit(f"{path}: not an admissible re-score source: {problems}")
-    return manifest
+def verify_run_manifest(path: Path, stars_dir: Path, registration: Path = REGISTRATION) -> dict:
+    """The source of an offline re-score must be a COMPLETE dev run at the
+    admitted pre-amendment digest on a registered dev list (V2_PLAN.md §10,
+    2026-09-04; `v2_common.dev_run_record`, the same check the tuning step
+    and the holdout apply) whose own stars directory is being re-scored."""
+    path = Path(path)
+    if Path(stars_dir).resolve() != (path.parent / "stars").resolve():
+        raise SystemExit(f"{path}: --stars-dir is not the manifest's own stars directory")
+    dev_run_record(path, registration)
+    return json.loads(path.read_text(encoding="utf-8"))
 
 SERIES_NAME = {"zg": "zg", "zr": "zr", "joint": "multiband"}
 FIXED = [float(locus["frequency_per_day"]) for locus in fixed_loci()]   # listed loci (exposure audit)
@@ -185,8 +177,10 @@ def main() -> None:
                         help="the source run's manifest.json (must be a completed dev run at the "
                              "admitted pre-amendment digest); its SHA and digest go into <out>.provenance.json")
     parser.add_argument("--out", type=Path, required=True)
+    parser.add_argument("--registration-root", type=Path, default=REGISTRATION,
+                        help="registration root holding the dev lists (tests only; default canonical)")
     args = parser.parse_args()
-    manifest = verify_run_manifest(args.run_manifest, args.stars_dir)
+    manifest = verify_run_manifest(args.run_manifest, args.stars_dir, args.registration_root)
     window_expected = float(manifest["constants"]["trend_window_days"])
     if window_expected not in TUNABLE["trend_window_days"]:
         raise SystemExit(f"run trend window {window_expected} is not a declared candidate")

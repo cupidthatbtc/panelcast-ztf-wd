@@ -504,5 +504,33 @@ code is staged on the laptop with digest parity.
   `window.py` docstring no longer claims the fixed loci avoid the science
   bands, the outline's limitation ranges read N29–N35. Code digest after the
   revision: `896558e61fa3e75b04d3e2f97d4ed7106d0a4675982b1e03ee5edfd870ca0280`
-  (tests: 268 passed) — the holdout digest unless a further reviewer round
-  changes code, in which case the later §10 entry supersedes this line.
+  (tests: 268 passed) — superseded by the round-8 revision below.
+- 2026-09-04, round-8 revision (REVISE, `sol_plan_review_r8.md`): (1) the
+  completion check had read a key the runner never writes; one function,
+  `v2_common.dev_run_record`, now verifies every dev-run manifest against
+  the runner's own schema (`source_count`, `pending_at_start`,
+  `completed_now`; a manifest without them is refused) — engine, dev-run
+  digest, dev half, no failures, no `--limit`, §5 schedule, registered list
+  SHA (top-level and binding), completion equal to the list length — and is
+  used by the re-scorer, the tuning step and, through
+  `validate_dev_run_records`, by the registered runner and the comparison; a
+  test runs the real runner in registered dev mode and checks the record on
+  its authentic manifest; (2) each re-score sidecar is matched to its own run
+  by manifest SHA and checked for that run's dataset, trend window and list
+  SHA, the four tables must claim the four runs one-to-one, and the bound
+  `dev_runs` must be exactly four well-formed records mapping one-to-one
+  onto the schedule (SHA-256, dev-run digest, list SHA, completion) — the
+  runner refuses anything else, the lock records the four records and the
+  comparison requires lock and artifact records to be identical; (3) the
+  dev chain script is pinned to the dev-run digest in the script itself
+  (never the mutable expected-digest file) and refuses to start once
+  `v2_chain.log` carries "V2 DEV RUNS DONE", the restart script refuses
+  likewise, the holdout script refuses before that line and refuses the
+  dev-run digest, and the holdout staging copies the pinned scripts before
+  writing the amended expected digest (the pinned scripts were staged on the
+  laptop at once; the running chain process is unaffected); (4) SUMMARY
+  counts 35 items and names N35, the RUNBOOK re-score example carries
+  `--run-manifest`. Code digest after the round-8 revision:
+  `bcf4d4d9f34e054e96775b34a4137d16a0de5942264201eebcdc5a5290275dd7`
+  (tests: 277 passed) — the holdout digest unless a later §10 entry
+  supersedes this line.

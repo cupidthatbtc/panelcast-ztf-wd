@@ -12,9 +12,18 @@ $ntfy = "https://ntfy.sh/jack-pings-f594ecfd9ef1a9c2"
 function Log($m) { Add-Content $log ("{0} {1}" -f (Get-Date -Format s), $m) }
 function Push($t, $m) { try { Invoke-RestMethod -Uri $ntfy -Method Post -Body $m -Headers @{ Title = $t } | Out-Null } catch {} }
 if (-not (Test-Path "$root\generalization\v2\V2_CONSTANTS_FROZEN.json")) { Log "no frozen constants artifact"; exit 1 }
-New-Item -ItemType Directory -Force -Path "$root\outputs\v2", "C:\ls_scratch\v2" | Out-Null
-Log "V2 HOLDOUT START (pid $PID)"
 $py = "$root\.venv\Scripts\python.exe"
+# V2_PLAN.md section 10 (2026-09-04): the holdout runs only after the dev runs are done, at the
+# amended digest the Mac holdout staging wrote (the runner re-verifies it against the artifact)
+if (-not ((Test-Path "$root\v2_chain.log") -and (Select-String -Path "$root\v2_chain.log" -Pattern "V2 DEV RUNS DONE" -Quiet))) { Log "the dev runs are not done - refusing"; exit 1 }
+$expectedFile = "$root\generalization\v2\EXPECTED_V2_DIGEST.txt"
+if (-not (Test-Path $expectedFile)) { Log "no EXPECTED_V2_DIGEST.txt (run the Mac holdout staging first)"; exit 1 }
+$expected = (Get-Content $expectedFile -Raw).Trim()
+$actual = ((& $py "$root\scripts\v2\analysis\print_digest.py" 2>&1) | ForEach-Object { "$_" } | Select-Object -Last 1).Trim()
+if ($actual -ne $expected) { Log "digest $actual != expected holdout digest $expected - refusing"; exit 2 }
+if ($actual -eq "ecc5df75d8f225cbd364d3c498894ab6dce6bf1aeead89ad1de285d4ee57d33c") { Log "staged code is still the pre-amendment dev-run digest - refusing"; exit 2 }
+New-Item -ItemType Directory -Force -Path "$root\outputs\v2", "C:\ls_scratch\v2" | Out-Null
+Log "V2 HOLDOUT START (pid $PID) digest $actual"
 $split = "$root\generalization\v2\split.csv"
 $constants = "$root\generalization\v2\V2_CONSTANTS_FROZEN.json"
 

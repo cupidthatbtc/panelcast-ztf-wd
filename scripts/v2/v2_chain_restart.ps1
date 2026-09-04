@@ -3,6 +3,12 @@
 # the SAME engine WMI launches (Windows PowerShell 5.1), and relaunch it detached.
 $root = "C:\Users\jcwen\Projects\astro-wd"
 $me = $PID
+# V2_PLAN.md section 10 (2026-09-04): once the dev runs are done the dev chain is never
+# relaunched (a relaunch at the amended digest would delete the old-digest dev results)
+if ((Test-Path "$root\v2_chain.log") -and (Select-String -Path "$root\v2_chain.log" -Pattern "V2 DEV RUNS DONE" -Quiet)) {
+  "REFUSED: v2_chain.log carries 'V2 DEV RUNS DONE' - the dev chain must not be relaunched"
+  exit 2
+}
 try {
   [scriptblock]::Create((Get-Content "$root\v2_laptop_chain.ps1" -Raw)) | Out-Null
   "parse ok ($($PSVersionTable.PSVersion))"

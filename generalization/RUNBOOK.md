@@ -161,7 +161,9 @@ split SHAs, tuning protocol, endpoints, disclosures). Code: `scripts/v2/`
    generalization/v2/d3_dev.txt --split-file generalization/v2/split.csv
    [--constants generalization/v2/constants_w10.json]`.
 3. Tuning (dev only): `rescore_v2.py --stars-dir outputs/v2/d3_dev_w30/stars
-   --out <d3_w30.csv>` (and d3_dev_w10, d2_dev_w30, d2_dev_w10) →
+   --run-manifest outputs/v2/d3_dev_w30/manifest.json --out <d3_w30.csv>`
+   (and d3_dev_w10, d2_dev_w30, d2_dev_w10; the manifest must be a complete
+   dev run at the dev-run digest; a `.provenance.json` lands beside each table) →
    `dev_tuning.py --d3-rescore <d3_w30.csv> <d3_w10.csv> --d2-rescore
    <d2_w30.csv> <d2_w10.csv> --frozen-per-star
    generalization/results/2026-09-02_d3/metrics/per_star.csv

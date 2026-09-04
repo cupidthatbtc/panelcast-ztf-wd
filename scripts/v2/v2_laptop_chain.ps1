@@ -2,7 +2,10 @@
 # (chain2.log "CHAIN2 DONE") so the frozen D2 run is never disturbed, then runs, at 12 workers:
 #   D3 dev (defaults) -> D2 dev nulls (defaults) -> D3 dev @ trend window 10 d -> D2 dev nulls @ 10 d
 # Holdout runs are launched separately in the registered mode (--allow-holdout) after the
-# constants are frozen. Resume-safe: relaunch the same script after a reboot. Launch detached:
+# constants are frozen. Resume-safe ONLY until the log carries "V2 DEV RUNS DONE": the dev
+# runs are pinned to the admitted round-6 digest (DEV_RUNS_V2_DIGEST, V2_PLAN.md section 10)
+# and this script refuses to start once the dev runs are done, because a relaunch at the
+# amended digest would delete the old-digest results for recomputation. Launch detached:
 #   Invoke-CimMethod -ClassName Win32_Process -MethodName Create -Arguments @{CommandLine=
 #     'powershell -NoProfile -ExecutionPolicy Bypass -File C:\Users\jcwen\Projects\astro-wd\v2_laptop_chain.ps1'}
 $ErrorActionPreference = "Continue"
@@ -10,19 +13,22 @@ $root = "C:\Users\jcwen\Projects\astro-wd"
 Set-Location $root
 $log = "$root\v2_chain.log"
 $ntfy = "https://ntfy.sh/jack-pings-f594ecfd9ef1a9c2"
+$devRunsDigest = "ecc5df75d8f225cbd364d3c498894ab6dce6bf1aeead89ad1de285d4ee57d33c"
 function Log($m) { Add-Content $log ("{0} {1}" -f (Get-Date -Format s), $m) }
 function Push($t, $m) { try { Invoke-RestMethod -Uri $ntfy -Method Post -Body $m -Headers @{ Title = $t } | Out-Null } catch {} }
+if ((Test-Path $log) -and (Select-String -Path $log -Pattern "V2 DEV RUNS DONE" -Quiet)) {
+  Log "REFUSED: the dev runs are done; the dev chain must never be relaunched (old-digest results would be deleted)"
+  Push "v2 chain REFUSED" "dev runs already done - not relaunching"
+  exit 2
+}
 New-Item -ItemType Directory -Force -Path "$root\outputs\v2", "C:\ls_scratch\v2" | Out-Null
 $py = "$root\.venv\Scripts\python.exe"
 function AssertDigest($stage) {
-  # the admitted v2 runtime digest is shipped by the Mac (scripts/v2/analysis/sync_laptop.sh);
-  # every stage refuses to start unless the staged code matches it
-  $expectedFile = "$root\generalization\v2\EXPECTED_V2_DIGEST.txt"
-  if (-not (Test-Path $expectedFile)) { Log "${stage}: no EXPECTED_V2_DIGEST.txt - refusing"; Push "v2 chain BLOCKED" "${stage}: no expected digest file"; exit 2 }
-  $expected = (Get-Content $expectedFile -Raw).Trim()
+  # the dev runs are pinned to the admitted round-6 digest (never the mutable expected-digest
+  # file, which the holdout staging overwrites with the amended digest)
   $digestOut = & $py "$root\scripts\v2\analysis\print_digest.py" 2>&1
   $actual = ($digestOut | ForEach-Object { "$_" } | Select-Object -Last 1).Trim()
-  if ($actual -ne $expected) { Log "${stage}: digest $actual != expected $expected - refusing"; Push "v2 chain BLOCKED" "${stage}: staged code digest differs from the admitted digest"; exit 2 }
+  if ($actual -ne $devRunsDigest) { Log "${stage}: digest $actual != dev-run digest $devRunsDigest - refusing"; Push "v2 chain BLOCKED" "${stage}: staged code digest is not the dev-run digest"; exit 2 }
   Log "${stage}: digest OK $actual"
 }
 Log "V2 CHAIN START (pid $PID)"
