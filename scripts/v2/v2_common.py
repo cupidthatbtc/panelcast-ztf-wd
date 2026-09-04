@@ -57,6 +57,7 @@ SCHEMA_VERSION = "v2-1"
 ENGINE = "v2"
 SOLAR_FREQUENCY = 1.0
 LUNAR_SYNODIC_DAYS = 29.530589
+SIDEREAL_MONTH_DAYS = 27.321661   # Amendment 2026-09-04 (V2_PLAN.md §10): moon-vs-field cycle
 YEAR_DAYS = 365.25
 BANDS = ("zg", "zr")
 
@@ -164,7 +165,7 @@ def env_digest() -> str:
 
 __all__ = [
     "BANDS", "DEFAULT", "ENGINE", "LUNAR_SYNODIC_DAYS", "PASS_BOUNDS", "REPO_ROOT",
-    "SAMPLES_PER_PEAK", "SCHEMA_VERSION", "SIDEREAL_FREQUENCY", "SOLAR_FREQUENCY",
+    "SAMPLES_PER_PEAK", "SCHEMA_VERSION", "SIDEREAL_FREQUENCY", "SIDEREAL_MONTH_DAYS", "SOLAR_FREQUENCY",
     "TUNABLE", "V2Constants", "V2_DIR", "WINDOW_POWER_THRESHOLD", "YEAR_DAYS",
     "FrequencyGrid", "approximate_peak_amplitude", "baluev_fap", "campaign_digest",
     "campaign_file_shas", "env_digest", "env_versions", "exact_power_and_amplitude",

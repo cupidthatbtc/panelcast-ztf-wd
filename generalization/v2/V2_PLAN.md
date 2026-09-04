@@ -79,11 +79,23 @@ frozen 1.5/T unchanged.
    peaks separated by tol are recorded (the veto uses the first
    `n_window_peaks`). Fixed loci: k·1.0 + m/365.25 (k = 1..3, m = −2..2;
    m = +1 is the sidereal frequency), k·1.00274 (k = 1, 2), k/29.530589 +
-   m/365.25 (k = 1, 2; m = −1..1), m/365.25 (m = 1, 2), and the lunar–solar /
-   lunar–sidereal beats k·{1.0, 1.00274} ± 1/29.530589 (k = 1, 2). A
-   candidate is `window_alias` in a series if it lies within tol of any
-   fixed or data-driven locus of that series, or if the frozen local test
-   fires (max window strength within ± tol ≥ 0.1). `is_alias_of_stronger`
+   m/365.25 (k = 1, 2; m = −1..1), m/365.25 (m = 1, 2), the lunar–solar /
+   lunar–sidereal beats k·{1.0, 1.00274} ± 1/29.530589 (k = 1, 2), and —
+   Amendment 2026-09-04 (§10), derived in closed form after inspecting the
+   partial dev run and before any holdout star was scored — the
+   sidereal-month beats k·{1.0, 1.00274} ± 1/27.321661 (k = 1, 2), the COMB
+   RULE — the month sidebands k·{1.0, 1.00274} ± {1/29.530589, 1/27.321661}
+   for every harmonic k ≥ 1 (the high pass sees the same comb at k =
+   24..1440) and the bare sidereal lines k·1.00274 for every k, the frozen
+   pipeline's own family, which the pre-amendment list carried only for
+   k = 1, 2 — and the DIURNAL BANDS [k·1.0 − 2/365.25 − tol, k·1.00274 +
+   2/365.25 + tol] for k = 1..3 (the yearly-sideband comb is denser than
+   2·tol, so isolated loci leave unvetoed gaps inside it). A candidate is
+   `window_alias` in a series if it lies within tol of any fixed or
+   data-driven locus of that series, matches the comb rule or a diurnal band
+   (`window.locus_label`, one function shared verbatim by the runner and
+   the offline re-scorer), or if the frozen local test fires (max window
+   strength within ± tol ≥ 0.1). `is_alias_of_stronger`
    (stronger = same-series peaks with higher power) uses spacings {1.0,
    1.00274} c/d and BOTH families: difference |f − f₀| ≈ k·spacing (frozen,
    sidereal only) and mirror f + f₀ ≈ k·spacing (the 1−δ / 2−δ wings; a
@@ -235,7 +247,11 @@ Only the four tunable constants, each within its declared set:
    then is the holdout scored — once (§8).
 
 Not tunable, ever: bounds, grids, FAP threshold, tolerance, the rule's
-structure, the veto's fixed loci, the alignment / detrend definitions.
+structure, the veto's fixed loci, the alignment / detrend definitions. The
+fixed loci were extended ONCE, by the closed-form amendment of 2026-09-04
+(§10), logged after inspection of the partial dev run and before any holdout
+star was scored; they are not a tuning dimension, and no further change to
+the veto is admissible after the holdout lock exists.
 
 ## 6. Comparison endpoints (holdout only, frozen vs v2 on the same stars)
 
@@ -275,10 +291,16 @@ part of a primary number; a sensitivity table including them is labelled
 ## 7. Disclosure (verbatim, for the abstract and poster)
 
 "After full-cohort frozen-arm failure analysis, we fixed a digest-locked
-but not byte-replay-attested v2 detector, selected four prespecified
-constants on development data, and evaluated it once on an internal odd-ID
-holdout excluding four stars used during development; this is
-post-selection internal validation, not confirmatory external validation."
+but not byte-replay-attested v2 detector, extended its fixed window-veto
+loci once after inspecting development-half results, selected four
+prespecified constants on development data, and evaluated it once on an
+internal odd-ID holdout excluding four stars used during development; this
+is post-selection internal validation, not confirmatory external
+validation."
+
+(The clause "extended its fixed window-veto loci once after inspecting
+development-half results" was added by the amendment of 2026-09-04, §10;
+the sentence before the amendment is in the git history of this file.)
 
 ## 8. Provenance, single holdout execution, metrics
 
@@ -397,3 +419,57 @@ code is staged on the laptop with digest parity.
   binds passes, frozen and v2 code digests, environment, shard index,
   shard directory and the constants overrides, re-verified by the metrics
   and the comparison; `frozen_api.py` is part of the v2 code digest.
+- 2026-09-04, after inspection of the PARTIAL dev D3 run (1,065 of 1,458
+  dev stars scored, 30-d trend window, round-6 digest `ecc5df75d8f225cb…`)
+  and before any holdout star was scored (no holdout lock exists; the
+  laptop chain was on the dev stages): closed-form extension of the fixed
+  window-veto loci. Evidence (dev half, partial, never a reportable number):
+  of 94 dev flag0 stars confirmed by v2, 45 sit at 1.9689–1.9690 c/d —
+  between the listed loci 1.96614 (2·1.0 − 1/29.530589) and 1.97161
+  (2·1.00274 − 1/29.530589) at ≈ 5 tol from each, local window power
+  0.04–0.14 (mostly below the 0.1 local test), absent from the 24 recorded
+  window peaks in 28 of the 45; 1.96888 = 2·1.00274 − 1/27.321661 is the
+  SIDEREAL-month sideband of the second sidereal-day harmonic (the moon's
+  position relative to a fixed field cycles with the sidereal month; its
+  phase with the synodic month). At k = 1 the solar−synodic and
+  sidereal−sidereal-month sidebands coincide at 0.96614 c/d — the
+  pre-registered k = 1 locus vetoed 23 frozen-only positive "detections"
+  there — while at k = 2 they split and the list carried only the synodic
+  one. Five more residuals sit at 1.0011–1.0041 c/d in the gaps between the
+  yearly-sideband loci of the k = 1 comb (locus spacing 1/365.25 = 0.00274 >
+  2·tol = 0.0011), and four high-pass residuals at 46.9634 = 47·1.0 −
+  1/27.321661 and 48.9662 = 49·1.0 − 1/29.530589, beyond the listed k ≤ 3.
+  Change (`scripts/v2/window.py`; the runner and `rescore_v2.py` share
+  `locus_label`): (a) listed sidereal-month sidebands k·{1.0, 1.00274} ±
+  1/27.321661 (k = 1, 2); (b) the comb rule for every harmonic k ≥ 1: the
+  month sidebands k·{1.0, 1.00274} ± 1/{29.530589, 27.321661} and the bare
+  sidereal lines k·1.00274 (the frozen pipeline's family for every k — the
+  pre-amendment list carried it only for k = 1, 2, an unintended narrowing
+  of the frozen veto; bare solar lines beyond k = 3 are left to the
+  data-driven peaks and the local test); (c) the diurnal bands [k·1.0 −
+  2/365.25 − tol, k·1.00274 + 2/365.25 + tol], k = 1..3. Nothing else
+  changed: the local test, the data-driven peaks, the alias-of-stronger
+  families, the cross-pass partners, the coherence gate, the tunable sets
+  and the selection rule stand as pre-registered. Exposure of true
+  frequencies: (b) vetoes nine stripes of width 2·tol per harmonic (≈ 1 %
+  of any 1 c/d interval at T ≈ 2,765 d, in the δ Sct and the DAV bands
+  alike; measured on the truth tables before the holdout: 7/456 Mo dominant
+  frequencies — 0 before the amendment — and 38/6,558 D2 injected modes, 0
+  before; 1.0 % of a uniform frequency draw in 4–24 and in 24–1440 c/d),
+  reported by the veto-exposure audit inside its `fixed` component. Code
+  digest after the amendment: `1a99db059a9abe13…` (tests: 257 passed).
+  Applied offline to the partial dev run: 56 of the 94 dev-negative
+  confirmations and 9 dev-positive confirmations are removed, none added;
+  of the 9, eight sat at the 1.96889 / 48.966 c/d loci with no truth match
+  and one (KIC dominant mode 1.03975 c/d, within tol of 1.00274 +
+  1/27.321661) was a correct recovery — the disclosed cost of vetoing a
+  window sideband that a real 1.04 c/d signal cannot be told from. The dev runs are NOT rerun: the veto is a pure function
+  of the recorded candidate frequency, tolerance and local window power, and
+  `rescore_v2.py` reproduced the runner's status / pass / frequency on
+  1,065 / 1,065 partial dev stars with the pre-amendment code; the dev runs
+  carry the round-6 digest and are re-scored under the amended code
+  (`dev_runs_v2_digest` beside `v2_digest` in `V2_CONSTANTS_FROZEN.json`);
+  the holdout runs use the amended digest. The §7 disclosure sentence gains
+  the clause "extended its fixed window-veto loci once after inspecting
+  development-half results". Reviewer round: `generalization/reviews/V2G1/
+  sol_plan_review_r7.md`. Development inspection used `d3_dev.txt` ids only.

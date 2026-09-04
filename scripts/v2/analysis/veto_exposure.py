@@ -7,7 +7,8 @@ for each pass whose grid contains the frequency, decide — from the v2
 per-star JSON and the shard — whether the truth frequency would be vetoed by
 each component of the v2 veto in each band, and by their union:
 
-  fixed      : within tol of a fixed locus (window.fixed_loci);
+  fixed      : within tol of a fixed locus, the comb-sideband rule or a
+               diurnal band (window.fixed_locus_label; Amendment 2026-09-04);
   data       : within tol of one of the first N recorded window peaks;
   local      : frozen local test on the shard's time stamps (max window
                strength within +/- tol >= 0.1);
@@ -39,7 +40,7 @@ sys.path.insert(0, str(V2_DIR))                # outside the v2 code digest: ana
 from align import align_zero_points  # noqa: E402
 from analyze_star_v2 import load_star_v2  # noqa: E402
 from detrend import prepare_series_v2  # noqa: E402
-from rescore_v2 import FIXED  # noqa: E402
+from window import fixed_locus_label  # noqa: E402  — listed loci + comb rule + diurnal band
 from v2_common import (  # noqa: E402
     BANDS, DEFAULT, PASS_BOUNDS, WINDOW_POWER_THRESHOLD, V2Constants, exact_power_and_amplitude,
     window_strength, with_overrides,
@@ -101,7 +102,7 @@ def exposure_rows(sid: str, result: dict, shard_path: Path, truths: list[float],
                 stronger = [float(p["frequency_per_day"]) for p in v2["series_peaks"][SERIES[band]]
                             if float(p["power"]) > power]
                 components = {
-                    "fixed": any(abs(truth - locus) <= tolerance for locus in FIXED),
+                    "fixed": bool(fixed_locus_label(truth, tolerance)),
                     "data": any(abs(truth - float(p["frequency_per_day"])) <= tolerance for p in peaks),
                     "local": local_power >= WINDOW_POWER_THRESHOLD,
                     "stronger": is_alias_of_stronger_v2(truth, stronger, tolerance),

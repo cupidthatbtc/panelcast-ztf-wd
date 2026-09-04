@@ -175,6 +175,10 @@ def main() -> None:
     parser.add_argument("--frozen-per-star", type=Path, required=True, help="frozen D3 metrics per_star.csv")
     parser.add_argument("--split", type=Path, default=REGISTRATION / "split.csv")
     parser.add_argument("--preregistration-commit", required=True)
+    parser.add_argument("--dev-run-digest", default=None,
+                        help="v2 code digest the dev RUNS were produced with when it differs from this "
+                             "checkout's digest (V2_PLAN.md §10 amendment of 2026-09-04: the runs are "
+                             "re-scored exactly under the amended veto, not rerun); recorded, not verified")
     parser.add_argument("--out-dir", type=Path, default=REGISTRATION)
     args = parser.parse_args()
 
@@ -198,6 +202,7 @@ def main() -> None:
         "selection_rule": f"max J = P2_dev - P3_dev s.t. dev nulls <= {MAX_DEV_NULLS} and P1_dev >= P1_dev(default) - {P1_SLACK}; "
                           "ties -> first feasible maximizer in V2_PLAN.md §3 order",
         "v2_digest": v2_digest(),
+        "dev_runs_v2_digest": args.dev_run_digest or v2_digest(),
         "split_sha256": sha256_file(args.split),
         "plan_sha256": sha256_file(REGISTRATION / "V2_PLAN.md"),
         "preregistration_commit": commit,

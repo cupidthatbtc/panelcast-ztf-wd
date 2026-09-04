@@ -28,10 +28,15 @@ for run in d3_dev_w30 d2_dev_w30 d3_dev_w10 d2_dev_w10; do
   echo "$run: $(ls "$SYNC/$run/stars" | grep -c -v prov) results, $(grep -c ',complete,' "$SYNC/$run/completion.csv") complete"
 done
 
-echo "== 2. digest parity: every run must carry this checkout's v2 digest"
-DIGEST=$($PY -c "import sys; sys.path.insert(0,'scripts/v2'); import v2_common; print(v2_common.v2_digest())" 2>/dev/null | tail -1)
+echo "== 2. digest parity: every dev run must carry the admitted pre-amendment digest (V2_PLAN §10, 2026-09-04)"
+# The dev runs were produced at the round-6 digest; the veto amendment of 2026-09-04 changed the
+# code digest and is applied to them by EXACT offline re-scoring (rescore reproduces 1,065/1,065
+# run decisions with the pre-amendment code). The holdout runs use this checkout's digest.
+DEV_RUN_DIGEST=ecc5df75d8f225cbd364d3c498894ab6dce6bf1aeead89ad1de285d4ee57d33c
+DIGEST=$($PY scripts/v2/analysis/print_digest.py 2>/dev/null | tail -1)
+echo "dev-run digest ${DEV_RUN_DIGEST:0:12}…  this checkout ${DIGEST:0:12}…"
 for run in d3_dev_w30 d2_dev_w30 d3_dev_w10 d2_dev_w10; do
-  $PY - "$SYNC/$run/manifest.json" "$DIGEST" <<'EOF'
+  $PY - "$SYNC/$run/manifest.json" "$DEV_RUN_DIGEST" <<'EOF'
 import json, sys
 m = json.load(open(sys.argv[1]))
 assert m["engine"] == "v2" and m["binding"]["v2_digest"] == sys.argv[2], (sys.argv[1], m["binding"]["v2_digest"][:12], sys.argv[2][:12])
@@ -50,5 +55,5 @@ echo "== 4. selector -> generalization/v2/dev_tuning.csv + V2_CONSTANTS_FROZEN.j
 $PY scripts/v2/dev_tuning.py --d3-rescore "$TUNE/rescore_d3_dev_w30.csv" "$TUNE/rescore_d3_dev_w10.csv" \
   --d2-rescore "$TUNE/rescore_d2_dev_w30.csv" "$TUNE/rescore_d2_dev_w10.csv" \
   --frozen-per-star generalization/results/2026-09-02_d3/metrics/per_star.csv \
-  --preregistration-commit "$COMMIT"
+  --preregistration-commit "$COMMIT" --dev-run-digest "$DEV_RUN_DIGEST"
 echo "DONE: review generalization/v2/dev_tuning.csv, add the §10 amendment, commit, copy dev_tuning.csv + V2_CONSTANTS_FROZEN.json to the laptop, then launch the registered holdout."

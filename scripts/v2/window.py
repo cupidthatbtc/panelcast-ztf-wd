@@ -10,10 +10,30 @@ ANY listed spectral-window locus:
   fixed loci : k * 1.0 c/d (k = 1..3) with m / 365.25 yearly sidebands
                (m = -2..2; m = +1 IS the sidereal frequency), k * 1.00274
                (k = 1, 2), k / 29.530589 (k = 1, 2) with m = -1..1 yearly
-               sidebands, and m / 365.25 (m = 1, 2);
+               sidebands, m / 365.25 (m = 1, 2), and the month sidebands of
+               the first two diurnal harmonics k * {1.0, 1.00274} +/- 1/month
+               for the synodic (29.530589 d) and — Amendment 2026-09-04 — the
+               sidereal (27.321661 d) month;
+  comb rule  : (Amendment 2026-09-04) the month sidebands k * spacing +/-
+               1/month for EVERY harmonic k >= 1 of both spacings and both
+               months (the high pass sees the same comb at k = 24..1440),
+               plus the bare sidereal lines k * 1.00274 for every k — the
+               frozen pipeline's own family, which the pre-amendment list
+               carried only for k = 1, 2 (bare solar lines beyond k = 3 are
+               left to the data-driven peaks and the local test);
+  diurnal    : (Amendment 2026-09-04) the closed band [k * 1.0 - 2/365.25,
+               k * 1.00274 + 2/365.25] +/- tol for k = 1..3 (the yearly
+               sideband comb is denser than 2 tol, so isolated loci leave
+               unvetoed gaps inside it);
   data-driven: the top-N (N = 12) peaks of the band's own spectral window on
                the pass grid subsampled x10;
   local test : the frozen rule, kept verbatim.
+
+The amendment was derived in closed form after inspecting the partial dev
+run (V2_PLAN.md §10, 2026-09-04) and before any holdout star was scored: at
+k = 1 the solar-minus-synodic and sidereal-minus-sidereal-month sidebands
+coincide (0.96614 c/d), at k = 2 they split (1.96614 vs 1.96888 c/d) and the
+pre-amendment list carried only the synodic one.
 
 `is_alias_of_stronger` is generalised to the solar AND sidereal spacings and
 to the mirror family k * spacing - f0 (the 1 - delta / 2 - delta wings: the
@@ -37,6 +57,7 @@ from v2_common import (
     DEFAULT,
     LUNAR_SYNODIC_DAYS,
     SIDEREAL_FREQUENCY,
+    SIDEREAL_MONTH_DAYS,
     SOLAR_FREQUENCY,
     WINDOW_POWER_THRESHOLD,
     YEAR_DAYS,
@@ -46,6 +67,9 @@ from v2_common import (
 )
 
 ALIAS_SPACINGS = (SOLAR_FREQUENCY, SIDEREAL_FREQUENCY)
+COMB_SPACINGS = (("solar", SOLAR_FREQUENCY), ("sidereal", SIDEREAL_FREQUENCY))
+MONTHS = (("lunar", LUNAR_SYNODIC_DAYS), ("sidmonth", SIDEREAL_MONTH_DAYS))
+DIURNAL_BAND_HARMONICS = (1, 2, 3)
 
 
 def fixed_loci() -> list[dict[str, object]]:
@@ -65,12 +89,78 @@ def fixed_loci() -> list[dict[str, object]]:
             for sign in (-1, 1):
                 loci.append({"label": f"{spacing_label}_k{k}_lunar{sign:+d}",
                              "frequency_per_day": k * spacing + sign / LUNAR_SYNODIC_DAYS})
+    for k in (1, 2):   # Amendment 2026-09-04: sidereal-month sidebands
+        for spacing_label, spacing in COMB_SPACINGS:
+            for sign in (-1, 1):
+                loci.append({"label": f"{spacing_label}_k{k}_sidmonth{sign:+d}",
+                             "frequency_per_day": k * spacing + sign / SIDEREAL_MONTH_DAYS})
     for m in (1, 2):
         loci.append({"label": f"yearly_m{m}", "frequency_per_day": m / YEAR_DAYS})
     for locus in loci:
         locus["source"] = "fixed"
         locus["strength"] = None
     return loci
+
+
+def comb_sideband_label(frequency: float, tolerance: float) -> str:
+    """Amendment 2026-09-04: the synodic-month and sidereal-month sidebands
+    k * spacing +/- 1/month of every harmonic k >= 1 of the solar and the
+    sidereal spacing, plus the bare sidereal lines k * 1.00274 (the frozen
+    family, every k). Nearest match within `tolerance`, else ''."""
+    best = math.inf
+    label = ""
+    for spacing_label, spacing in COMB_SPACINGS:
+        centre = int(round(frequency / spacing))
+        for k in (centre - 1, centre, centre + 1):
+            if k < 1:
+                continue
+            offsets = [("m+0", 0.0)] if spacing_label == "sidereal" else []
+            offsets += [
+                (f"{month_label}{sign:+d}", sign / days) for month_label, days in MONTHS for sign in (-1, 1)
+            ]
+            for tag, offset in offsets:
+                distance = abs(frequency - (k * spacing + offset))
+                if distance <= tolerance and distance < best:
+                    best, label = distance, f"comb_{spacing_label}_k{k}_{tag}"
+    return label
+
+
+def diurnal_band_label(frequency: float, tolerance: float) -> str:
+    """Amendment 2026-09-04: the closed band between the outermost yearly
+    sidebands of the solar and sidereal harmonics k = 1..3, widened by tol."""
+    for k in DIURNAL_BAND_HARMONICS:
+        low = k * SOLAR_FREQUENCY - 2.0 / YEAR_DAYS - tolerance
+        high = k * SIDEREAL_FREQUENCY + 2.0 / YEAR_DAYS + tolerance
+        if low <= frequency <= high:
+            return f"diurnal_band_k{k}"
+    return ""
+
+
+def locus_label(frequency: float, tolerance: float, loci: list[dict[str, object]]) -> str:
+    """The veto label of `frequency`: the nearest listed locus within
+    `tolerance` (fixed and data-driven), else the comb-sideband rule, else the
+    diurnal band; '' when none applies. Pure function of (frequency,
+    tolerance, loci): the runner and the offline re-scorer share it."""
+    label = ""
+    best = math.inf
+    for locus in loci:
+        distance = abs(frequency - float(locus["frequency_per_day"]))
+        if distance <= tolerance and distance < best:
+            best, label = distance, str(locus["label"])
+    if not label:
+        label = comb_sideband_label(frequency, tolerance)
+    if not label:
+        label = diurnal_band_label(frequency, tolerance)
+    return label
+
+
+_FIXED_LOCI = fixed_loci()
+
+
+def fixed_locus_label(frequency: float, tolerance: float) -> str:
+    """`locus_label` against the fixed loci only (offline re-scoring and the
+    veto-exposure audit; data-driven peaks are tested separately there)."""
+    return locus_label(frequency, tolerance, _FIXED_LOCI)
 
 
 def window_strength_grid(
@@ -135,15 +225,11 @@ def is_window_alias_v2(
 ) -> tuple[bool, float, str]:
     """(alias, local window power, locus label). Alias if the frozen local test
     fires (max window strength within +/- tolerance >= 0.1) OR the candidate is
-    within `tolerance` of any listed locus."""
+    within `tolerance` of any listed locus, the comb-sideband rule or the
+    diurnal band (`locus_label`)."""
     offsets = np.linspace(-tolerance, tolerance, constants.window_local_samples)
     local = float(np.max(window_strength(time, frequency + offsets)))
-    label = ""
-    best = math.inf
-    for locus in loci:
-        distance = abs(frequency - float(locus["frequency_per_day"]))
-        if distance <= tolerance and distance < best:
-            best, label = distance, str(locus["label"])
+    label = locus_label(frequency, tolerance, loci)
     if not label and local >= WINDOW_POWER_THRESHOLD:
         label = "local_window_power"
     return bool(label), local, label
@@ -170,6 +256,7 @@ def is_alias_of_stronger_v2(
 
 
 __all__ = [
-    "ALIAS_SPACINGS", "fixed_loci", "is_alias_of_stronger_v2", "is_window_alias_v2",
-    "veto_loci", "window_peaks", "window_strength_grid",
+    "ALIAS_SPACINGS", "COMB_SPACINGS", "DIURNAL_BAND_HARMONICS", "MONTHS", "comb_sideband_label",
+    "diurnal_band_label", "fixed_loci", "fixed_locus_label", "is_alias_of_stronger_v2",
+    "is_window_alias_v2", "locus_label", "veto_loci", "window_peaks", "window_strength_grid",
 ]

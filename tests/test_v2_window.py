@@ -13,18 +13,23 @@ sys.path.insert(0, str(ROOT / "scripts" / "v2"))
 from v2_common import (  # noqa: E402
     LUNAR_SYNODIC_DAYS,
     SIDEREAL_FREQUENCY,
+    SIDEREAL_MONTH_DAYS,
     SOLAR_FREQUENCY,
     YEAR_DAYS,
     grid_for,
 )
 from window import (  # noqa: E402
     fixed_loci,
+    fixed_locus_label,
     is_alias_of_stronger_v2,
     is_window_alias_v2,
     veto_loci,
     window_peaks,
     window_strength_grid,
 )
+from rescore_v2 import window_alias_under  # noqa: E402
+
+D3_TOLERANCE = 1.5 / 2765.0   # 1.5 / T at the D3 baseline
 from lomb_scargle_common import window_strength  # noqa: E402
 
 
@@ -82,6 +87,54 @@ def test_fixed_window_aliases_are_vetoed_with_family_label(frequency, prefix):
 
     assert aliased is True
     assert label.startswith(prefix)
+
+
+def test_amendment_lists_sidereal_month_sidebands_of_the_first_two_harmonics():
+    by_label = {str(row["label"]): float(row["frequency_per_day"]) for row in fixed_loci()}
+
+    assert by_label["sidereal_k2_sidmonth-1"] == pytest.approx(2 * SIDEREAL_FREQUENCY - 1 / SIDEREAL_MONTH_DAYS)
+    assert by_label["solar_k1_sidmonth+1"] == pytest.approx(SOLAR_FREQUENCY + 1 / SIDEREAL_MONTH_DAYS)
+    # at k = 1 the solar-synodic and sidereal-sidereal-month sidebands coincide; at k = 2 they split
+    assert abs(by_label["solar_k1_lunar-1"] - by_label["sidereal_k1_sidmonth-1"]) < D3_TOLERANCE
+    assert abs(by_label["solar_k2_lunar-1"] - by_label["sidereal_k2_sidmonth-1"]) > 4 * D3_TOLERANCE
+
+
+@pytest.mark.parametrize(
+    ("frequency", "expected"),
+    [
+        (2 * SIDEREAL_FREQUENCY - 1 / SIDEREAL_MONTH_DAYS, "sidereal_k2_sidmonth-1"),   # 1.96888 c/d
+        (47.0 - 1 / SIDEREAL_MONTH_DAYS, "comb_solar_k47_sidmonth-1"),                 # 46.9634 c/d
+        (49.0 - 1 / LUNAR_SYNODIC_DAYS, "comb_solar_k49_lunar-1"),                     # 48.9661 c/d
+        (4 * SIDEREAL_FREQUENCY, "comb_sidereal_k4_m+0"),
+        (1000 * SIDEREAL_FREQUENCY, "comb_sidereal_k1000_m+0"),
+        (1.0014, "diurnal_band_k1"),                                                    # yearly-comb gap
+        (2.0, "solar_k2_m+0"),
+    ],
+)
+def test_amended_fixed_veto_labels(frequency, expected):
+    assert fixed_locus_label(frequency, D3_TOLERANCE) == expected
+
+
+@pytest.mark.parametrize("frequency", [12.3, 5.6889, 4.2477, 1000.5, 0.4467, 40.5, 5.5, 47.0, 4.0])
+def test_amended_fixed_veto_leaves_science_frequencies_alone(frequency):
+    assert fixed_locus_label(frequency, D3_TOLERANCE) == ""
+
+
+def test_offline_rescore_applies_the_amended_fixed_veto():
+    assert window_alias_under(2 * SIDEREAL_FREQUENCY - 1 / SIDEREAL_MONTH_DAYS, 0.0, [], D3_TOLERANCE, 12)
+    assert window_alias_under(1.0014, 0.0, [], D3_TOLERANCE, 12)
+    assert not window_alias_under(12.3, 0.0, [], D3_TOLERANCE, 12)
+
+
+def test_runner_veto_labels_amended_loci_before_the_local_test():
+    time = _ztf_like_times()
+    tolerance = 1.5 / np.ptp(time)
+
+    aliased, _, label = is_window_alias_v2(time, 2 * SIDEREAL_FREQUENCY - 1 / SIDEREAL_MONTH_DAYS,
+                                           tolerance, fixed_loci())
+
+    assert aliased is True
+    assert label == "sidereal_k2_sidmonth-1"
 
 
 def test_science_frequency_is_not_a_window_alias_on_synthetic_cadence():

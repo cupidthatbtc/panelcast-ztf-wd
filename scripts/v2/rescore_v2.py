@@ -36,10 +36,10 @@ import pandas as pd
 
 from rule import STATUS_ORDER, decide
 from v2_common import BANDS, DEFAULT, TUNABLE, WINDOW_POWER_THRESHOLD, V2Constants, overall_result
-from window import fixed_loci
+from window import fixed_loci, fixed_locus_label
 
 SERIES_NAME = {"zg": "zg", "zr": "zr", "joint": "multiband"}
-FIXED = [float(locus["frequency_per_day"]) for locus in fixed_loci()]
+FIXED = [float(locus["frequency_per_day"]) for locus in fixed_loci()]   # listed loci (exposure audit)
 
 
 def combination_id(constants: V2Constants) -> str:
@@ -66,7 +66,7 @@ def combinations(trend_window_days: float | None = None) -> list[tuple[str, V2Co
 
 def window_alias_under(frequency: float, window_power: float, peaks: list[dict],
                        tolerance: float, n_window_peaks: int) -> bool:
-    if any(abs(frequency - locus) <= tolerance for locus in FIXED):
+    if fixed_locus_label(frequency, tolerance):   # listed loci + comb rule + diurnal band (window.py)
         return True
     if window_power >= WINDOW_POWER_THRESHOLD:
         return True
