@@ -532,5 +532,15 @@ code is staged on the laptop with digest parity.
   counts 35 items and names N35, the RUNBOOK re-score example carries
   `--run-manifest`. Code digest after the round-8 revision:
   `bcf4d4d9f34e054e96775b34a4137d16a0de5942264201eebcdc5a5290275dd7`
+  (tests: 277 passed) — superseded by the round-9 fix below.
+- 2026-09-04, round-9 fix (REVISE on one item, `sol_plan_review_r9.md`): the
+  bound `dev_runs` records must carry four DISTINCT manifest identities —
+  `validate_dev_run_records` requires each `manifest` to be a non-empty path
+  string and each `sha256` a SHA-256, and refuses any repeated `sha256` or
+  repeated `manifest` across the four records; the runner, the lock and the
+  comparison inherit the check; the reviewer's reproducer (one manifest
+  identity, four records with altered schedule metadata) is a negative test
+  in the provenance and runner suites. Code digest after the round-9 fix:
+  `332736cf82f862afb5881bb58b72a45b24dbd48643094bf2fa09cc6347e0ff79`
   (tests: 277 passed) — the holdout digest unless a later §10 entry
   supersedes this line.

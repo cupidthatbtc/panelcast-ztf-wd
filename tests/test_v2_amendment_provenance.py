@@ -160,12 +160,16 @@ def test_dev_tuning_rejects_a_missing_or_duplicated_schedule_entry(tmp_path):
 
 
 def test_validate_dev_run_records_rejects_junk_and_shallow_records():
-    good = [{"manifest": "m", "sha256": "a" * 64, "dataset": d, "trend_window_days": w,
+    good = [{"manifest": f"run{i}/manifest.json", "sha256": str(i) * 64, "dataset": d, "trend_window_days": w,
              "v2_digest": DEV_RUNS_V2_DIGEST, "stars_file_sha256": registered_list(REG, name)[0],
-             "completed": registered_list(REG, name)[1]} for (d, w), name in DEV_RUN_SCHEDULE.items()]
+             "completed": registered_list(REG, name)[1]} for i, ((d, w), name) in enumerate(DEV_RUN_SCHEDULE.items())]
     assert validate_dev_run_records(good, REG) == good
     for bad, message in (("junk", "list of exactly 4"), (good[:3], "exactly 4"), (good[:1] * 4, "unique"),
                          ([{**good[0], "sha256": "zz"}, *good[1:]], "SHA-256"),
+                         ([{**r, "sha256": good[0]["sha256"]} for r in good], "distinct"),
+                         ([{**r, "manifest": good[0]["manifest"]} for r in good], "distinct"),
+                         ([{**good[0], "manifest": ""}, *good[1:]], "not a path"),
+                         ([{**good[0], "manifest": 7}, *good[1:]], "not a path"),
                          ([{**good[0], "v2_digest": v2_digest()}, *good[1:]], "dev-run digest"),
                          ([{**good[0], "completed": 1}, *good[1:]], "completion"),
                          ([{k: v for k, v in good[0].items() if k != "stars_file_sha256"}, *good[1:]], "carry")):
@@ -235,11 +239,14 @@ def test_authentic_runner_manifest_is_verified_by_the_same_record_check(tmp_path
     record = dev_run_record(manifest, reg)
     assert record["completed"] == 1 and record["stars_file_sha256"] == _sha(reg / "d3_dev.txt")
     assert record["dataset"] == "d3-kepler-dsct" and record["trend_window_days"] == 30.0
-    validate_dev_run_records([record, *[{**record, "dataset": d, "trend_window_days": w,
-                                          "stars_file_sha256": registered_list(reg, n)[0],
-                                          "completed": registered_list(reg, n)[1]}
-                                         for (d, w), n in DEV_RUN_SCHEDULE.items() if (d, w) != ("d3-kepler-dsct", 30.0)]],
-                             reg)
+    others = [{**record, "dataset": d, "trend_window_days": w, "manifest": f"other{i}/manifest.json",
+               "sha256": str(i) * 64, "stars_file_sha256": registered_list(reg, n)[0],
+               "completed": registered_list(reg, n)[1]}
+              for i, ((d, w), n) in enumerate(DEV_RUN_SCHEDULE.items()) if (d, w) != ("d3-kepler-dsct", 30.0)]
+    validate_dev_run_records([record, *others], reg)
+    with pytest.raises(SystemExit, match="distinct"):          # the same manifest identity four times
+        validate_dev_run_records([record, *[{**o, "manifest": record["manifest"], "sha256": record["sha256"]}
+                                            for o in others]], reg)
 
 
 def test_amendment_commit_descends_from_the_preregistration_commit():

@@ -248,6 +248,8 @@ def validate_dev_run_records(records, registration: Path) -> list[dict]:
     if not isinstance(records, list) or len(records) != 4:
         raise SystemExit("dev_runs must be a list of exactly 4 records")
     seen: set[tuple] = set()
+    manifests: set[str] = set()
+    shas: set[str] = set()
     for record in records:
         if not isinstance(record, dict) or set(DEV_RUN_RECORD_KEYS) - set(record):
             raise SystemExit(f"dev_runs record must carry {DEV_RUN_RECORD_KEYS}")
@@ -258,8 +260,15 @@ def validate_dev_run_records(records, registration: Path) -> list[dict]:
         if key not in DEV_RUN_SCHEDULE or key in seen:
             raise SystemExit(f"dev_runs record {key} is not a unique §5 schedule entry")
         seen.add(key)
-        if not re.fullmatch(r"[0-9a-f]{64}", str(record["sha256"])):
+        if not isinstance(record["sha256"], str) or not re.fullmatch(r"[0-9a-f]{64}", record["sha256"]):
             raise SystemExit("dev_runs record sha256 is not a SHA-256")
+        if not isinstance(record["manifest"], str) or not record["manifest"].strip():
+            raise SystemExit("dev_runs record manifest is not a path")
+        if record["sha256"] in shas or record["manifest"] in manifests:
+            raise SystemExit(f"dev_runs record {key} repeats another record's manifest identity "
+                             "(four distinct manifests are required)")
+        shas.add(record["sha256"])
+        manifests.add(record["manifest"])
         if record["v2_digest"] != DEV_RUNS_V2_DIGEST:
             raise SystemExit("dev_runs record digest is not the dev-run digest")
         list_sha, n_list = registered_list(registration, DEV_RUN_SCHEDULE[key])

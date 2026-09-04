@@ -30,9 +30,9 @@ def _amendment_binding(reg: Path) -> dict:
     commit and four well-formed dev-run records (one per §5 schedule entry, at
     the pre-amendment digest, with the registration root's dev-list SHAs)."""
     records = []
-    for (dataset, window), name in DEV_RUN_SCHEDULE.items():
+    for i, ((dataset, window), name) in enumerate(DEV_RUN_SCHEDULE.items()):
         sha, n = registered_list(reg, name)
-        records.append({"manifest": f"{dataset}_w{window:g}/manifest.json", "sha256": "0" * 64,
+        records.append({"manifest": f"{dataset}_w{window:g}/manifest.json", "sha256": str(i) * 64,
                         "dataset": dataset, "trend_window_days": window, "v2_digest": DEV_RUNS_V2_DIGEST,
                         "stars_file_sha256": sha, "completed": n})
     return {"dev_runs_v2_digest": DEV_RUNS_V2_DIGEST, "veto_amendment_commit": VETO_AMENDMENT_COMMIT,
@@ -196,6 +196,8 @@ def test_registered_holdout_mode_locks_and_refuses_drift(tmp_path):
     good_runs = artifact["dev_runs"]
     for broken in ({"veto_amendment_commit": "f" * 40}, {"dev_runs_v2_digest": v2_digest()}, {"dev_runs": []},
                    {"dev_runs": "junk"}, {"dev_runs": good_runs[:1] * 4},
+                   {"dev_runs": [{**r, "sha256": good_runs[0]["sha256"]} for r in good_runs]},   # one manifest, 4 records
+                   {"dev_runs": [{**r, "manifest": "same/manifest.json"} for r in good_runs]},
                    {"dev_runs": [{**good_runs[0], "stars_file_sha256": "0" * 64}, *good_runs[1:]]},
                    {"dev_runs": [{**good_runs[0], "v2_digest": v2_digest()}, *good_runs[1:]]}):
         (reg / "V2_CONSTANTS_FROZEN.json").write_text(json.dumps({**artifact, "overrides": {"n_window_peaks": 6},
