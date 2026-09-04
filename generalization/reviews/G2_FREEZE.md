@@ -352,3 +352,18 @@ directly from result JSONs with an approximate any-pass/first-confirmed proxy
 decision, definition, or code follows from it; every D2 endpoint and the
 round-2 descriptive set were fixed before it. Recorded so the exposure table
 stays complete.
+
+2026-09-04 — D2 FULL RUN LANDED (laptop, gen2 129740d1809c…, 3,089/3,089, 0 failures,
+strict attestation); authoritative metrics = Mac re-run of the compliance-patched program
+(generalization/results/2026-09-04_d2/metrics), ruled guard vs the laptop pre-fix run: 17
+science outputs identical (newline tier) and per_star.csv identical in every decision/match/
+count column; the two CSV-parsed truth columns (primary_freq, truth_period_days) differ by one
+ulp on 76 rows (max relative 2.1e-16) = the documented laptop pandas float-parse artifact
+(CROSS_PLATFORM_REPLAY.md, 2026-08-29). The guard gained an explicit, named-column
+`--allow-known-platform-ulp` exception (compare_metrics_runs.py; tests) — every other column
+stays byte-bound; disclosed in the bundle README. RESULT OF THE SOLE CONFIRMATORY DECISION
+(P5): 19/1,000 Gaussian nulls confirmed, CP upper 0.0278 — the acceptance rule (U95 ≤ 0.005)
+is NOT met. No endpoint changes; the P5-fail contingency of the writing outline applies.
+P4 (nominal arm B, 103 targets): recovery 0.217 [0.172, 0.262] eligible = usable; trigger
+0.557 [0.518, 0.602]; paired controls D 0.557 vs 0.417 (diff 0.139 [0.091, 0.191]), R 0.217
+vs 0; native control trigger 0.443 [0.352, 0.538]. G5 D2 independent re-derivation launched.

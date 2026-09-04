@@ -1,0 +1,8 @@
+{
+  "derangements": 10000,
+  "unit": "target-equal mean over nominal arm-B windows",
+  "accidental_recovery_rate_mean": 0.0,
+  "accidental_recovery_rate_p95": 0.0,
+  "accidental_any_mode_rate_mean": 0.0,
+  "accidental_any_mode_rate_p95": 0.0
+}

@@ -1,0 +1,3 @@
+quantity,rule,n_scheduled,n_completed,k,p,cp_one_sided_95_upper,acceptance_u95_leq_0.005,n_completed_is_1000,prespecified_primary,confirmatory_decision,n,ess,lo,hi
+fpr_gaussian,confirmed,1000.0,1000.0,19.0,0.019,0.027755286045479104,False,True,True,False,,,,
+native_trigger_rate,confirmed,,,,0.44339622641509435,,,,,,106.0,106.0,0.35245081369761305,0.5383008193484405

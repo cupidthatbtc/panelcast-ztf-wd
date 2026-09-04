@@ -1,0 +1,24 @@
+{
+  "bundle": "2026-09-04_d2",
+  "checks": {
+    "run_complete_3089": true,
+    "failures_0": true,
+    "provenance_verified_3089": true,
+    "pilot_false_confirmatory_allowed": true,
+    "attestation_strict": true,
+    "frozen_sha_match": true,
+    "generation_id_run_equals_shards": true,
+    "run_matrix_matches_generation_schedule": true,
+    "guard_pass_laptop_vs_mac": true,
+    "guard_known_ulp_exception_columns": ["primary_freq", "truth_period_days"],
+    "guard_max_relative_difference": 2.06e-16,
+    "p5_nulls_completed_1000": true,
+    "p5_acceptance_u95_leq_0.005": false,
+    "p5_confirmed_count": 19,
+    "p5_cp_one_sided_95_upper": 0.027755,
+    "p4_targets_103_zero_unusable_strata": true,
+    "tests_238_passed": true
+  },
+  "all_pass": true,
+  "note": "all_pass refers to provenance, completeness and guard checks; the P5 acceptance rule (the sole confirmatory decision) is NOT met and is recorded as a result, not a check failure."
+}

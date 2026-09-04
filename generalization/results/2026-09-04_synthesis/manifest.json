@@ -1,0 +1,42 @@
+{
+  "d3_readme_cross_check": "pass (25 README cells at three decimals)",
+  "datasets": {
+    "absent": [
+      "D2/v2",
+      "D3/v2"
+    ],
+    "present": [
+      "D1/frozen",
+      "D2/frozen",
+      "D3/frozen"
+    ]
+  },
+  "inputs": {
+    "generalization/results/2026-09-02_d3/README.md": "2e2ee1489c1679ba86a4e6fec6a744353b0f51d5c50e56da9e55805b11222be6",
+    "generalization/results/2026-09-02_d3/descriptive_postlaunch/d3_negative_trigger_strata.csv": "cdadde8936aa5bc9229571b099169cc4ce5ddc287eb7eb7bf555f45d04fd9207",
+    "generalization/results/2026-09-02_d3/descriptive_postlaunch/d3_strata_covariates.README.md": "b2d3f05bb7c33cf5a2964731b195a06409a297b8cfc0a81baf2027cd3fd4cc0a",
+    "generalization/results/2026-09-02_d3/metrics/chance_match.json": "be9b3fb6c2420409a0f0a940f075be122607044c4040ae87ff16dce419755651",
+    "generalization/results/2026-09-02_d3/metrics/completeness_by_class_pass_rule.csv": "13267cce40a78c8577b161bf6098fcd79beecf843c4d0327ebd101aad2d3c757",
+    "generalization/results/2026-09-02_d3/metrics/contingency_complementarity.json": "11520ecaa8d138a4424f339dba4a650e81f95881cb45e7b83116087e74f653d5",
+    "generalization/results/2026-09-02_d3/metrics/manifest.json": "2e5772b161679369bdaa15dfcea541ad07ae1e645304b049374d2a090333008d",
+    "generalization/results/2026-09-02_d3/metrics/ppv.csv": "36b2a29bc4cab73109c010fc242365921341f8ceddfa9948e02ab2b18d090c0b",
+    "generalization/results/2026-09-02_d3/metrics/trigger_rates.csv": "7d12c2d656a724d27126aa5946bebcaa579edebbf919691b78850d22067a2236",
+    "generalization/results/2026-09-04_d2/metrics/chance_match.json": "3e58909dd90cd56cdb928dc423e402e2bd1f19d668c0b1977c7e0941adbda9bc",
+    "generalization/results/2026-09-04_d2/metrics/d2_cluster_completeness.csv": "fb9496098db80ace7153a939655ceb266680a61f54f09c8443e31df062a28252",
+    "generalization/results/2026-09-04_d2/metrics/d2_paired_controls_summary.csv": "ac54953c7b75d220a18b3bec62c89b41b3ccce34e32fbc13fddf3dbdbed0caa1",
+    "generalization/results/2026-09-04_d2/metrics/d2_scenario_contrasts.csv": "aec4aeba67811585b510aa3ac43d88475f27ed46803e991d1ccfd7fd2a0fabca",
+    "generalization/results/2026-09-04_d2/metrics/manifest.json": "380c07497fc764e0693b750fa7d09e6f41773e99e604f617ab8511a5408190b5",
+    "generalization/results/2026-09-04_d2/metrics/trigger_rates.csv": "78b3a76034e1b3779cc3be23be06003ceeda9b8aab1a8908380ddbf275943c0f",
+    "outputs/generalization/metrics_d1/chance_match.json": "37b512a1a9655e9c7d930eef9a8829d88734a3132a5d8fcc3d70c0bd4c7827bd",
+    "outputs/generalization/metrics_d1/completeness_by_class_pass_rule.csv": "a492b468bc918f9c9bea6ff34a40369b3df35192db72b4f5562089eea3a8e75e",
+    "outputs/generalization/metrics_d1/contingency_complementarity.json": "9c94453f52c8fca1dcf1d56e1243c84f2b2471eda8a50cc6456ed49c6666ac27",
+    "outputs/generalization/metrics_d1/manifest.json": "35e306541b21e67c6e23b3dbdec37d1dc181720b3c9176719d858316b672c333",
+    "outputs/generalization/metrics_d1/per_star.csv": "b42d653a8fd1c0eb608115fd0d33b4fa4ee1775d9e42e193953a731b02000b97",
+    "scripts/generalization/descriptive/synthesis_table.py": "62d877f561aa918c5223abb8fe0eb30791736afddada98d1ed98807e72f5733a"
+  },
+  "script": {
+    "path": "scripts/generalization/descriptive/synthesis_table.py",
+    "sha256": "62d877f561aa918c5223abb8fe0eb30791736afddada98d1ed98807e72f5733a"
+  },
+  "timestamp_utc": "2026-09-04T03:54:32.588564+00:00"
+}

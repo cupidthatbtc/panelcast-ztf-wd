@@ -1,0 +1,2209 @@
+{
+  "bundle_manifests": {
+    "D1/frozen": {
+      "engine": "frozen",
+      "file": "outputs/generalization/metrics_d1/manifest.json",
+      "pilot": false,
+      "sha256": "35e306541b21e67c6e23b3dbdec37d1dc181720b3c9176719d858316b672c333"
+    },
+    "D2/frozen": {
+      "engine": "frozen",
+      "file": "generalization/results/2026-09-04_d2/metrics/manifest.json",
+      "pilot": false,
+      "sha256": "380c07497fc764e0693b750fa7d09e6f41773e99e604f617ab8511a5408190b5"
+    },
+    "D3/frozen": {
+      "engine": "frozen",
+      "file": "generalization/results/2026-09-02_d3/metrics/manifest.json",
+      "pilot": false,
+      "sha256": "2e5772b161679369bdaa15dfcea541ad07ae1e645304b049374d2a090333008d"
+    }
+  },
+  "cells": {
+    "D1|frozen|P1_detection|arm": {
+      "file": "outputs/generalization/metrics_d1/completeness_by_class_pass_rule.csv",
+      "locator": "CSV line 24, column p",
+      "sha256": "a492b468bc918f9c9bea6ff34a40369b3df35192db72b4f5562089eea3a8e75e",
+      "value": "frozen"
+    },
+    "D1|frozen|P1_detection|dataset": {
+      "file": "outputs/generalization/metrics_d1/completeness_by_class_pass_rule.csv",
+      "locator": "CSV line 24, column p",
+      "sha256": "a492b468bc918f9c9bea6ff34a40369b3df35192db72b4f5562089eea3a8e75e",
+      "value": "D1"
+    },
+    "D1|frozen|P1_detection|endpoint": {
+      "file": "outputs/generalization/metrics_d1/completeness_by_class_pass_rule.csv",
+      "locator": "CSV line 24, column p",
+      "sha256": "a492b468bc918f9c9bea6ff34a40369b3df35192db72b4f5562089eea3a8e75e",
+      "value": "P1_detection"
+    },
+    "D1|frozen|P1_detection|estimate": {
+      "file": "outputs/generalization/metrics_d1/completeness_by_class_pass_rule.csv",
+      "locator": "CSV line 24, column p",
+      "sha256": "a492b468bc918f9c9bea6ff34a40369b3df35192db72b4f5562089eea3a8e75e",
+      "value": 0.8461538461538461
+    },
+    "D1|frozen|P1_detection|frame": {
+      "file": "outputs/generalization/metrics_d1/completeness_by_class_pass_rule.csv",
+      "locator": "CSV line 24, column p",
+      "sha256": "a492b468bc918f9c9bea6ff34a40369b3df35192db72b4f5562089eea3a8e75e",
+      "value": "13 paper-variable stars (eligible roster)"
+    },
+    "D1|frozen|P1_detection|hi": {
+      "file": "outputs/generalization/metrics_d1/completeness_by_class_pass_rule.csv",
+      "locator": "CSV line 24, column hi",
+      "sha256": "a492b468bc918f9c9bea6ff34a40369b3df35192db72b4f5562089eea3a8e75e",
+      "value": 0.9567418216419186
+    },
+    "D1|frozen|P1_detection|interval_type": {
+      "file": "outputs/generalization/metrics_d1/completeness_by_class_pass_rule.csv",
+      "locator": "CSV line 24, column p",
+      "sha256": "a492b468bc918f9c9bea6ff34a40369b3df35192db72b4f5562089eea3a8e75e",
+      "value": "Wilson 95%"
+    },
+    "D1|frozen|P1_detection|lo": {
+      "file": "outputs/generalization/metrics_d1/completeness_by_class_pass_rule.csv",
+      "locator": "CSV line 24, column lo",
+      "sha256": "a492b468bc918f9c9bea6ff34a40369b3df35192db72b4f5562089eea3a8e75e",
+      "value": 0.5776536898051745
+    },
+    "D1|frozen|P1_detection|n": {
+      "file": "outputs/generalization/metrics_d1/completeness_by_class_pass_rule.csv",
+      "locator": "CSV line 24, column n",
+      "sha256": "a492b468bc918f9c9bea6ff34a40369b3df35192db72b4f5562089eea3a8e75e",
+      "value": 13
+    },
+    "D1|frozen|P1_detection|source_file": {
+      "file": "outputs/generalization/metrics_d1/completeness_by_class_pass_rule.csv",
+      "locator": "CSV line 24, column p",
+      "sha256": "a492b468bc918f9c9bea6ff34a40369b3df35192db72b4f5562089eea3a8e75e",
+      "value": "outputs/generalization/metrics_d1/completeness_by_class_pass_rule.csv"
+    },
+    "D1|frozen|P1_detection|source_locator": {
+      "file": "outputs/generalization/metrics_d1/completeness_by_class_pass_rule.csv",
+      "locator": "CSV line 24, column p",
+      "sha256": "a492b468bc918f9c9bea6ff34a40369b3df35192db72b4f5562089eea3a8e75e",
+      "value": "CSV line 24, column p"
+    },
+    "D1|frozen|P2_recovery|arm": {
+      "file": "outputs/generalization/metrics_d1/completeness_by_class_pass_rule.csv",
+      "locator": "CSV line 26, column p",
+      "sha256": "a492b468bc918f9c9bea6ff34a40369b3df35192db72b4f5562089eea3a8e75e",
+      "value": "frozen"
+    },
+    "D1|frozen|P2_recovery|dataset": {
+      "file": "outputs/generalization/metrics_d1/completeness_by_class_pass_rule.csv",
+      "locator": "CSV line 26, column p",
+      "sha256": "a492b468bc918f9c9bea6ff34a40369b3df35192db72b4f5562089eea3a8e75e",
+      "value": "D1"
+    },
+    "D1|frozen|P2_recovery|endpoint": {
+      "file": "outputs/generalization/metrics_d1/completeness_by_class_pass_rule.csv",
+      "locator": "CSV line 26, column p",
+      "sha256": "a492b468bc918f9c9bea6ff34a40369b3df35192db72b4f5562089eea3a8e75e",
+      "value": "P2_recovery"
+    },
+    "D1|frozen|P2_recovery|estimate": {
+      "file": "outputs/generalization/metrics_d1/completeness_by_class_pass_rule.csv",
+      "locator": "CSV line 26, column p",
+      "sha256": "a492b468bc918f9c9bea6ff34a40369b3df35192db72b4f5562089eea3a8e75e",
+      "value": 0.0
+    },
+    "D1|frozen|P2_recovery|frame": {
+      "file": "outputs/generalization/metrics_d1/completeness_by_class_pass_rule.csv",
+      "locator": "CSV line 26, column p",
+      "sha256": "a492b468bc918f9c9bea6ff34a40369b3df35192db72b4f5562089eea3a8e75e",
+      "value": "frequency-scorable paper-variable stars"
+    },
+    "D1|frozen|P2_recovery|hi": {
+      "file": "outputs/generalization/metrics_d1/completeness_by_class_pass_rule.csv",
+      "locator": "CSV line 26, column hi",
+      "sha256": "a492b468bc918f9c9bea6ff34a40369b3df35192db72b4f5562089eea3a8e75e",
+      "value": 0.4898908364545973
+    },
+    "D1|frozen|P2_recovery|interval_type": {
+      "file": "outputs/generalization/metrics_d1/completeness_by_class_pass_rule.csv",
+      "locator": "CSV line 26, column p",
+      "sha256": "a492b468bc918f9c9bea6ff34a40369b3df35192db72b4f5562089eea3a8e75e",
+      "value": "Wilson 95%"
+    },
+    "D1|frozen|P2_recovery|lo": {
+      "file": "outputs/generalization/metrics_d1/completeness_by_class_pass_rule.csv",
+      "locator": "CSV line 26, column lo",
+      "sha256": "a492b468bc918f9c9bea6ff34a40369b3df35192db72b4f5562089eea3a8e75e",
+      "value": 0.0
+    },
+    "D1|frozen|P2_recovery|n": {
+      "file": "outputs/generalization/metrics_d1/completeness_by_class_pass_rule.csv",
+      "locator": "CSV line 26, column n",
+      "sha256": "a492b468bc918f9c9bea6ff34a40369b3df35192db72b4f5562089eea3a8e75e",
+      "value": 4
+    },
+    "D1|frozen|P2_recovery|notes": {
+      "file": "outputs/generalization/metrics_d1/completeness_by_class_pass_rule.csv",
+      "locator": "CSV line 26, column p",
+      "sha256": "a492b468bc918f9c9bea6ff34a40369b3df35192db72b4f5562089eea3a8e75e",
+      "value": "diagnostic only; non-contemporaneous literature frequencies"
+    },
+    "D1|frozen|P2_recovery|source_file": {
+      "file": "outputs/generalization/metrics_d1/completeness_by_class_pass_rule.csv",
+      "locator": "CSV line 26, column p",
+      "sha256": "a492b468bc918f9c9bea6ff34a40369b3df35192db72b4f5562089eea3a8e75e",
+      "value": "outputs/generalization/metrics_d1/completeness_by_class_pass_rule.csv"
+    },
+    "D1|frozen|P2_recovery|source_locator": {
+      "file": "outputs/generalization/metrics_d1/completeness_by_class_pass_rule.csv",
+      "locator": "CSV line 26, column p",
+      "sha256": "a492b468bc918f9c9bea6ff34a40369b3df35192db72b4f5562089eea3a8e75e",
+      "value": "CSV line 26, column p"
+    },
+    "D1|frozen|P3_negative_trigger|arm": {
+      "file": "outputs/generalization/metrics_d1/per_star.csv",
+      "locator": "CSV lines 8,9,10,11,12, filter label_positive=false; aggregate best_status",
+      "sha256": "b42d653a8fd1c0eb608115fd0d33b4fa4ee1775d9e42e193953a731b02000b97",
+      "value": "frozen"
+    },
+    "D1|frozen|P3_negative_trigger|dataset": {
+      "file": "outputs/generalization/metrics_d1/per_star.csv",
+      "locator": "CSV lines 8,9,10,11,12, filter label_positive=false; aggregate best_status",
+      "sha256": "b42d653a8fd1c0eb608115fd0d33b4fa4ee1775d9e42e193953a731b02000b97",
+      "value": "D1"
+    },
+    "D1|frozen|P3_negative_trigger|endpoint": {
+      "file": "outputs/generalization/metrics_d1/per_star.csv",
+      "locator": "CSV lines 8,9,10,11,12, filter label_positive=false; aggregate best_status",
+      "sha256": "b42d653a8fd1c0eb608115fd0d33b4fa4ee1775d9e42e193953a731b02000b97",
+      "value": "P3_negative_trigger"
+    },
+    "D1|frozen|P3_negative_trigger|estimate": {
+      "file": "outputs/generalization/metrics_d1/per_star.csv",
+      "locator": "CSV lines 8,9,10,11,12, filter label_positive=false; aggregate best_status",
+      "sha256": "b42d653a8fd1c0eb608115fd0d33b4fa4ee1775d9e42e193953a731b02000b97",
+      "value": 0.0
+    },
+    "D1|frozen|P3_negative_trigger|frame": {
+      "file": "outputs/generalization/metrics_d1/per_star.csv",
+      "locator": "CSV lines 8,9,10,11,12, filter label_positive=false; aggregate best_status",
+      "sha256": "b42d653a8fd1c0eb608115fd0d33b4fa4ee1775d9e42e193953a731b02000b97",
+      "value": "five paper-constant stars; transit control excluded"
+    },
+    "D1|frozen|P3_negative_trigger|hi": {
+      "file": "outputs/generalization/metrics_d1/per_star.csv",
+      "locator": "CSV lines 8,9,10,11,12, filter label_positive=false; aggregate best_status",
+      "sha256": "b42d653a8fd1c0eb608115fd0d33b4fa4ee1775d9e42e193953a731b02000b97",
+      "value": 0.43448246478317476
+    },
+    "D1|frozen|P3_negative_trigger|interval_type": {
+      "file": "outputs/generalization/metrics_d1/per_star.csv",
+      "locator": "CSV lines 8,9,10,11,12, filter label_positive=false; aggregate best_status",
+      "sha256": "b42d653a8fd1c0eb608115fd0d33b4fa4ee1775d9e42e193953a731b02000b97",
+      "value": "Wilson 95%"
+    },
+    "D1|frozen|P3_negative_trigger|lo": {
+      "file": "outputs/generalization/metrics_d1/per_star.csv",
+      "locator": "CSV lines 8,9,10,11,12, filter label_positive=false; aggregate best_status",
+      "sha256": "b42d653a8fd1c0eb608115fd0d33b4fa4ee1775d9e42e193953a731b02000b97",
+      "value": 0.0
+    },
+    "D1|frozen|P3_negative_trigger|n": {
+      "file": "outputs/generalization/metrics_d1/per_star.csv",
+      "locator": "CSV lines 8,9,10,11,12, filter label_positive=false; aggregate best_status",
+      "sha256": "b42d653a8fd1c0eb608115fd0d33b4fa4ee1775d9e42e193953a731b02000b97",
+      "value": 5
+    },
+    "D1|frozen|P3_negative_trigger|notes": {
+      "file": "outputs/generalization/metrics_d1/per_star.csv",
+      "locator": "CSV lines 8,9,10,11,12, filter label_positive=false; aggregate best_status",
+      "sha256": "b42d653a8fd1c0eb608115fd0d33b4fa4ee1775d9e42e193953a731b02000b97",
+      "value": "0 confirmed + 1 candidate"
+    },
+    "D1|frozen|P3_negative_trigger|source_file": {
+      "file": "outputs/generalization/metrics_d1/per_star.csv",
+      "locator": "CSV lines 8,9,10,11,12, filter label_positive=false; aggregate best_status",
+      "sha256": "b42d653a8fd1c0eb608115fd0d33b4fa4ee1775d9e42e193953a731b02000b97",
+      "value": "outputs/generalization/metrics_d1/per_star.csv"
+    },
+    "D1|frozen|P3_negative_trigger|source_locator": {
+      "file": "outputs/generalization/metrics_d1/per_star.csv",
+      "locator": "CSV lines 8,9,10,11,12, filter label_positive=false; aggregate best_status",
+      "sha256": "b42d653a8fd1c0eb608115fd0d33b4fa4ee1775d9e42e193953a731b02000b97",
+      "value": "CSV lines 8,9,10,11,12, filter label_positive=false; aggregate best_status"
+    },
+    "D1|frozen|census_rate|arm": {
+      "file": "outputs/generalization/metrics_d1/completeness_by_class_pass_rule.csv",
+      "locator": "CSV line 30, column p",
+      "sha256": "a492b468bc918f9c9bea6ff34a40369b3df35192db72b4f5562089eea3a8e75e",
+      "value": "frozen"
+    },
+    "D1|frozen|census_rate|dataset": {
+      "file": "outputs/generalization/metrics_d1/completeness_by_class_pass_rule.csv",
+      "locator": "CSV line 30, column p",
+      "sha256": "a492b468bc918f9c9bea6ff34a40369b3df35192db72b4f5562089eea3a8e75e",
+      "value": "D1"
+    },
+    "D1|frozen|census_rate|endpoint": {
+      "file": "outputs/generalization/metrics_d1/completeness_by_class_pass_rule.csv",
+      "locator": "CSV line 30, column p",
+      "sha256": "a492b468bc918f9c9bea6ff34a40369b3df35192db72b4f5562089eea3a8e75e",
+      "value": "census_rate"
+    },
+    "D1|frozen|census_rate|estimate": {
+      "file": "outputs/generalization/metrics_d1/completeness_by_class_pass_rule.csv",
+      "locator": "CSV line 30, column p",
+      "sha256": "a492b468bc918f9c9bea6ff34a40369b3df35192db72b4f5562089eea3a8e75e",
+      "value": 0.6923076923076923
+    },
+    "D1|frozen|census_rate|frame": {
+      "file": "outputs/generalization/metrics_d1/completeness_by_class_pass_rule.csv",
+      "locator": "CSV line 30, column p",
+      "sha256": "a492b468bc918f9c9bea6ff34a40369b3df35192db72b4f5562089eea3a8e75e",
+      "value": "13 paper-variable stars (eligible roster)"
+    },
+    "D1|frozen|census_rate|hi": {
+      "file": "outputs/generalization/metrics_d1/completeness_by_class_pass_rule.csv",
+      "locator": "CSV line 30, column hi",
+      "sha256": "a492b468bc918f9c9bea6ff34a40369b3df35192db72b4f5562089eea3a8e75e",
+      "value": 0.8731929634428948
+    },
+    "D1|frozen|census_rate|interval_type": {
+      "file": "outputs/generalization/metrics_d1/completeness_by_class_pass_rule.csv",
+      "locator": "CSV line 30, column p",
+      "sha256": "a492b468bc918f9c9bea6ff34a40369b3df35192db72b4f5562089eea3a8e75e",
+      "value": "Wilson 95%"
+    },
+    "D1|frozen|census_rate|lo": {
+      "file": "outputs/generalization/metrics_d1/completeness_by_class_pass_rule.csv",
+      "locator": "CSV line 30, column lo",
+      "sha256": "a492b468bc918f9c9bea6ff34a40369b3df35192db72b4f5562089eea3a8e75e",
+      "value": 0.42369343180549035
+    },
+    "D1|frozen|census_rate|n": {
+      "file": "outputs/generalization/metrics_d1/completeness_by_class_pass_rule.csv",
+      "locator": "CSV line 30, column n",
+      "sha256": "a492b468bc918f9c9bea6ff34a40369b3df35192db72b4f5562089eea3a8e75e",
+      "value": 13
+    },
+    "D1|frozen|census_rate|source_file": {
+      "file": "outputs/generalization/metrics_d1/completeness_by_class_pass_rule.csv",
+      "locator": "CSV line 30, column p",
+      "sha256": "a492b468bc918f9c9bea6ff34a40369b3df35192db72b4f5562089eea3a8e75e",
+      "value": "outputs/generalization/metrics_d1/completeness_by_class_pass_rule.csv"
+    },
+    "D1|frozen|census_rate|source_locator": {
+      "file": "outputs/generalization/metrics_d1/completeness_by_class_pass_rule.csv",
+      "locator": "CSV line 30, column p",
+      "sha256": "a492b468bc918f9c9bea6ff34a40369b3df35192db72b4f5562089eea3a8e75e",
+      "value": "CSV line 30, column p"
+    },
+    "D1|frozen|chance_match_mean|arm": {
+      "file": "outputs/generalization/metrics_d1/chance_match.json",
+      "locator": "JSON key $.accidental_direct_match_rate_mean",
+      "sha256": "37b512a1a9655e9c7d930eef9a8829d88734a3132a5d8fcc3d70c0bd4c7827bd",
+      "value": "frozen"
+    },
+    "D1|frozen|chance_match_mean|dataset": {
+      "file": "outputs/generalization/metrics_d1/chance_match.json",
+      "locator": "JSON key $.accidental_direct_match_rate_mean",
+      "sha256": "37b512a1a9655e9c7d930eef9a8829d88734a3132a5d8fcc3d70c0bd4c7827bd",
+      "value": "D1"
+    },
+    "D1|frozen|chance_match_mean|endpoint": {
+      "file": "outputs/generalization/metrics_d1/chance_match.json",
+      "locator": "JSON key $.accidental_direct_match_rate_mean",
+      "sha256": "37b512a1a9655e9c7d930eef9a8829d88734a3132a5d8fcc3d70c0bd4c7827bd",
+      "value": "chance_match_mean"
+    },
+    "D1|frozen|chance_match_mean|estimate": {
+      "file": "outputs/generalization/metrics_d1/chance_match.json",
+      "locator": "JSON key $.accidental_direct_match_rate_mean",
+      "sha256": "37b512a1a9655e9c7d930eef9a8829d88734a3132a5d8fcc3d70c0bd4c7827bd",
+      "value": 0.0
+    },
+    "D1|frozen|chance_match_mean|frame": {
+      "file": "outputs/generalization/metrics_d1/chance_match.json",
+      "locator": "JSON key $.accidental_direct_match_rate_mean",
+      "sha256": "37b512a1a9655e9c7d930eef9a8829d88734a3132a5d8fcc3d70c0bd4c7827bd",
+      "value": "frequency-scorable stars"
+    },
+    "D1|frozen|chance_match_mean|interval_type": {
+      "file": "outputs/generalization/metrics_d1/chance_match.json",
+      "locator": "JSON key $.accidental_direct_match_rate_mean",
+      "sha256": "37b512a1a9655e9c7d930eef9a8829d88734a3132a5d8fcc3d70c0bd4c7827bd",
+      "value": "truth-list permutation calibration"
+    },
+    "D1|frozen|chance_match_mean|n": {
+      "file": "outputs/generalization/metrics_d1/chance_match.json",
+      "locator": "JSON key $.permutations",
+      "sha256": "37b512a1a9655e9c7d930eef9a8829d88734a3132a5d8fcc3d70c0bd4c7827bd",
+      "value": 100
+    },
+    "D1|frozen|chance_match_mean|notes": {
+      "file": "outputs/generalization/metrics_d1/chance_match.json",
+      "locator": "JSON key $.accidental_direct_match_rate_mean",
+      "sha256": "37b512a1a9655e9c7d930eef9a8829d88734a3132a5d8fcc3d70c0bd4c7827bd",
+      "value": "calibration; not an observed recovery estimate"
+    },
+    "D1|frozen|chance_match_mean|source_file": {
+      "file": "outputs/generalization/metrics_d1/chance_match.json",
+      "locator": "JSON key $.accidental_direct_match_rate_mean",
+      "sha256": "37b512a1a9655e9c7d930eef9a8829d88734a3132a5d8fcc3d70c0bd4c7827bd",
+      "value": "outputs/generalization/metrics_d1/chance_match.json"
+    },
+    "D1|frozen|chance_match_mean|source_locator": {
+      "file": "outputs/generalization/metrics_d1/chance_match.json",
+      "locator": "JSON key $.accidental_direct_match_rate_mean",
+      "sha256": "37b512a1a9655e9c7d930eef9a8829d88734a3132a5d8fcc3d70c0bd4c7827bd",
+      "value": "JSON key $.accidental_direct_match_rate_mean"
+    },
+    "D1|frozen|chance_match_p95|arm": {
+      "file": "outputs/generalization/metrics_d1/chance_match.json",
+      "locator": "JSON key $.accidental_direct_match_rate_p95",
+      "sha256": "37b512a1a9655e9c7d930eef9a8829d88734a3132a5d8fcc3d70c0bd4c7827bd",
+      "value": "frozen"
+    },
+    "D1|frozen|chance_match_p95|dataset": {
+      "file": "outputs/generalization/metrics_d1/chance_match.json",
+      "locator": "JSON key $.accidental_direct_match_rate_p95",
+      "sha256": "37b512a1a9655e9c7d930eef9a8829d88734a3132a5d8fcc3d70c0bd4c7827bd",
+      "value": "D1"
+    },
+    "D1|frozen|chance_match_p95|endpoint": {
+      "file": "outputs/generalization/metrics_d1/chance_match.json",
+      "locator": "JSON key $.accidental_direct_match_rate_p95",
+      "sha256": "37b512a1a9655e9c7d930eef9a8829d88734a3132a5d8fcc3d70c0bd4c7827bd",
+      "value": "chance_match_p95"
+    },
+    "D1|frozen|chance_match_p95|estimate": {
+      "file": "outputs/generalization/metrics_d1/chance_match.json",
+      "locator": "JSON key $.accidental_direct_match_rate_p95",
+      "sha256": "37b512a1a9655e9c7d930eef9a8829d88734a3132a5d8fcc3d70c0bd4c7827bd",
+      "value": 0.0
+    },
+    "D1|frozen|chance_match_p95|frame": {
+      "file": "outputs/generalization/metrics_d1/chance_match.json",
+      "locator": "JSON key $.accidental_direct_match_rate_p95",
+      "sha256": "37b512a1a9655e9c7d930eef9a8829d88734a3132a5d8fcc3d70c0bd4c7827bd",
+      "value": "frequency-scorable stars"
+    },
+    "D1|frozen|chance_match_p95|interval_type": {
+      "file": "outputs/generalization/metrics_d1/chance_match.json",
+      "locator": "JSON key $.accidental_direct_match_rate_p95",
+      "sha256": "37b512a1a9655e9c7d930eef9a8829d88734a3132a5d8fcc3d70c0bd4c7827bd",
+      "value": "truth-list permutation calibration"
+    },
+    "D1|frozen|chance_match_p95|n": {
+      "file": "outputs/generalization/metrics_d1/chance_match.json",
+      "locator": "JSON key $.permutations",
+      "sha256": "37b512a1a9655e9c7d930eef9a8829d88734a3132a5d8fcc3d70c0bd4c7827bd",
+      "value": 100
+    },
+    "D1|frozen|chance_match_p95|notes": {
+      "file": "outputs/generalization/metrics_d1/chance_match.json",
+      "locator": "JSON key $.accidental_direct_match_rate_p95",
+      "sha256": "37b512a1a9655e9c7d930eef9a8829d88734a3132a5d8fcc3d70c0bd4c7827bd",
+      "value": "calibration; not an observed recovery estimate"
+    },
+    "D1|frozen|chance_match_p95|source_file": {
+      "file": "outputs/generalization/metrics_d1/chance_match.json",
+      "locator": "JSON key $.accidental_direct_match_rate_p95",
+      "sha256": "37b512a1a9655e9c7d930eef9a8829d88734a3132a5d8fcc3d70c0bd4c7827bd",
+      "value": "outputs/generalization/metrics_d1/chance_match.json"
+    },
+    "D1|frozen|chance_match_p95|source_locator": {
+      "file": "outputs/generalization/metrics_d1/chance_match.json",
+      "locator": "JSON key $.accidental_direct_match_rate_p95",
+      "sha256": "37b512a1a9655e9c7d930eef9a8829d88734a3132a5d8fcc3d70c0bd4c7827bd",
+      "value": "JSON key $.accidental_direct_match_rate_p95"
+    },
+    "D1|frozen|either_rate|arm": {
+      "file": "outputs/generalization/metrics_d1/completeness_by_class_pass_rule.csv",
+      "locator": "CSV line 32, column p",
+      "sha256": "a492b468bc918f9c9bea6ff34a40369b3df35192db72b4f5562089eea3a8e75e",
+      "value": "frozen"
+    },
+    "D1|frozen|either_rate|dataset": {
+      "file": "outputs/generalization/metrics_d1/completeness_by_class_pass_rule.csv",
+      "locator": "CSV line 32, column p",
+      "sha256": "a492b468bc918f9c9bea6ff34a40369b3df35192db72b4f5562089eea3a8e75e",
+      "value": "D1"
+    },
+    "D1|frozen|either_rate|endpoint": {
+      "file": "outputs/generalization/metrics_d1/completeness_by_class_pass_rule.csv",
+      "locator": "CSV line 32, column p",
+      "sha256": "a492b468bc918f9c9bea6ff34a40369b3df35192db72b4f5562089eea3a8e75e",
+      "value": "either_rate"
+    },
+    "D1|frozen|either_rate|estimate": {
+      "file": "outputs/generalization/metrics_d1/completeness_by_class_pass_rule.csv",
+      "locator": "CSV line 32, column p",
+      "sha256": "a492b468bc918f9c9bea6ff34a40369b3df35192db72b4f5562089eea3a8e75e",
+      "value": 1.0
+    },
+    "D1|frozen|either_rate|frame": {
+      "file": "outputs/generalization/metrics_d1/completeness_by_class_pass_rule.csv",
+      "locator": "CSV line 32, column p",
+      "sha256": "a492b468bc918f9c9bea6ff34a40369b3df35192db72b4f5562089eea3a8e75e",
+      "value": "13 paper-variable stars (eligible roster)"
+    },
+    "D1|frozen|either_rate|hi": {
+      "file": "outputs/generalization/metrics_d1/completeness_by_class_pass_rule.csv",
+      "locator": "CSV line 32, column hi",
+      "sha256": "a492b468bc918f9c9bea6ff34a40369b3df35192db72b4f5562089eea3a8e75e",
+      "value": 0.9999999999999999
+    },
+    "D1|frozen|either_rate|interval_type": {
+      "file": "outputs/generalization/metrics_d1/completeness_by_class_pass_rule.csv",
+      "locator": "CSV line 32, column p",
+      "sha256": "a492b468bc918f9c9bea6ff34a40369b3df35192db72b4f5562089eea3a8e75e",
+      "value": "Wilson 95%"
+    },
+    "D1|frozen|either_rate|lo": {
+      "file": "outputs/generalization/metrics_d1/completeness_by_class_pass_rule.csv",
+      "locator": "CSV line 32, column lo",
+      "sha256": "a492b468bc918f9c9bea6ff34a40369b3df35192db72b4f5562089eea3a8e75e",
+      "value": 0.7719046276458016
+    },
+    "D1|frozen|either_rate|n": {
+      "file": "outputs/generalization/metrics_d1/completeness_by_class_pass_rule.csv",
+      "locator": "CSV line 32, column n",
+      "sha256": "a492b468bc918f9c9bea6ff34a40369b3df35192db72b4f5562089eea3a8e75e",
+      "value": 13
+    },
+    "D1|frozen|either_rate|source_file": {
+      "file": "outputs/generalization/metrics_d1/completeness_by_class_pass_rule.csv",
+      "locator": "CSV line 32, column p",
+      "sha256": "a492b468bc918f9c9bea6ff34a40369b3df35192db72b4f5562089eea3a8e75e",
+      "value": "outputs/generalization/metrics_d1/completeness_by_class_pass_rule.csv"
+    },
+    "D1|frozen|either_rate|source_locator": {
+      "file": "outputs/generalization/metrics_d1/completeness_by_class_pass_rule.csv",
+      "locator": "CSV line 32, column p",
+      "sha256": "a492b468bc918f9c9bea6ff34a40369b3df35192db72b4f5562089eea3a8e75e",
+      "value": "CSV line 32, column p"
+    },
+    "D1|frozen|incremental_census|arm": {
+      "file": "outputs/generalization/metrics_d1/contingency_complementarity.json",
+      "locator": "JSON key $.incremental_census_only.p",
+      "sha256": "9c94453f52c8fca1dcf1d56e1243c84f2b2471eda8a50cc6456ed49c6666ac27",
+      "value": "frozen"
+    },
+    "D1|frozen|incremental_census|dataset": {
+      "file": "outputs/generalization/metrics_d1/contingency_complementarity.json",
+      "locator": "JSON key $.incremental_census_only.p",
+      "sha256": "9c94453f52c8fca1dcf1d56e1243c84f2b2471eda8a50cc6456ed49c6666ac27",
+      "value": "D1"
+    },
+    "D1|frozen|incremental_census|endpoint": {
+      "file": "outputs/generalization/metrics_d1/contingency_complementarity.json",
+      "locator": "JSON key $.incremental_census_only.p",
+      "sha256": "9c94453f52c8fca1dcf1d56e1243c84f2b2471eda8a50cc6456ed49c6666ac27",
+      "value": "incremental_census"
+    },
+    "D1|frozen|incremental_census|estimate": {
+      "file": "outputs/generalization/metrics_d1/contingency_complementarity.json",
+      "locator": "JSON key $.incremental_census_only.p",
+      "sha256": "9c94453f52c8fca1dcf1d56e1243c84f2b2471eda8a50cc6456ed49c6666ac27",
+      "value": 0.15384615384615385
+    },
+    "D1|frozen|incremental_census|frame": {
+      "file": "outputs/generalization/metrics_d1/contingency_complementarity.json",
+      "locator": "JSON key $.incremental_census_only.p",
+      "sha256": "9c94453f52c8fca1dcf1d56e1243c84f2b2471eda8a50cc6456ed49c6666ac27",
+      "value": "positives with both methods available and usable"
+    },
+    "D1|frozen|incremental_census|hi": {
+      "file": "outputs/generalization/metrics_d1/contingency_complementarity.json",
+      "locator": "JSON key $.incremental_census_only.hi",
+      "sha256": "9c94453f52c8fca1dcf1d56e1243c84f2b2471eda8a50cc6456ed49c6666ac27",
+      "value": 0.4223463101948254
+    },
+    "D1|frozen|incremental_census|interval_type": {
+      "file": "outputs/generalization/metrics_d1/contingency_complementarity.json",
+      "locator": "JSON key $.incremental_census_only.p",
+      "sha256": "9c94453f52c8fca1dcf1d56e1243c84f2b2471eda8a50cc6456ed49c6666ac27",
+      "value": "Wilson 95%"
+    },
+    "D1|frozen|incremental_census|lo": {
+      "file": "outputs/generalization/metrics_d1/contingency_complementarity.json",
+      "locator": "JSON key $.incremental_census_only.lo",
+      "sha256": "9c94453f52c8fca1dcf1d56e1243c84f2b2471eda8a50cc6456ed49c6666ac27",
+      "value": 0.043258178358081184
+    },
+    "D1|frozen|incremental_census|n": {
+      "file": "outputs/generalization/metrics_d1/contingency_complementarity.json",
+      "locator": "JSON key $.n_positives_scored",
+      "sha256": "9c94453f52c8fca1dcf1d56e1243c84f2b2471eda8a50cc6456ed49c6666ac27",
+      "value": 13
+    },
+    "D1|frozen|incremental_census|source_file": {
+      "file": "outputs/generalization/metrics_d1/contingency_complementarity.json",
+      "locator": "JSON key $.incremental_census_only.p",
+      "sha256": "9c94453f52c8fca1dcf1d56e1243c84f2b2471eda8a50cc6456ed49c6666ac27",
+      "value": "outputs/generalization/metrics_d1/contingency_complementarity.json"
+    },
+    "D1|frozen|incremental_census|source_locator": {
+      "file": "outputs/generalization/metrics_d1/contingency_complementarity.json",
+      "locator": "JSON key $.incremental_census_only.p",
+      "sha256": "9c94453f52c8fca1dcf1d56e1243c84f2b2471eda8a50cc6456ed49c6666ac27",
+      "value": "JSON key $.incremental_census_only.p"
+    },
+    "D1|frozen|mcnemar_p|arm": {
+      "file": "outputs/generalization/metrics_d1/contingency_complementarity.json",
+      "locator": "JSON key $.mcnemar_exact_p_secondary",
+      "sha256": "9c94453f52c8fca1dcf1d56e1243c84f2b2471eda8a50cc6456ed49c6666ac27",
+      "value": "frozen"
+    },
+    "D1|frozen|mcnemar_p|dataset": {
+      "file": "outputs/generalization/metrics_d1/contingency_complementarity.json",
+      "locator": "JSON key $.mcnemar_exact_p_secondary",
+      "sha256": "9c94453f52c8fca1dcf1d56e1243c84f2b2471eda8a50cc6456ed49c6666ac27",
+      "value": "D1"
+    },
+    "D1|frozen|mcnemar_p|endpoint": {
+      "file": "outputs/generalization/metrics_d1/contingency_complementarity.json",
+      "locator": "JSON key $.mcnemar_exact_p_secondary",
+      "sha256": "9c94453f52c8fca1dcf1d56e1243c84f2b2471eda8a50cc6456ed49c6666ac27",
+      "value": "mcnemar_p"
+    },
+    "D1|frozen|mcnemar_p|estimate": {
+      "file": "outputs/generalization/metrics_d1/contingency_complementarity.json",
+      "locator": "JSON key $.mcnemar_exact_p_secondary",
+      "sha256": "9c94453f52c8fca1dcf1d56e1243c84f2b2471eda8a50cc6456ed49c6666ac27",
+      "value": 0.6875
+    },
+    "D1|frozen|mcnemar_p|frame": {
+      "file": "outputs/generalization/metrics_d1/contingency_complementarity.json",
+      "locator": "JSON key $.mcnemar_exact_p_secondary",
+      "sha256": "9c94453f52c8fca1dcf1d56e1243c84f2b2471eda8a50cc6456ed49c6666ac27",
+      "value": "positives with both methods available and usable"
+    },
+    "D1|frozen|mcnemar_p|interval_type": {
+      "file": "outputs/generalization/metrics_d1/contingency_complementarity.json",
+      "locator": "JSON key $.mcnemar_exact_p_secondary",
+      "sha256": "9c94453f52c8fca1dcf1d56e1243c84f2b2471eda8a50cc6456ed49c6666ac27",
+      "value": "exact two-sided McNemar"
+    },
+    "D1|frozen|mcnemar_p|n": {
+      "file": "outputs/generalization/metrics_d1/contingency_complementarity.json",
+      "locator": "JSON key $.n_positives_scored",
+      "sha256": "9c94453f52c8fca1dcf1d56e1243c84f2b2471eda8a50cc6456ed49c6666ac27",
+      "value": 13
+    },
+    "D1|frozen|mcnemar_p|notes": {
+      "file": "outputs/generalization/metrics_d1/contingency_complementarity.json",
+      "locator": "JSON key $.mcnemar_exact_p_secondary",
+      "sha256": "9c94453f52c8fca1dcf1d56e1243c84f2b2471eda8a50cc6456ed49c6666ac27",
+      "value": "secondary marginal-homogeneity test"
+    },
+    "D1|frozen|mcnemar_p|source_file": {
+      "file": "outputs/generalization/metrics_d1/contingency_complementarity.json",
+      "locator": "JSON key $.mcnemar_exact_p_secondary",
+      "sha256": "9c94453f52c8fca1dcf1d56e1243c84f2b2471eda8a50cc6456ed49c6666ac27",
+      "value": "outputs/generalization/metrics_d1/contingency_complementarity.json"
+    },
+    "D1|frozen|mcnemar_p|source_locator": {
+      "file": "outputs/generalization/metrics_d1/contingency_complementarity.json",
+      "locator": "JSON key $.mcnemar_exact_p_secondary",
+      "sha256": "9c94453f52c8fca1dcf1d56e1243c84f2b2471eda8a50cc6456ed49c6666ac27",
+      "value": "JSON key $.mcnemar_exact_p_secondary"
+    },
+    "D1|frozen|union_rate|arm": {
+      "file": "outputs/generalization/metrics_d1/contingency_complementarity.json",
+      "locator": "JSON key $.union_completeness.p",
+      "sha256": "9c94453f52c8fca1dcf1d56e1243c84f2b2471eda8a50cc6456ed49c6666ac27",
+      "value": "frozen"
+    },
+    "D1|frozen|union_rate|dataset": {
+      "file": "outputs/generalization/metrics_d1/contingency_complementarity.json",
+      "locator": "JSON key $.union_completeness.p",
+      "sha256": "9c94453f52c8fca1dcf1d56e1243c84f2b2471eda8a50cc6456ed49c6666ac27",
+      "value": "D1"
+    },
+    "D1|frozen|union_rate|endpoint": {
+      "file": "outputs/generalization/metrics_d1/contingency_complementarity.json",
+      "locator": "JSON key $.union_completeness.p",
+      "sha256": "9c94453f52c8fca1dcf1d56e1243c84f2b2471eda8a50cc6456ed49c6666ac27",
+      "value": "union_rate"
+    },
+    "D1|frozen|union_rate|estimate": {
+      "file": "outputs/generalization/metrics_d1/contingency_complementarity.json",
+      "locator": "JSON key $.union_completeness.p",
+      "sha256": "9c94453f52c8fca1dcf1d56e1243c84f2b2471eda8a50cc6456ed49c6666ac27",
+      "value": 1.0
+    },
+    "D1|frozen|union_rate|frame": {
+      "file": "outputs/generalization/metrics_d1/contingency_complementarity.json",
+      "locator": "JSON key $.union_completeness.p",
+      "sha256": "9c94453f52c8fca1dcf1d56e1243c84f2b2471eda8a50cc6456ed49c6666ac27",
+      "value": "positives with both methods available and usable"
+    },
+    "D1|frozen|union_rate|hi": {
+      "file": "outputs/generalization/metrics_d1/contingency_complementarity.json",
+      "locator": "JSON key $.union_completeness.hi",
+      "sha256": "9c94453f52c8fca1dcf1d56e1243c84f2b2471eda8a50cc6456ed49c6666ac27",
+      "value": 0.9999999999999999
+    },
+    "D1|frozen|union_rate|interval_type": {
+      "file": "outputs/generalization/metrics_d1/contingency_complementarity.json",
+      "locator": "JSON key $.union_completeness.p",
+      "sha256": "9c94453f52c8fca1dcf1d56e1243c84f2b2471eda8a50cc6456ed49c6666ac27",
+      "value": "Wilson 95%"
+    },
+    "D1|frozen|union_rate|lo": {
+      "file": "outputs/generalization/metrics_d1/contingency_complementarity.json",
+      "locator": "JSON key $.union_completeness.lo",
+      "sha256": "9c94453f52c8fca1dcf1d56e1243c84f2b2471eda8a50cc6456ed49c6666ac27",
+      "value": 0.7719046276458016
+    },
+    "D1|frozen|union_rate|n": {
+      "file": "outputs/generalization/metrics_d1/contingency_complementarity.json",
+      "locator": "JSON key $.n_positives_scored",
+      "sha256": "9c94453f52c8fca1dcf1d56e1243c84f2b2471eda8a50cc6456ed49c6666ac27",
+      "value": 13
+    },
+    "D1|frozen|union_rate|source_file": {
+      "file": "outputs/generalization/metrics_d1/contingency_complementarity.json",
+      "locator": "JSON key $.union_completeness.p",
+      "sha256": "9c94453f52c8fca1dcf1d56e1243c84f2b2471eda8a50cc6456ed49c6666ac27",
+      "value": "outputs/generalization/metrics_d1/contingency_complementarity.json"
+    },
+    "D1|frozen|union_rate|source_locator": {
+      "file": "outputs/generalization/metrics_d1/contingency_complementarity.json",
+      "locator": "JSON key $.union_completeness.p",
+      "sha256": "9c94453f52c8fca1dcf1d56e1243c84f2b2471eda8a50cc6456ed49c6666ac27",
+      "value": "JSON key $.union_completeness.p"
+    },
+    "D2|frozen|P4_recovery_eligible|arm": {
+      "file": "generalization/results/2026-09-04_d2/metrics/d2_cluster_completeness.csv",
+      "locator": "CSV line 55, column p",
+      "sha256": "fb9496098db80ace7153a939655ceb266680a61f54f09c8443e31df062a28252",
+      "value": "frozen"
+    },
+    "D2|frozen|P4_recovery_eligible|dataset": {
+      "file": "generalization/results/2026-09-04_d2/metrics/d2_cluster_completeness.csv",
+      "locator": "CSV line 55, column p",
+      "sha256": "fb9496098db80ace7153a939655ceb266680a61f54f09c8443e31df062a28252",
+      "value": "D2"
+    },
+    "D2|frozen|P4_recovery_eligible|endpoint": {
+      "file": "generalization/results/2026-09-04_d2/metrics/d2_cluster_completeness.csv",
+      "locator": "CSV line 55, column p",
+      "sha256": "fb9496098db80ace7153a939655ceb266680a61f54f09c8443e31df062a28252",
+      "value": "P4_recovery_eligible"
+    },
+    "D2|frozen|P4_recovery_eligible|estimate": {
+      "file": "generalization/results/2026-09-04_d2/metrics/d2_cluster_completeness.csv",
+      "locator": "CSV line 55, column p",
+      "sha256": "fb9496098db80ace7153a939655ceb266680a61f54f09c8443e31df062a28252",
+      "value": 0.21682847896440124
+    },
+    "D2|frozen|P4_recovery_eligible|frame": {
+      "file": "generalization/results/2026-09-04_d2/metrics/d2_cluster_completeness.csv",
+      "locator": "CSV line 55, column p",
+      "sha256": "fb9496098db80ace7153a939655ceb266680a61f54f09c8443e31df062a28252",
+      "value": "nominal arm-B targets, eligible; scheduled strata"
+    },
+    "D2|frozen|P4_recovery_eligible|hi": {
+      "file": "generalization/results/2026-09-04_d2/metrics/d2_cluster_completeness.csv",
+      "locator": "CSV line 55, column hi",
+      "sha256": "fb9496098db80ace7153a939655ceb266680a61f54f09c8443e31df062a28252",
+      "value": 0.262135922330097
+    },
+    "D2|frozen|P4_recovery_eligible|interval_type": {
+      "file": "generalization/results/2026-09-04_d2/metrics/d2_cluster_completeness.csv",
+      "locator": "CSV line 55, column interval",
+      "sha256": "fb9496098db80ace7153a939655ceb266680a61f54f09c8443e31df062a28252",
+      "value": "cluster_bootstrap"
+    },
+    "D2|frozen|P4_recovery_eligible|lo": {
+      "file": "generalization/results/2026-09-04_d2/metrics/d2_cluster_completeness.csv",
+      "locator": "CSV line 55, column lo",
+      "sha256": "fb9496098db80ace7153a939655ceb266680a61f54f09c8443e31df062a28252",
+      "value": 0.17152103559870543
+    },
+    "D2|frozen|P4_recovery_eligible|n": {
+      "file": "generalization/results/2026-09-04_d2/metrics/d2_cluster_completeness.csv",
+      "locator": "CSV line 55, column n_targets",
+      "sha256": "fb9496098db80ace7153a939655ceb266680a61f54f09c8443e31df062a28252",
+      "value": 103
+    },
+    "D2|frozen|P4_recovery_eligible|notes": {
+      "file": "generalization/results/2026-09-04_d2/metrics/d2_cluster_completeness.csv",
+      "locator": "CSV line 55, column p",
+      "sha256": "fb9496098db80ace7153a939655ceb266680a61f54f09c8443e31df062a28252",
+      "value": "target-equal nominal arm-B estimate"
+    },
+    "D2|frozen|P4_recovery_eligible|source_file": {
+      "file": "generalization/results/2026-09-04_d2/metrics/d2_cluster_completeness.csv",
+      "locator": "CSV line 55, column p",
+      "sha256": "fb9496098db80ace7153a939655ceb266680a61f54f09c8443e31df062a28252",
+      "value": "generalization/results/2026-09-04_d2/metrics/d2_cluster_completeness.csv"
+    },
+    "D2|frozen|P4_recovery_eligible|source_locator": {
+      "file": "generalization/results/2026-09-04_d2/metrics/d2_cluster_completeness.csv",
+      "locator": "CSV line 55, column p",
+      "sha256": "fb9496098db80ace7153a939655ceb266680a61f54f09c8443e31df062a28252",
+      "value": "CSV line 55, column p"
+    },
+    "D2|frozen|P4_recovery_usable|arm": {
+      "file": "generalization/results/2026-09-04_d2/metrics/d2_cluster_completeness.csv",
+      "locator": "CSV line 54, column p",
+      "sha256": "fb9496098db80ace7153a939655ceb266680a61f54f09c8443e31df062a28252",
+      "value": "frozen"
+    },
+    "D2|frozen|P4_recovery_usable|dataset": {
+      "file": "generalization/results/2026-09-04_d2/metrics/d2_cluster_completeness.csv",
+      "locator": "CSV line 54, column p",
+      "sha256": "fb9496098db80ace7153a939655ceb266680a61f54f09c8443e31df062a28252",
+      "value": "D2"
+    },
+    "D2|frozen|P4_recovery_usable|endpoint": {
+      "file": "generalization/results/2026-09-04_d2/metrics/d2_cluster_completeness.csv",
+      "locator": "CSV line 54, column p",
+      "sha256": "fb9496098db80ace7153a939655ceb266680a61f54f09c8443e31df062a28252",
+      "value": "P4_recovery_usable"
+    },
+    "D2|frozen|P4_recovery_usable|estimate": {
+      "file": "generalization/results/2026-09-04_d2/metrics/d2_cluster_completeness.csv",
+      "locator": "CSV line 54, column p",
+      "sha256": "fb9496098db80ace7153a939655ceb266680a61f54f09c8443e31df062a28252",
+      "value": 0.21682847896440124
+    },
+    "D2|frozen|P4_recovery_usable|frame": {
+      "file": "generalization/results/2026-09-04_d2/metrics/d2_cluster_completeness.csv",
+      "locator": "CSV line 54, column p",
+      "sha256": "fb9496098db80ace7153a939655ceb266680a61f54f09c8443e31df062a28252",
+      "value": "nominal arm-B targets, usable; scheduled strata"
+    },
+    "D2|frozen|P4_recovery_usable|hi": {
+      "file": "generalization/results/2026-09-04_d2/metrics/d2_cluster_completeness.csv",
+      "locator": "CSV line 54, column hi",
+      "sha256": "fb9496098db80ace7153a939655ceb266680a61f54f09c8443e31df062a28252",
+      "value": 0.262135922330097
+    },
+    "D2|frozen|P4_recovery_usable|interval_type": {
+      "file": "generalization/results/2026-09-04_d2/metrics/d2_cluster_completeness.csv",
+      "locator": "CSV line 54, column interval",
+      "sha256": "fb9496098db80ace7153a939655ceb266680a61f54f09c8443e31df062a28252",
+      "value": "cluster_bootstrap"
+    },
+    "D2|frozen|P4_recovery_usable|lo": {
+      "file": "generalization/results/2026-09-04_d2/metrics/d2_cluster_completeness.csv",
+      "locator": "CSV line 54, column lo",
+      "sha256": "fb9496098db80ace7153a939655ceb266680a61f54f09c8443e31df062a28252",
+      "value": 0.17152103559870543
+    },
+    "D2|frozen|P4_recovery_usable|n": {
+      "file": "generalization/results/2026-09-04_d2/metrics/d2_cluster_completeness.csv",
+      "locator": "CSV line 54, column n_targets",
+      "sha256": "fb9496098db80ace7153a939655ceb266680a61f54f09c8443e31df062a28252",
+      "value": 103
+    },
+    "D2|frozen|P4_recovery_usable|notes": {
+      "file": "generalization/results/2026-09-04_d2/metrics/d2_cluster_completeness.csv",
+      "locator": "CSV line 54, column p",
+      "sha256": "fb9496098db80ace7153a939655ceb266680a61f54f09c8443e31df062a28252",
+      "value": "target-equal nominal arm-B estimate"
+    },
+    "D2|frozen|P4_recovery_usable|source_file": {
+      "file": "generalization/results/2026-09-04_d2/metrics/d2_cluster_completeness.csv",
+      "locator": "CSV line 54, column p",
+      "sha256": "fb9496098db80ace7153a939655ceb266680a61f54f09c8443e31df062a28252",
+      "value": "generalization/results/2026-09-04_d2/metrics/d2_cluster_completeness.csv"
+    },
+    "D2|frozen|P4_recovery_usable|source_locator": {
+      "file": "generalization/results/2026-09-04_d2/metrics/d2_cluster_completeness.csv",
+      "locator": "CSV line 54, column p",
+      "sha256": "fb9496098db80ace7153a939655ceb266680a61f54f09c8443e31df062a28252",
+      "value": "CSV line 54, column p"
+    },
+    "D2|frozen|P4_trigger|arm": {
+      "file": "generalization/results/2026-09-04_d2/metrics/d2_cluster_completeness.csv",
+      "locator": "CSV line 57, column p",
+      "sha256": "fb9496098db80ace7153a939655ceb266680a61f54f09c8443e31df062a28252",
+      "value": "frozen"
+    },
+    "D2|frozen|P4_trigger|dataset": {
+      "file": "generalization/results/2026-09-04_d2/metrics/d2_cluster_completeness.csv",
+      "locator": "CSV line 57, column p",
+      "sha256": "fb9496098db80ace7153a939655ceb266680a61f54f09c8443e31df062a28252",
+      "value": "D2"
+    },
+    "D2|frozen|P4_trigger|endpoint": {
+      "file": "generalization/results/2026-09-04_d2/metrics/d2_cluster_completeness.csv",
+      "locator": "CSV line 57, column p",
+      "sha256": "fb9496098db80ace7153a939655ceb266680a61f54f09c8443e31df062a28252",
+      "value": "P4_trigger"
+    },
+    "D2|frozen|P4_trigger|estimate": {
+      "file": "generalization/results/2026-09-04_d2/metrics/d2_cluster_completeness.csv",
+      "locator": "CSV line 57, column p",
+      "sha256": "fb9496098db80ace7153a939655ceb266680a61f54f09c8443e31df062a28252",
+      "value": 0.5566343042071197
+    },
+    "D2|frozen|P4_trigger|frame": {
+      "file": "generalization/results/2026-09-04_d2/metrics/d2_cluster_completeness.csv",
+      "locator": "CSV line 57, column p",
+      "sha256": "fb9496098db80ace7153a939655ceb266680a61f54f09c8443e31df062a28252",
+      "value": "nominal arm-B targets, eligible; scheduled strata"
+    },
+    "D2|frozen|P4_trigger|hi": {
+      "file": "generalization/results/2026-09-04_d2/metrics/d2_cluster_completeness.csv",
+      "locator": "CSV line 57, column hi",
+      "sha256": "fb9496098db80ace7153a939655ceb266680a61f54f09c8443e31df062a28252",
+      "value": 0.6019417475728155
+    },
+    "D2|frozen|P4_trigger|interval_type": {
+      "file": "generalization/results/2026-09-04_d2/metrics/d2_cluster_completeness.csv",
+      "locator": "CSV line 57, column interval",
+      "sha256": "fb9496098db80ace7153a939655ceb266680a61f54f09c8443e31df062a28252",
+      "value": "cluster_bootstrap"
+    },
+    "D2|frozen|P4_trigger|lo": {
+      "file": "generalization/results/2026-09-04_d2/metrics/d2_cluster_completeness.csv",
+      "locator": "CSV line 57, column lo",
+      "sha256": "fb9496098db80ace7153a939655ceb266680a61f54f09c8443e31df062a28252",
+      "value": 0.5177993527508089
+    },
+    "D2|frozen|P4_trigger|n": {
+      "file": "generalization/results/2026-09-04_d2/metrics/d2_cluster_completeness.csv",
+      "locator": "CSV line 57, column n_targets",
+      "sha256": "fb9496098db80ace7153a939655ceb266680a61f54f09c8443e31df062a28252",
+      "value": 103
+    },
+    "D2|frozen|P4_trigger|notes": {
+      "file": "generalization/results/2026-09-04_d2/metrics/d2_cluster_completeness.csv",
+      "locator": "CSV line 57, column p",
+      "sha256": "fb9496098db80ace7153a939655ceb266680a61f54f09c8443e31df062a28252",
+      "value": "target-equal nominal arm-B estimate; eligible denominator (usable trigger variant remains in source table)"
+    },
+    "D2|frozen|P4_trigger|source_file": {
+      "file": "generalization/results/2026-09-04_d2/metrics/d2_cluster_completeness.csv",
+      "locator": "CSV line 57, column p",
+      "sha256": "fb9496098db80ace7153a939655ceb266680a61f54f09c8443e31df062a28252",
+      "value": "generalization/results/2026-09-04_d2/metrics/d2_cluster_completeness.csv"
+    },
+    "D2|frozen|P4_trigger|source_locator": {
+      "file": "generalization/results/2026-09-04_d2/metrics/d2_cluster_completeness.csv",
+      "locator": "CSV line 57, column p",
+      "sha256": "fb9496098db80ace7153a939655ceb266680a61f54f09c8443e31df062a28252",
+      "value": "CSV line 57, column p"
+    },
+    "D2|frozen|P5_fpr_upper|arm": {
+      "file": "generalization/results/2026-09-04_d2/metrics/trigger_rates.csv",
+      "locator": "CSV line 2, column cp_one_sided_95_upper",
+      "sha256": "78b3a76034e1b3779cc3be23be06003ceeda9b8aab1a8908380ddbf275943c0f",
+      "value": "frozen"
+    },
+    "D2|frozen|P5_fpr_upper|dataset": {
+      "file": "generalization/results/2026-09-04_d2/metrics/trigger_rates.csv",
+      "locator": "CSV line 2, column cp_one_sided_95_upper",
+      "sha256": "78b3a76034e1b3779cc3be23be06003ceeda9b8aab1a8908380ddbf275943c0f",
+      "value": "D2"
+    },
+    "D2|frozen|P5_fpr_upper|endpoint": {
+      "file": "generalization/results/2026-09-04_d2/metrics/trigger_rates.csv",
+      "locator": "CSV line 2, column cp_one_sided_95_upper",
+      "sha256": "78b3a76034e1b3779cc3be23be06003ceeda9b8aab1a8908380ddbf275943c0f",
+      "value": "P5_fpr_upper"
+    },
+    "D2|frozen|P5_fpr_upper|estimate": {
+      "file": "generalization/results/2026-09-04_d2/metrics/trigger_rates.csv",
+      "locator": "CSV line 2, column cp_one_sided_95_upper",
+      "sha256": "78b3a76034e1b3779cc3be23be06003ceeda9b8aab1a8908380ddbf275943c0f",
+      "value": 0.027755286045479104
+    },
+    "D2|frozen|P5_fpr_upper|frame": {
+      "file": "generalization/results/2026-09-04_d2/metrics/trigger_rates.csv",
+      "locator": "CSV line 2, column cp_one_sided_95_upper",
+      "sha256": "78b3a76034e1b3779cc3be23be06003ceeda9b8aab1a8908380ddbf275943c0f",
+      "value": "completed arm-A Gaussian nulls"
+    },
+    "D2|frozen|P5_fpr_upper|interval_type": {
+      "file": "generalization/results/2026-09-04_d2/metrics/trigger_rates.csv",
+      "locator": "CSV line 2, column cp_one_sided_95_upper",
+      "sha256": "78b3a76034e1b3779cc3be23be06003ceeda9b8aab1a8908380ddbf275943c0f",
+      "value": "exact one-sided Clopper-Pearson 95% upper"
+    },
+    "D2|frozen|P5_fpr_upper|n": {
+      "file": "generalization/results/2026-09-04_d2/metrics/trigger_rates.csv",
+      "locator": "CSV line 2, column n_completed",
+      "sha256": "78b3a76034e1b3779cc3be23be06003ceeda9b8aab1a8908380ddbf275943c0f",
+      "value": 1000
+    },
+    "D2|frozen|P5_fpr_upper|notes": {
+      "file": "generalization/results/2026-09-04_d2/metrics/trigger_rates.csv",
+      "locator": "CSV line 2, column cp_one_sided_95_upper",
+      "sha256": "78b3a76034e1b3779cc3be23be06003ceeda9b8aab1a8908380ddbf275943c0f",
+      "value": "upper bound is the endpoint; observed 19/1000"
+    },
+    "D2|frozen|P5_fpr_upper|source_file": {
+      "file": "generalization/results/2026-09-04_d2/metrics/trigger_rates.csv",
+      "locator": "CSV line 2, column cp_one_sided_95_upper",
+      "sha256": "78b3a76034e1b3779cc3be23be06003ceeda9b8aab1a8908380ddbf275943c0f",
+      "value": "generalization/results/2026-09-04_d2/metrics/trigger_rates.csv"
+    },
+    "D2|frozen|P5_fpr_upper|source_locator": {
+      "file": "generalization/results/2026-09-04_d2/metrics/trigger_rates.csv",
+      "locator": "CSV line 2, column cp_one_sided_95_upper",
+      "sha256": "78b3a76034e1b3779cc3be23be06003ceeda9b8aab1a8908380ddbf275943c0f",
+      "value": "CSV line 2, column cp_one_sided_95_upper"
+    },
+    "D2|frozen|chance_match_mean|arm": {
+      "file": "generalization/results/2026-09-04_d2/metrics/chance_match.json",
+      "locator": "JSON key $.accidental_recovery_rate_mean",
+      "sha256": "3e58909dd90cd56cdb928dc423e402e2bd1f19d668c0b1977c7e0941adbda9bc",
+      "value": "frozen"
+    },
+    "D2|frozen|chance_match_mean|dataset": {
+      "file": "generalization/results/2026-09-04_d2/metrics/chance_match.json",
+      "locator": "JSON key $.accidental_recovery_rate_mean",
+      "sha256": "3e58909dd90cd56cdb928dc423e402e2bd1f19d668c0b1977c7e0941adbda9bc",
+      "value": "D2"
+    },
+    "D2|frozen|chance_match_mean|endpoint": {
+      "file": "generalization/results/2026-09-04_d2/metrics/chance_match.json",
+      "locator": "JSON key $.accidental_recovery_rate_mean",
+      "sha256": "3e58909dd90cd56cdb928dc423e402e2bd1f19d668c0b1977c7e0941adbda9bc",
+      "value": "chance_match_mean"
+    },
+    "D2|frozen|chance_match_mean|estimate": {
+      "file": "generalization/results/2026-09-04_d2/metrics/chance_match.json",
+      "locator": "JSON key $.accidental_recovery_rate_mean",
+      "sha256": "3e58909dd90cd56cdb928dc423e402e2bd1f19d668c0b1977c7e0941adbda9bc",
+      "value": 0.0
+    },
+    "D2|frozen|chance_match_mean|frame": {
+      "file": "generalization/results/2026-09-04_d2/metrics/chance_match.json",
+      "locator": "JSON key $.accidental_recovery_rate_mean",
+      "sha256": "3e58909dd90cd56cdb928dc423e402e2bd1f19d668c0b1977c7e0941adbda9bc",
+      "value": "nominal arm-B target-equal recovery"
+    },
+    "D2|frozen|chance_match_mean|interval_type": {
+      "file": "generalization/results/2026-09-04_d2/metrics/chance_match.json",
+      "locator": "JSON key $.accidental_recovery_rate_mean",
+      "sha256": "3e58909dd90cd56cdb928dc423e402e2bd1f19d668c0b1977c7e0941adbda9bc",
+      "value": "target-level derangement calibration"
+    },
+    "D2|frozen|chance_match_mean|n": {
+      "file": "generalization/results/2026-09-04_d2/metrics/chance_match.json",
+      "locator": "JSON key $.derangements",
+      "sha256": "3e58909dd90cd56cdb928dc423e402e2bd1f19d668c0b1977c7e0941adbda9bc",
+      "value": 10000
+    },
+    "D2|frozen|chance_match_mean|notes": {
+      "file": "generalization/results/2026-09-04_d2/metrics/chance_match.json",
+      "locator": "JSON key $.accidental_recovery_rate_mean",
+      "sha256": "3e58909dd90cd56cdb928dc423e402e2bd1f19d668c0b1977c7e0941adbda9bc",
+      "value": "calibration; not an observed recovery estimate"
+    },
+    "D2|frozen|chance_match_mean|source_file": {
+      "file": "generalization/results/2026-09-04_d2/metrics/chance_match.json",
+      "locator": "JSON key $.accidental_recovery_rate_mean",
+      "sha256": "3e58909dd90cd56cdb928dc423e402e2bd1f19d668c0b1977c7e0941adbda9bc",
+      "value": "generalization/results/2026-09-04_d2/metrics/chance_match.json"
+    },
+    "D2|frozen|chance_match_mean|source_locator": {
+      "file": "generalization/results/2026-09-04_d2/metrics/chance_match.json",
+      "locator": "JSON key $.accidental_recovery_rate_mean",
+      "sha256": "3e58909dd90cd56cdb928dc423e402e2bd1f19d668c0b1977c7e0941adbda9bc",
+      "value": "JSON key $.accidental_recovery_rate_mean"
+    },
+    "D2|frozen|chance_match_p95|arm": {
+      "file": "generalization/results/2026-09-04_d2/metrics/chance_match.json",
+      "locator": "JSON key $.accidental_recovery_rate_p95",
+      "sha256": "3e58909dd90cd56cdb928dc423e402e2bd1f19d668c0b1977c7e0941adbda9bc",
+      "value": "frozen"
+    },
+    "D2|frozen|chance_match_p95|dataset": {
+      "file": "generalization/results/2026-09-04_d2/metrics/chance_match.json",
+      "locator": "JSON key $.accidental_recovery_rate_p95",
+      "sha256": "3e58909dd90cd56cdb928dc423e402e2bd1f19d668c0b1977c7e0941adbda9bc",
+      "value": "D2"
+    },
+    "D2|frozen|chance_match_p95|endpoint": {
+      "file": "generalization/results/2026-09-04_d2/metrics/chance_match.json",
+      "locator": "JSON key $.accidental_recovery_rate_p95",
+      "sha256": "3e58909dd90cd56cdb928dc423e402e2bd1f19d668c0b1977c7e0941adbda9bc",
+      "value": "chance_match_p95"
+    },
+    "D2|frozen|chance_match_p95|estimate": {
+      "file": "generalization/results/2026-09-04_d2/metrics/chance_match.json",
+      "locator": "JSON key $.accidental_recovery_rate_p95",
+      "sha256": "3e58909dd90cd56cdb928dc423e402e2bd1f19d668c0b1977c7e0941adbda9bc",
+      "value": 0.0
+    },
+    "D2|frozen|chance_match_p95|frame": {
+      "file": "generalization/results/2026-09-04_d2/metrics/chance_match.json",
+      "locator": "JSON key $.accidental_recovery_rate_p95",
+      "sha256": "3e58909dd90cd56cdb928dc423e402e2bd1f19d668c0b1977c7e0941adbda9bc",
+      "value": "nominal arm-B target-equal recovery"
+    },
+    "D2|frozen|chance_match_p95|interval_type": {
+      "file": "generalization/results/2026-09-04_d2/metrics/chance_match.json",
+      "locator": "JSON key $.accidental_recovery_rate_p95",
+      "sha256": "3e58909dd90cd56cdb928dc423e402e2bd1f19d668c0b1977c7e0941adbda9bc",
+      "value": "target-level derangement calibration"
+    },
+    "D2|frozen|chance_match_p95|n": {
+      "file": "generalization/results/2026-09-04_d2/metrics/chance_match.json",
+      "locator": "JSON key $.derangements",
+      "sha256": "3e58909dd90cd56cdb928dc423e402e2bd1f19d668c0b1977c7e0941adbda9bc",
+      "value": 10000
+    },
+    "D2|frozen|chance_match_p95|notes": {
+      "file": "generalization/results/2026-09-04_d2/metrics/chance_match.json",
+      "locator": "JSON key $.accidental_recovery_rate_p95",
+      "sha256": "3e58909dd90cd56cdb928dc423e402e2bd1f19d668c0b1977c7e0941adbda9bc",
+      "value": "calibration; not an observed recovery estimate"
+    },
+    "D2|frozen|chance_match_p95|source_file": {
+      "file": "generalization/results/2026-09-04_d2/metrics/chance_match.json",
+      "locator": "JSON key $.accidental_recovery_rate_p95",
+      "sha256": "3e58909dd90cd56cdb928dc423e402e2bd1f19d668c0b1977c7e0941adbda9bc",
+      "value": "generalization/results/2026-09-04_d2/metrics/chance_match.json"
+    },
+    "D2|frozen|chance_match_p95|source_locator": {
+      "file": "generalization/results/2026-09-04_d2/metrics/chance_match.json",
+      "locator": "JSON key $.accidental_recovery_rate_p95",
+      "sha256": "3e58909dd90cd56cdb928dc423e402e2bd1f19d668c0b1977c7e0941adbda9bc",
+      "value": "JSON key $.accidental_recovery_rate_p95"
+    },
+    "D2|frozen|control_contrast_strict_recovery|arm": {
+      "file": "generalization/results/2026-09-04_d2/metrics/d2_paired_controls_summary.csv",
+      "locator": "CSV line 3, column paired_diff_b_minus_c",
+      "sha256": "ac54953c7b75d220a18b3bec62c89b41b3ccce34e32fbc13fddf3dbdbed0caa1",
+      "value": "frozen"
+    },
+    "D2|frozen|control_contrast_strict_recovery|dataset": {
+      "file": "generalization/results/2026-09-04_d2/metrics/d2_paired_controls_summary.csv",
+      "locator": "CSV line 3, column paired_diff_b_minus_c",
+      "sha256": "ac54953c7b75d220a18b3bec62c89b41b3ccce34e32fbc13fddf3dbdbed0caa1",
+      "value": "D2"
+    },
+    "D2|frozen|control_contrast_strict_recovery|endpoint": {
+      "file": "generalization/results/2026-09-04_d2/metrics/d2_paired_controls_summary.csv",
+      "locator": "CSV line 3, column paired_diff_b_minus_c",
+      "sha256": "ac54953c7b75d220a18b3bec62c89b41b3ccce34e32fbc13fddf3dbdbed0caa1",
+      "value": "control_contrast_strict_recovery"
+    },
+    "D2|frozen|control_contrast_strict_recovery|estimate": {
+      "file": "generalization/results/2026-09-04_d2/metrics/d2_paired_controls_summary.csv",
+      "locator": "CSV line 3, column paired_diff_b_minus_c",
+      "sha256": "ac54953c7b75d220a18b3bec62c89b41b3ccce34e32fbc13fddf3dbdbed0caa1",
+      "value": 0.21682847896440124
+    },
+    "D2|frozen|control_contrast_strict_recovery|frame": {
+      "file": "generalization/results/2026-09-04_d2/metrics/d2_paired_controls_summary.csv",
+      "locator": "CSV line 3, column paired_diff_b_minus_c",
+      "sha256": "ac54953c7b75d220a18b3bec62c89b41b3ccce34e32fbc13fddf3dbdbed0caa1",
+      "value": "nominal injected minus paired-control response"
+    },
+    "D2|frozen|control_contrast_strict_recovery|hi": {
+      "file": "generalization/results/2026-09-04_d2/metrics/d2_paired_controls_summary.csv",
+      "locator": "CSV line 3, column paired_diff_b_minus_c_hi",
+      "sha256": "ac54953c7b75d220a18b3bec62c89b41b3ccce34e32fbc13fddf3dbdbed0caa1",
+      "value": 0.262135922330097
+    },
+    "D2|frozen|control_contrast_strict_recovery|interval_type": {
+      "file": "generalization/results/2026-09-04_d2/metrics/d2_paired_controls_summary.csv",
+      "locator": "CSV line 3, column paired_diff_b_minus_c",
+      "sha256": "ac54953c7b75d220a18b3bec62c89b41b3ccce34e32fbc13fddf3dbdbed0caa1",
+      "value": "target-cluster bootstrap"
+    },
+    "D2|frozen|control_contrast_strict_recovery|lo": {
+      "file": "generalization/results/2026-09-04_d2/metrics/d2_paired_controls_summary.csv",
+      "locator": "CSV line 3, column paired_diff_b_minus_c_lo",
+      "sha256": "ac54953c7b75d220a18b3bec62c89b41b3ccce34e32fbc13fddf3dbdbed0caa1",
+      "value": 0.17152103559870543
+    },
+    "D2|frozen|control_contrast_strict_recovery|n": {
+      "file": "generalization/results/2026-09-04_d2/metrics/d2_paired_controls_summary.csv",
+      "locator": "CSV line 3, column n_targets",
+      "sha256": "ac54953c7b75d220a18b3bec62c89b41b3ccce34e32fbc13fddf3dbdbed0caa1",
+      "value": 103
+    },
+    "D2|frozen|control_contrast_strict_recovery|notes": {
+      "file": "generalization/results/2026-09-04_d2/metrics/d2_paired_controls_summary.csv",
+      "locator": "CSV line 3, column paired_diff_b_minus_c",
+      "sha256": "ac54953c7b75d220a18b3bec62c89b41b3ccce34e32fbc13fddf3dbdbed0caa1",
+      "value": "309 scored pairs; 106 unique control windows"
+    },
+    "D2|frozen|control_contrast_strict_recovery|source_file": {
+      "file": "generalization/results/2026-09-04_d2/metrics/d2_paired_controls_summary.csv",
+      "locator": "CSV line 3, column paired_diff_b_minus_c",
+      "sha256": "ac54953c7b75d220a18b3bec62c89b41b3ccce34e32fbc13fddf3dbdbed0caa1",
+      "value": "generalization/results/2026-09-04_d2/metrics/d2_paired_controls_summary.csv"
+    },
+    "D2|frozen|control_contrast_strict_recovery|source_locator": {
+      "file": "generalization/results/2026-09-04_d2/metrics/d2_paired_controls_summary.csv",
+      "locator": "CSV line 3, column paired_diff_b_minus_c",
+      "sha256": "ac54953c7b75d220a18b3bec62c89b41b3ccce34e32fbc13fddf3dbdbed0caa1",
+      "value": "CSV line 3, column paired_diff_b_minus_c"
+    },
+    "D2|frozen|control_contrast_trigger|arm": {
+      "file": "generalization/results/2026-09-04_d2/metrics/d2_paired_controls_summary.csv",
+      "locator": "CSV line 2, column paired_diff_b_minus_c",
+      "sha256": "ac54953c7b75d220a18b3bec62c89b41b3ccce34e32fbc13fddf3dbdbed0caa1",
+      "value": "frozen"
+    },
+    "D2|frozen|control_contrast_trigger|dataset": {
+      "file": "generalization/results/2026-09-04_d2/metrics/d2_paired_controls_summary.csv",
+      "locator": "CSV line 2, column paired_diff_b_minus_c",
+      "sha256": "ac54953c7b75d220a18b3bec62c89b41b3ccce34e32fbc13fddf3dbdbed0caa1",
+      "value": "D2"
+    },
+    "D2|frozen|control_contrast_trigger|endpoint": {
+      "file": "generalization/results/2026-09-04_d2/metrics/d2_paired_controls_summary.csv",
+      "locator": "CSV line 2, column paired_diff_b_minus_c",
+      "sha256": "ac54953c7b75d220a18b3bec62c89b41b3ccce34e32fbc13fddf3dbdbed0caa1",
+      "value": "control_contrast_trigger"
+    },
+    "D2|frozen|control_contrast_trigger|estimate": {
+      "file": "generalization/results/2026-09-04_d2/metrics/d2_paired_controls_summary.csv",
+      "locator": "CSV line 2, column paired_diff_b_minus_c",
+      "sha256": "ac54953c7b75d220a18b3bec62c89b41b3ccce34e32fbc13fddf3dbdbed0caa1",
+      "value": 0.13915857605177995
+    },
+    "D2|frozen|control_contrast_trigger|frame": {
+      "file": "generalization/results/2026-09-04_d2/metrics/d2_paired_controls_summary.csv",
+      "locator": "CSV line 2, column paired_diff_b_minus_c",
+      "sha256": "ac54953c7b75d220a18b3bec62c89b41b3ccce34e32fbc13fddf3dbdbed0caa1",
+      "value": "nominal injected minus paired-control response"
+    },
+    "D2|frozen|control_contrast_trigger|hi": {
+      "file": "generalization/results/2026-09-04_d2/metrics/d2_paired_controls_summary.csv",
+      "locator": "CSV line 2, column paired_diff_b_minus_c_hi",
+      "sha256": "ac54953c7b75d220a18b3bec62c89b41b3ccce34e32fbc13fddf3dbdbed0caa1",
+      "value": 0.1909385113268608
+    },
+    "D2|frozen|control_contrast_trigger|interval_type": {
+      "file": "generalization/results/2026-09-04_d2/metrics/d2_paired_controls_summary.csv",
+      "locator": "CSV line 2, column paired_diff_b_minus_c",
+      "sha256": "ac54953c7b75d220a18b3bec62c89b41b3ccce34e32fbc13fddf3dbdbed0caa1",
+      "value": "target-cluster bootstrap"
+    },
+    "D2|frozen|control_contrast_trigger|lo": {
+      "file": "generalization/results/2026-09-04_d2/metrics/d2_paired_controls_summary.csv",
+      "locator": "CSV line 2, column paired_diff_b_minus_c_lo",
+      "sha256": "ac54953c7b75d220a18b3bec62c89b41b3ccce34e32fbc13fddf3dbdbed0caa1",
+      "value": 0.09061488673139159
+    },
+    "D2|frozen|control_contrast_trigger|n": {
+      "file": "generalization/results/2026-09-04_d2/metrics/d2_paired_controls_summary.csv",
+      "locator": "CSV line 2, column n_targets",
+      "sha256": "ac54953c7b75d220a18b3bec62c89b41b3ccce34e32fbc13fddf3dbdbed0caa1",
+      "value": 103
+    },
+    "D2|frozen|control_contrast_trigger|notes": {
+      "file": "generalization/results/2026-09-04_d2/metrics/d2_paired_controls_summary.csv",
+      "locator": "CSV line 2, column paired_diff_b_minus_c",
+      "sha256": "ac54953c7b75d220a18b3bec62c89b41b3ccce34e32fbc13fddf3dbdbed0caa1",
+      "value": "309 scored pairs; 106 unique control windows"
+    },
+    "D2|frozen|control_contrast_trigger|source_file": {
+      "file": "generalization/results/2026-09-04_d2/metrics/d2_paired_controls_summary.csv",
+      "locator": "CSV line 2, column paired_diff_b_minus_c",
+      "sha256": "ac54953c7b75d220a18b3bec62c89b41b3ccce34e32fbc13fddf3dbdbed0caa1",
+      "value": "generalization/results/2026-09-04_d2/metrics/d2_paired_controls_summary.csv"
+    },
+    "D2|frozen|control_contrast_trigger|source_locator": {
+      "file": "generalization/results/2026-09-04_d2/metrics/d2_paired_controls_summary.csv",
+      "locator": "CSV line 2, column paired_diff_b_minus_c",
+      "sha256": "ac54953c7b75d220a18b3bec62c89b41b3ccce34e32fbc13fddf3dbdbed0caa1",
+      "value": "CSV line 2, column paired_diff_b_minus_c"
+    },
+    "D2|v2|P4_recovery_eligible|arm": {
+      "file": "scripts/generalization/descriptive/synthesis_table.py",
+      "locator": "endpoint slot D2/v2/P4_recovery_eligible",
+      "sha256": "62d877f561aa918c5223abb8fe0eb30791736afddada98d1ed98807e72f5733a",
+      "value": "v2"
+    },
+    "D2|v2|P4_recovery_eligible|dataset": {
+      "file": "scripts/generalization/descriptive/synthesis_table.py",
+      "locator": "endpoint slot D2/v2/P4_recovery_eligible",
+      "sha256": "62d877f561aa918c5223abb8fe0eb30791736afddada98d1ed98807e72f5733a",
+      "value": "D2"
+    },
+    "D2|v2|P4_recovery_eligible|endpoint": {
+      "file": "scripts/generalization/descriptive/synthesis_table.py",
+      "locator": "endpoint slot D2/v2/P4_recovery_eligible",
+      "sha256": "62d877f561aa918c5223abb8fe0eb30791736afddada98d1ed98807e72f5733a",
+      "value": "P4_recovery_eligible"
+    },
+    "D2|v2|P4_recovery_eligible|notes": {
+      "file": "scripts/generalization/descriptive/synthesis_table.py",
+      "locator": "endpoint slot D2/v2/P4_recovery_eligible",
+      "sha256": "62d877f561aa918c5223abb8fe0eb30791736afddada98d1ed98807e72f5733a",
+      "value": "bundle not available"
+    },
+    "D2|v2|P4_recovery_usable|arm": {
+      "file": "scripts/generalization/descriptive/synthesis_table.py",
+      "locator": "endpoint slot D2/v2/P4_recovery_usable",
+      "sha256": "62d877f561aa918c5223abb8fe0eb30791736afddada98d1ed98807e72f5733a",
+      "value": "v2"
+    },
+    "D2|v2|P4_recovery_usable|dataset": {
+      "file": "scripts/generalization/descriptive/synthesis_table.py",
+      "locator": "endpoint slot D2/v2/P4_recovery_usable",
+      "sha256": "62d877f561aa918c5223abb8fe0eb30791736afddada98d1ed98807e72f5733a",
+      "value": "D2"
+    },
+    "D2|v2|P4_recovery_usable|endpoint": {
+      "file": "scripts/generalization/descriptive/synthesis_table.py",
+      "locator": "endpoint slot D2/v2/P4_recovery_usable",
+      "sha256": "62d877f561aa918c5223abb8fe0eb30791736afddada98d1ed98807e72f5733a",
+      "value": "P4_recovery_usable"
+    },
+    "D2|v2|P4_recovery_usable|notes": {
+      "file": "scripts/generalization/descriptive/synthesis_table.py",
+      "locator": "endpoint slot D2/v2/P4_recovery_usable",
+      "sha256": "62d877f561aa918c5223abb8fe0eb30791736afddada98d1ed98807e72f5733a",
+      "value": "bundle not available"
+    },
+    "D2|v2|P4_trigger|arm": {
+      "file": "scripts/generalization/descriptive/synthesis_table.py",
+      "locator": "endpoint slot D2/v2/P4_trigger",
+      "sha256": "62d877f561aa918c5223abb8fe0eb30791736afddada98d1ed98807e72f5733a",
+      "value": "v2"
+    },
+    "D2|v2|P4_trigger|dataset": {
+      "file": "scripts/generalization/descriptive/synthesis_table.py",
+      "locator": "endpoint slot D2/v2/P4_trigger",
+      "sha256": "62d877f561aa918c5223abb8fe0eb30791736afddada98d1ed98807e72f5733a",
+      "value": "D2"
+    },
+    "D2|v2|P4_trigger|endpoint": {
+      "file": "scripts/generalization/descriptive/synthesis_table.py",
+      "locator": "endpoint slot D2/v2/P4_trigger",
+      "sha256": "62d877f561aa918c5223abb8fe0eb30791736afddada98d1ed98807e72f5733a",
+      "value": "P4_trigger"
+    },
+    "D2|v2|P4_trigger|notes": {
+      "file": "scripts/generalization/descriptive/synthesis_table.py",
+      "locator": "endpoint slot D2/v2/P4_trigger",
+      "sha256": "62d877f561aa918c5223abb8fe0eb30791736afddada98d1ed98807e72f5733a",
+      "value": "bundle not available"
+    },
+    "D2|v2|P5_fpr_upper|arm": {
+      "file": "scripts/generalization/descriptive/synthesis_table.py",
+      "locator": "endpoint slot D2/v2/P5_fpr_upper",
+      "sha256": "62d877f561aa918c5223abb8fe0eb30791736afddada98d1ed98807e72f5733a",
+      "value": "v2"
+    },
+    "D2|v2|P5_fpr_upper|dataset": {
+      "file": "scripts/generalization/descriptive/synthesis_table.py",
+      "locator": "endpoint slot D2/v2/P5_fpr_upper",
+      "sha256": "62d877f561aa918c5223abb8fe0eb30791736afddada98d1ed98807e72f5733a",
+      "value": "D2"
+    },
+    "D2|v2|P5_fpr_upper|endpoint": {
+      "file": "scripts/generalization/descriptive/synthesis_table.py",
+      "locator": "endpoint slot D2/v2/P5_fpr_upper",
+      "sha256": "62d877f561aa918c5223abb8fe0eb30791736afddada98d1ed98807e72f5733a",
+      "value": "P5_fpr_upper"
+    },
+    "D2|v2|P5_fpr_upper|notes": {
+      "file": "scripts/generalization/descriptive/synthesis_table.py",
+      "locator": "endpoint slot D2/v2/P5_fpr_upper",
+      "sha256": "62d877f561aa918c5223abb8fe0eb30791736afddada98d1ed98807e72f5733a",
+      "value": "bundle not available"
+    },
+    "D2|v2|control_contrast_strict_recovery|arm": {
+      "file": "scripts/generalization/descriptive/synthesis_table.py",
+      "locator": "endpoint slot D2/v2/control_contrast_strict_recovery",
+      "sha256": "62d877f561aa918c5223abb8fe0eb30791736afddada98d1ed98807e72f5733a",
+      "value": "v2"
+    },
+    "D2|v2|control_contrast_strict_recovery|dataset": {
+      "file": "scripts/generalization/descriptive/synthesis_table.py",
+      "locator": "endpoint slot D2/v2/control_contrast_strict_recovery",
+      "sha256": "62d877f561aa918c5223abb8fe0eb30791736afddada98d1ed98807e72f5733a",
+      "value": "D2"
+    },
+    "D2|v2|control_contrast_strict_recovery|endpoint": {
+      "file": "scripts/generalization/descriptive/synthesis_table.py",
+      "locator": "endpoint slot D2/v2/control_contrast_strict_recovery",
+      "sha256": "62d877f561aa918c5223abb8fe0eb30791736afddada98d1ed98807e72f5733a",
+      "value": "control_contrast_strict_recovery"
+    },
+    "D2|v2|control_contrast_strict_recovery|notes": {
+      "file": "scripts/generalization/descriptive/synthesis_table.py",
+      "locator": "endpoint slot D2/v2/control_contrast_strict_recovery",
+      "sha256": "62d877f561aa918c5223abb8fe0eb30791736afddada98d1ed98807e72f5733a",
+      "value": "bundle not available"
+    },
+    "D2|v2|control_contrast_trigger|arm": {
+      "file": "scripts/generalization/descriptive/synthesis_table.py",
+      "locator": "endpoint slot D2/v2/control_contrast_trigger",
+      "sha256": "62d877f561aa918c5223abb8fe0eb30791736afddada98d1ed98807e72f5733a",
+      "value": "v2"
+    },
+    "D2|v2|control_contrast_trigger|dataset": {
+      "file": "scripts/generalization/descriptive/synthesis_table.py",
+      "locator": "endpoint slot D2/v2/control_contrast_trigger",
+      "sha256": "62d877f561aa918c5223abb8fe0eb30791736afddada98d1ed98807e72f5733a",
+      "value": "D2"
+    },
+    "D2|v2|control_contrast_trigger|endpoint": {
+      "file": "scripts/generalization/descriptive/synthesis_table.py",
+      "locator": "endpoint slot D2/v2/control_contrast_trigger",
+      "sha256": "62d877f561aa918c5223abb8fe0eb30791736afddada98d1ed98807e72f5733a",
+      "value": "control_contrast_trigger"
+    },
+    "D2|v2|control_contrast_trigger|notes": {
+      "file": "scripts/generalization/descriptive/synthesis_table.py",
+      "locator": "endpoint slot D2/v2/control_contrast_trigger",
+      "sha256": "62d877f561aa918c5223abb8fe0eb30791736afddada98d1ed98807e72f5733a",
+      "value": "bundle not available"
+    },
+    "D3|frozen|P1_detection|arm": {
+      "file": "generalization/results/2026-09-02_d3/metrics/completeness_by_class_pass_rule.csv",
+      "locator": "CSV line 24, column p",
+      "sha256": "13267cce40a78c8577b161bf6098fcd79beecf843c4d0327ebd101aad2d3c757",
+      "value": "frozen"
+    },
+    "D3|frozen|P1_detection|dataset": {
+      "file": "generalization/results/2026-09-02_d3/metrics/completeness_by_class_pass_rule.csv",
+      "locator": "CSV line 24, column p",
+      "sha256": "13267cce40a78c8577b161bf6098fcd79beecf843c4d0327ebd101aad2d3c757",
+      "value": "D3"
+    },
+    "D3|frozen|P1_detection|endpoint": {
+      "file": "generalization/results/2026-09-02_d3/metrics/completeness_by_class_pass_rule.csv",
+      "locator": "CSV line 24, column p",
+      "sha256": "13267cce40a78c8577b161bf6098fcd79beecf843c4d0327ebd101aad2d3c757",
+      "value": "P1_detection"
+    },
+    "D3|frozen|P1_detection|estimate": {
+      "file": "generalization/results/2026-09-02_d3/metrics/completeness_by_class_pass_rule.csv",
+      "locator": "CSV line 24, column p",
+      "sha256": "13267cce40a78c8577b161bf6098fcd79beecf843c4d0327ebd101aad2d3c757",
+      "value": 0.5360655737704918
+    },
+    "D3|frozen|P1_detection|frame": {
+      "file": "generalization/results/2026-09-02_d3/metrics/completeness_by_class_pass_rule.csv",
+      "locator": "CSV line 24, column p",
+      "sha256": "13267cce40a78c8577b161bf6098fcd79beecf843c4d0327ebd101aad2d3c757",
+      "value": "dSct=1 eligible roster"
+    },
+    "D3|frozen|P1_detection|hi": {
+      "file": "generalization/results/2026-09-02_d3/metrics/completeness_by_class_pass_rule.csv",
+      "locator": "CSV line 24, column hi",
+      "sha256": "13267cce40a78c8577b161bf6098fcd79beecf843c4d0327ebd101aad2d3c757",
+      "value": 0.5752914483644217
+    },
+    "D3|frozen|P1_detection|interval_type": {
+      "file": "generalization/results/2026-09-02_d3/metrics/completeness_by_class_pass_rule.csv",
+      "locator": "CSV line 24, column p",
+      "sha256": "13267cce40a78c8577b161bf6098fcd79beecf843c4d0327ebd101aad2d3c757",
+      "value": "Wilson 95%"
+    },
+    "D3|frozen|P1_detection|lo": {
+      "file": "generalization/results/2026-09-02_d3/metrics/completeness_by_class_pass_rule.csv",
+      "locator": "CSV line 24, column lo",
+      "sha256": "13267cce40a78c8577b161bf6098fcd79beecf843c4d0327ebd101aad2d3c757",
+      "value": 0.4963882978758084
+    },
+    "D3|frozen|P1_detection|n": {
+      "file": "generalization/results/2026-09-02_d3/metrics/completeness_by_class_pass_rule.csv",
+      "locator": "CSV line 24, column n",
+      "sha256": "13267cce40a78c8577b161bf6098fcd79beecf843c4d0327ebd101aad2d3c757",
+      "value": 610
+    },
+    "D3|frozen|P1_detection|source_file": {
+      "file": "generalization/results/2026-09-02_d3/metrics/completeness_by_class_pass_rule.csv",
+      "locator": "CSV line 24, column p",
+      "sha256": "13267cce40a78c8577b161bf6098fcd79beecf843c4d0327ebd101aad2d3c757",
+      "value": "generalization/results/2026-09-02_d3/metrics/completeness_by_class_pass_rule.csv"
+    },
+    "D3|frozen|P1_detection|source_locator": {
+      "file": "generalization/results/2026-09-02_d3/metrics/completeness_by_class_pass_rule.csv",
+      "locator": "CSV line 24, column p",
+      "sha256": "13267cce40a78c8577b161bf6098fcd79beecf843c4d0327ebd101aad2d3c757",
+      "value": "CSV line 24, column p"
+    },
+    "D3|frozen|P2_recovery|arm": {
+      "file": "generalization/results/2026-09-02_d3/metrics/completeness_by_class_pass_rule.csv",
+      "locator": "CSV line 26, column p",
+      "sha256": "13267cce40a78c8577b161bf6098fcd79beecf843c4d0327ebd101aad2d3c757",
+      "value": "frozen"
+    },
+    "D3|frozen|P2_recovery|dataset": {
+      "file": "generalization/results/2026-09-02_d3/metrics/completeness_by_class_pass_rule.csv",
+      "locator": "CSV line 26, column p",
+      "sha256": "13267cce40a78c8577b161bf6098fcd79beecf843c4d0327ebd101aad2d3c757",
+      "value": "D3"
+    },
+    "D3|frozen|P2_recovery|endpoint": {
+      "file": "generalization/results/2026-09-02_d3/metrics/completeness_by_class_pass_rule.csv",
+      "locator": "CSV line 26, column p",
+      "sha256": "13267cce40a78c8577b161bf6098fcd79beecf843c4d0327ebd101aad2d3c757",
+      "value": "P2_recovery"
+    },
+    "D3|frozen|P2_recovery|estimate": {
+      "file": "generalization/results/2026-09-02_d3/metrics/completeness_by_class_pass_rule.csv",
+      "locator": "CSV line 26, column p",
+      "sha256": "13267cce40a78c8577b161bf6098fcd79beecf843c4d0327ebd101aad2d3c757",
+      "value": 0.16326530612244897
+    },
+    "D3|frozen|P2_recovery|frame": {
+      "file": "generalization/results/2026-09-02_d3/metrics/completeness_by_class_pass_rule.csv",
+      "locator": "CSV line 26, column p",
+      "sha256": "13267cce40a78c8577b161bf6098fcd79beecf843c4d0327ebd101aad2d3c757",
+      "value": "Mo-joined, S_best=1, usable"
+    },
+    "D3|frozen|P2_recovery|hi": {
+      "file": "generalization/results/2026-09-02_d3/metrics/completeness_by_class_pass_rule.csv",
+      "locator": "CSV line 26, column hi",
+      "sha256": "13267cce40a78c8577b161bf6098fcd79beecf843c4d0327ebd101aad2d3c757",
+      "value": 0.20064287889483925
+    },
+    "D3|frozen|P2_recovery|interval_type": {
+      "file": "generalization/results/2026-09-02_d3/metrics/completeness_by_class_pass_rule.csv",
+      "locator": "CSV line 26, column p",
+      "sha256": "13267cce40a78c8577b161bf6098fcd79beecf843c4d0327ebd101aad2d3c757",
+      "value": "Wilson 95%"
+    },
+    "D3|frozen|P2_recovery|lo": {
+      "file": "generalization/results/2026-09-02_d3/metrics/completeness_by_class_pass_rule.csv",
+      "locator": "CSV line 26, column lo",
+      "sha256": "13267cce40a78c8577b161bf6098fcd79beecf843c4d0327ebd101aad2d3c757",
+      "value": 0.131703524276826
+    },
+    "D3|frozen|P2_recovery|n": {
+      "file": "generalization/results/2026-09-02_d3/metrics/completeness_by_class_pass_rule.csv",
+      "locator": "CSV line 26, column n",
+      "sha256": "13267cce40a78c8577b161bf6098fcd79beecf843c4d0327ebd101aad2d3c757",
+      "value": 441
+    },
+    "D3|frozen|P2_recovery|notes": {
+      "file": "generalization/results/2026-09-02_d3/metrics/completeness_by_class_pass_rule.csv",
+      "locator": "CSV line 26, column p",
+      "sha256": "13267cce40a78c8577b161bf6098fcd79beecf843c4d0327ebd101aad2d3c757",
+      "value": "Mo-join-conditioned dominant-direct recovery"
+    },
+    "D3|frozen|P2_recovery|source_file": {
+      "file": "generalization/results/2026-09-02_d3/metrics/completeness_by_class_pass_rule.csv",
+      "locator": "CSV line 26, column p",
+      "sha256": "13267cce40a78c8577b161bf6098fcd79beecf843c4d0327ebd101aad2d3c757",
+      "value": "generalization/results/2026-09-02_d3/metrics/completeness_by_class_pass_rule.csv"
+    },
+    "D3|frozen|P2_recovery|source_locator": {
+      "file": "generalization/results/2026-09-02_d3/metrics/completeness_by_class_pass_rule.csv",
+      "locator": "CSV line 26, column p",
+      "sha256": "13267cce40a78c8577b161bf6098fcd79beecf843c4d0327ebd101aad2d3c757",
+      "value": "CSV line 26, column p"
+    },
+    "D3|frozen|P3_negative_trigger|arm": {
+      "file": "generalization/results/2026-09-02_d3/metrics/trigger_rates.csv",
+      "locator": "CSV line 2, column p",
+      "sha256": "7d12c2d656a724d27126aa5946bebcaa579edebbf919691b78850d22067a2236",
+      "value": "frozen"
+    },
+    "D3|frozen|P3_negative_trigger|dataset": {
+      "file": "generalization/results/2026-09-02_d3/metrics/trigger_rates.csv",
+      "locator": "CSV line 2, column p",
+      "sha256": "7d12c2d656a724d27126aa5946bebcaa579edebbf919691b78850d22067a2236",
+      "value": "D3"
+    },
+    "D3|frozen|P3_negative_trigger|endpoint": {
+      "file": "generalization/results/2026-09-02_d3/metrics/trigger_rates.csv",
+      "locator": "CSV line 2, column p",
+      "sha256": "7d12c2d656a724d27126aa5946bebcaa579edebbf919691b78850d22067a2236",
+      "value": "P3_negative_trigger"
+    },
+    "D3|frozen|P3_negative_trigger|estimate": {
+      "file": "generalization/results/2026-09-02_d3/metrics/trigger_rates.csv",
+      "locator": "CSV line 2, column p",
+      "sha256": "7d12c2d656a724d27126aa5946bebcaa579edebbf919691b78850d22067a2236",
+      "value": 0.4161624891961971
+    },
+    "D3|frozen|P3_negative_trigger|frame": {
+      "file": "generalization/results/2026-09-02_d3/metrics/trigger_rates.csv",
+      "locator": "CSV line 2, column p",
+      "sha256": "7d12c2d656a724d27126aa5946bebcaa579edebbf919691b78850d22067a2236",
+      "value": "dSct=0 sampled negative class"
+    },
+    "D3|frozen|P3_negative_trigger|hi": {
+      "file": "generalization/results/2026-09-02_d3/metrics/trigger_rates.csv",
+      "locator": "CSV line 2, column hi",
+      "sha256": "7d12c2d656a724d27126aa5946bebcaa579edebbf919691b78850d22067a2236",
+      "value": 0.4363689750832922
+    },
+    "D3|frozen|P3_negative_trigger|interval_type": {
+      "file": "generalization/results/2026-09-02_d3/metrics/trigger_rates.csv",
+      "locator": "CSV line 2, column p",
+      "sha256": "7d12c2d656a724d27126aa5946bebcaa579edebbf919691b78850d22067a2236",
+      "value": "Wilson 95%"
+    },
+    "D3|frozen|P3_negative_trigger|lo": {
+      "file": "generalization/results/2026-09-02_d3/metrics/trigger_rates.csv",
+      "locator": "CSV line 2, column lo",
+      "sha256": "7d12c2d656a724d27126aa5946bebcaa579edebbf919691b78850d22067a2236",
+      "value": 0.3962338983688841
+    },
+    "D3|frozen|P3_negative_trigger|n": {
+      "file": "generalization/results/2026-09-02_d3/metrics/trigger_rates.csv",
+      "locator": "CSV line 2, column n",
+      "sha256": "7d12c2d656a724d27126aa5946bebcaa579edebbf919691b78850d22067a2236",
+      "value": 2314
+    },
+    "D3|frozen|P3_negative_trigger|notes": {
+      "file": "generalization/results/2026-09-02_d3/descriptive_postlaunch/d3_negative_trigger_strata.csv",
+      "locator": "CSV lines 10,11,12,13, stratifier=merged_oid",
+      "sha256": "cdadde8936aa5bc9229571b099169cc4ce5ddc287eb7eb7bf555f45d04fd9207",
+      "value": "non-dSct comparison class; not a Gaussian false-positive rate; merged-oid descriptive rates (no intervals): <=1: 0/46=0.000, 2: 107/438=0.244, 3-4: 670/1439=0.466, >=5: 186/391=0.476"
+    },
+    "D3|frozen|P3_negative_trigger|source_file": {
+      "file": "generalization/results/2026-09-02_d3/metrics/trigger_rates.csv",
+      "locator": "CSV line 2, column p",
+      "sha256": "7d12c2d656a724d27126aa5946bebcaa579edebbf919691b78850d22067a2236",
+      "value": "generalization/results/2026-09-02_d3/metrics/trigger_rates.csv"
+    },
+    "D3|frozen|P3_negative_trigger|source_locator": {
+      "file": "generalization/results/2026-09-02_d3/metrics/trigger_rates.csv",
+      "locator": "CSV line 2, column p",
+      "sha256": "7d12c2d656a724d27126aa5946bebcaa579edebbf919691b78850d22067a2236",
+      "value": "CSV line 2, column p"
+    },
+    "D3|frozen|census_rate|arm": {
+      "file": "generalization/results/2026-09-02_d3/metrics/completeness_by_class_pass_rule.csv",
+      "locator": "CSV line 30, column p",
+      "sha256": "13267cce40a78c8577b161bf6098fcd79beecf843c4d0327ebd101aad2d3c757",
+      "value": "frozen"
+    },
+    "D3|frozen|census_rate|dataset": {
+      "file": "generalization/results/2026-09-02_d3/metrics/completeness_by_class_pass_rule.csv",
+      "locator": "CSV line 30, column p",
+      "sha256": "13267cce40a78c8577b161bf6098fcd79beecf843c4d0327ebd101aad2d3c757",
+      "value": "D3"
+    },
+    "D3|frozen|census_rate|endpoint": {
+      "file": "generalization/results/2026-09-02_d3/metrics/completeness_by_class_pass_rule.csv",
+      "locator": "CSV line 30, column p",
+      "sha256": "13267cce40a78c8577b161bf6098fcd79beecf843c4d0327ebd101aad2d3c757",
+      "value": "census_rate"
+    },
+    "D3|frozen|census_rate|estimate": {
+      "file": "generalization/results/2026-09-02_d3/metrics/completeness_by_class_pass_rule.csv",
+      "locator": "CSV line 30, column p",
+      "sha256": "13267cce40a78c8577b161bf6098fcd79beecf843c4d0327ebd101aad2d3c757",
+      "value": 0.040983606557377046
+    },
+    "D3|frozen|census_rate|frame": {
+      "file": "generalization/results/2026-09-02_d3/metrics/completeness_by_class_pass_rule.csv",
+      "locator": "CSV line 30, column p",
+      "sha256": "13267cce40a78c8577b161bf6098fcd79beecf843c4d0327ebd101aad2d3c757",
+      "value": "dSct=1 eligible roster"
+    },
+    "D3|frozen|census_rate|hi": {
+      "file": "generalization/results/2026-09-02_d3/metrics/completeness_by_class_pass_rule.csv",
+      "locator": "CSV line 30, column hi",
+      "sha256": "13267cce40a78c8577b161bf6098fcd79beecf843c4d0327ebd101aad2d3c757",
+      "value": 0.05980038127416218
+    },
+    "D3|frozen|census_rate|interval_type": {
+      "file": "generalization/results/2026-09-02_d3/metrics/completeness_by_class_pass_rule.csv",
+      "locator": "CSV line 30, column p",
+      "sha256": "13267cce40a78c8577b161bf6098fcd79beecf843c4d0327ebd101aad2d3c757",
+      "value": "Wilson 95%"
+    },
+    "D3|frozen|census_rate|lo": {
+      "file": "generalization/results/2026-09-02_d3/metrics/completeness_by_class_pass_rule.csv",
+      "locator": "CSV line 30, column lo",
+      "sha256": "13267cce40a78c8577b161bf6098fcd79beecf843c4d0327ebd101aad2d3c757",
+      "value": 0.027911939304727643
+    },
+    "D3|frozen|census_rate|n": {
+      "file": "generalization/results/2026-09-02_d3/metrics/completeness_by_class_pass_rule.csv",
+      "locator": "CSV line 30, column n",
+      "sha256": "13267cce40a78c8577b161bf6098fcd79beecf843c4d0327ebd101aad2d3c757",
+      "value": 610
+    },
+    "D3|frozen|census_rate|source_file": {
+      "file": "generalization/results/2026-09-02_d3/metrics/completeness_by_class_pass_rule.csv",
+      "locator": "CSV line 30, column p",
+      "sha256": "13267cce40a78c8577b161bf6098fcd79beecf843c4d0327ebd101aad2d3c757",
+      "value": "generalization/results/2026-09-02_d3/metrics/completeness_by_class_pass_rule.csv"
+    },
+    "D3|frozen|census_rate|source_locator": {
+      "file": "generalization/results/2026-09-02_d3/metrics/completeness_by_class_pass_rule.csv",
+      "locator": "CSV line 30, column p",
+      "sha256": "13267cce40a78c8577b161bf6098fcd79beecf843c4d0327ebd101aad2d3c757",
+      "value": "CSV line 30, column p"
+    },
+    "D3|frozen|chance_match_mean|arm": {
+      "file": "generalization/results/2026-09-02_d3/metrics/chance_match.json",
+      "locator": "JSON key $.accidental_direct_match_rate_mean",
+      "sha256": "be9b3fb6c2420409a0f0a940f075be122607044c4040ae87ff16dce419755651",
+      "value": "frozen"
+    },
+    "D3|frozen|chance_match_mean|dataset": {
+      "file": "generalization/results/2026-09-02_d3/metrics/chance_match.json",
+      "locator": "JSON key $.accidental_direct_match_rate_mean",
+      "sha256": "be9b3fb6c2420409a0f0a940f075be122607044c4040ae87ff16dce419755651",
+      "value": "D3"
+    },
+    "D3|frozen|chance_match_mean|endpoint": {
+      "file": "generalization/results/2026-09-02_d3/metrics/chance_match.json",
+      "locator": "JSON key $.accidental_direct_match_rate_mean",
+      "sha256": "be9b3fb6c2420409a0f0a940f075be122607044c4040ae87ff16dce419755651",
+      "value": "chance_match_mean"
+    },
+    "D3|frozen|chance_match_mean|estimate": {
+      "file": "generalization/results/2026-09-02_d3/metrics/chance_match.json",
+      "locator": "JSON key $.accidental_direct_match_rate_mean",
+      "sha256": "be9b3fb6c2420409a0f0a940f075be122607044c4040ae87ff16dce419755651",
+      "value": 0.0037273546747527506
+    },
+    "D3|frozen|chance_match_mean|frame": {
+      "file": "generalization/results/2026-09-02_d3/metrics/chance_match.json",
+      "locator": "JSON key $.accidental_direct_match_rate_mean",
+      "sha256": "be9b3fb6c2420409a0f0a940f075be122607044c4040ae87ff16dce419755651",
+      "value": "frequency-scorable stars"
+    },
+    "D3|frozen|chance_match_mean|interval_type": {
+      "file": "generalization/results/2026-09-02_d3/metrics/chance_match.json",
+      "locator": "JSON key $.accidental_direct_match_rate_mean",
+      "sha256": "be9b3fb6c2420409a0f0a940f075be122607044c4040ae87ff16dce419755651",
+      "value": "truth-list permutation calibration"
+    },
+    "D3|frozen|chance_match_mean|n": {
+      "file": "generalization/results/2026-09-02_d3/metrics/chance_match.json",
+      "locator": "JSON key $.permutations",
+      "sha256": "be9b3fb6c2420409a0f0a940f075be122607044c4040ae87ff16dce419755651",
+      "value": 100
+    },
+    "D3|frozen|chance_match_mean|notes": {
+      "file": "generalization/results/2026-09-02_d3/metrics/chance_match.json",
+      "locator": "JSON key $.accidental_direct_match_rate_mean",
+      "sha256": "be9b3fb6c2420409a0f0a940f075be122607044c4040ae87ff16dce419755651",
+      "value": "calibration; not an observed recovery estimate"
+    },
+    "D3|frozen|chance_match_mean|source_file": {
+      "file": "generalization/results/2026-09-02_d3/metrics/chance_match.json",
+      "locator": "JSON key $.accidental_direct_match_rate_mean",
+      "sha256": "be9b3fb6c2420409a0f0a940f075be122607044c4040ae87ff16dce419755651",
+      "value": "generalization/results/2026-09-02_d3/metrics/chance_match.json"
+    },
+    "D3|frozen|chance_match_mean|source_locator": {
+      "file": "generalization/results/2026-09-02_d3/metrics/chance_match.json",
+      "locator": "JSON key $.accidental_direct_match_rate_mean",
+      "sha256": "be9b3fb6c2420409a0f0a940f075be122607044c4040ae87ff16dce419755651",
+      "value": "JSON key $.accidental_direct_match_rate_mean"
+    },
+    "D3|frozen|chance_match_p95|arm": {
+      "file": "generalization/results/2026-09-02_d3/metrics/chance_match.json",
+      "locator": "JSON key $.accidental_direct_match_rate_p95",
+      "sha256": "be9b3fb6c2420409a0f0a940f075be122607044c4040ae87ff16dce419755651",
+      "value": "frozen"
+    },
+    "D3|frozen|chance_match_p95|dataset": {
+      "file": "generalization/results/2026-09-02_d3/metrics/chance_match.json",
+      "locator": "JSON key $.accidental_direct_match_rate_p95",
+      "sha256": "be9b3fb6c2420409a0f0a940f075be122607044c4040ae87ff16dce419755651",
+      "value": "D3"
+    },
+    "D3|frozen|chance_match_p95|endpoint": {
+      "file": "generalization/results/2026-09-02_d3/metrics/chance_match.json",
+      "locator": "JSON key $.accidental_direct_match_rate_p95",
+      "sha256": "be9b3fb6c2420409a0f0a940f075be122607044c4040ae87ff16dce419755651",
+      "value": "chance_match_p95"
+    },
+    "D3|frozen|chance_match_p95|estimate": {
+      "file": "generalization/results/2026-09-02_d3/metrics/chance_match.json",
+      "locator": "JSON key $.accidental_direct_match_rate_p95",
+      "sha256": "be9b3fb6c2420409a0f0a940f075be122607044c4040ae87ff16dce419755651",
+      "value": 0.00907132549989693
+    },
+    "D3|frozen|chance_match_p95|frame": {
+      "file": "generalization/results/2026-09-02_d3/metrics/chance_match.json",
+      "locator": "JSON key $.accidental_direct_match_rate_p95",
+      "sha256": "be9b3fb6c2420409a0f0a940f075be122607044c4040ae87ff16dce419755651",
+      "value": "frequency-scorable stars"
+    },
+    "D3|frozen|chance_match_p95|interval_type": {
+      "file": "generalization/results/2026-09-02_d3/metrics/chance_match.json",
+      "locator": "JSON key $.accidental_direct_match_rate_p95",
+      "sha256": "be9b3fb6c2420409a0f0a940f075be122607044c4040ae87ff16dce419755651",
+      "value": "truth-list permutation calibration"
+    },
+    "D3|frozen|chance_match_p95|n": {
+      "file": "generalization/results/2026-09-02_d3/metrics/chance_match.json",
+      "locator": "JSON key $.permutations",
+      "sha256": "be9b3fb6c2420409a0f0a940f075be122607044c4040ae87ff16dce419755651",
+      "value": 100
+    },
+    "D3|frozen|chance_match_p95|notes": {
+      "file": "generalization/results/2026-09-02_d3/metrics/chance_match.json",
+      "locator": "JSON key $.accidental_direct_match_rate_p95",
+      "sha256": "be9b3fb6c2420409a0f0a940f075be122607044c4040ae87ff16dce419755651",
+      "value": "calibration; not an observed recovery estimate"
+    },
+    "D3|frozen|chance_match_p95|source_file": {
+      "file": "generalization/results/2026-09-02_d3/metrics/chance_match.json",
+      "locator": "JSON key $.accidental_direct_match_rate_p95",
+      "sha256": "be9b3fb6c2420409a0f0a940f075be122607044c4040ae87ff16dce419755651",
+      "value": "generalization/results/2026-09-02_d3/metrics/chance_match.json"
+    },
+    "D3|frozen|chance_match_p95|source_locator": {
+      "file": "generalization/results/2026-09-02_d3/metrics/chance_match.json",
+      "locator": "JSON key $.accidental_direct_match_rate_p95",
+      "sha256": "be9b3fb6c2420409a0f0a940f075be122607044c4040ae87ff16dce419755651",
+      "value": "JSON key $.accidental_direct_match_rate_p95"
+    },
+    "D3|frozen|either_rate|arm": {
+      "file": "generalization/results/2026-09-02_d3/metrics/completeness_by_class_pass_rule.csv",
+      "locator": "CSV line 32, column p",
+      "sha256": "13267cce40a78c8577b161bf6098fcd79beecf843c4d0327ebd101aad2d3c757",
+      "value": "frozen"
+    },
+    "D3|frozen|either_rate|dataset": {
+      "file": "generalization/results/2026-09-02_d3/metrics/completeness_by_class_pass_rule.csv",
+      "locator": "CSV line 32, column p",
+      "sha256": "13267cce40a78c8577b161bf6098fcd79beecf843c4d0327ebd101aad2d3c757",
+      "value": "D3"
+    },
+    "D3|frozen|either_rate|endpoint": {
+      "file": "generalization/results/2026-09-02_d3/metrics/completeness_by_class_pass_rule.csv",
+      "locator": "CSV line 32, column p",
+      "sha256": "13267cce40a78c8577b161bf6098fcd79beecf843c4d0327ebd101aad2d3c757",
+      "value": "either_rate"
+    },
+    "D3|frozen|either_rate|estimate": {
+      "file": "generalization/results/2026-09-02_d3/metrics/completeness_by_class_pass_rule.csv",
+      "locator": "CSV line 32, column p",
+      "sha256": "13267cce40a78c8577b161bf6098fcd79beecf843c4d0327ebd101aad2d3c757",
+      "value": 0.5475409836065573
+    },
+    "D3|frozen|either_rate|frame": {
+      "file": "generalization/results/2026-09-02_d3/metrics/completeness_by_class_pass_rule.csv",
+      "locator": "CSV line 32, column p",
+      "sha256": "13267cce40a78c8577b161bf6098fcd79beecf843c4d0327ebd101aad2d3c757",
+      "value": "dSct=1 eligible roster"
+    },
+    "D3|frozen|either_rate|hi": {
+      "file": "generalization/results/2026-09-02_d3/metrics/completeness_by_class_pass_rule.csv",
+      "locator": "CSV line 32, column hi",
+      "sha256": "13267cce40a78c8577b161bf6098fcd79beecf843c4d0327ebd101aad2d3c757",
+      "value": 0.5866193532951686
+    },
+    "D3|frozen|either_rate|interval_type": {
+      "file": "generalization/results/2026-09-02_d3/metrics/completeness_by_class_pass_rule.csv",
+      "locator": "CSV line 32, column p",
+      "sha256": "13267cce40a78c8577b161bf6098fcd79beecf843c4d0327ebd101aad2d3c757",
+      "value": "Wilson 95%"
+    },
+    "D3|frozen|either_rate|lo": {
+      "file": "generalization/results/2026-09-02_d3/metrics/completeness_by_class_pass_rule.csv",
+      "locator": "CSV line 32, column lo",
+      "sha256": "13267cce40a78c8577b161bf6098fcd79beecf843c4d0327ebd101aad2d3c757",
+      "value": 0.5078675849305893
+    },
+    "D3|frozen|either_rate|n": {
+      "file": "generalization/results/2026-09-02_d3/metrics/completeness_by_class_pass_rule.csv",
+      "locator": "CSV line 32, column n",
+      "sha256": "13267cce40a78c8577b161bf6098fcd79beecf843c4d0327ebd101aad2d3c757",
+      "value": 610
+    },
+    "D3|frozen|either_rate|source_file": {
+      "file": "generalization/results/2026-09-02_d3/metrics/completeness_by_class_pass_rule.csv",
+      "locator": "CSV line 32, column p",
+      "sha256": "13267cce40a78c8577b161bf6098fcd79beecf843c4d0327ebd101aad2d3c757",
+      "value": "generalization/results/2026-09-02_d3/metrics/completeness_by_class_pass_rule.csv"
+    },
+    "D3|frozen|either_rate|source_locator": {
+      "file": "generalization/results/2026-09-02_d3/metrics/completeness_by_class_pass_rule.csv",
+      "locator": "CSV line 32, column p",
+      "sha256": "13267cce40a78c8577b161bf6098fcd79beecf843c4d0327ebd101aad2d3c757",
+      "value": "CSV line 32, column p"
+    },
+    "D3|frozen|incremental_census|arm": {
+      "file": "generalization/results/2026-09-02_d3/metrics/contingency_complementarity.json",
+      "locator": "JSON key $.incremental_census_only.p",
+      "sha256": "11520ecaa8d138a4424f339dba4a650e81f95881cb45e7b83116087e74f653d5",
+      "value": "frozen"
+    },
+    "D3|frozen|incremental_census|dataset": {
+      "file": "generalization/results/2026-09-02_d3/metrics/contingency_complementarity.json",
+      "locator": "JSON key $.incremental_census_only.p",
+      "sha256": "11520ecaa8d138a4424f339dba4a650e81f95881cb45e7b83116087e74f653d5",
+      "value": "D3"
+    },
+    "D3|frozen|incremental_census|endpoint": {
+      "file": "generalization/results/2026-09-02_d3/metrics/contingency_complementarity.json",
+      "locator": "JSON key $.incremental_census_only.p",
+      "sha256": "11520ecaa8d138a4424f339dba4a650e81f95881cb45e7b83116087e74f653d5",
+      "value": "incremental_census"
+    },
+    "D3|frozen|incremental_census|estimate": {
+      "file": "generalization/results/2026-09-02_d3/metrics/contingency_complementarity.json",
+      "locator": "JSON key $.incremental_census_only.p",
+      "sha256": "11520ecaa8d138a4424f339dba4a650e81f95881cb45e7b83116087e74f653d5",
+      "value": 0.011965811965811967
+    },
+    "D3|frozen|incremental_census|frame": {
+      "file": "generalization/results/2026-09-02_d3/metrics/contingency_complementarity.json",
+      "locator": "JSON key $.incremental_census_only.p",
+      "sha256": "11520ecaa8d138a4424f339dba4a650e81f95881cb45e7b83116087e74f653d5",
+      "value": "positives with both methods available and usable"
+    },
+    "D3|frozen|incremental_census|hi": {
+      "file": "generalization/results/2026-09-02_d3/metrics/contingency_complementarity.json",
+      "locator": "JSON key $.incremental_census_only.hi",
+      "sha256": "11520ecaa8d138a4424f339dba4a650e81f95881cb45e7b83116087e74f653d5",
+      "value": 0.024491184519128337
+    },
+    "D3|frozen|incremental_census|interval_type": {
+      "file": "generalization/results/2026-09-02_d3/metrics/contingency_complementarity.json",
+      "locator": "JSON key $.incremental_census_only.p",
+      "sha256": "11520ecaa8d138a4424f339dba4a650e81f95881cb45e7b83116087e74f653d5",
+      "value": "Wilson 95%"
+    },
+    "D3|frozen|incremental_census|lo": {
+      "file": "generalization/results/2026-09-02_d3/metrics/contingency_complementarity.json",
+      "locator": "JSON key $.incremental_census_only.lo",
+      "sha256": "11520ecaa8d138a4424f339dba4a650e81f95881cb45e7b83116087e74f653d5",
+      "value": 0.0058080726976210036
+    },
+    "D3|frozen|incremental_census|n": {
+      "file": "generalization/results/2026-09-02_d3/metrics/contingency_complementarity.json",
+      "locator": "JSON key $.n_positives_scored",
+      "sha256": "11520ecaa8d138a4424f339dba4a650e81f95881cb45e7b83116087e74f653d5",
+      "value": 585
+    },
+    "D3|frozen|incremental_census|source_file": {
+      "file": "generalization/results/2026-09-02_d3/metrics/contingency_complementarity.json",
+      "locator": "JSON key $.incremental_census_only.p",
+      "sha256": "11520ecaa8d138a4424f339dba4a650e81f95881cb45e7b83116087e74f653d5",
+      "value": "generalization/results/2026-09-02_d3/metrics/contingency_complementarity.json"
+    },
+    "D3|frozen|incremental_census|source_locator": {
+      "file": "generalization/results/2026-09-02_d3/metrics/contingency_complementarity.json",
+      "locator": "JSON key $.incremental_census_only.p",
+      "sha256": "11520ecaa8d138a4424f339dba4a650e81f95881cb45e7b83116087e74f653d5",
+      "value": "JSON key $.incremental_census_only.p"
+    },
+    "D3|frozen|mcnemar_p|arm": {
+      "file": "generalization/results/2026-09-02_d3/metrics/contingency_complementarity.json",
+      "locator": "JSON key $.mcnemar_exact_p_secondary",
+      "sha256": "11520ecaa8d138a4424f339dba4a650e81f95881cb45e7b83116087e74f653d5",
+      "value": "frozen"
+    },
+    "D3|frozen|mcnemar_p|dataset": {
+      "file": "generalization/results/2026-09-02_d3/metrics/contingency_complementarity.json",
+      "locator": "JSON key $.mcnemar_exact_p_secondary",
+      "sha256": "11520ecaa8d138a4424f339dba4a650e81f95881cb45e7b83116087e74f653d5",
+      "value": "D3"
+    },
+    "D3|frozen|mcnemar_p|endpoint": {
+      "file": "generalization/results/2026-09-02_d3/metrics/contingency_complementarity.json",
+      "locator": "JSON key $.mcnemar_exact_p_secondary",
+      "sha256": "11520ecaa8d138a4424f339dba4a650e81f95881cb45e7b83116087e74f653d5",
+      "value": "mcnemar_p"
+    },
+    "D3|frozen|mcnemar_p|estimate": {
+      "file": "generalization/results/2026-09-02_d3/metrics/contingency_complementarity.json",
+      "locator": "JSON key $.mcnemar_exact_p_secondary",
+      "sha256": "11520ecaa8d138a4424f339dba4a650e81f95881cb45e7b83116087e74f653d5",
+      "value": 8.948591379055871e-82
+    },
+    "D3|frozen|mcnemar_p|frame": {
+      "file": "generalization/results/2026-09-02_d3/metrics/contingency_complementarity.json",
+      "locator": "JSON key $.mcnemar_exact_p_secondary",
+      "sha256": "11520ecaa8d138a4424f339dba4a650e81f95881cb45e7b83116087e74f653d5",
+      "value": "positives with both methods available and usable"
+    },
+    "D3|frozen|mcnemar_p|interval_type": {
+      "file": "generalization/results/2026-09-02_d3/metrics/contingency_complementarity.json",
+      "locator": "JSON key $.mcnemar_exact_p_secondary",
+      "sha256": "11520ecaa8d138a4424f339dba4a650e81f95881cb45e7b83116087e74f653d5",
+      "value": "exact two-sided McNemar"
+    },
+    "D3|frozen|mcnemar_p|n": {
+      "file": "generalization/results/2026-09-02_d3/metrics/contingency_complementarity.json",
+      "locator": "JSON key $.n_positives_scored",
+      "sha256": "11520ecaa8d138a4424f339dba4a650e81f95881cb45e7b83116087e74f653d5",
+      "value": 585
+    },
+    "D3|frozen|mcnemar_p|notes": {
+      "file": "generalization/results/2026-09-02_d3/metrics/contingency_complementarity.json",
+      "locator": "JSON key $.mcnemar_exact_p_secondary",
+      "sha256": "11520ecaa8d138a4424f339dba4a650e81f95881cb45e7b83116087e74f653d5",
+      "value": "secondary marginal-homogeneity test"
+    },
+    "D3|frozen|mcnemar_p|source_file": {
+      "file": "generalization/results/2026-09-02_d3/metrics/contingency_complementarity.json",
+      "locator": "JSON key $.mcnemar_exact_p_secondary",
+      "sha256": "11520ecaa8d138a4424f339dba4a650e81f95881cb45e7b83116087e74f653d5",
+      "value": "generalization/results/2026-09-02_d3/metrics/contingency_complementarity.json"
+    },
+    "D3|frozen|mcnemar_p|source_locator": {
+      "file": "generalization/results/2026-09-02_d3/metrics/contingency_complementarity.json",
+      "locator": "JSON key $.mcnemar_exact_p_secondary",
+      "sha256": "11520ecaa8d138a4424f339dba4a650e81f95881cb45e7b83116087e74f653d5",
+      "value": "JSON key $.mcnemar_exact_p_secondary"
+    },
+    "D3|frozen|ppv|arm": {
+      "file": "generalization/results/2026-09-02_d3/metrics/ppv.csv",
+      "locator": "CSV line 2, column p",
+      "sha256": "36b2a29bc4cab73109c010fc242365921341f8ceddfa9948e02ab2b18d090c0b",
+      "value": "frozen"
+    },
+    "D3|frozen|ppv|dataset": {
+      "file": "generalization/results/2026-09-02_d3/metrics/ppv.csv",
+      "locator": "CSV line 2, column p",
+      "sha256": "36b2a29bc4cab73109c010fc242365921341f8ceddfa9948e02ab2b18d090c0b",
+      "value": "D3"
+    },
+    "D3|frozen|ppv|endpoint": {
+      "file": "generalization/results/2026-09-02_d3/metrics/ppv.csv",
+      "locator": "CSV line 2, column p",
+      "sha256": "36b2a29bc4cab73109c010fc242365921341f8ceddfa9948e02ab2b18d090c0b",
+      "value": "ppv"
+    },
+    "D3|frozen|ppv|estimate": {
+      "file": "generalization/results/2026-09-02_d3/metrics/ppv.csv",
+      "locator": "CSV line 2, column p",
+      "sha256": "36b2a29bc4cab73109c010fc242365921341f8ceddfa9948e02ab2b18d090c0b",
+      "value": 0.09727346142899344
+    },
+    "D3|frozen|ppv|frame": {
+      "file": "generalization/results/2026-09-02_d3/metrics/ppv.csv",
+      "locator": "CSV line 2, column p",
+      "sha256": "36b2a29bc4cab73109c010fc242365921341f8ceddfa9948e02ab2b18d090c0b",
+      "value": "triggered weighted frame; dSct=2 excluded"
+    },
+    "D3|frozen|ppv|hi": {
+      "file": "generalization/results/2026-09-02_d3/metrics/ppv.csv",
+      "locator": "CSV line 2, column hi",
+      "sha256": "36b2a29bc4cab73109c010fc242365921341f8ceddfa9948e02ab2b18d090c0b",
+      "value": 0.10097766514186661
+    },
+    "D3|frozen|ppv|interval_type": {
+      "file": "generalization/results/2026-09-02_d3/metrics/ppv.csv",
+      "locator": "CSV line 2, column interval",
+      "sha256": "36b2a29bc4cab73109c010fc242365921341f8ceddfa9948e02ab2b18d090c0b",
+      "value": "survey_bootstrap_fpc_rescaled"
+    },
+    "D3|frozen|ppv|lo": {
+      "file": "generalization/results/2026-09-02_d3/metrics/ppv.csv",
+      "locator": "CSV line 2, column lo",
+      "sha256": "36b2a29bc4cab73109c010fc242365921341f8ceddfa9948e02ab2b18d090c0b",
+      "value": 0.09374390140765886
+    },
+    "D3|frozen|ppv|n": {
+      "file": "generalization/results/2026-09-02_d3/metrics/ppv.csv",
+      "locator": "CSV line 2, column n_triggered",
+      "sha256": "36b2a29bc4cab73109c010fc242365921341f8ceddfa9948e02ab2b18d090c0b",
+      "value": 1290
+    },
+    "D3|frozen|ppv|notes": {
+      "file": "generalization/results/2026-09-02_d3/metrics/ppv.csv",
+      "locator": "CSV line 2, column p",
+      "sha256": "36b2a29bc4cab73109c010fc242365921341f8ceddfa9948e02ab2b18d090c0b",
+      "value": "frame-specific label PPV; no transfer to other prevalences"
+    },
+    "D3|frozen|ppv|source_file": {
+      "file": "generalization/results/2026-09-02_d3/metrics/ppv.csv",
+      "locator": "CSV line 2, column p",
+      "sha256": "36b2a29bc4cab73109c010fc242365921341f8ceddfa9948e02ab2b18d090c0b",
+      "value": "generalization/results/2026-09-02_d3/metrics/ppv.csv"
+    },
+    "D3|frozen|ppv|source_locator": {
+      "file": "generalization/results/2026-09-02_d3/metrics/ppv.csv",
+      "locator": "CSV line 2, column p",
+      "sha256": "36b2a29bc4cab73109c010fc242365921341f8ceddfa9948e02ab2b18d090c0b",
+      "value": "CSV line 2, column p"
+    },
+    "D3|frozen|union_rate|arm": {
+      "file": "generalization/results/2026-09-02_d3/metrics/contingency_complementarity.json",
+      "locator": "JSON key $.union_completeness.p",
+      "sha256": "11520ecaa8d138a4424f339dba4a650e81f95881cb45e7b83116087e74f653d5",
+      "value": "frozen"
+    },
+    "D3|frozen|union_rate|dataset": {
+      "file": "generalization/results/2026-09-02_d3/metrics/contingency_complementarity.json",
+      "locator": "JSON key $.union_completeness.p",
+      "sha256": "11520ecaa8d138a4424f339dba4a650e81f95881cb45e7b83116087e74f653d5",
+      "value": "D3"
+    },
+    "D3|frozen|union_rate|endpoint": {
+      "file": "generalization/results/2026-09-02_d3/metrics/contingency_complementarity.json",
+      "locator": "JSON key $.union_completeness.p",
+      "sha256": "11520ecaa8d138a4424f339dba4a650e81f95881cb45e7b83116087e74f653d5",
+      "value": "union_rate"
+    },
+    "D3|frozen|union_rate|estimate": {
+      "file": "generalization/results/2026-09-02_d3/metrics/contingency_complementarity.json",
+      "locator": "JSON key $.union_completeness.p",
+      "sha256": "11520ecaa8d138a4424f339dba4a650e81f95881cb45e7b83116087e74f653d5",
+      "value": 0.5709401709401709
+    },
+    "D3|frozen|union_rate|frame": {
+      "file": "generalization/results/2026-09-02_d3/metrics/contingency_complementarity.json",
+      "locator": "JSON key $.union_completeness.p",
+      "sha256": "11520ecaa8d138a4424f339dba4a650e81f95881cb45e7b83116087e74f653d5",
+      "value": "positives with both methods available and usable"
+    },
+    "D3|frozen|union_rate|hi": {
+      "file": "generalization/results/2026-09-02_d3/metrics/contingency_complementarity.json",
+      "locator": "JSON key $.union_completeness.hi",
+      "sha256": "11520ecaa8d138a4424f339dba4a650e81f95881cb45e7b83116087e74f653d5",
+      "value": 0.6104564023360556
+    },
+    "D3|frozen|union_rate|interval_type": {
+      "file": "generalization/results/2026-09-02_d3/metrics/contingency_complementarity.json",
+      "locator": "JSON key $.union_completeness.p",
+      "sha256": "11520ecaa8d138a4424f339dba4a650e81f95881cb45e7b83116087e74f653d5",
+      "value": "Wilson 95%"
+    },
+    "D3|frozen|union_rate|lo": {
+      "file": "generalization/results/2026-09-02_d3/metrics/contingency_complementarity.json",
+      "locator": "JSON key $.union_completeness.lo",
+      "sha256": "11520ecaa8d138a4424f339dba4a650e81f95881cb45e7b83116087e74f653d5",
+      "value": 0.5304983466149248
+    },
+    "D3|frozen|union_rate|n": {
+      "file": "generalization/results/2026-09-02_d3/metrics/contingency_complementarity.json",
+      "locator": "JSON key $.n_positives_scored",
+      "sha256": "11520ecaa8d138a4424f339dba4a650e81f95881cb45e7b83116087e74f653d5",
+      "value": 585
+    },
+    "D3|frozen|union_rate|source_file": {
+      "file": "generalization/results/2026-09-02_d3/metrics/contingency_complementarity.json",
+      "locator": "JSON key $.union_completeness.p",
+      "sha256": "11520ecaa8d138a4424f339dba4a650e81f95881cb45e7b83116087e74f653d5",
+      "value": "generalization/results/2026-09-02_d3/metrics/contingency_complementarity.json"
+    },
+    "D3|frozen|union_rate|source_locator": {
+      "file": "generalization/results/2026-09-02_d3/metrics/contingency_complementarity.json",
+      "locator": "JSON key $.union_completeness.p",
+      "sha256": "11520ecaa8d138a4424f339dba4a650e81f95881cb45e7b83116087e74f653d5",
+      "value": "JSON key $.union_completeness.p"
+    },
+    "D3|v2|P1_detection|arm": {
+      "file": "scripts/generalization/descriptive/synthesis_table.py",
+      "locator": "endpoint slot D3/v2/P1_detection",
+      "sha256": "62d877f561aa918c5223abb8fe0eb30791736afddada98d1ed98807e72f5733a",
+      "value": "v2"
+    },
+    "D3|v2|P1_detection|dataset": {
+      "file": "scripts/generalization/descriptive/synthesis_table.py",
+      "locator": "endpoint slot D3/v2/P1_detection",
+      "sha256": "62d877f561aa918c5223abb8fe0eb30791736afddada98d1ed98807e72f5733a",
+      "value": "D3"
+    },
+    "D3|v2|P1_detection|endpoint": {
+      "file": "scripts/generalization/descriptive/synthesis_table.py",
+      "locator": "endpoint slot D3/v2/P1_detection",
+      "sha256": "62d877f561aa918c5223abb8fe0eb30791736afddada98d1ed98807e72f5733a",
+      "value": "P1_detection"
+    },
+    "D3|v2|P1_detection|notes": {
+      "file": "scripts/generalization/descriptive/synthesis_table.py",
+      "locator": "endpoint slot D3/v2/P1_detection",
+      "sha256": "62d877f561aa918c5223abb8fe0eb30791736afddada98d1ed98807e72f5733a",
+      "value": "bundle not available"
+    },
+    "D3|v2|P2_recovery|arm": {
+      "file": "scripts/generalization/descriptive/synthesis_table.py",
+      "locator": "endpoint slot D3/v2/P2_recovery",
+      "sha256": "62d877f561aa918c5223abb8fe0eb30791736afddada98d1ed98807e72f5733a",
+      "value": "v2"
+    },
+    "D3|v2|P2_recovery|dataset": {
+      "file": "scripts/generalization/descriptive/synthesis_table.py",
+      "locator": "endpoint slot D3/v2/P2_recovery",
+      "sha256": "62d877f561aa918c5223abb8fe0eb30791736afddada98d1ed98807e72f5733a",
+      "value": "D3"
+    },
+    "D3|v2|P2_recovery|endpoint": {
+      "file": "scripts/generalization/descriptive/synthesis_table.py",
+      "locator": "endpoint slot D3/v2/P2_recovery",
+      "sha256": "62d877f561aa918c5223abb8fe0eb30791736afddada98d1ed98807e72f5733a",
+      "value": "P2_recovery"
+    },
+    "D3|v2|P2_recovery|notes": {
+      "file": "scripts/generalization/descriptive/synthesis_table.py",
+      "locator": "endpoint slot D3/v2/P2_recovery",
+      "sha256": "62d877f561aa918c5223abb8fe0eb30791736afddada98d1ed98807e72f5733a",
+      "value": "bundle not available"
+    },
+    "D3|v2|P3_negative_trigger|arm": {
+      "file": "scripts/generalization/descriptive/synthesis_table.py",
+      "locator": "endpoint slot D3/v2/P3_negative_trigger",
+      "sha256": "62d877f561aa918c5223abb8fe0eb30791736afddada98d1ed98807e72f5733a",
+      "value": "v2"
+    },
+    "D3|v2|P3_negative_trigger|dataset": {
+      "file": "scripts/generalization/descriptive/synthesis_table.py",
+      "locator": "endpoint slot D3/v2/P3_negative_trigger",
+      "sha256": "62d877f561aa918c5223abb8fe0eb30791736afddada98d1ed98807e72f5733a",
+      "value": "D3"
+    },
+    "D3|v2|P3_negative_trigger|endpoint": {
+      "file": "scripts/generalization/descriptive/synthesis_table.py",
+      "locator": "endpoint slot D3/v2/P3_negative_trigger",
+      "sha256": "62d877f561aa918c5223abb8fe0eb30791736afddada98d1ed98807e72f5733a",
+      "value": "P3_negative_trigger"
+    },
+    "D3|v2|P3_negative_trigger|notes": {
+      "file": "scripts/generalization/descriptive/synthesis_table.py",
+      "locator": "endpoint slot D3/v2/P3_negative_trigger",
+      "sha256": "62d877f561aa918c5223abb8fe0eb30791736afddada98d1ed98807e72f5733a",
+      "value": "bundle not available"
+    },
+    "D3|v2|chance_match_mean|arm": {
+      "file": "scripts/generalization/descriptive/synthesis_table.py",
+      "locator": "endpoint slot D3/v2/chance_match_mean",
+      "sha256": "62d877f561aa918c5223abb8fe0eb30791736afddada98d1ed98807e72f5733a",
+      "value": "v2"
+    },
+    "D3|v2|chance_match_mean|dataset": {
+      "file": "scripts/generalization/descriptive/synthesis_table.py",
+      "locator": "endpoint slot D3/v2/chance_match_mean",
+      "sha256": "62d877f561aa918c5223abb8fe0eb30791736afddada98d1ed98807e72f5733a",
+      "value": "D3"
+    },
+    "D3|v2|chance_match_mean|endpoint": {
+      "file": "scripts/generalization/descriptive/synthesis_table.py",
+      "locator": "endpoint slot D3/v2/chance_match_mean",
+      "sha256": "62d877f561aa918c5223abb8fe0eb30791736afddada98d1ed98807e72f5733a",
+      "value": "chance_match_mean"
+    },
+    "D3|v2|chance_match_mean|notes": {
+      "file": "scripts/generalization/descriptive/synthesis_table.py",
+      "locator": "endpoint slot D3/v2/chance_match_mean",
+      "sha256": "62d877f561aa918c5223abb8fe0eb30791736afddada98d1ed98807e72f5733a",
+      "value": "bundle not available"
+    },
+    "D3|v2|chance_match_p95|arm": {
+      "file": "scripts/generalization/descriptive/synthesis_table.py",
+      "locator": "endpoint slot D3/v2/chance_match_p95",
+      "sha256": "62d877f561aa918c5223abb8fe0eb30791736afddada98d1ed98807e72f5733a",
+      "value": "v2"
+    },
+    "D3|v2|chance_match_p95|dataset": {
+      "file": "scripts/generalization/descriptive/synthesis_table.py",
+      "locator": "endpoint slot D3/v2/chance_match_p95",
+      "sha256": "62d877f561aa918c5223abb8fe0eb30791736afddada98d1ed98807e72f5733a",
+      "value": "D3"
+    },
+    "D3|v2|chance_match_p95|endpoint": {
+      "file": "scripts/generalization/descriptive/synthesis_table.py",
+      "locator": "endpoint slot D3/v2/chance_match_p95",
+      "sha256": "62d877f561aa918c5223abb8fe0eb30791736afddada98d1ed98807e72f5733a",
+      "value": "chance_match_p95"
+    },
+    "D3|v2|chance_match_p95|notes": {
+      "file": "scripts/generalization/descriptive/synthesis_table.py",
+      "locator": "endpoint slot D3/v2/chance_match_p95",
+      "sha256": "62d877f561aa918c5223abb8fe0eb30791736afddada98d1ed98807e72f5733a",
+      "value": "bundle not available"
+    }
+  },
+  "schema_version": 1
+}

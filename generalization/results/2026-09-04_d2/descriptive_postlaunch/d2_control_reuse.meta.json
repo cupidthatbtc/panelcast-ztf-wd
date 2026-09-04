@@ -1,0 +1,21 @@
+{
+  "figure": "d2_control_reuse.png",
+  "source_csv": "d2_control_reuse_source.csv",
+  "analysis_status": "postlaunch_descriptive",
+  "prespecified": false,
+  "interval": "none",
+  "plotted_quantity": "n_b_assignments",
+  "bar_unit": "one bar per unique control_campaign_id",
+  "sort": "descending n_b_assignments, then control_campaign_id ascending",
+  "n_controls": 106,
+  "n_b_assignments_total": 309,
+  "inputs_sha256": {
+    "d2_control_reuse.csv": "ae3a15477938baff3482d389f46094c9eda78f7bee3ea9b9cb761bcd70776e4d"
+  },
+  "outputs_sha256": {
+    "d2_control_reuse.png": "f8fe57f10209dc32942d4c5035593bfe2275762481ff4d1ebc9b5b7b27afa3fc",
+    "d2_control_reuse_source.csv": "702864aaf29946ac60163e57cc227f7630dd84d0b646b8fb41124601d40e35e8"
+  },
+  "script_sha256": "cdd82397d2358cd2931f6861053247ed0ccf7cf79b1bd3ba324b9e19db4afd73",
+  "disclosure": "Post-launch descriptive D2 diagnostics report nominal arm-B recovery and triggering by \\(K\\) and the template’s published status, the fixed control-window reuse pattern, and paired nominal arm-A/arm-B outcomes per target and \\(K\\); the rows expose native-variability and reuse confounding, carry no interval, and cannot support an unqualified recovery-versus-\\(W_g\\) trend."
+}

@@ -1,0 +1,484 @@
+{
+  "bundle": "generalization/results/2026-09-04_d2",
+  "pilot": false,
+  "watermark": "",
+  "inputs_sha256": {
+    "metrics/manifest.json": "380c07497fc764e0693b750fa7d09e6f41773e99e604f617ab8511a5408190b5",
+    "metrics/surfaces/recovery_wg_amplitude.csv": "5ec3612422095652109431911227b6f77a13206015e4025266b7512d8c9ed5f7",
+    "metrics/d2_cluster_completeness.csv": "fb9496098db80ace7153a939655ceb266680a61f54f09c8443e31df062a28252",
+    "metrics/d2_scenario_contrasts.csv": "aec4aeba67811585b510aa3ac43d88475f27ed46803e991d1ccfd7fd2a0fabca",
+    "metrics/trigger_rates.csv": "78b3a76034e1b3779cc3be23be06003ceeda9b8aab1a8908380ddbf275943c0f",
+    "metrics/d2_paired_controls_summary.csv": "ac54953c7b75d220a18b3bec62c89b41b3ccce34e32fbc13fddf3dbdbed0caa1",
+    "metrics/d2_control_reuse.csv": "ae3a15477938baff3482d389f46094c9eda78f7bee3ea9b9cb761bcd70776e4d",
+    "metrics/per_star.csv": "36adc674f8d18fbb6a058abf5500c0b42badd17d04d860f39d9984833f5ad701"
+  },
+  "script_sha256": "b3f935bf2bf342bf98800f95d14d34d4dc1afd36275fcd27596dc6a5d8097d7c",
+  "frozen_edges": {
+    "wg": [
+      15,
+      41,
+      84,
+      217
+    ],
+    "amp_ppt": [
+      0.5,
+      2.0,
+      5.0,
+      10.0,
+      30.0
+    ]
+  },
+  "figures": {
+    "F5": {
+      "png": "f5_recovery_surface.png",
+      "pdf": "f5_recovery_surface.pdf",
+      "numbers": {
+        "cells": {
+          "wg0_amp1": {
+            "n_windows": 2,
+            "k_windows": 0,
+            "n_targets": 2
+          },
+          "wg0_amp2": {
+            "n_windows": 11,
+            "k_windows": 0,
+            "n_targets": 11,
+            "p": 0.0,
+            "lo": 0.0,
+            "hi": 0.0,
+            "interval": "target_cluster_bootstrap"
+          },
+          "wg0_amp3": {
+            "n_windows": 31,
+            "k_windows": 0,
+            "n_targets": 31,
+            "p": 0.0,
+            "lo": 0.0,
+            "hi": 0.0,
+            "interval": "target_cluster_bootstrap"
+          },
+          "wg0_amp4": {
+            "n_windows": 46,
+            "k_windows": 5,
+            "n_targets": 45,
+            "p": 0.1111111111111111,
+            "lo": 0.0222222222222222,
+            "hi": 0.2,
+            "interval": "target_cluster_bootstrap"
+          },
+          "wg0_amp5": {
+            "n_windows": 9,
+            "k_windows": 2,
+            "n_targets": 9,
+            "p": 0.2222222222222222,
+            "lo": 0.0,
+            "hi": 0.5555555555555556,
+            "interval": "target_cluster_bootstrap"
+          },
+          "wg1_amp1": {
+            "n_windows": 2,
+            "k_windows": 0,
+            "n_targets": 2
+          },
+          "wg1_amp2": {
+            "n_windows": 2,
+            "k_windows": 0,
+            "n_targets": 2
+          },
+          "wg1_amp3": {
+            "n_windows": 1,
+            "k_windows": 0,
+            "n_targets": 1
+          },
+          "wg2_amp1": {
+            "n_windows": 2,
+            "k_windows": 0,
+            "n_targets": 2
+          },
+          "wg2_amp2": {
+            "n_windows": 11,
+            "k_windows": 0,
+            "n_targets": 11,
+            "p": 0.0,
+            "lo": 0.0,
+            "hi": 0.0,
+            "interval": "target_cluster_bootstrap"
+          },
+          "wg2_amp3": {
+            "n_windows": 30,
+            "k_windows": 0,
+            "n_targets": 30,
+            "p": 0.0,
+            "lo": 0.0,
+            "hi": 0.0,
+            "interval": "target_cluster_bootstrap"
+          },
+          "wg2_amp4": {
+            "n_windows": 44,
+            "k_windows": 4,
+            "n_targets": 44,
+            "p": 0.0909090909090909,
+            "lo": 0.0227272727272727,
+            "hi": 0.1818181818181818,
+            "interval": "target_cluster_bootstrap"
+          },
+          "wg2_amp5": {
+            "n_windows": 9,
+            "k_windows": 5,
+            "n_targets": 9,
+            "p": 0.5555555555555556,
+            "lo": 0.2222222222222222,
+            "hi": 0.8888888888888888,
+            "interval": "target_cluster_bootstrap"
+          },
+          "wg3_amp1": {
+            "n_windows": 2,
+            "k_windows": 0,
+            "n_targets": 2
+          },
+          "wg3_amp2": {
+            "n_windows": 2,
+            "k_windows": 1,
+            "n_targets": 2
+          },
+          "wg3_amp3": {
+            "n_windows": 2,
+            "k_windows": 1,
+            "n_targets": 2
+          },
+          "wg3_amp4": {
+            "n_windows": 1,
+            "k_windows": 0,
+            "n_targets": 1
+          },
+          "wg4_amp1": {
+            "n_windows": 4,
+            "k_windows": 0,
+            "n_targets": 4
+          },
+          "wg4_amp2": {
+            "n_windows": 13,
+            "k_windows": 3,
+            "n_targets": 13,
+            "p": 0.2307692307692307,
+            "lo": 0.0,
+            "hi": 0.4615384615384615,
+            "interval": "target_cluster_bootstrap"
+          },
+          "wg4_amp3": {
+            "n_windows": 32,
+            "k_windows": 12,
+            "n_targets": 32,
+            "p": 0.375,
+            "lo": 0.21875,
+            "hi": 0.53125,
+            "interval": "target_cluster_bootstrap"
+          },
+          "wg4_amp4": {
+            "n_windows": 44,
+            "k_windows": 26,
+            "n_targets": 44,
+            "p": 0.5909090909090909,
+            "lo": 0.4318181818181818,
+            "hi": 0.7272727272727273,
+            "interval": "target_cluster_bootstrap"
+          },
+          "wg4_amp5": {
+            "n_windows": 9,
+            "k_windows": 8,
+            "n_targets": 9,
+            "p": 0.8888888888888888,
+            "lo": 0.6666666666666666,
+            "hi": 1.0,
+            "interval": "target_cluster_bootstrap"
+          }
+        },
+        "p4": {
+          "eligible": {
+            "p": 0.2168284789644012,
+            "lo": 0.1715210355987054,
+            "hi": 0.262135922330097,
+            "n_targets": 103,
+            "n_targets_zero_usable_strata": 0,
+            "interval": "cluster_bootstrap"
+          },
+          "usable": {
+            "p": 0.2168284789644012,
+            "lo": 0.1715210355987054,
+            "hi": 0.262135922330097,
+            "n_targets": 103,
+            "n_targets_zero_usable_strata": 0,
+            "interval": "cluster_bootstrap"
+          }
+        },
+        "strata": {
+          "K0": {
+            "n_targets": 103,
+            "k_targets_equivalent": 7.0,
+            "p": 0.06796116504854369
+          },
+          "K1": {
+            "n_targets": 103,
+            "k_targets_equivalent": 11.0,
+            "p": 0.10679611650485436
+          },
+          "K2": {
+            "n_targets": 103,
+            "k_targets_equivalent": 49.0,
+            "p": 0.47572815533980584
+          }
+        }
+      }
+    },
+    "F6": {
+      "png": "f6_sensitivity.png",
+      "pdf": "f6_sensitivity.pdf",
+      "numbers": {
+        "ladder_g1r1": {
+          "diff": -0.0388349514563106,
+          "diff_lo": -0.0776699029126213,
+          "diff_hi": -0.0097087378640776,
+          "discordance_u95": NaN,
+          "interval": "paired_cluster_bootstrap_common_draws",
+          "n_targets_matched": 103,
+          "p_scenario": 0.0679611650485436,
+          "p_nominal_k1": 0.1067961165048543
+        },
+        "ladder_g1r2": {
+          "diff": -0.0194174757281553,
+          "diff_lo": -0.0485436893203883,
+          "diff_hi": 0.0,
+          "discordance_u95": NaN,
+          "interval": "paired_cluster_bootstrap_common_draws",
+          "n_targets_matched": 103,
+          "p_scenario": 0.087378640776699,
+          "p_nominal_k1": 0.1067961165048543
+        },
+        "ladder_g1r3": {
+          "diff": -0.0097087378640776,
+          "diff_lo": -0.029126213592233,
+          "diff_hi": 0.0,
+          "discordance_u95": NaN,
+          "interval": "paired_cluster_bootstrap_common_draws",
+          "n_targets_matched": 103,
+          "p_scenario": 0.0970873786407767,
+          "p_nominal_k1": 0.1067961165048543
+        },
+        "ladder_g2r1": {
+          "diff": -0.0097087378640776,
+          "diff_lo": -0.029126213592233,
+          "diff_hi": 0.0,
+          "discordance_u95": NaN,
+          "interval": "paired_cluster_bootstrap_common_draws",
+          "n_targets_matched": 103,
+          "p_scenario": 0.0970873786407767,
+          "p_nominal_k1": 0.1067961165048543
+        },
+        "ladder_g2r3": {
+          "diff": 0.0194174757281553,
+          "diff_lo": 0.0,
+          "diff_hi": 0.0485436893203883,
+          "discordance_u95": NaN,
+          "interval": "paired_cluster_bootstrap_common_draws",
+          "n_targets_matched": 103,
+          "p_scenario": 0.1262135922330097,
+          "p_nominal_k1": 0.1067961165048543
+        },
+        "ladder_g3r1": {
+          "diff": 0.0388349514563106,
+          "diff_lo": 0.0097087378640776,
+          "diff_hi": 0.0776699029126213,
+          "discordance_u95": NaN,
+          "interval": "paired_cluster_bootstrap_common_draws",
+          "n_targets_matched": 103,
+          "p_scenario": 0.145631067961165,
+          "p_nominal_k1": 0.1067961165048543
+        },
+        "ladder_g3r2": {
+          "diff": 0.0388349514563106,
+          "diff_lo": 0.0097087378640776,
+          "diff_hi": 0.0776699029126213,
+          "discordance_u95": NaN,
+          "interval": "paired_cluster_bootstrap_common_draws",
+          "n_targets_matched": 103,
+          "p_scenario": 0.145631067961165,
+          "p_nominal_k1": 0.1067961165048543
+        },
+        "ladder_g3r3": {
+          "diff": 0.0388349514563106,
+          "diff_lo": 0.0097087378640776,
+          "diff_hi": 0.0776699029126213,
+          "discordance_u95": NaN,
+          "interval": "paired_cluster_bootstrap_common_draws",
+          "n_targets_matched": 103,
+          "p_scenario": 0.145631067961165,
+          "p_nominal_k1": 0.1067961165048543
+        },
+        "phase_1": {
+          "diff": 0.0097087378640776,
+          "diff_lo": -0.0194174757281553,
+          "diff_hi": 0.0388349514563106,
+          "discordance_u95": NaN,
+          "interval": "paired_cluster_bootstrap_common_draws",
+          "n_targets_matched": 103,
+          "p_scenario": 0.116504854368932,
+          "p_nominal_k1": 0.1067961165048543
+        },
+        "phase_2": {
+          "diff": 0.058252427184466,
+          "diff_lo": 0.0194174757281553,
+          "diff_hi": 0.1067961165048543,
+          "discordance_u95": NaN,
+          "interval": "paired_cluster_bootstrap_common_draws",
+          "n_targets_matched": 103,
+          "p_scenario": 0.1650485436893204,
+          "p_nominal_k1": 0.1067961165048543
+        },
+        "ampscale_0.7": {
+          "diff": -0.058252427184466,
+          "diff_lo": -0.1067961165048543,
+          "diff_hi": -0.0194174757281553,
+          "discordance_u95": NaN,
+          "interval": "paired_cluster_bootstrap_common_draws",
+          "n_targets_matched": 103,
+          "p_scenario": 0.0485436893203883,
+          "p_nominal_k1": 0.1067961165048543
+        },
+        "ampscale_1.3": {
+          "diff": 0.0388349514563106,
+          "diff_lo": 0.0097087378640776,
+          "diff_hi": 0.0776699029126213,
+          "discordance_u95": NaN,
+          "interval": "paired_cluster_bootstrap_common_draws",
+          "n_targets_matched": 103,
+          "p_scenario": 0.145631067961165,
+          "p_nominal_k1": 0.1067961165048543
+        },
+        "dropout": {
+          "diff": -0.0526315789473684,
+          "diff_lo": -0.1052631578947368,
+          "diff_hi": -0.0121951219512195,
+          "discordance_u95": NaN,
+          "interval": "paired_cluster_bootstrap_common_draws",
+          "n_targets_matched": 76,
+          "p_scenario": 0.0394736842105263,
+          "p_nominal_k1": 0.0921052631578947
+        },
+        "cadence_alt": {
+          "diff": 0.0606060606060606,
+          "diff_lo": 0.0,
+          "diff_hi": 0.1515734265734262,
+          "discordance_u95": NaN,
+          "interval": "paired_cluster_bootstrap_common_draws",
+          "n_targets_matched": 33,
+          "p_scenario": 0.1515151515151515,
+          "p_nominal_k1": 0.0909090909090909
+        },
+        "redilution": {
+          "diff": -0.35,
+          "diff_lo": -0.5714285714285714,
+          "diff_hi": -0.1428571428571428,
+          "discordance_u95": NaN,
+          "interval": "paired_cluster_bootstrap_common_draws",
+          "n_targets_matched": 20,
+          "p_scenario": 0.0,
+          "p_nominal_k1": 0.35
+        },
+        "_range": {
+          "min_scenario": "redilution",
+          "min_diff": -0.35,
+          "max_scenario": "cadence_alt",
+          "max_diff": 0.0606060606060606
+        }
+      }
+    },
+    "F7": {
+      "png": "f7_nulls_controls.png",
+      "pdf": "f7_nulls_controls.pdf",
+      "numbers": {
+        "fpr_gaussian": {
+          "k": 19,
+          "n_completed": 1000,
+          "n_scheduled": 1000,
+          "p": 0.019,
+          "cp_one_sided_95_upper": 0.0277552860454791,
+          "acceptance_u95_leq_0.005": false,
+          "n_completed_is_1000": true
+        },
+        "paired_D": {
+          "both": 118,
+          "b_only": 54,
+          "c_only": 11,
+          "neither": 126,
+          "union": 183,
+          "n_pairs_scored": 309,
+          "n_targets": 103,
+          "n_unique_windows": 106,
+          "p_b": 0.5566343042071197,
+          "p_b_lo": 0.5177993527508089,
+          "p_b_hi": 0.6019417475728155,
+          "p_c": 0.4174757281553399,
+          "p_c_lo": 0.3656957928802591,
+          "p_c_hi": 0.4692556634304207,
+          "paired_diff_b_minus_c": 0.1391585760517799,
+          "paired_diff_b_minus_c_lo": 0.0906148867313915,
+          "paired_diff_b_minus_c_hi": 0.1909385113268608,
+          "p_b_and_not_c": 0.174757281553398,
+          "p_b_and_not_c_lo": 0.1359223300970873,
+          "p_b_and_not_c_hi": 0.2200647249190938
+        },
+        "paired_R": {
+          "both": 0,
+          "b_only": 67,
+          "c_only": 0,
+          "neither": 242,
+          "union": 67,
+          "n_pairs_scored": 309,
+          "n_targets": 103,
+          "n_unique_windows": 106,
+          "p_b": 0.2168284789644012,
+          "p_b_lo": 0.1715210355987054,
+          "p_b_hi": 0.262135922330097,
+          "p_c": 0.0,
+          "p_c_lo": 0.0,
+          "p_c_hi": 0.0,
+          "paired_diff_b_minus_c": 0.2168284789644012,
+          "paired_diff_b_minus_c_lo": 0.1715210355987054,
+          "paired_diff_b_minus_c_hi": 0.262135922330097,
+          "p_b_and_not_c": 0.2168284789644012,
+          "p_b_and_not_c_lo": 0.1715210355987054,
+          "p_b_and_not_c_hi": 0.262135922330097
+        },
+        "native_trigger_rate": {
+          "p": 0.4433962264150943,
+          "lo": 0.352450813697613,
+          "hi": 0.5383008193484405,
+          "n": 106,
+          "ess": 106.0
+        },
+        "reuse": {
+          "n_control_windows": 106,
+          "n_b_assignments_total": 309,
+          "reuse_histogram": {
+            "1": 36,
+            "2": 28,
+            "3": 11,
+            "4": 10,
+            "5": 6,
+            "6": 5,
+            "7": 4,
+            "8": 2,
+            "9": 2,
+            "10": 1,
+            "12": 1
+          }
+        }
+      }
+    }
+  },
+  "captions": {
+    "F5": "D2 recovery surface. (a) Target-level dominant-mode recovery (rule 1, best pass, direct match to the largest-amplitude retained injected mode) on nominal arm-B windows, on the frozen (W_g stratum, published TESS amplitude) grid with edges W_g {15,41,84,217} and A {0.5,2,5,10,30,\u221e} ppt; a cell is filled and carries its target-cluster bootstrap 95% interval only where \u2265 5 targets, otherwise the raw window counts and target count are printed. Published amplitudes, never ladder-scaled; no window-level Wilson; no scenario pooling. (b) P4 in its eligible and usable variants with the cluster interval, and the K0/K1/K2 target means as descriptive counts without an interval. [PRIMARY-P4 (side panel); DESCRIPTIVE-PRESPEC (surface, strata)]",
+    "F6": "D2 sensitivity. Paired scenario-minus-nominal-K1 recovery differences (eligible denominator) with common-draw target-bootstrap 95% intervals for the ladder points, phase draws, amplitude scales, dominant-mode dropout, cadence_alt and redilution; rows with zero observed discordances are drawn as the exact Clopper\u2013Pearson discordance bound and marked. The min and max are named; no band and no interval on the range. [DESCRIPTIVE-PRESPEC]",
+    "F7": "D2 nulls and controls. (a) FPR_Gaussian: rule-1 confirmations among the Gaussian nulls with the exact one-sided 95% Clopper\u2013Pearson upper bound and the 0.5% acceptance line (the sole confirmatory decision; only at n = 1,000 completed trials). (b) Paired uninjected controls: 2\u00d72 injected-vs-control for detection D and for strict recovery R with union and P(B=1, C=0) with its cluster interval. (c) Native trigger rate of the control windows with their reuse counts. Not a real-sky FPR; the native rate is never subtracted from P4. [PRIMARY-P5; SECONDARY (paired D/R); DESCRIPTIVE-PRESPEC (native, reuse)]"
+  }
+}
